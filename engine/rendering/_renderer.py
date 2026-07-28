@@ -41,11 +41,11 @@ class Renderer:
     # Frame contract
     # ------------------------------------------------------------------
 
-    def render_frame(self, background_color: tuple[int, int, int]) -> None:
-        """Produce one complete frame.
+    def clear_frame(self, background_color: tuple[int, int, int]) -> None:
+        """Clear the display to *background_color*.
 
-        1. Clear the display to *background_color*.
-        2. Present the frame.
+        Does **not** present the frame — call ``present_frame`` after
+        the scene has contributed content.
 
         Args:
             background_color: ``(r, g, b)`` tuple; each channel 0–255.
@@ -54,8 +54,29 @@ class Renderer:
             RuntimeError: If the platform is not initialized.
         """
         self._platform.clear_frame(background_color)
+
+    def present_frame(self) -> None:
+        """Present the completed frame to the display.
+
+        Must be called after ``clear_frame`` and scene participation.
+
+        Raises:
+            RuntimeError: If the platform is not initialized.
+        """
         self._platform.present_frame()
         self._frame_count += 1
+
+    def render_frame(self, background_color: tuple[int, int, int]) -> None:
+        """Produce one complete frame (clear + present).
+
+        Convenience for when no scene participation is needed between
+        clear and present.
+
+        Args:
+            background_color: ``(r, g, b)`` tuple; each channel 0–255.
+        """
+        self.clear_frame(background_color)
+        self.present_frame()
 
     # ------------------------------------------------------------------
     # Queries
