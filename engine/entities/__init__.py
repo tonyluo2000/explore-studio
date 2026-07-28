@@ -10,5 +10,6 @@ Ownership: Engine team.
 """
 
 from engine.entities._character import Bounds, Character
+from engine.entities._world_object import WorldObject
 
-__all__ = ["Bounds", "Character"]
+__all__ = ["Bounds", "Character", "WorldObject"]

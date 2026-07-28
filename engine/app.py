@@ -15,7 +15,6 @@ import sys
 
 from engine._config import Config
 from engine._platform import Platform
-from engine.input import DirectionalInput
 from engine.rendering import Renderer
 from engine.scenes import DefaultScene, Scene
 
@@ -139,14 +138,17 @@ class App:
 
         # --- main loop ---
         self._state = _LifecycleState.RUNNING
+        loop_error: BaseException | None = None
         try:
             self._run_loop()
-        except Exception:
-            self._log.exception("Unhandled error in main loop.")
+        except BaseException as _exc:
+            loop_error = _exc
+            if isinstance(_exc, Exception):
+                self._log.exception("Unhandled error in main loop.")
             raise
         finally:
             self._state = _LifecycleState.STOPPED
-            self._cleanup_scene()
+            self._cleanup_scene(earlier_error=loop_error)
             self._cleanup_platform()
 
     def shutdown(self) -> None:
@@ -165,7 +167,7 @@ class App:
         if self._state == _LifecycleState.RUNNING:
             self._state = _LifecycleState.STOPPED
 
-        self._cleanup_scene()
+        self._cleanup_scene(earlier_error=None)
         self._cleanup_platform()
 
     # ------------------------------------------------------------------
@@ -184,13 +186,14 @@ class App:
         assert self._renderer is not None
         return DefaultScene(self._renderer)
 
-    def _cleanup_scene(self) -> None:
+    def _cleanup_scene(self, *, earlier_error: BaseException | None = None) -> None:
         """Exit the active scene if it was entered.
 
-        Scene-exit failures are logged but never prevent further
-        cleanup. The original operational exception (if any) is
-        preserved by Python's try/finally semantics — this method
-        does not raise.
+        Args:
+            earlier_error: If an operational failure is already in
+                flight, it takes precedence. The exit failure is logged
+                but not re-raised. If no earlier error exists, the
+                exit failure is raised so it remains observable.
         """
         if self._scene is None:
             return
@@ -198,7 +201,12 @@ class App:
         try:
             self._scene.exit()
         except Exception:
-            self._log.exception("Scene exit failed during cleanup.")
+            if earlier_error is not None:
+                self._log.exception(
+                    "Scene exit failed during error recovery; " "preserving original exception."
+                )
+            else:
+                raise
 
     # ------------------------------------------------------------------
     # Internal: main loop
@@ -225,8 +233,7 @@ class App:
 
         while not self._platform.has_quit_request():
             dt = self._platform.tick()
-            raw = self._platform.poll_directional_input()
-            inp = DirectionalInput(**raw)
+            inp = self._platform.poll_directional_input()
 
             self._renderer.clear_frame(self._config.background_color)
             try:

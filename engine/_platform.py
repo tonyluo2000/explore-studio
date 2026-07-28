@@ -17,6 +17,7 @@ from typing import Any
 import pygame
 
 from engine._config import Config
+from engine.input import DirectionalInput
 
 _LOGGER = logging.getLogger("explore-studio.platform")
 
@@ -117,22 +118,22 @@ class Platform:
     # Input
     # ------------------------------------------------------------------
 
-    def poll_directional_input(self) -> dict[str, bool]:
-        """Return current directional key state.
+    def poll_directional_input(self) -> DirectionalInput:
+        """Return current directional key state as a DirectionalInput.
 
-        Maps arrow keys and WASD to direction booleans. Returns a
-        plain dict so no Pygame types leak.
+        Maps arrow keys and WASD to direction booleans. Returns the
+        engine-owned value object directly — no dict or Pygame types.
 
         Returns:
-            ``{"left": bool, "right": bool, "up": bool, "down": bool}``.
+            ``DirectionalInput`` with pressed directions.
         """
         keys = pygame.key.get_pressed()
-        return {
-            "left": keys[pygame.K_LEFT] or keys[pygame.K_a],
-            "right": keys[pygame.K_RIGHT] or keys[pygame.K_d],
-            "up": keys[pygame.K_UP] or keys[pygame.K_w],
-            "down": keys[pygame.K_DOWN] or keys[pygame.K_s],
-        }
+        return DirectionalInput(
+            left=keys[pygame.K_LEFT] or keys[pygame.K_a],
+            right=keys[pygame.K_RIGHT] or keys[pygame.K_d],
+            up=keys[pygame.K_UP] or keys[pygame.K_w],
+            down=keys[pygame.K_DOWN] or keys[pygame.K_s],
+        )
 
     # ------------------------------------------------------------------
     # Frame control

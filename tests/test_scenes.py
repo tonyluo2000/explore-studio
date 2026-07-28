@@ -322,12 +322,12 @@ class _FailingExitScene(Scene):
 
 
 def test_scene_exit_failure_does_not_prevent_platform_cleanup() -> None:
-    """If scene exit fails, platform cleanup still occurs."""
+    """If scene exit fails during normal shutdown, the failure is raised."""
     scene = _FailingExitScene()
     app = _SpyApp(scene, Config(target_fps=120))
     _post_quit_after(0.1)
-    # Exit failure is logged but app exits cleanly.
-    app.start()
+    with pytest.raises(RuntimeError, match="exit failure"):
+        app.start()
     assert app.is_running is False
 
 
@@ -340,13 +340,12 @@ class _FailingEnterAndExitScene(Scene):
 
 
 def test_scene_exit_failure_preserved_when_no_earlier_error() -> None:
-    """Exit failure during normal shutdown is logged; app exits cleanly."""
+    """Exit failure during normal shutdown is raised and observable."""
     scene = _FailingEnterAndExitScene()
     app = _SpyApp(scene, Config(target_fps=120))
     _post_quit_after(0.1)
-    # Exit failure is logged but does not prevent clean shutdown.
-    app.start()
-    assert app.is_running is False
+    with pytest.raises(RuntimeError, match="exit failure after ok enter"):
+        app.start()
 
 
 class _FailingFrameAndExitScene(Scene):
