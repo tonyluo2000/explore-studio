@@ -127,15 +127,35 @@ def test_scene_ordering_enter_frame_exit() -> None:
 
 def test_default_scene_is_scene() -> None:
     """DefaultScene is a valid Scene subclass."""
-    scene = DefaultScene()
-    assert isinstance(scene, Scene)
+    from engine._platform import Platform
+    from engine.rendering import Renderer
+
+    platform = Platform(Config())
+    platform.initialize()
+    try:
+        renderer = Renderer(platform)
+        scene = DefaultScene(renderer)
+        assert isinstance(scene, Scene)
+    finally:
+        platform.shutdown()
 
 
-def test_default_scene_on_frame_noop() -> None:
-    """DefaultScene.on_frame() is a no-op."""
-    scene = DefaultScene()
-    scene.enter()
-    scene.on_frame()  # no-op, should not raise
+def test_default_scene_on_frame_draws() -> None:
+    """DefaultScene.on_frame() draws the character (does not raise)."""
+    from engine._platform import Platform
+    from engine.rendering import Renderer
+
+    platform = Platform(Config())
+    platform.initialize()
+    try:
+        renderer = Renderer(platform)
+        renderer.clear_frame((0, 0, 0))
+        scene = DefaultScene(renderer)
+        scene.enter()
+        scene.on_frame()  # draws character, should not raise
+        renderer.present_frame()
+    finally:
+        platform.shutdown()
 
 
 # ==================================================================

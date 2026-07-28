@@ -66,6 +66,27 @@ class Renderer:
         self._platform.present_frame()
         self._frame_count += 1
 
+    def draw_rect(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled rectangle at *(x, y)*.
+
+        Must be called between ``clear_frame`` and ``present_frame``.
+
+        Args:
+            x: Left-edge x-coordinate.
+            y: Top-edge y-coordinate.
+            width: Width in pixels.
+            height: Height in pixels.
+            color: ``(r, g, b)`` fill color.
+        """
+        self._platform.draw_rect(x, y, width, height, color)
+
     def render_frame(self, background_color: tuple[int, int, int]) -> None:
         """Produce one complete frame (clear + present).
 

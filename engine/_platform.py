@@ -132,6 +132,31 @@ class Platform:
             raise RuntimeError("Cannot clear frame: platform not initialized.")
         self._window.fill(color)
 
+    def draw_rect(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled rectangle at *(x, y)* with the given dimensions.
+
+        Args:
+            x: Left-edge x-coordinate in pixels.
+            y: Top-edge y-coordinate in pixels.
+            width: Rectangle width in pixels.
+            height: Rectangle height in pixels.
+            color: ``(r, g, b)`` fill color.
+
+        Raises:
+            RuntimeError: If the platform is not initialized.
+        """
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        rect = pygame.Rect(x, y, width, height)
+        pygame.draw.rect(self._window, color, rect)
+
     def present_frame(self) -> None:
         """Swap buffers / present the completed frame to the display.
 

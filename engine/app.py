@@ -175,12 +175,13 @@ class App:
         """Create the scene for this application run.
 
         Override in subclasses to provide a custom scene. The default
-        returns a ``DefaultScene`` with no content.
+        returns a ``DefaultScene`` with a centered character.
 
         Returns:
             A new Scene instance (not yet entered).
         """
-        return DefaultScene()
+        assert self._renderer is not None
+        return DefaultScene(self._renderer)
 
     def _cleanup_scene(self) -> None:
         """Exit the active scene if it was entered.
