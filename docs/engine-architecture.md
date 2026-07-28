@@ -223,6 +223,80 @@ which interaction should fire and invokes it. Interaction dispatch is
 deterministic: given the same world state and input, the same interaction always
 fires.
 
+#### Proximity Detection
+
+Proximity detection is the first building block of the interaction system. It
+answers one question: **"Is the character near the object?"** — nothing more.
+
+**How it works:**
+
+The scene compares the centers of two rectangles using squared Euclidean
+distance:
+
+```
+character_center = (character.x + character.width / 2, character.y + character.height / 2)
+object_center   = (object.x + object.width / 2, object.y + object.height / 2)
+distance²       = (character_cx − object_cx)² + (character_cy − object_cy)²
+```
+
+The character is **near** when:
+
+```
+distance² ≤ interaction_range²
+```
+
+The boundary is **inclusive** — exactly at the range edge counts as near.
+
+**Key properties:**
+
+| Property | Value |
+|----------|-------|
+| Rule | Center-to-center squared Euclidean distance |
+| Range | 120 pixels (owned by the default scene) |
+| Boundary | Inclusive (distance ≤ range) |
+| Evaluation | Once per frame, after movement, before drawing |
+| Result | Read-only Boolean (`is_character_near_object`) |
+| Initial state | `False` (Explorer starts far from the Treasure Chest) |
+
+**What proximity is not:**
+
+| Concept | Relationship to proximity |
+|---------|--------------------------|
+| **Collision** | Proximity does not block movement. The character passes through the object. Proximity and collision are separate concepts. |
+| **Interaction** | Proximity only produces a Boolean result. It does not open chests, display dialogue, collect items, or change object state. Those capabilities are built on top of proximity in later milestones. |
+| **Visual feedback** | Proximity causes no visible change. No range circles, outlines, color changes, text prompts, or highlights. The rendered output is identical whether near or far. |
+
+**Deferred capabilities:**
+
+The following are intentionally not part of proximity detection and will be added
+in future milestones:
+
+- Interaction key handling (E key)
+- "Press E" prompts
+- Dialogue display
+- Object-state mutation (opening the chest)
+- Inventory and item collection
+- Multiple-object queries
+- Nearest-object selection
+- Event buses and callbacks
+- Student-facing proximity API
+
+**Architecture:**
+
+```
+Character position (engine-internal)
+        +
+WorldObject position (engine-internal)
+        ↓
+Scene-owned proximity rule (DefaultScene)
+        ↓
+Read-only Boolean result (is_character_near_object)
+```
+
+Neither `Character` nor `WorldObject` reference each other, import each other,
+calculate proximity, or store the interaction range. The scene owns the rule and
+the result. The renderer and platform remain unaware of proximity.
+
 ### Animation
 
 The engine supports simple, frame-based animation: a character walking, a

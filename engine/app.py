@@ -178,13 +178,17 @@ class App:
         """Create the scene for this application run.
 
         Override in subclasses to provide a custom scene. The default
-        returns a ``DefaultScene`` with a centered character.
+        returns a ``DefaultScene`` with a centered character and the
+        configured background colour.
 
         Returns:
             A new Scene instance (not yet entered).
         """
         assert self._renderer is not None
-        return DefaultScene(self._renderer)
+        return DefaultScene(
+            self._renderer,
+            background_color=self._config.background_color,
+        )
 
     def _cleanup_scene(self, *, earlier_error: BaseException | None = None) -> None:
         """Exit the active scene if it was entered.
@@ -219,9 +223,11 @@ class App:
         1. Polls platform events for quit requests.
         2. Obtains elapsed time (dt) from the platform clock.
         3. Reads current directional input.
-        4. Clears the frame.
-        5. Allows the active scene to update and draw (receives input + dt).
-        6. Presents the completed frame.
+        4. Allows the active scene to update and draw.
+           The scene is responsible for clearing the frame at the
+           appropriate point so that failures in update logic
+           (movement, proximity) prevent the clear.
+        5. Presents the completed frame.
 
         Exits when a quit event is received. A failure in any step
         prevents frame presentation and preserves the original exception.
@@ -235,7 +241,6 @@ class App:
             dt = self._platform.tick()
             inp = self._platform.poll_directional_input()
 
-            self._renderer.clear_frame(self._config.background_color)
             try:
                 self._scene.on_frame(inp, dt)
             except Exception:
