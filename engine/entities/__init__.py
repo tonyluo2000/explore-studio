@@ -9,6 +9,6 @@ Submodules:
 Ownership: Engine team.
 """
 
-from engine.entities._character import Character
+from engine.entities._character import Bounds, Character
 
-__all__ = ["Character"]
+__all__ = ["Bounds", "Character"]

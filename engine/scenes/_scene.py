@@ -11,6 +11,10 @@ from __future__ import annotations
 
 import enum
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from engine.input import DirectionalInput
 
 _LOGGER = logging.getLogger("explore-studio.scene")
 
@@ -104,11 +108,15 @@ class Scene:
     # Frame participation
     # ------------------------------------------------------------------
 
-    def on_frame(self) -> None:
+    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
         """Participate in one frame.
 
         Called once per completed loop iteration while the scene is
         active, between frame clear and frame presentation.
+
+        Args:
+            input_state: Current directional input snapshot.
+            dt: Elapsed time in seconds since the last frame.
 
         The default implementation is a no-op — subclasses override
         to contribute content.

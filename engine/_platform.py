@@ -114,6 +114,27 @@ class Platform:
         return any(event.type == pygame.QUIT for event in pygame.event.get())
 
     # ------------------------------------------------------------------
+    # Input
+    # ------------------------------------------------------------------
+
+    def poll_directional_input(self) -> dict[str, bool]:
+        """Return current directional key state.
+
+        Maps arrow keys and WASD to direction booleans. Returns a
+        plain dict so no Pygame types leak.
+
+        Returns:
+            ``{"left": bool, "right": bool, "up": bool, "down": bool}``.
+        """
+        keys = pygame.key.get_pressed()
+        return {
+            "left": keys[pygame.K_LEFT] or keys[pygame.K_a],
+            "right": keys[pygame.K_RIGHT] or keys[pygame.K_d],
+            "up": keys[pygame.K_UP] or keys[pygame.K_w],
+            "down": keys[pygame.K_DOWN] or keys[pygame.K_s],
+        }
+
+    # ------------------------------------------------------------------
     # Frame control
     # ------------------------------------------------------------------
 
@@ -170,17 +191,17 @@ class Platform:
         pygame.display.flip()
 
     def tick(self) -> float:
-        """Advance one frame and return elapsed milliseconds.
+        """Advance one frame and return elapsed time in seconds.
 
         Must only be called after initialize(). Caps the frame rate to
         the configured target FPS.
 
         Returns:
-            The elapsed time in milliseconds since the last tick call.
+            Elapsed time in seconds (float) since the last tick call.
         """
         if self._clock is None:
             raise RuntimeError("Platform not initialized; call initialize() first.")
-        return self._clock.tick(self._config.target_fps)
+        return self._clock.tick(self._config.target_fps) / 1000.0
 
     # ------------------------------------------------------------------
     # Shutdown

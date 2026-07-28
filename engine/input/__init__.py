@@ -1,8 +1,15 @@
-"""Explore Studio engine — input handling.
+"""Explore Studio engine — input subsystem.
 
-Collects keyboard and mouse events from the platform layer and translates
-them into engine-level actions. Owns event interpretation, key mapping,
-and input dispatch.
+Owns input interpretation: translates platform events and keyboard state
+into engine-owned input representations. Does not own rendering, world
+state, or gameplay decisions.
+
+Submodules:
+    _directional  — DirectionalInput: immutable directional snapshot.
 
 Ownership: Engine team.
 """
+
+from engine.input._directional import DirectionalInput
+
+__all__ = ["DirectionalInput"]

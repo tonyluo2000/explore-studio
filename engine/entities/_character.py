@@ -2,21 +2,21 @@
 
 Defines the Character concept: an engine-internal domain object
 representing one inhabitant of a scene. Characters have identity,
-position, size, and color.
+position (mutable via move()), size, and color.
 
-No generic Entity base class. No component system. No movement.
+No generic Entity base class. No component system.
 
 Internal module — not part of the Student API.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import math
+from dataclasses import dataclass
 from typing import Any
 
 
 def _check_positive_dimension(value: Any, name: str) -> int:
-    """Validate a positive integer dimension (rejects bool)."""
     if not isinstance(value, int) or isinstance(value, bool):
         raise TypeError(f"{name} must be int, got {type(value).__name__}")
     if value <= 0:
@@ -24,17 +24,7 @@ def _check_positive_dimension(value: Any, name: str) -> int:
     return value
 
 
-def _check_coordinate(value: Any, name: str) -> int:
-    """Validate an integer coordinate (rejects bool; allows zero or positive)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise TypeError(f"{name} must be int, got {type(value).__name__}")
-    if value < 0:
-        raise ValueError(f"{name} must be >= 0, got {value}")
-    return value
-
-
 def _check_name(value: Any) -> str:
-    """Validate a non-empty, non-whitespace character name."""
     if not isinstance(value, str):
         raise TypeError(f"name must be str, got {type(value).__name__}")
     if not value.strip():
@@ -42,8 +32,17 @@ def _check_name(value: Any) -> str:
     return value
 
 
+def _check_float(value: Any, name: str) -> float:
+    """Validate a finite float (rejects bool, NaN, inf)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be float or int, got {type(value).__name__}")
+    f = float(value)
+    if math.isnan(f) or math.isinf(f):
+        raise ValueError(f"{name} must be finite, got {f}")
+    return f
+
+
 def _validate_rgb_color(color: object) -> tuple[int, int, int]:
-    """Validate an (r, g, b) tuple with channels 0–255 (rejects bool)."""
     if not isinstance(color, tuple):
         raise TypeError(f"color must be a tuple, got {type(color).__name__}")
     if len(color) != 3:
@@ -57,34 +56,94 @@ def _validate_rgb_color(color: object) -> tuple[int, int, int]:
 
 
 @dataclass(frozen=True)
+class Bounds:
+    """Axis-aligned movement bounds."""
+
+    min_x: float
+    min_y: float
+    max_x: float
+    max_y: float
+
+
 class Character:
     """An inhabitant of a scene.
 
-    Immutable: once created, a character's identity, position, size,
-    and color cannot change. Movement and state mutation belong to
-    future milestones.
-
-    Attributes:
-        name: Display name (non-empty, non-whitespace).
-        x: Left-edge x-coordinate in pixels (>= 0, int, bool rejected).
-        y: Top-edge y-coordinate in pixels (>= 0, int, bool rejected).
-        width: Width in pixels (positive int, bool rejected).
-        height: Height in pixels (positive int, bool rejected).
-        color: ``(r, g, b)`` tuple; each channel 0–255, bool rejected.
+    Identity, size, and color are immutable. Position is mutable only
+    via ``move()``. Internal position is stored as float for smooth
+    frame-rate-aware movement; ``x``/``y`` return rounded ints for
+    rendering.
     """
 
-    name: str = field(metadata={"validate": _check_name})
-    x: int = field(metadata={"validate": _check_coordinate})
-    y: int = field(metadata={"validate": _check_coordinate})
-    width: int = field(metadata={"validate": _check_positive_dimension})
-    height: int = field(metadata={"validate": _check_positive_dimension})
-    color: tuple[int, int, int] = field(metadata={"validate": _validate_rgb_color})
+    def __init__(
+        self,
+        *,
+        name: str,
+        x: float = 0,
+        y: float = 0,
+        width: int,
+        height: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        _check_name(name)
+        _check_float(x, "x")
+        _check_float(y, "y")
+        if x < 0:
+            raise ValueError(f"x must be >= 0, got {x}")
+        if y < 0:
+            raise ValueError(f"y must be >= 0, got {y}")
+        _check_positive_dimension(width, "width")
+        _check_positive_dimension(height, "height")
+        _validate_rgb_color(color)
+        self._name = name
+        self._x = float(x)
+        self._y = float(y)
+        self._width = width
+        self._height = height
+        self._color = color
 
-    def __post_init__(self) -> None:
-        """Validate all fields after dataclass initialization."""
-        _check_name(self.name)
-        _check_coordinate(self.x, "x")
-        _check_coordinate(self.y, "y")
-        _check_positive_dimension(self.width, "width")
-        _check_positive_dimension(self.height, "height")
-        _validate_rgb_color(self.color)
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def width(self) -> int:
+        return self._width
+
+    @property
+    def height(self) -> int:
+        return self._height
+
+    @property
+    def color(self) -> tuple[int, int, int]:
+        return self._color
+
+    @property
+    def x(self) -> int:
+        return round(self._x)
+
+    @property
+    def y(self) -> int:
+        return round(self._y)
+
+    @property
+    def x_float(self) -> float:
+        return self._x
+
+    @property
+    def y_float(self) -> float:
+        return self._y
+
+    def move(self, dx: float, dy: float, bounds: Bounds) -> None:
+        """Apply displacement and clamp to bounds."""
+        _check_float(dx, "dx")
+        _check_float(dy, "dy")
+        self._x += dx
+        self._y += dy
+        if self._x < bounds.min_x:
+            self._x = bounds.min_x
+        elif self._x > bounds.max_x:
+            self._x = bounds.max_x
+        if self._y < bounds.min_y:
+            self._y = bounds.min_y
+        elif self._y > bounds.max_y:
+            self._y = bounds.max_y

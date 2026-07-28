@@ -15,6 +15,7 @@ import sys
 
 from engine._config import Config
 from engine._platform import Platform
+from engine.input import DirectionalInput
 from engine.rendering import Renderer
 from engine.scenes import DefaultScene, Scene
 
@@ -186,26 +187,18 @@ class App:
     def _cleanup_scene(self) -> None:
         """Exit the active scene if it was entered.
 
-        Scene-exit failures are logged but do not prevent further
-        cleanup. If an earlier exception is in flight, the exit failure
-        is logged and the original exception takes precedence.
+        Scene-exit failures are logged but never prevent further
+        cleanup. The original operational exception (if any) is
+        preserved by Python's try/finally semantics — this method
+        does not raise.
         """
         if self._scene is None:
             return
 
-        early_error: BaseException | None = sys.exc_info()[1]
-
         try:
             self._scene.exit()
         except Exception:
-            if early_error is not None:
-                self._log.exception(
-                    "Scene exit failed during error recovery; " "preserving original exception."
-                )
-            else:
-                self._log.exception("Scene exit failed.")
-                if early_error is None:
-                    raise
+            self._log.exception("Scene exit failed during cleanup.")
 
     # ------------------------------------------------------------------
     # Internal: main loop
@@ -216,13 +209,14 @@ class App:
 
         Each iteration:
         1. Polls platform events for quit requests.
-        2. Clears the frame to the configured background color.
-        3. Allows the active scene to contribute to the frame.
-        4. Presents the completed frame.
-        5. Caps frame rate to the configured target FPS.
+        2. Obtains elapsed time (dt) from the platform clock.
+        3. Reads current directional input.
+        4. Clears the frame.
+        5. Allows the active scene to update and draw (receives input + dt).
+        6. Presents the completed frame.
 
-        Exits when a quit event is received. If scene frame participation
-        fails, the loop stops and the frame is not presented.
+        Exits when a quit event is received. A failure in any step
+        prevents frame presentation and preserves the original exception.
         """
         assert self._platform is not None
         assert self._renderer is not None
@@ -230,14 +224,17 @@ class App:
         self._log.info("Entering main loop (target %d FPS).", self._config.target_fps)
 
         while not self._platform.has_quit_request():
+            dt = self._platform.tick()
+            raw = self._platform.poll_directional_input()
+            inp = DirectionalInput(**raw)
+
             self._renderer.clear_frame(self._config.background_color)
             try:
-                self._scene.on_frame()
+                self._scene.on_frame(inp, dt)
             except Exception:
                 self._log.exception("Scene frame participation failed.")
                 raise
             self._renderer.present_frame()
-            self._platform.tick()
 
         self._log.info("Quit requested. Exiting main loop.")
 
