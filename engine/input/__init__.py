@@ -6,10 +6,12 @@ state, or gameplay decisions.
 
 Submodules:
     _directional  — DirectionalInput: immutable directional snapshot.
+    _interaction  — InteractionInput: immutable interaction press snapshot.
 
 Ownership: Engine team.
 """
 
 from engine.input._directional import DirectionalInput
+from engine.input._interaction import InteractionInput
 
-__all__ = ["DirectionalInput"]
+__all__ = ["DirectionalInput", "InteractionInput"]

@@ -271,7 +271,6 @@ The boundary is **inclusive** — exactly at the range edge counts as near.
 The following are intentionally not part of proximity detection and will be added
 in future milestones:
 
-- Interaction key handling (E key)
 - "Press E" prompts
 - Dialogue display
 - Object-state mutation (opening the chest)
@@ -292,6 +291,76 @@ Scene-owned proximity rule (DefaultScene)
         ↓
 Read-only Boolean result (is_character_near_object)
 ```
+
+Neither `Character` nor `WorldObject` reference each other, import each other,
+calculate proximity, or store the interaction range. The scene owns the rule and
+the result. The renderer and platform remain unaware of proximity.
+
+#### Interaction Input
+
+Interaction input introduces an explicit E-key action gated by proximity. It
+builds on proximity detection to answer: **"Did the player press E while near
+the object?"** — nothing more.
+
+**Frame contract:**
+
+Scene participation is split into two narrow phases so the renderer retains
+ownership of frame clearing and presentation:
+
+```
+poll frame events (quit / interaction, one event-queue pass)
+    ↓
+tick (elapsed time)
+    ↓
+poll directional input (continuous held-key state)
+    ↓
+scene.update(direction, interaction, dt)   ← movement, proximity, interaction
+    ↓
+renderer.clear_frame()
+    ↓
+scene.render()                              ← drawing only
+    ↓
+renderer.present_frame()
+```
+
+**Key properties:**
+
+| Property | Value |
+|----------|-------|
+| Interaction key | E (edge-triggered `KEYDOWN`) |
+| Input model | `InteractionInput(interact_pressed: bool)` — immutable, no Pygame types |
+| Eligibility | `interact_pressed AND is_character_near_object` |
+| Result | `did_interact_this_frame` — read-only Boolean pulse |
+| Pulse behaviour | `True` only for the frame of a valid press; resets to `False` next frame |
+| Event polling | One `pygame.event.get()` call per iteration via `Platform.poll_frame_events()` |
+
+**Movement vs interaction input:**
+
+| Concept | Movement | Interaction |
+|---------|----------|-------------|
+| Input model | Continuous held-key state | Discrete edge-triggered press |
+| Value object | `DirectionalInput` | `InteractionInput` |
+| Key mapping | Arrow keys, WASD | E key only |
+| Polling | `pygame.key.get_pressed()` | `pygame.KEYDOWN` events |
+
+**What interaction does not do:**
+
+- Open the Treasure Chest or change object state
+- Display dialogue, text, or visual prompts
+- Add items to inventory
+- Block movement
+- Produce any visible effect
+- Emit events or invoke callbacks
+
+**Deferred capabilities:**
+
+- Object activation (opening the chest)
+- Dialogue and text rendering
+- Visual prompts ("Press E")
+- Inventory and item collection
+- Configurable key bindings
+- Multiple interactable objects
+- Student-facing interaction API
 
 Neither `Character` nor `WorldObject` reference each other, import each other,
 calculate proximity, or store the interaction range. The scene owns the rule and

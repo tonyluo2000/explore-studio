@@ -15,6 +15,7 @@ import sys
 
 from engine._config import Config
 from engine._platform import Platform
+from engine.input import InteractionInput
 from engine.rendering import Renderer
 from engine.scenes import DefaultScene, Scene
 
@@ -178,17 +179,13 @@ class App:
         """Create the scene for this application run.
 
         Override in subclasses to provide a custom scene. The default
-        returns a ``DefaultScene`` with a centered character and the
-        configured background colour.
+        returns a ``DefaultScene`` with a centered character.
 
         Returns:
             A new Scene instance (not yet entered).
         """
         assert self._renderer is not None
-        return DefaultScene(
-            self._renderer,
-            background_color=self._config.background_color,
-        )
+        return DefaultScene(self._renderer)
 
     def _cleanup_scene(self, *, earlier_error: BaseException | None = None) -> None:
         """Exit the active scene if it was entered.
@@ -219,15 +216,18 @@ class App:
     def _run_loop(self) -> None:
         """Execute the application main loop.
 
-        Each iteration:
-        1. Polls platform events for quit requests.
-        2. Obtains elapsed time (dt) from the platform clock.
-        3. Reads current directional input.
-        4. Allows the active scene to update and draw.
-           The scene is responsible for clearing the frame at the
-           appropriate point so that failures in update logic
-           (movement, proximity) prevent the clear.
-        5. Presents the completed frame.
+        Each completed non-quit frame:
+        1. Poll frame events (quit / interaction) — one event-queue pass.
+        2. Obtain elapsed time (dt) from the platform clock.
+        3. Poll directional input.
+        4. Scene update (movement, proximity, interaction).
+        5. Renderer clears the frame.
+        6. Scene render (drawing).
+        7. Renderer presents the frame.
+
+        Failures in update prevent clearing and rendering.
+        Failures in rendering prevent presentation.
+        Quit events exit the loop without frame work.
 
         Exits when a quit event is received. A failure in any step
         prevents frame presentation and preserves the original exception.
@@ -237,15 +237,44 @@ class App:
         assert self._scene is not None
         self._log.info("Entering main loop (target %d FPS).", self._config.target_fps)
 
-        while not self._platform.has_quit_request():
+        while True:
+            # 1. Poll frame events (one event-queue pass per iteration)
+            frame_events = self._platform.poll_frame_events()
+
+            if frame_events.quit_requested:
+                break
+
+            # 2. Obtain elapsed time
             dt = self._platform.tick()
+
+            # 3. Poll directional input
             inp = self._platform.poll_directional_input()
 
+            # 4. Scene update (before clear)
+            interaction_input = InteractionInput(
+                interact_pressed=frame_events.interaction_pressed,
+            )
             try:
-                self._scene.on_frame(inp, dt)
+                self._scene.update(inp, interaction_input, dt)
             except Exception:
-                self._log.exception("Scene frame participation failed.")
+                self._log.exception("Scene update failed.")
                 raise
+
+            # 5. Clear the frame (renderer-owned)
+            try:
+                self._renderer.clear_frame(self._config.background_color)
+            except Exception:
+                self._log.exception("Frame clear failed.")
+                raise
+
+            # 6. Scene render (between clear and present)
+            try:
+                self._scene.render()
+            except Exception:
+                self._log.exception("Scene render failed.")
+                raise
+
+            # 7. Present the frame (renderer-owned)
             self._renderer.present_frame()
 
         self._log.info("Quit requested. Exiting main loop.")

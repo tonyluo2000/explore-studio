@@ -12,6 +12,7 @@ Internal module — not part of the Student API.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 import pygame
@@ -20,6 +21,23 @@ from engine._config import Config
 from engine.input import DirectionalInput
 
 _LOGGER = logging.getLogger("explore-studio.platform")
+
+
+@dataclass(frozen=True)
+class FrameEvents:
+    """Engine-owned result of one event-queue poll.
+
+    Contains no Pygame types.  Created by ``Platform.poll_frame_events()``
+    once per application iteration.
+
+    Attributes:
+        quit_requested: ``True`` if a quit event was received.
+        interaction_pressed: ``True`` if the E key was newly pressed
+            (``KEYDOWN``).  Held-key repeats do not set this.
+    """
+
+    quit_requested: bool = False
+    interaction_pressed: bool = False
 
 
 class Platform:
@@ -89,6 +107,32 @@ class Platform:
     # ------------------------------------------------------------------
     # Event polling
     # ------------------------------------------------------------------
+
+    def poll_frame_events(self) -> FrameEvents:
+        """Poll the Pygame event queue once and return engine-owned events.
+
+        Processes every pending event in a single pass.  Maps:
+
+        * ``pygame.QUIT`` → ``FrameEvents.quit_requested = True``
+        * ``pygame.KEYDOWN`` (E key) → ``FrameEvents.interaction_pressed = True``
+
+        Other events are consumed but ignored.  Raw Pygame types never
+        leave this method.
+
+        Returns:
+            ``FrameEvents`` with the results of this poll.
+        """
+        quit_requested = False
+        interaction_pressed = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit_requested = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                interaction_pressed = True
+        return FrameEvents(
+            quit_requested=quit_requested,
+            interaction_pressed=interaction_pressed,
+        )
 
     def poll_events(self) -> list[dict[str, Any]]:
         """Collect pending platform events.

@@ -91,14 +91,14 @@ def test_scene_exit_from_created() -> None:
 
 def test_scene_on_frame_only_when_active() -> None:
     scene = Scene()
-    with pytest.raises(SceneLifecycleError, match="Cannot participate"):
+    with pytest.raises(SceneLifecycleError, match="Cannot update"):
         scene.on_frame(_NO_INPUT, 0.0)
 
     scene.enter()
     scene.on_frame(_NO_INPUT, 0.0)
 
     scene.exit()
-    with pytest.raises(SceneLifecycleError, match="Cannot participate"):
+    with pytest.raises(SceneLifecycleError, match="Cannot update"):
         scene.on_frame(_NO_INPUT, 0.0)
 
 
@@ -158,9 +158,9 @@ class _SpyScene(Scene):
         self.enter_calls += 1
         super().enter()
 
-    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
+    def update(self, input_state, interaction_input, dt) -> None:
         self.frame_calls += 1
-        super().on_frame(input_state, dt)
+        super().update(input_state, interaction_input, dt)
 
     def exit(self) -> None:
         self.exit_calls += 1
@@ -205,21 +205,21 @@ def test_scene_enter_before_frame() -> None:
     app = _SpyApp(scene, Config(target_fps=120))
     order: list[str] = []
     orig_enter = scene.enter
-    orig_frame = scene.on_frame
+    orig_update = scene.update
 
     def tracking_enter() -> None:
         order.append("enter")
         orig_enter()
 
-    def tracking_frame(input_state: DirectionalInput, dt: float) -> None:
+    def tracking_update(input_state, interaction_input, dt) -> None:
         if "enter" not in order:
             order.append("frame-before-enter")
         else:
             order.append("frame")
-        orig_frame(input_state, dt)
+        orig_update(input_state, interaction_input, dt)
 
     scene.enter = tracking_enter  # type: ignore[method-assign]
-    scene.on_frame = tracking_frame  # type: ignore[method-assign]
+    scene.update = tracking_update  # type: ignore[method-assign]
 
     _post_quit_after(0.1)
     app.start()
@@ -286,8 +286,8 @@ def test_scene_entry_failure_preserves_exception() -> None:
 class _FailingFrameScene(Scene):
     frame_call_count = 0
 
-    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
-        super().on_frame(input_state, dt)
+    def update(self, input_state, interaction_input, dt) -> None:
+        super().update(input_state, interaction_input, dt)
         self.frame_call_count += 1
         if self.frame_call_count >= 2:
             raise RuntimeError("frame failure")
@@ -351,8 +351,8 @@ def test_scene_exit_failure_preserved_when_no_earlier_error() -> None:
 class _FailingFrameAndExitScene(Scene):
     frame_call_count = 0
 
-    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
-        super().on_frame(input_state, dt)
+    def update(self, input_state, interaction_input, dt) -> None:
+        super().update(input_state, interaction_input, dt)
         self.frame_call_count += 1
         raise RuntimeError("frame failure first")
 

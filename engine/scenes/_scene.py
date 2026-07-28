@@ -4,6 +4,11 @@ Defines the Scene base class and lifecycle states. A scene owns the
 content of a frame — the application owns execution, the renderer owns
 presentation, and the scene owns scene-specific participation.
 
+Scene frame participation is split into two phases:
+
+* **update** — movement, proximity, interaction evaluation (before clear).
+* **render** — content drawing (between clear and present).
+
 Internal module — not part of the Student API.
 """
 
@@ -14,7 +19,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from engine.input import DirectionalInput
+    from engine.input import DirectionalInput, InteractionInput
 
 _LOGGER = logging.getLogger("explore-studio.scene")
 
@@ -108,21 +113,64 @@ class Scene:
     # Frame participation
     # ------------------------------------------------------------------
 
-    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
-        """Participate in one frame.
+    def update(
+        self,
+        input_state: DirectionalInput,
+        interaction_input: InteractionInput,
+        dt: float,
+    ) -> None:
+        """Update scene state for one frame.
 
-        Called once per completed loop iteration while the scene is
-        active, between frame clear and frame presentation.
+        Called **before** the frame is cleared.  Owns movement,
+        proximity, and interaction evaluation.  Must not draw or
+        clear anything.
+
+        The default implementation is a no-op — subclasses override
+        to contribute update logic.
 
         Args:
             input_state: Current directional input snapshot.
+            interaction_input: Current interaction input snapshot.
             dt: Elapsed time in seconds since the last frame.
-
-        The default implementation is a no-op — subclasses override
-        to contribute content.
 
         Raises:
             SceneLifecycleError: If the scene is not ACTIVE.
         """
         if self._state != SceneState.ACTIVE:
-            raise SceneLifecycleError(f"Cannot participate in frame: scene is {self._state.value}.")
+            raise SceneLifecycleError(f"Cannot update: scene is {self._state.value}.")
+
+    def render(self) -> None:
+        """Draw scene content for one frame.
+
+        Called **between** frame clear and frame presentation.  Must
+        not update movement, recalculate proximity, evaluate interaction,
+        clear the frame, or present the frame.
+
+        The default implementation is a no-op — subclasses override
+        to contribute drawing.
+
+        Raises:
+            SceneLifecycleError: If the scene is not ACTIVE.
+        """
+        if self._state != SceneState.ACTIVE:
+            raise SceneLifecycleError(f"Cannot render: scene is {self._state.value}.")
+
+    def on_frame(self, input_state: DirectionalInput, dt: float) -> None:
+        """Participate in one frame (backward-compatible).
+
+        Delegates to ``update`` (with a default ``InteractionInput``)
+        followed by ``render``.  Prefer calling ``update`` and ``render``
+        separately in new code.
+
+        Args:
+            input_state: Current directional input snapshot.
+            dt: Elapsed time in seconds since the last frame.
+
+        Raises:
+            SceneLifecycleError: If the scene is not ACTIVE.
+        """
+        # Import here to avoid circular dependency at module level.
+        from engine.input import InteractionInput  # noqa: PLC0415
+
+        self.update(input_state, InteractionInput(), dt)
+        self.render()
