@@ -27,4 +27,9 @@ def test_engine_subsystem_imports() -> None:
 
 def test_public_api_exports() -> None:
     """Engine __init__ exports the expected public symbols."""
-    from engine import App, Config, init_logging  # noqa: F401
+    from engine import App, Config, LifecycleError, init_logging  # noqa: F401
+
+
+def test_platform_module_importable() -> None:
+    """The internal platform module is importable."""
+    from engine import _platform  # noqa: F401

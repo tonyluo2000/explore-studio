@@ -19,13 +19,14 @@ Subsystems:
     assets      — Image, sound, and font management.
 
 Public interface:
-    App         — Application entry point and lifecycle.
-    Config      — Engine configuration.
-    init_logging — Centralized logging setup.
+    App             — Application entry point and lifecycle.
+    Config          — Engine configuration (validated).
+    LifecycleError  — Raised on invalid lifecycle transitions.
+    init_logging    — Centralized logging setup.
 """
 
 from engine._config import Config
 from engine._logging import init_logging
-from engine.app import App
+from engine.app import App, LifecycleError
 
-__all__ = ["App", "Config", "init_logging"]
+__all__ = ["App", "Config", "LifecycleError", "init_logging"]

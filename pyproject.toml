@@ -9,6 +9,9 @@ description = "Interactive educational environment for teaching programming thro
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
+dependencies = [
+    "pygame>=2.5",
+]
 authors = [
     {name = "Explore Studio Contributors"},
 ]
