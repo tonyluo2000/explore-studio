@@ -15,6 +15,7 @@ import sys
 
 from engine._config import Config
 from engine._platform import Platform
+from engine.rendering import Renderer
 
 
 class _LifecycleState(enum.Enum):
@@ -63,6 +64,7 @@ class App:
         self._config = config if config is not None else Config()
         self._log: logging.Logger | None = None
         self._platform: Platform | None = None
+        self._renderer: Renderer | None = None
         self._state = _LifecycleState.CREATED
 
     # ------------------------------------------------------------------
@@ -118,6 +120,9 @@ class App:
             self._cleanup_platform()
             raise
 
+        # --- renderer ---
+        self._renderer = Renderer(self._platform)
+
         # --- main loop ---
         self._state = _LifecycleState.RUNNING
         try:
@@ -156,14 +161,18 @@ class App:
 
         Each iteration:
         1. Polls platform events for quit requests.
-        2. Caps frame rate to the configured target FPS.
+        2. Clears the frame to the configured background color.
+        3. Presents the completed frame.
+        4. Caps frame rate to the configured target FPS.
 
         Exits when a quit event is received.
         """
         assert self._platform is not None
+        assert self._renderer is not None
         self._log.info("Entering main loop (target %d FPS).", self._config.target_fps)
 
         while not self._platform.has_quit_request():
+            self._renderer.render_frame(self._config.background_color)
             self._platform.tick()
 
         self._log.info("Quit requested. Exiting main loop.")

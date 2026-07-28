@@ -14,6 +14,7 @@ def test_config_defaults() -> None:
     assert config.target_fps == 60
     assert config.window_width == 960
     assert config.window_height == 640
+    assert config.background_color == (32, 32, 48)
 
 
 def test_config_custom_values() -> None:
@@ -89,3 +90,76 @@ def test_config_rejects_negative_fps() -> None:
 
     with pytest.raises(ValueError, match="target_fps"):
         Config(target_fps=-30)
+
+
+# ------------------------------------------------------------------
+# Background color validation
+# ------------------------------------------------------------------
+
+
+def test_background_color_default() -> None:
+    """Default background_color is a valid (r, g, b) tuple."""
+    config = Config()
+    assert config.background_color == (32, 32, 48)
+
+
+def test_background_color_custom_valid() -> None:
+    """Custom valid background_color is accepted."""
+    config = Config(background_color=(255, 128, 0))
+    assert config.background_color == (255, 128, 0)
+
+
+def test_background_color_too_few_channels() -> None:
+    """Tuple with fewer than 3 channels is rejected."""
+    import pytest
+
+    with pytest.raises(ValueError, match="must have 3 channels"):
+        Config(background_color=(0, 0))
+
+
+def test_background_color_too_many_channels() -> None:
+    """Tuple with more than 3 channels is rejected."""
+    import pytest
+
+    with pytest.raises(ValueError, match="must have 3 channels"):
+        Config(background_color=(0, 0, 0, 0))
+
+
+def test_background_color_negative_channel() -> None:
+    """Negative channel value is rejected."""
+    import pytest
+
+    with pytest.raises(ValueError, match="0–255"):
+        Config(background_color=(-1, 0, 0))
+
+
+def test_background_color_channel_above_255() -> None:
+    """Channel value above 255 is rejected."""
+    import pytest
+
+    with pytest.raises(ValueError, match="0–255"):
+        Config(background_color=(256, 0, 0))
+
+
+def test_background_color_non_int_channel() -> None:
+    """Non-integer channel is rejected."""
+    import pytest
+
+    with pytest.raises(TypeError, match="must be int"):
+        Config(background_color=(0.5, 0, 0))  # type: ignore[arg-type]
+
+
+def test_background_color_bool_channel_rejected() -> None:
+    """Bool channel is rejected even though bool is an int subclass."""
+    import pytest
+
+    with pytest.raises(TypeError, match="must be int"):
+        Config(background_color=(True, 0, 0))  # type: ignore[arg-type]
+
+
+def test_background_color_not_a_tuple() -> None:
+    """Non-tuple value is rejected."""
+    import pytest
+
+    with pytest.raises(TypeError, match="must be a tuple"):
+        Config(background_color=[0, 0, 0])  # type: ignore[arg-type]

@@ -117,6 +117,33 @@ class Platform:
     # Frame control
     # ------------------------------------------------------------------
 
+    def clear_frame(self, color: tuple[int, int, int]) -> None:
+        """Fill the entire window surface with *color*.
+
+        Must only be called after initialize() and before shutdown().
+
+        Args:
+            color: ``(r, g, b)`` tuple; each channel 0–255.
+
+        Raises:
+            RuntimeError: If the platform is not initialized.
+        """
+        if self._window is None:
+            raise RuntimeError("Cannot clear frame: platform not initialized.")
+        self._window.fill(color)
+
+    def present_frame(self) -> None:
+        """Swap buffers / present the completed frame to the display.
+
+        Must only be called after initialize() and before shutdown().
+
+        Raises:
+            RuntimeError: If the platform is not initialized.
+        """
+        if self._window is None:
+            raise RuntimeError("Cannot present frame: platform not initialized.")
+        pygame.display.flip()
+
     def tick(self) -> float:
         """Advance one frame and return elapsed milliseconds.
 
