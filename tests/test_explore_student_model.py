@@ -444,21 +444,40 @@ def test_character_and_object_both_added() -> None:
 # ==================================================================
 
 
-def test_world_run_raises_not_implemented() -> None:
+def test_world_run_missing_character_raises() -> None:
     w = World("W")
-    w.add(Character(name="A"))
     w.add(Object(name="B", x=0, y=0))
-    with pytest.raises(NotImplementedError, match="Task M4C"):
+    with pytest.raises(StudentAPIError, match="Character"):
         w.run()
 
 
-def test_world_run_message_mentions_future() -> None:
+def test_world_run_missing_object_raises() -> None:
+    w = World("W")
+    w.add(Character(name="A"))
+    with pytest.raises(StudentAPIError, match="Object"):
+        w.run()
+
+
+def test_world_run_twice_raises() -> None:
+    """Calling run() after the engine has exited raises."""
+    import threading
+    import time
+
+    import pygame
+
     w = World("W")
     w.add(Character(name="A"))
     w.add(Object(name="B", x=0, y=0))
-    with pytest.raises(NotImplementedError) as exc:
+
+    def post_quit() -> None:
+        time.sleep(0.1)
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
+
+    threading.Thread(target=post_quit, daemon=True).start()
+    w.run()
+    # Second call should fail.
+    with pytest.raises(StudentAPIError, match="already running"):
         w.run()
-    assert "M4C" in str(exc.value)
 
 
 # ==================================================================

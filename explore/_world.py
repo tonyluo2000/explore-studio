@@ -1,15 +1,16 @@
 """Explore Studio — Student API World model.
 
-A ``World`` collects student-facing entities and, in M4C, will launch
-the engine.  In this milestone only registration, cardinality, and
-validation are implemented — ``run()`` is a deferred stub.
+A ``World`` collects student-facing entities and launches the engine
+when ``run()`` is called.  The ``explore`` package acts as an adapter:
+it translates student configuration into engine objects and then
+delegates all behaviour to the existing engine.
 
 Ownership: Student API team.
 """
 
 from __future__ import annotations
 
-from explore._character import Character, _validate_name
+from explore._character import _FREEZE_MESSAGE, Character, _validate_name
 from explore._error import StudentAPIError
 from explore._object import Object
 
@@ -18,20 +19,26 @@ class World:
     """Student-facing container for one Character and one Object.
 
     In v0.1 a world holds exactly one of each.  Duplicate registration
-    raises a friendly error.  ``run()`` is deferred to M4C.
+    raises a friendly error.
+
+    ``run()`` translates student configuration into engine objects and
+    launches the engine.  Once running, all configuration is frozen.
 
     Usage::
 
         world = World("Treasure Island")
         world.add(explorer)
         world.add(chest)
-        # world.run()  ← available in M4C
+        chest.when_near("Press E to explore")
+        chest.when_interacted("You found a treasure!")
+        world.run()
     """
 
     def __init__(self, name: str) -> None:
         self._name = _validate_name(name, "World")
         self._character: Character | None = None
         self._object: Object | None = None
+        self._has_run = False
 
     # ------------------------------------------------------------------
     # Public read-only properties
@@ -70,8 +77,11 @@ class World:
 
         Raises:
             StudentAPIError: If a Character or Object is already
-                registered, or if *entity* is not a recognised type.
+                registered, if *entity* is not a recognised type, or
+                if the world is already running.
         """
+        if self._has_run:
+            raise StudentAPIError(_FREEZE_MESSAGE)
         if isinstance(entity, Character):
             if self._character is not None:
                 raise StudentAPIError(
@@ -93,18 +103,104 @@ class World:
             )
 
     # ------------------------------------------------------------------
-    # Execution (deferred)
+    # Execution
     # ------------------------------------------------------------------
 
     def run(self) -> None:
-        """Launch the world (not yet implemented).
+        """Launch the world.
+
+        Translates student configuration into engine objects, constructs
+        the engine application, and starts the main loop.  Blocks until
+        the window is closed.
 
         Raises:
-            NotImplementedError: Always.  Execution is implemented in
-                Task M4C (World Adapter and Execution).
+            StudentAPIError: If the required character or object has
+                not been added, or if ``run()`` has already been called.
         """
-        raise NotImplementedError(
-            "Student API execution is implemented in Task M4C.\n"
-            "For now, your Character and Object are ready — "
-            "the engine will launch them soon!"
+        if self._has_run:
+            raise StudentAPIError(
+                "This world is already running.\n\n" "Create a new World to start again."
+            )
+        if self._character is None:
+            raise StudentAPIError("Add one Character before running the world.")
+        if self._object is None:
+            raise StudentAPIError("Add one Object before running the world.")
+
+        # --- freeze student configuration ---
+        self._has_run = True
+        self._character._freeze()
+        self._object._freeze()
+
+        # --- translate student objects → engine objects ---
+        from engine._config import Config
+        from engine._platform import Platform
+        from engine.entities import Character as EngineCharacter
+        from engine.entities import WorldObject as EngineWorldObject
+        from engine.rendering import Renderer
+        from engine.scenes._default_scene import DefaultScene
+
+        # Build engine Config from world name.
+        config = Config(app_name=self._name)
+
+        # Build engine Character from student Character.
+        engine_character = EngineCharacter(
+            name=self._character.name,
+            x=self._character.x,
+            y=self._character.y,
+            width=100,
+            height=100,
+            color=self._character.color_rgb,
         )
+
+        # Build engine WorldObject from student Object.
+        engine_object = EngineWorldObject(
+            name=self._object.name,
+            x=self._object.x,
+            y=self._object.y,
+            width=80,
+            height=60,
+            color=self._object.color_rgb,
+        )
+
+        # --- construct and launch engine ---
+        platform = Platform(config)
+        platform.initialize()
+        try:
+            renderer = Renderer(platform)
+            scene = DefaultScene(
+                renderer,
+                character=engine_character,
+                world_object=engine_object,
+                near_message=self._object.near_message,
+                interacted_message=self._object.interacted_message,
+            )
+            scene.enter()
+
+            # Main loop (mirrors App._run_loop structure).
+            while True:
+                frame_events = platform.poll_frame_events()
+                if frame_events.quit_requested:
+                    break
+
+                dt = platform.tick()
+                inp = platform.poll_directional_input()
+
+                from engine.input import InteractionInput
+
+                interaction_input = InteractionInput(
+                    interact_pressed=frame_events.interaction_pressed,
+                )
+                scene.update(inp, interaction_input, dt)
+                renderer.clear_frame(config.background_color)
+                scene.render()
+                renderer.present_frame()
+
+        except Exception as exc:
+            raise StudentAPIError("The world ran into a problem and had to close.") from exc
+        finally:
+            # --- cleanup ---
+            import contextlib
+
+            with contextlib.suppress(Exception):
+                scene.exit()
+            platform.shutdown()

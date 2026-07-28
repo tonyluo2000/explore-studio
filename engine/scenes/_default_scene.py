@@ -83,6 +83,9 @@ _DEFAULT_OBJECT = WorldObject(
 )
 
 
+_SENTINEL = object()
+
+
 class DefaultScene(Scene):
     """A scene with one character, one stationary world object,
     proximity-gated interaction, and visible feedback.
@@ -116,6 +119,8 @@ class DefaultScene(Scene):
         world_object: WorldObject | None = None,
         *,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
+        near_message: str | None = _SENTINEL,  # type: ignore[assignment]
+        interacted_message: str | None = _SENTINEL,  # type: ignore[assignment]
     ) -> None:
         super().__init__()
         self._renderer = renderer
@@ -128,6 +133,17 @@ class DefaultScene(Scene):
         self._is_near: bool = False
         self._interaction_pulse: bool = False
         self._success_remaining: float = 0.0
+        # Custom feedback messages.  _SENTINEL means "use module default";
+        # None means "draw nothing" (used by the Student API adapter when
+        # the student did not set a message).
+        self._near_message: str | None = near_message  # type: ignore[assignment]
+        self._interacted_message: str | None = interacted_message  # type: ignore[assignment]
+
+        # Resolve sentinel → module default.
+        if self._near_message is _SENTINEL:
+            self._near_message = _PROMPT_TEXT
+        if self._interacted_message is _SENTINEL:
+            self._interacted_message = _SUCCESS_TEXT
 
     # ------------------------------------------------------------------
     # Public properties
@@ -277,11 +293,18 @@ class DefaultScene(Scene):
 
         Priority: success message > proximity prompt.
 
+        Uses custom messages when provided, otherwise falls back to
+        the module-level defaults.
+
         Only one message is drawn at a time.
         """
+        success_msg = (
+            self._interacted_message if self._interacted_message is not None else _SUCCESS_TEXT
+        )
+        near_msg = self._near_message if self._near_message is not None else _PROMPT_TEXT
         if self._success_remaining > 0:
             self._renderer.draw_text(
-                _SUCCESS_TEXT,
+                success_msg,
                 _FEEDBACK_X,
                 _FEEDBACK_Y,
                 _FEEDBACK_COLOR,
@@ -289,7 +312,7 @@ class DefaultScene(Scene):
             )
         elif self._is_near:
             self._renderer.draw_text(
-                _PROMPT_TEXT,
+                near_msg,
                 _FEEDBACK_X,
                 _FEEDBACK_Y,
                 _FEEDBACK_COLOR,

@@ -54,11 +54,17 @@ def _validate_coordinate(value: Any, label: str) -> int:
     return value
 
 
+_FREEZE_MESSAGE = "The world is already running.\n\n" "Create a new World before making changes."
+
+
 class Character:
     """Student-facing configuration for a movable character.
 
     Stores identity, position, and colour.  The engine provides a fixed
     size (100 × 100) and movement speed — students do not set these.
+
+    Once the world starts running, the character becomes frozen —
+    properties cannot be changed.
 
     Use :meth:`World.add` to register this character with a world.
     """
@@ -76,6 +82,7 @@ class Character:
         self._y = _validate_coordinate(y, "Character y")
         self._color_name = color  # validated via resolve_color
         self._color_rgb = resolve_color(color)
+        self._frozen = False
 
     # ------------------------------------------------------------------
     # Public read-only properties
@@ -105,3 +112,21 @@ class Character:
     def color_rgb(self) -> tuple[int, int, int]:
         """The resolved ``(r, g, b)`` tuple (engine-internal use)."""
         return self._color_rgb
+
+    @property
+    def frozen(self) -> bool:
+        """``True`` once the world starts running."""
+        return self._frozen
+
+    # ------------------------------------------------------------------
+    # Freeze (called by World.run())
+    # ------------------------------------------------------------------
+
+    def _freeze(self) -> None:
+        """Lock this character's configuration (engine-internal)."""
+        self._frozen = True
+
+    def _check_not_frozen(self) -> None:
+        """Raise if the world is already running."""
+        if self._frozen:
+            raise StudentAPIError(_FREEZE_MESSAGE)

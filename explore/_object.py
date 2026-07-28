@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from explore._character import _validate_coordinate, _validate_name
+from explore._character import _FREEZE_MESSAGE, _validate_coordinate, _validate_name
 from explore._colors import resolve_color
 from explore._error import StudentAPIError
 
@@ -41,6 +41,9 @@ class Object:
     messages.  The engine provides a fixed size (80 × 60) — students
     do not set this.
 
+    Once the world starts running, the object becomes frozen —
+    messages and properties cannot be changed.
+
     Use :meth:`World.add` to register this object with a world.
     """
 
@@ -59,6 +62,7 @@ class Object:
         self._color_rgb = resolve_color(color)
         self._near_message: str | None = None
         self._interacted_message: str | None = None
+        self._frozen = False
 
     # ------------------------------------------------------------------
     # Public read-only properties
@@ -99,6 +103,24 @@ class Object:
         """The success message, or ``None`` if not set."""
         return self._interacted_message
 
+    @property
+    def frozen(self) -> bool:
+        """``True`` once the world starts running."""
+        return self._frozen
+
+    # ------------------------------------------------------------------
+    # Freeze (called by World.run())
+    # ------------------------------------------------------------------
+
+    def _freeze(self) -> None:
+        """Lock this object's configuration (engine-internal)."""
+        self._frozen = True
+
+    def _check_not_frozen(self) -> None:
+        """Raise if the world is already running."""
+        if self._frozen:
+            raise StudentAPIError(_FREEZE_MESSAGE)
+
     # ------------------------------------------------------------------
     # Interaction message configuration
     # ------------------------------------------------------------------
@@ -108,7 +130,11 @@ class Object:
 
         Args:
             message: Non-empty string (e.g. ``"Press E to explore"``).
+
+        Raises:
+            StudentAPIError: If the world is already running.
         """
+        self._check_not_frozen()
         self._near_message = _validate_message(message, "when_near")
 
     def when_interacted(self, message: str) -> None:
@@ -116,5 +142,9 @@ class Object:
 
         Args:
             message: Non-empty string (e.g. ``"You found a treasure!"``).
+
+        Raises:
+            StudentAPIError: If the world is already running.
         """
+        self._check_not_frozen()
         self._interacted_message = _validate_message(message, "when_interacted")

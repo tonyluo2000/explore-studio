@@ -6,8 +6,7 @@ The public interface students import from::
 
 Everything else is internal.  Students never import from ``engine``.
 
-Current milestone: **M4B — Student Model Foundation**.
-Execution (``world.run()``) is deferred to M4C.
+Student API v0.1 is complete — ``world.run()`` launches the engine.
 """
 
 from explore._character import Character
