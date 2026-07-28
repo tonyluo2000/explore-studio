@@ -346,21 +346,98 @@ renderer.present_frame()
 **What interaction does not do:**
 
 - Open the Treasure Chest or change object state
-- Display dialogue, text, or visual prompts
 - Add items to inventory
 - Block movement
-- Produce any visible effect
 - Emit events or invoke callbacks
 
 **Deferred capabilities:**
 
 - Object activation (opening the chest)
-- Dialogue and text rendering
-- Visual prompts ("Press E")
+- Dialogue systems
 - Inventory and item collection
 - Configurable key bindings
 - Multiple interactable objects
 - Student-facing interaction API
+
+#### Visible Feedback
+
+The scene draws temporary text messages to give the player visible feedback.
+Text is drawn after world objects and before frame presentation.
+
+**Text rendering boundary:**
+
+The platform (`Platform.draw_text`) owns all Pygame font and surface objects.
+It uses the Pygame default font (`pygame.font.Font(None, size)`). The renderer
+(`Renderer.draw_text`) delegates directly. No Pygame types cross the boundary.
+
+**Proximity prompt:**
+
+While the Explorer is near the Treasure Chest and no success message is active:
+
+```
+"Press E to explore"
+```
+
+Visible only when `is_character_near_object` is `True`.  Disappears when the
+Explorer moves away.
+
+**Success message:**
+
+After a valid interaction (`did_interact_this_frame` is `True`):
+
+```
+"You found a treasure!"
+```
+
+The message remains visible for **2.0 seconds** and then automatically
+disappears.  A later valid interaction restarts the full duration.
+
+**Timer behaviour:**
+
+- The timer is set to the full duration on the frame of a valid interaction
+  (the current frame's `dt` is not subtracted).
+- On subsequent frames without a new interaction, the timer decreases by `dt`.
+- The timer never goes below zero.
+- The timer updates only during `scene.update()` — `scene.render()` does not
+  change it.
+
+**Message priority:**
+
+Only one message is drawn at a time:
+
+| Condition | Message drawn |
+|-----------|--------------|
+| Success active + near | Success message |
+| Success active + far | Success message (until expiry) |
+| No success + near | Proximity prompt |
+| No success + far | Nothing |
+
+**Feedback rendering order:**
+
+```
+draw world object
+    ↓
+draw character
+    ↓
+draw feedback text (if any)
+```
+
+**What feedback does not do:**
+
+- Change the Treasure Chest (immutable — no opened/closed state)
+- Add inventory, items, or rewards
+- Introduce dialogue systems or text boxes
+- Use custom fonts or assets
+- Animate, flash, or produce sound
+
+**Deferred capabilities:**
+
+- Chest opening / object activation
+- Dialogue trees and multi-line text
+- Text boxes, speech bubbles, typewriter effects
+- Inventory and item collection
+- Localization
+- Student-facing feedback API
 
 Neither `Character` nor `WorldObject` reference each other, import each other,
 calculate proximity, or store the interaction range. The scene owns the rule and

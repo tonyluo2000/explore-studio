@@ -223,6 +223,65 @@ class Platform:
         rect = pygame.Rect(x, y, width, height)
         pygame.draw.rect(self._window, color, rect)
 
+    def draw_text(
+        self,
+        text: str,
+        x: int,
+        y: int,
+        color: tuple[int, int, int],
+        font_size: int,
+    ) -> None:
+        """Draw one line of text at *(x, y)* using the default Pygame font.
+
+        All inputs are validated with the same engine-owned rules used
+        elsewhere (colour channels, positive dimensions, etc.).  No
+        Pygame types are returned.
+
+        Args:
+            text: Non-empty, non-whitespace string.
+            x: Left-edge x-coordinate (int, >= 0).
+            y: Top-edge y-coordinate (int, >= 0).
+            color: ``(r, g, b)``; each channel 0–255.
+            font_size: Positive integer point size.
+
+        Raises:
+            TypeError / ValueError: On invalid input.
+            RuntimeError: If the platform is not initialized.
+        """
+        # --- validate text ---
+        if not isinstance(text, str):
+            raise TypeError(f"text must be str, got {type(text).__name__}")
+        if not text.strip():
+            raise ValueError("text must not be empty or whitespace-only")
+
+        # --- validate position ---
+        if isinstance(x, bool) or not isinstance(x, int):
+            raise TypeError(f"x must be int, got {type(x).__name__}")
+        if isinstance(y, bool) or not isinstance(y, int):
+            raise TypeError(f"y must be int, got {type(y).__name__}")
+        if x < 0:
+            raise ValueError(f"x must be >= 0, got {x}")
+        if y < 0:
+            raise ValueError(f"y must be >= 0, got {y}")
+
+        # --- validate font size ---
+        if isinstance(font_size, bool) or not isinstance(font_size, int):
+            raise TypeError(f"font_size must be int, got {type(font_size).__name__}")
+        if font_size <= 0:
+            raise ValueError(f"font_size must be positive, got {font_size}")
+
+        # --- validate colour ---
+        from engine._color import _validate_rgb_color
+
+        _validate_rgb_color(color)
+
+        # --- render ---
+        if self._window is None:
+            raise RuntimeError("Cannot draw text: platform not initialized.")
+        font = pygame.font.Font(None, font_size)
+        surface = font.render(text, True, color)
+        self._window.blit(surface, (x, y))
+
     def present_frame(self) -> None:
         """Swap buffers / present the completed frame to the display.
 

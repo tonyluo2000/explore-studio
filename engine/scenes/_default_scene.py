@@ -1,5 +1,5 @@
 """Explore Studio engine — default scene with movement, world object, proximity,
-and interaction input.
+interaction input, and visible feedback.
 
 A minimal scene that owns one character and one world object. The
 character moves via directional input; the world object is stationary.
@@ -7,8 +7,9 @@ Both are drawn as solid rectangles.
 
 Frame participation is split into two phases:
 
-* **update** — move character, evaluate proximity, evaluate interaction.
-* **render** — draw world object, draw character.
+* **update** — move character, evaluate proximity, evaluate interaction,
+  update feedback state.
+* **render** — draw world object, draw character, draw feedback text.
 
 The renderer owns frame clearing and presentation.  The scene does not
 clear or present.
@@ -37,6 +38,30 @@ _MOVEMENT_SPEED = 160.0
 # between scene-owned objects.
 _DEFAULT_INTERACTION_RANGE = 120.0
 
+# --- Feedback ---
+
+# How long the success message remains visible (seconds).
+_FEEDBACK_DURATION = 2.0
+
+# Prompt shown while near the chest and no success message is active.
+_PROMPT_TEXT = "Press E to explore"
+
+# Success message shown briefly after a valid interaction.
+_SUCCESS_TEXT = "You found a treasure!"
+
+# Screen position for feedback text (top-left corner).
+# Placed near the lower center, far from the initial Treasure Chest.
+_FEEDBACK_X = 360
+_FEEDBACK_Y = 560
+
+# Font size for feedback text.
+_FEEDBACK_FONT_SIZE = 28
+
+# Text colour — white, readable against the dark background.
+_FEEDBACK_COLOR = (240, 240, 240)
+
+# --- Default entities ---
+
 # Default character — centered in the 960×640 window.
 _DEFAULT_CHARACTER = Character(
     name="Explorer",
@@ -59,27 +84,29 @@ _DEFAULT_OBJECT = WorldObject(
 
 
 class DefaultScene(Scene):
-    """A scene with one character, one stationary world object, and
-    proximity-gated interaction.
+    """A scene with one character, one stationary world object,
+    proximity-gated interaction, and visible feedback.
 
     **Update phase** (before clear):
     1. move the character (directional input × dt);
     2. evaluate proximity (character ↔ world object);
-    3. evaluate interaction attempt (proximity + E-key press).
+    3. evaluate interaction attempt (proximity + E-key press);
+    4. update feedback state (timer, message).
 
     **Render phase** (between clear and present):
-    4. draw the world object;
-    5. draw the character.
+    5. draw the world object;
+    6. draw the character;
+    7. draw current feedback text, if any.
 
     The character may pass through the object (no collision).
 
     Attributes:
-        is_character_near_object: Read-only Boolean — ``True`` when the
-            character's center is within *interaction_range* of the
-            world object's center.
-        did_interact_this_frame: Read-only Boolean — ``True`` only
-            during the frame in which a valid interaction occurred.
-            Automatically resets to ``False`` on the next update.
+        is_character_near_object: Read-only — ``True`` when near the
+            world object.
+        did_interact_this_frame: Read-only — ``True`` only during the
+            frame of a valid interaction.
+        feedback_remaining: Read-only — seconds remaining for the
+            success message (0 when no message is active).
     """
 
     def __init__(
@@ -100,6 +127,7 @@ class DefaultScene(Scene):
         self._range_sq = self._interaction_range * self._interaction_range
         self._is_near: bool = False
         self._interaction_pulse: bool = False
+        self._success_remaining: float = 0.0
 
     # ------------------------------------------------------------------
     # Public properties
@@ -134,12 +162,16 @@ class DefaultScene(Scene):
         Read-only.  Reset to ``False`` at the start of each update phase.
         Set to ``True`` when both E is newly pressed **and** the
         character is near the object.
-
-        A "valid interaction" means the interaction key was pressed
-        while the character was near — it does not open the chest,
-        change object state, or produce any visible effect.
         """
         return self._interaction_pulse
+
+    @property
+    def feedback_remaining(self) -> float:
+        """Seconds remaining for the success message (0 when inactive).
+
+        Read-only.  Updated during ``update()``, not ``render()``.
+        """
+        return self._success_remaining
 
     # ------------------------------------------------------------------
     # Frame participation — update (before clear)
@@ -151,21 +183,23 @@ class DefaultScene(Scene):
         interaction_input: InteractionInput,
         dt: float,
     ) -> None:
-        """Move the character, evaluate proximity, then evaluate interaction."""
+        """Move, evaluate proximity, evaluate interaction, update feedback."""
         super().update(input_state, interaction_input, dt)
         self._move_character(input_state, dt)
         self._evaluate_proximity()
         self._evaluate_interaction(interaction_input)
+        self._update_feedback(dt)
 
     # ------------------------------------------------------------------
     # Frame participation — render (between clear and present)
     # ------------------------------------------------------------------
 
     def render(self) -> None:
-        """Draw the world object, then the character."""
+        """Draw the world object, character, then feedback text."""
         super().render()
         self._draw_world_object()
         self._draw_character()
+        self._draw_feedback()
 
     # ------------------------------------------------------------------
     # Internal: movement
@@ -213,13 +247,54 @@ class DefaultScene(Scene):
         A valid interaction requires both:
         * the interaction key was newly pressed this frame; and
         * the character is currently near the world object.
-
-        The pulse is ``True`` only for the frame of a valid press.
-        It resets to ``False`` at the start of every ``update`` call
-        (the reset happens at the beginning of ``update``, before
-        this method, because ``_interaction_pulse`` is set here).
         """
         self._interaction_pulse = interaction_input.interact_pressed and self._is_near
+
+    # ------------------------------------------------------------------
+    # Internal: feedback
+    # ------------------------------------------------------------------
+
+    def _update_feedback(self, dt: float) -> None:
+        """Update feedback timer and state.
+
+        When a valid interaction occurs this frame, the success-message
+        timer is set to the full configured duration (the current
+        frame's *dt* is not subtracted).
+
+        On frames without a new interaction, the timer is reduced by
+        *dt* and clamped to zero.
+
+        A later valid interaction while the message is already active
+        restarts the timer at the full duration.
+        """
+        if self._interaction_pulse:
+            self._success_remaining = _FEEDBACK_DURATION
+        elif self._success_remaining > 0:
+            self._success_remaining = max(0.0, self._success_remaining - dt)
+
+    def _draw_feedback(self) -> None:
+        """Draw the current feedback message, if any.
+
+        Priority: success message > proximity prompt.
+
+        Only one message is drawn at a time.
+        """
+        if self._success_remaining > 0:
+            self._renderer.draw_text(
+                _SUCCESS_TEXT,
+                _FEEDBACK_X,
+                _FEEDBACK_Y,
+                _FEEDBACK_COLOR,
+                _FEEDBACK_FONT_SIZE,
+            )
+        elif self._is_near:
+            self._renderer.draw_text(
+                _PROMPT_TEXT,
+                _FEEDBACK_X,
+                _FEEDBACK_Y,
+                _FEEDBACK_COLOR,
+                _FEEDBACK_FONT_SIZE,
+            )
 
     # ------------------------------------------------------------------
     # Internal: drawing

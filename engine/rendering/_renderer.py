@@ -87,6 +87,28 @@ class Renderer:
         """
         self._platform.draw_rect(x, y, width, height, color)
 
+    def draw_text(
+        self,
+        text: str,
+        x: int,
+        y: int,
+        color: tuple[int, int, int],
+        font_size: int,
+    ) -> None:
+        """Draw one line of text at *(x, y)*.
+
+        Delegates to the platform.  Must be called between
+        ``clear_frame`` and ``present_frame``.
+
+        Args:
+            text: Non-empty, non-whitespace string.
+            x: Left-edge x-coordinate (int, >= 0).
+            y: Top-edge y-coordinate (int, >= 0).
+            color: ``(r, g, b)``; each channel 0–255.
+            font_size: Positive integer point size.
+        """
+        self._platform.draw_text(text, x, y, color, font_size)
+
     def render_frame(self, background_color: tuple[int, int, int]) -> None:
         """Produce one complete frame (clear + present).
 
