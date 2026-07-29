@@ -40,6 +40,10 @@ class World:
         self._object: Object | None = None
         self._has_run = False
 
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
+        return f'World(name="{self._name}")'
+
     # ------------------------------------------------------------------
     # Public read-only properties
     # ------------------------------------------------------------------

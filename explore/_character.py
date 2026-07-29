@@ -84,6 +84,12 @@ class Character:
         self._color_rgb = resolve_color(color)
         self._frozen = False
 
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
+        return (
+            f'Character(name="{self._name}", x={self._x}, y={self._y}, color="{self._color_name}")'
+        )
+
     # ------------------------------------------------------------------
     # Public read-only properties
     # ------------------------------------------------------------------

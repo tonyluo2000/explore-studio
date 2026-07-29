@@ -64,6 +64,10 @@ class Object:
         self._interacted_message: str | None = None
         self._frozen = False
 
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation."""
+        return f'Object(name="{self._name}", x={self._x}, y={self._y}, color="{self._color_name}")'
+
     # ------------------------------------------------------------------
     # Public read-only properties
     # ------------------------------------------------------------------
