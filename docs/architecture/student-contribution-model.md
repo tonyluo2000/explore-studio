@@ -210,6 +210,11 @@ Empty directories need not be included. The exact archive format, directory
 names, serialization formats, and file extensions remain proposed until the
 contract prototype is tested against Student API examples.
 
+The implemented prototype is documented in
+[Explorer Package Contract v0.1](../explorer-package-v0.1.md). It deliberately
+implements only the declarative subset supported by Student API v0.1; fields
+listed below as proposed or deferred are not silently accepted by that contract.
+
 ### 7.2 Manifest responsibilities
 
 The manifest must declare enough information for deterministic validation and

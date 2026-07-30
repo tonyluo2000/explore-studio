@@ -1,5 +1,6 @@
 # Explore Studio — Runtime Dependencies
-# (currently none — project is in Phase 0 foundation)
+pygame>=2.5
+PyYAML>=6.0
 
 # Development dependencies are declared in pyproject.toml [project.optional-dependencies] dev
 # Install with: pip install -e ".[dev]"

@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "pygame>=2.5",
+    "PyYAML>=6.0",
 ]
 authors = [
     {name = "Explore Studio Contributors"},
@@ -64,4 +65,4 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 
 [tool.setuptools]
-packages = ["explore", "engine"]
+packages = ["explore", "explore.packages", "engine"]

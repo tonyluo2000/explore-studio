@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "nova-character"
+  display_name: "Nova the Explorer"
+  version: "1.0.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "nova"
+    type: "character"
+    path: "character/nova.yaml"
