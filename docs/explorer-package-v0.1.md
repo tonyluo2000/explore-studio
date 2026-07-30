@@ -5,7 +5,10 @@
 
 Explorer Package v0.1 is the declarative boundary between an independently owned
 student repository and future shared-world assembly. The prototype validates an
-unpacked package directory. It does not publish, approve, load, or execute a
+unpacked package directory. A separate
+[Local Explorer Package Loader v0.1](explorer-package-loader-v0.1.md) consumes
+validator-approved packages and interprets the supported declarative
+contributions. Neither component publishes, approves, registers, or executes a
 contribution.
 
 ## Package layout
@@ -95,7 +98,9 @@ v0.1:
 
 The validator confirms declaration structure, identifier uniqueness, supported
 type, path safety, file extension, existence, and regular-file status. It does
-not yet interpret the contents of character or world-object YAML files.
+not itself interpret the contents of character or world-object YAML files. The
+[local loader contract](explorer-package-loader-v0.1.md) defines that subsequent
+validation-first interpretation.
 
 ## Assets
 
