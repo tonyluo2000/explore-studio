@@ -1,0 +1,6 @@
+name: "Crystal Lantern"
+x: 120
+y: 460
+color: "yellow"
+when_near: "The lantern glows warmly."
+when_interacted: "A tiny crystal spark dances inside!"

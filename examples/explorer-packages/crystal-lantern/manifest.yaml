@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "crystal-lantern"
+  display_name: "Crystal Lantern"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "lantern"
+    type: "world_object"
+    path: "objects/lantern.yaml"
