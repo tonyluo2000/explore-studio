@@ -3,6 +3,10 @@
 > *The foundational product-design document for the semester-long shared world
 > built by Explore Studio students. Defines what Explorer World is — not how it
 > will be programmed.*
+>
+> **Contribution-model note:** The shared world is assembled from independently
+> owned student repositories through Explorer Packages. See the
+> [Student Contribution and Class-World Model](architecture/student-contribution-model.md).
 
 ---
 
@@ -31,7 +35,7 @@ crosses it, a third debugs why the bridge collapsed. The interdependence is the
 point.
 
 Students learn that software is not written alone. It is negotiated, reviewed,
-merged, and maintained together.
+published through stable contracts, assembled, and maintained together.
 
 ---
 
@@ -56,17 +60,20 @@ those constraints, ownership is absolute.
 
 ### Collaboration
 
-Students use Git to contribute to the shared world. They create branches, open
-pull requests, resolve merge conflicts, and review each other's code. These are
-not abstract lessons about "teamwork." They are the practical mechanics of
-building shared software.
+Each student uses Git in an independent repository. They create branches, make
+commits, review changes, and publish versioned Explorer Packages for approval.
+The class learns to resolve contract, namespace, and compatibility conflicts
+without merging student repositories or committing to the official engine.
+These are not abstract lessons about "teamwork." They are the practical
+mechanics of building shared software.
 
 ### Debugging
 
-Bugs are inevitable when thirty students modify the same codebase. Explorer World
-treats debugging not as failure but as a core skill. Students learn to read error
-messages, trace logic, write tests, and ask precise questions — habits that
-distinguish effective programmers at every experience level.
+Bugs are inevitable when thirty independently developed contributions meet in
+one class world. Explorer World treats debugging not as failure but as a core
+skill. Students learn to read errors, trace logic, write tests, and ask precise
+questions — habits that distinguish effective programmers at every experience
+level.
 
 ### Software Engineering
 
@@ -260,7 +267,12 @@ progresses.
 
 The semester is organized into six development sprints. Each sprint lasts
 approximately two to three weeks and corresponds to recovering one fragment of
-the Heart Crystal.
+the Heart Crystal. The approved 30-mission course uses these sprints as
+curriculum groupings; missions provide the smaller learning steps within them.
+
+The platform capabilities needed for all 30 missions are implemented and tested
+before the course begins. Sprints control when students encounter capabilities,
+not when maintainers finish building them.
 
 ### Sprint Philosophy
 
@@ -305,9 +317,10 @@ Explorer World is **student-owned** from the first day.
 
 ### Not Isolated Homework
 
-Students do not build throwaway exercises in separate files. Every contribution
-is a pull request into the shared world. When a student's code is merged, their
-character or object becomes part of the world that the entire class experiences.
+Independent repositories do not mean isolated or throwaway homework. Every
+Explorer publishes a versioned package. After validation and teacher approval, a
+specific package version is selected for a class-world release that classmates
+experience. A commit alone does not publish or release a contribution.
 
 This changes the psychology of programming assignments. Students are not
 satisfying a rubric. They are contributing to something their peers will see,
@@ -315,11 +328,11 @@ interact with, and build upon.
 
 ### The Git Record
 
-The semester's Git history tells a story. A student's first commit — adding their
-character to the Village Square. Their mid-semester commit — implementing a
-dialogue tree. Their final commit — a polished interaction with another
-student's character. The history is a portfolio, a grade book, and a source of
-pride.
+Each student's repository history tells a story: a first commit adding their
+character, a mid-semester commit implementing dialogue, and a final commit
+polishing an interaction. Published package versions connect selected source
+states to class releases. The student's history remains a portfolio and a source
+of pride without mixing every student's commits into one repository.
 
 ---
 
@@ -338,11 +351,11 @@ self-sufficient debuggers.
 
 ### Technical Lead
 
-The teacher sets technical direction: which features ship this sprint, what code
-quality standards the class maintains, how merge conflicts are resolved, when a
-feature is "done." The teacher models the practices of a professional engineering
-lead — code review, architecture decisions, prioritization — in a way students
-can observe and learn from.
+The teacher sets technical direction: which packages are approved for a release,
+what quality standards the class maintains, how validation or namespace
+conflicts are resolved, and when a contribution is "done." The teacher models
+the practices of a professional engineering lead — code review, architecture
+decisions, prioritization — in a way students can observe and learn from.
 
 ### Creative Director
 
@@ -403,10 +416,10 @@ context.
 The following are explicitly out of scope for Explorer World Version 1:
 
 - **Multiplayer.** The world is shared through Git, not through simultaneous
-  real-time interaction. Students explore the world individually and merge their
-  contributions.
-- **Online services.** No server, no accounts, no cloud storage beyond Git
-  hosting. The world runs locally on each student's machine.
+  real-time interaction. Students explore locally or through an approved online
+  class environment, and contributions are assembled from packages.
+- **Unmoderated social services.** Unrestricted public chat and public
+  publishing are not part of the core Explorer Package model.
 - **Databases.** World state is stored in code and simple files. No SQL, no
   persistent server-side storage.
 - **Advanced physics.** Simple movement and collision only. No gravity
@@ -418,8 +431,9 @@ The following are explicitly out of scope for Explorer World Version 1:
   quest logs, no experience points.
 - **Professional game engine features.** No particle effects, no shaders, no
   skeletal animation, no audio mixing, no localization framework.
-- **Mobile or web deployment.** Desktop only. Students run the world on the
-  machine they program on.
+- **Mobile client.** Mobile delivery is deferred. Local desktop execution and an
+  authenticated online mode are the approved execution models; the exact online
+  client and hosting platform remain open.
 - **Accessibility beyond basic keyboard input.** Future versions should address
   accessibility comprehensively; Version 1 focuses on core functionality.
 
@@ -464,7 +478,8 @@ The world is designed for continuity, not disposability.
 Even as Explorer World evolves, the core principles remain:
 
 - Students own their creations.
-- Code is shared, reviewed, and merged — not submitted and forgotten.
+- Contributions are reviewed, published, and assembled — not submitted and
+  forgotten.
 - AI is a tool, not an author.
 - Programming is learned by building things that matter to other people.
 
@@ -484,7 +499,7 @@ Even as Explorer World evolves, the core principles remain:
    How quickly do they see their character in the world?
 
 4. **Assessment model.** How should teachers evaluate student contributions?
-   What does a rubric for a "good" pull request look like?
+   What does a rubric for a validated, publishable Explorer Package look like?
 
 5. **Cross-class sharing.** Should classes be able to visit each other's worlds?
    Should there be a gallery of example worlds from past semesters?
@@ -530,9 +545,10 @@ the six Heart Crystal fragments.
 
 Git is the industry standard for collaborative software development. Learning it
 in an educational context — where stakes are low and support is high — prepares
-students for internships, open-source contribution, and professional work.
-GitHub's pull request model also provides a natural framework for code review,
-peer feedback, and teacher assessment.
+students for internships, open-source contribution, and professional work. Each
+student's repository provides a clear history and natural framework for review
+and feedback. Publishing an Explorer Package then teaches the separate
+professional concepts of packaging, approval, and release.
 
 ---
 

@@ -3,8 +3,13 @@
 ## Overview
 
 *This document defines the high-level technical architecture of Explore Studio.
-It is intentionally lightweight during Phase 0 and will be expanded as design
-decisions are made.*
+It is intentionally lightweight and links to the detailed specifications and
+decision records that govern each boundary.*
+
+The canonical contribution architecture is
+[Student Contribution and Class-World Model](architecture/student-contribution-model.md).
+The accepted decision is recorded in
+[ADR-001: Student repositories and Explorer Packages](architecture/decisions/ADR-001-student-repositories-and-explorer-packages.md).
 
 ## Design Goals
 
@@ -16,6 +21,11 @@ decisions are made.*
   integration testing.
 - **Extensible.** Community contributors can add new lesson modules,
   world entities, and teacher tools without modifying the core.
+- **Student-owned.** Each student works in an independent repository and
+  publishes versioned Explorer Packages rather than modifying the official
+  engine repository.
+- **Reproducible.** A class world is generated from pinned engine, package, and
+  class-configuration inputs.
 
 ## High-Level Components
 
@@ -35,8 +45,25 @@ decisions are made.*
 ├─────────────────────────────────────────────┤
 │                  Teacher                     │
 │   (dashboard, authoring, assessment)         │
+├─────────────────────────────────────────────┤
+│            Contribution Pipeline              │
+│   (packages, validation, class-world build)   │
 └─────────────────────────────────────────────┘
 ```
+
+Local projects run without login. Online services use authenticated identity and
+server-side authorization. The engine should reach these modes through stable
+provider boundaries rather than treating a local directory as online identity.
+
+## Architecture Documents
+
+- [Engine Architecture Specification](engine-architecture.md)
+- [Repository Architecture Specification](repository-architecture.md)
+- [Student API Specification](student-api-spec.md)
+- [Student API v0.1 Specification](student-api-v0.1-spec.md)
+- [Explorer World Design Specification](explorer-world-spec.md)
+- [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
+- [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
 
@@ -58,4 +85,5 @@ decisions are made.*
 
 ---
 
-*Decisions will be recorded here with rationale as they are made.*
+*Accepted cross-cutting decisions are recorded under
+[`docs/architecture/decisions/`](architecture/decisions/).*

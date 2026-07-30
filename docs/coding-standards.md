@@ -37,7 +37,11 @@ Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`, `ci`.
 
 ## Documentation
 
-- Architecture decisions documented in `docs/architecture.md`.
+- `docs/architecture.md` is the architecture index.
+- Accepted cross-cutting decisions are recorded as numbered ADRs under
+  `docs/architecture/decisions/`.
+- Detailed architecture belongs in a canonical design document and is linked
+  from related specifications rather than copied.
 - Public API documented with docstrings.
 - Curriculum content documented in `docs/curriculum.md`.
 

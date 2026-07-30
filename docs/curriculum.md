@@ -8,7 +8,22 @@ modifying or extending their world.
 
 ## Curriculum Structure
 
-*To be defined during Phase 2.*
+The target online course contains 30 missions. Missions may be grouped into the
+six established Explorer World sprints so that teachers can retain sprint
+showcases while students receive smaller, age-appropriate steps.
+
+> **Everything is already built. Students gradually learn how to use it.**
+
+The engine capabilities and world systems required by a cohort are implemented
+and tested before the course begins. Mission progression controls which concepts
+and experiences are introduced; it is not a source-code security boundary.
+Students who inspect later capabilities locally are demonstrating curiosity.
+
+Each student works in an independent repository, develops and tests locally
+without login, and publishes a versioned Explorer Package for review. Online
+course and shared-world services require authenticated identity. See the
+[Student Contribution and Class-World Model](architecture/student-contribution-model.md)
+for the canonical workflow.
 
 ### Planned Module Areas
 
@@ -34,5 +49,6 @@ Each lesson follows a consistent structure:
 
 ---
 
-*This document is a placeholder. Detailed curriculum content will be
-developed after the engine reaches Phase 1 completion.*
+*Detailed mission content and assessment remain to be defined. Curriculum
+sequencing is independent of whether the underlying capability has already been
+implemented.*
