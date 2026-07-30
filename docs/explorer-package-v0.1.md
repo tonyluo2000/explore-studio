@@ -75,6 +75,11 @@ Contribution IDs are unique within a package's contribution namespace. Asset IDs
 are unique within its asset namespace. Class-wide namespace and registry
 collision handling are deferred.
 
+`package.display_name` is display text, not an identifier. It must be a string,
+must contain non-whitespace text, and may contain at most 100 characters, as
+defined by `DISPLAY_NAME_MAX_LENGTH`. The value is retained as supplied and is
+not subject to the lower-kebab-case identifier rules.
+
 Package versions use Semantic Versioning 2.0.0. Student API compatibility is an
 exact version in this prototype; the only supported value is `"0.1"`.
 
@@ -107,6 +112,12 @@ file, and be no larger than `5,242,880` bytes (5 MiB). The implementation expose
 this default as `MAX_ASSET_SIZE_BYTES`. These extensions and size limits are
 conservative prototype defaults, not permanent platform policy. Media metadata
 is not inspected or transformed.
+
+Contribution and asset extension validation is case-insensitive, so `.yaml`,
+`.yml`, `.png`, and `.wav` accept case variants such as `.YAML` and `.PNG`. The
+declared path is still resolved exactly as written against the filesystem; the
+validator does not perform case-insensitive filename lookup. Portable package
+authors should use lowercase filenames and extensions.
 
 ## Filesystem and execution safety
 

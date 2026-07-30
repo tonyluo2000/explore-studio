@@ -9,6 +9,7 @@ import pytest
 import yaml
 
 from explore.packages import (
+    DISPLAY_NAME_MAX_LENGTH,
     MAX_ASSET_SIZE_BYTES,
     IssueCode,
     ValidationReport,
@@ -101,6 +102,100 @@ def test_manifest_must_be_mapping(tmp_path: Path) -> None:
     package = _write_package(tmp_path / "package", manifest='"hello"\n')
 
     assert _codes(validate_explorer_package(package)) == [IssueCode.MANIFEST_INVALID_TYPE]
+
+
+def test_invalid_manifest_encoding(tmp_path: Path) -> None:
+    """A manifest that is not UTF-8 produces one stable loading diagnostic."""
+    package = _write_package(tmp_path / "package")
+    (package / "manifest.yaml").write_bytes(b"\xff")
+
+    assert _codes(validate_explorer_package(package)) == [IssueCode.MANIFEST_INVALID_ENCODING]
+
+
+def test_empty_contributions_are_rejected_but_remain_parsed(tmp_path: Path) -> None:
+    """An empty declaration list is invalid while remaining visible in the parsed manifest."""
+    manifest = VALID_MANIFEST.replace(
+        """\
+contributions:
+  - id: "river-guide"
+    type: "character"
+    path: "character/guide.yaml"
+""",
+        "contributions: []\n",
+    )
+    package = _write_package(tmp_path / "package", manifest)
+
+    report = validate_explorer_package(package)
+
+    assert _codes(report) == [IssueCode.CONTRIBUTIONS_REQUIRED]
+    assert report.manifest is not None
+    assert report.manifest.contributions == ()
+
+
+@pytest.mark.parametrize(
+    ("manifest", "expected_location"),
+    [
+        pytest.param(
+            VALID_MANIFEST + "unexpected: true\n",
+            "unexpected",
+            id="root",
+        ),
+        pytest.param(
+            VALID_MANIFEST.replace(
+                '  version: "1.0.0"',
+                '  version: "1.0.0"\n  unexpected: true',
+            ),
+            "package.unexpected",
+            id="nested-package",
+        ),
+    ],
+)
+def test_unknown_manifest_fields_are_rejected(
+    tmp_path: Path,
+    manifest: str,
+    expected_location: str,
+) -> None:
+    """Unknown root and nested fields produce the stable contract diagnostic."""
+    package = _write_package(tmp_path / "package", manifest)
+
+    report = validate_explorer_package(package)
+
+    assert _codes(report) == [IssueCode.MANIFEST_FIELD_UNKNOWN]
+    assert report.issues[0].location == expected_location
+
+
+@pytest.mark.parametrize(
+    ("display_name", "is_valid"),
+    [
+        pytest.param("   ", False, id="whitespace-only"),
+        pytest.param(
+            "a" * (DISPLAY_NAME_MAX_LENGTH + 1),
+            False,
+            id="over-limit",
+        ),
+        pytest.param("a" * DISPLAY_NAME_MAX_LENGTH, True, id="at-limit"),
+    ],
+)
+def test_display_name_boundaries(
+    tmp_path: Path,
+    display_name: str,
+    is_valid: bool,
+) -> None:
+    """Display names require visible text and accept at most the named policy limit."""
+    manifest = VALID_MANIFEST.replace(
+        'display_name: "River Rescue"',
+        f'display_name: "{display_name}"',
+    )
+    package = _write_package(tmp_path / "package", manifest)
+
+    report = validate_explorer_package(package)
+
+    if is_valid:
+        assert report.is_valid
+        assert report.manifest is not None
+        assert report.manifest.package.display_name == display_name
+    else:
+        assert IssueCode.PACKAGE_DISPLAY_NAME_INVALID in _codes(report)
 
 
 @pytest.mark.parametrize(
@@ -242,8 +337,16 @@ assets:
     assert IssueCode.FILE_TYPE_UNSUPPORTED in _codes(validate_explorer_package(package))
 
 
-def test_asset_size_limit(tmp_path: Path) -> None:
-    """Assets larger than the named v0.1 policy limit are rejected."""
+@pytest.mark.parametrize(
+    ("size", "is_valid"),
+    [
+        pytest.param(0, True, id="empty"),
+        pytest.param(MAX_ASSET_SIZE_BYTES, True, id="at-limit"),
+        pytest.param(MAX_ASSET_SIZE_BYTES + 1, False, id="over-limit"),
+    ],
+)
+def test_asset_size_boundaries(tmp_path: Path, size: int, is_valid: bool) -> None:
+    """Empty and limit-sized assets are accepted; one byte over the limit is rejected."""
     manifest = VALID_MANIFEST + """\
 assets:
   - id: "guide-avatar"
@@ -254,26 +357,77 @@ assets:
     asset = package / "assets" / "guide.png"
     asset.parent.mkdir()
     with asset.open("wb") as stream:
-        stream.truncate(MAX_ASSET_SIZE_BYTES + 1)
+        stream.truncate(size)
 
-    assert IssueCode.FILE_TOO_LARGE in _codes(validate_explorer_package(package))
+    report = validate_explorer_package(package)
+
+    if is_valid:
+        assert report.is_valid
+    else:
+        assert IssueCode.FILE_TOO_LARGE in _codes(report)
 
 
-def test_symlink_is_rejected_without_following_it(tmp_path: Path) -> None:
-    """Declared symlinks are rejected on platforms that support creating them."""
-    outside = tmp_path / "outside.yaml"
-    outside.write_text("name: Outside\n", encoding="utf-8")
-    package = _write_package(
-        tmp_path / "package",
-        VALID_MANIFEST.replace("character/guide.yaml", "character/link.yaml"),
-    )
+@pytest.mark.parametrize(
+    "target_exists",
+    [
+        pytest.param(True, id="target-exists"),
+        pytest.param(False, id="broken"),
+    ],
+)
+def test_declared_file_symlink_is_rejected(tmp_path: Path, target_exists: bool) -> None:
+    """Declared symlinks are rejected whether their target exists or is broken."""
+    target = tmp_path / "target.yaml"
+    if target_exists:
+        target.write_text("name: Outside\n", encoding="utf-8")
+    manifest = VALID_MANIFEST.replace("character/guide.yaml", "character/link.yaml")
+    package = _write_package(tmp_path / "package", manifest)
     link = package / "character" / "link.yaml"
     try:
-        link.symlink_to(outside)
+        link.symlink_to(target)
     except (NotImplementedError, OSError) as error:
         pytest.skip(f"Symlinks are unavailable on this platform: {error}")
 
     assert IssueCode.PATH_SYMLINK_NOT_ALLOWED in _codes(validate_explorer_package(package))
+
+
+def test_declared_path_through_symlinked_parent_is_rejected(tmp_path: Path) -> None:
+    """A declared path may not pass through a symlinked parent directory."""
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "guide.yaml").write_text("name: Outside\n", encoding="utf-8")
+    manifest = VALID_MANIFEST.replace("character/guide.yaml", "linked/guide.yaml")
+    package = _write_package(tmp_path / "package", manifest)
+    linked_parent = package / "linked"
+    try:
+        linked_parent.symlink_to(target, target_is_directory=True)
+    except (NotImplementedError, OSError) as error:
+        pytest.skip(f"Symlinks are unavailable on this platform: {error}")
+
+    assert IssueCode.PATH_SYMLINK_NOT_ALLOWED in _codes(validate_explorer_package(package))
+
+
+def test_declared_directory_is_not_a_regular_file(tmp_path: Path) -> None:
+    """A directory at a declared contribution path is rejected."""
+    manifest = VALID_MANIFEST.replace("character/guide.yaml", "character/declaration.yaml")
+    package = _write_package(tmp_path / "package", manifest)
+    (package / "character" / "declaration.yaml").mkdir()
+
+    assert IssueCode.FILE_NOT_REGULAR in _codes(validate_explorer_package(package))
+
+
+def test_missing_package_root(tmp_path: Path) -> None:
+    """A missing package root produces the stable public diagnostic."""
+    package = tmp_path / "missing"
+
+    assert _codes(validate_explorer_package(package)) == [IssueCode.PACKAGE_ROOT_MISSING]
+
+
+def test_package_root_must_be_directory(tmp_path: Path) -> None:
+    """A regular file cannot serve as an Explorer Package root."""
+    package = tmp_path / "package"
+    package.write_text("not a directory\n", encoding="utf-8")
+
+    assert _codes(validate_explorer_package(package)) == [IssueCode.PACKAGE_ROOT_NOT_DIRECTORY]
 
 
 def test_safe_yaml_loader_does_not_construct_python_objects(tmp_path: Path) -> None:
