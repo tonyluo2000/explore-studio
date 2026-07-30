@@ -3,6 +3,10 @@
 > *The architectural reference for the educational game engine that powers
 > Explorer World. Defines structure, responsibilities, boundaries, and
 > philosophy — not implementation.*
+>
+> **Contribution-model note:** Student ownership, local and online modes, and
+> class-world assembly are governed by the
+> [Student Contribution and Class-World Model](architecture/student-contribution-model.md).
 
 ---
 
@@ -55,8 +59,11 @@ models the code quality we expect from students.
 
 ### Gradual Reveal of Complexity
 
-The engine must support a world that starts nearly empty and grows rich over six
-sprints. This means the engine itself must reveal complexity gradually.
+> **Everything is already built. Students gradually learn how to use it.**
+
+The engine and world capabilities required by a cohort are implemented,
+integrated, and tested before the course begins. The six sprint groupings and
+their 30 missions reveal those capabilities gradually.
 
 A student writing their first character should not need to understand the
 animation system. A student implementing a dialogue tree in Sprint 3 should not
@@ -65,7 +72,9 @@ partial understanding — students engage with only the layer relevant to their
 current task.
 
 This is not about hiding internals. It is about not requiring knowledge before it
-is needed. Every subsystem should be independently approachable.
+is needed. Every subsystem should be independently approachable. Source access,
+feature flags, and local configuration are not security boundaries; students may
+inspect later capabilities.
 
 ---
 
@@ -92,7 +101,7 @@ The following are explicitly not goals for the Explore Studio engine:
 | **AAA game engine** | The engine does not need to compete with commercial products. It needs to teach programming. |
 | **Unity or Godot replacement** | These are professional tools with decades of development. Explore Studio is an educational platform. |
 | **Multiplayer** | Simultaneous real-time interaction introduces networking complexity that distracts from learning Python. Collaboration happens through Git. |
-| **Networking** | No client-server architecture. No sockets. No message passing between machines. |
+| **Direct networking in the course engine** | Gameplay subsystems do not open sockets or infer remote identity. Online mode reaches authenticated services through maintained provider boundaries. |
 | **Entity-Component-System (ECS)** | ECS is powerful but abstract. It introduces terminology and patterns that obscure rather than reveal programming concepts for beginners. |
 | **Advanced physics** | Simple grid-based movement and basic collision detection are sufficient. Gravity, momentum, and rigid bodies belong in a physics curriculum, not a programming curriculum. |
 | **Scripting language** | Python is the scripting language. The engine does not embed or interpret a secondary language. |
@@ -157,8 +166,10 @@ not planned.
 
 **Operating System**
 
-The host environment. The engine runs on the student's machine. No servers, no
-containers, no virtualization.
+The host environment. In local mode, the engine runs on the student's machine
+without login and may run offline. Online mode reaches authenticated progress,
+package-registry, and shared-world services through maintained interfaces. The
+engine must not infer online identity from a local folder.
 
 ---
 
@@ -516,7 +527,7 @@ replace their judgment.
 |---------------|-------------|
 | **Curriculum design** | What concepts are taught in which order, and how they map to engine features. |
 | **World progression** | When new areas unlock, what the sprint deliverables are, how the world evolves over the semester. |
-| **Sprint integration** | How student contributions are merged, reviewed, and integrated into the shared world each sprint. |
+| **Package approval and release** | How student Explorer Packages are validated, reviewed, approved, and selected for reproducible class-world releases. |
 | **Code review** | Evaluating student work, providing feedback, ensuring code quality and world consistency. |
 | **Classroom culture** | Setting expectations for collaboration, AI use, and code ownership. |
 | **Pacing and adaptation** | Adjusting the curriculum to the class's needs — spending more time on difficult concepts, accelerating through familiar ones. |
@@ -566,41 +577,45 @@ about software architecture through lived experience.
 
 ### Boundary Enforcement
 
-The engine enforces ownership boundaries through its design, not through
-permission systems. Students physically cannot modify engine internals because
-the engine is a separate package they import — not code they edit. Teachers do
-not need to police boundaries; the architecture makes violations impossible.
+The supported Student API and Explorer Package contract define the contribution
+boundary. Students do not commit to the official engine repository, but they may
+read or modify engine source in a local experiment. Architecture guides supported
+use; it does not make source exploration impossible.
+
+Shared online services add a separate trust boundary. Authenticated identity,
+authorization, package approval, and release permissions must be enforced by
+trusted server-side systems.
 
 ---
 
 ## 9. Engine Growth Strategy
 
-The engine is not built all at once. It grows incrementally, matching the
-semester's six-sprint progression. Each version adds precisely the capabilities
-needed for the next sprint — nothing more.
+Platform development and course progression use different timelines. Before a
+cohort begins, the complete set of engine capabilities and world systems needed
+for its 30 missions is implemented and tested. During the course, missions
+gradually introduce those existing capabilities.
 
-### Version Progression
+### Educational Capability Progression
 
-| Version | Capability | What Students Can Now Do |
-|---------|-----------|-------------------------|
-| **0.1** | Window and grid | See the world. A window opens. A tile grid renders. The Village Square exists as colored tiles. |
-| **0.2** | Entities and characters | Place characters in the world. Each student's character appears at a position. Characters have simple visual representation. |
-| **0.3** | Movement and input | Characters respond to keyboard input. Students write simple movement behaviors. The world feels alive. |
-| **0.4** | Interactions | Characters interact with objects and each other. Dialogue appears. Objects respond. The world becomes interactive. |
-| **0.5** | State and persistence | The world remembers. Objects change state. Save and load work. Progress persists across sessions. |
-| **0.6** | Scenes and UI | Menus, dialogue screens, splash screens. The world has structure beyond the main grid. |
-| **1.0** | Semester complete | All subsystems integrated. The engine supports a full six-sprint semester. Stable, documented, tested. |
+| Course stage | Capability introduced to students |
+|--------------|------------------------------------|
+| **Presence** | Window, grid, entities, character identity, and placement |
+| **Motion** | Movement, input, simple animation, and object interaction |
+| **Connection** | Dialogue and character-to-character interaction |
+| **Memory** | State and persistence |
+| **Wonder** | Conditional behaviors, quests, and richer world systems |
+| **Wholeness** | Composition, polish, testing, packaging, and release |
 
-### Why Incremental
+Engine, Student API, Explorer Package, and class-world release versions remain
+independent. A course stage does not select an unfinished engine branch.
 
-Building the full engine before the first student uses it risks building the
-wrong thing. Building incrementally — one sprint's worth of capability at a
-time — ensures every subsystem is validated by actual classroom use before the
-next subsystem is designed.
+### Why the Separation Matters
 
-It also mirrors the student experience: the engine grows in complexity at the
-same pace as the students' abilities. No one — student, teacher, or engine
-developer — is overwhelmed.
+Course pacing should not expose students to deployment risk or a changing
+platform contract. Maintainers can prototype future cohorts separately, but a
+running cohort receives a pinned, stable platform. Mission configuration,
+feature presentation, or fog of war can focus attention without treating local
+source code as inaccessible.
 
 ---
 
@@ -846,7 +861,7 @@ future implementation decision:
 |-----------|---------|
 | **Separation of concerns** | Each layer has one job. Rendering does not handle input. Dialogue does not manage save files. |
 | **Composition over complexity** | Complex behavior emerges from composing simple pieces. The engine provides simple pieces; students compose them. |
-| **Progressive disclosure** | Students see only what they need at their current level. The full engine is revealed gradually across six sprints. |
+| **Progressive disclosure** | Required capabilities are built before the course; missions gradually introduce them without treating source visibility as a security boundary. |
 | **Stable educational interfaces** | What students learn in Sprint 1 still works in Sprint 6. The engine grows but does not break its promises. |
 | **Clear ownership** | Engine, student, and teacher responsibilities are explicit and non-overlapping. |
 | **Simplicity first** | The simplest solution that meets the educational need is always chosen. Complexity is added only when proven necessary. |

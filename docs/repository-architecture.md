@@ -3,6 +3,13 @@
 > *Defines how the codebase is organized, where responsibilities belong, and
 > how dependencies flow between packages. The structural guardrails for all
 > future implementation. An architecture document — not a directory listing.*
+>
+> **Contribution-model note:** This document describes the official platform
+> repository. The approved multi-repository student workflow is defined by the
+> [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
+> and [ADR-001](architecture/decisions/ADR-001-student-repositories-and-explorer-packages.md).
+> Those documents supersede earlier assumptions that student work is kept in
+> directories or branches of this repository.
 
 ---
 
@@ -75,7 +82,7 @@ is intentional — nothing exists at the root without a reason.
 | **`engine/`** | The Explore Studio engine: application lifecycle, rendering, input, world state, interactions, audio, persistence. The platform. | Engine team. |
 | **`examples/`** | Standalone, runnable demonstrations of engine capabilities. Each example is self-contained and illustrates exactly one concept. | Engine team (creates); teachers (use). |
 | **`lessons/`** | Curriculum content: lesson plans, starter projects, completed solutions, exercise descriptions. Organized by sprint and topic. | Teachers and curriculum designers. |
-| **`students/`** | Student-created content: character definitions, world contributions, personal projects. Each student has an isolated workspace. | Students. |
+| **`students/`** | Optional platform-owned fixtures or migration examples only. It is not the target home of student projects. | Engine team. |
 | **`teacher/`** | Teacher tooling: dashboards, assessment helpers, world configuration, sprint management. | Teachers. |
 | **`tests/`** | Automated tests: engine unit tests, integration tests, regression tests, example validation. | Engine team. |
 | **`tools/`** | Development and operational scripts: build helpers, asset pipelines, world validators, migration tools. Not part of the runtime. | Engine team. |
@@ -138,42 +145,51 @@ The engine is organized around capabilities, not technical layers:
 
 ## 5. Student Workspace
 
-The student workspace is where students create. It must feel like their
-territory — not like a corner of the engine they are permitted to touch.
+The target student workspace is one independent repository per student, created
+from a supported template. It is the student's territory, not a directory or
+branch in the official engine repository. A student commits freely to that
+repository and publishes selected work through a versioned Explorer Package.
 
 ### Design Requirements
 
 | Requirement | Rationale |
 |-------------|-----------|
-| **Isolation** | Each student's work lives in a distinct area. Modifying one student's character cannot accidentally break another's. |
-| **Ownership** | The directory structure makes ownership visible. A student can point to their directory and say "that's mine." |
-| **Simplicity** | The student workspace contains only what students need. No engine internals, no build scripts, no configuration. |
+| **Isolation** | Each student's work and Git history live in a distinct repository. Modifying one project cannot directly rewrite another's source. |
+| **Ownership** | Repository ownership makes the student's code, assets, tests, and history clearly theirs. |
+| **Simplicity** | The supported template emphasizes student work and hides operational complexity from the normal workflow. |
 | **Discoverability** | Students can find their character file, their dialogue file, and their object definitions without guidance. |
-| **Version-control friendly** | Student directories are structured so that Git operations — branching, merging, pull requests — are straightforward. Merge conflicts are minimized. |
+| **Version-control friendly** | Commits and reviews occur in the student's repository. Publishing is separate from committing. |
+| **Publishable** | The workspace can export a validated Explorer Package without copying the entire repository. |
 
 ### What Students See
 
 Students see a workspace that contains:
+
 - Their character definition.
 - Their dialogue files.
 - Their object and interaction definitions.
-- A way to run the world and see their contributions.
+- Their assets and local tests.
+- A way to run locally without login.
+- A documented way to build and validate an Explorer Package.
 
 ### What Students Do Not See
 
-- Engine source code (unless they choose to explore it).
-- Other students' character internals (they see the characters in the world,
-  but not the source files).
-- Build scripts, configuration files, or tooling.
-- Test infrastructure.
-- Documentation (available separately, not in their workspace).
+- Operational secrets or privileged server credentials.
+- Unapproved private source from other students.
+- Class-world release controls unless their authenticated role permits them.
+
+Students may have the complete open-source engine and may inspect future
+capabilities. The template should keep the everyday path understandable without
+pretending that source code is a security boundary.
 
 ### The Student Boundary
 
-The boundary between student workspace and engine is absolute. Students
-import from the Student API — they never import from engine internals.
-The workspace enforces this through its structure: student directories
-do not have access to engine internals by default.
+Student code uses the Student API rather than engine internals. Package
+validation rejects unsupported contribution boundaries before shared-world
+assembly. Local source access means students can still experiment; structural
+conventions guide the supported path but do not make modification impossible.
+Online authorization and approval are enforced by trusted services, not by
+repository layout.
 
 ---
 
@@ -297,6 +313,7 @@ through engine architecture documents.
 | **Vision** | Everyone | Why Explore Studio exists, what it is, what it is not. |
 | **Product Design** | Teachers, curriculum designers | Explorer World specification: world, characters, story, interactions. |
 | **Architecture** | Engine developers, contributors | Engine architecture, repository organization, Student API specification. |
+| **Decision records** | Maintainers, instructors | Accepted cross-cutting choices, consequences, alternatives, and follow-up work. |
 | **Curriculum** | Teachers | Lesson plans, teaching guides, assessment strategies, classroom management. |
 | **Development** | Contributors | Setup guides, contribution guidelines, coding standards, review process. |
 | **Teaching** | Teachers | How to use Explore Studio in a classroom: first-day setup, troubleshooting, customizing content. |
@@ -311,6 +328,8 @@ through engine architecture documents.
   changes in the same commit. Outdated documentation is a bug.
 - **Every architectural decision is documented.** Why a choice was made
   matters as much as what was chosen. Future contributors need context.
+- **Canonical documents are linked, not copied.** Cross-document summaries
+  point to the detailed design and ADR so contracts do not drift.
 - **Documentation is written for humans.** It is not generated from code
   comments. It tells a story, provides context, and answers "why."
 
@@ -419,7 +438,10 @@ contribution straightforward. Every area of the repository has an owner.
 |------|--------------|--------------|-------------------|
 | Engine core | Engine team | Approved contributors | Engine lead |
 | Student API | Engine team + curriculum team | Approved contributors | Engine lead + Curriculum lead |
-| Student workspace | Individual students | Classmates (with permission) | Teacher |
+| Student repository | Individual student | Classmates (with permission) | Student; teacher approval for publication |
+| Explorer Package contract | Engine team + curriculum team | Approved contributors | Engine lead + curriculum lead |
+| Package approval | Teacher and automated policy | Student author | Teacher/course team |
+| Class-world configuration and release | Course team | Teachers | Course lead |
 | Lessons | Curriculum team | Teachers, contributors | Curriculum lead |
 | Examples | Engine team | Teachers, contributors | Engine lead |
 | Teacher tools | Engine team | Teachers, contributors | Engine lead |
@@ -443,6 +465,10 @@ Ownership is not about permission. It is about responsibility. A teacher
 who wants to add a lesson does not need the engine team's approval — but
 the engine team is responsible if a student's code breaks due to an engine
 change. Ownership boundaries make these responsibilities explicit.
+
+Student publication is a special case: the student owns the source and package,
+while the teacher and automated policy decide whether a particular package
+version enters a shared class configuration.
 
 ---
 
@@ -536,8 +562,8 @@ guidelines, not preferences, not "usually."
 1. **Engine code never imports from lessons.** The engine is a platform,
    not a consumer of curriculum content.
 
-2. **Engine code never imports from student code.** The engine does not
-   know about specific characters, dialogues, or student creations.
+2. **Engine code never imports arbitrary student modules.** Contributions
+   cross the maintained Student API and Explorer Package boundary.
 
 3. **Student code never imports from engine internals.** Students import
    only from the Student API.
@@ -595,8 +621,8 @@ the transition without restructuring:
 - **Student API** — unchanged. Builder Studio uses the same API, with all
   capabilities unlocked from the start.
 - **Student workspace** — grows. Students have persistent workspaces that
-  span multiple semesters. The workspace structure supports long-lived
-  projects.
+  span multiple semesters in independently owned repositories. The supported
+  template and package contract support long-lived projects.
 - **Lessons** — supplemented. Builder Studio adds open-ended project ideas,
   challenge prompts, and community-contributed content alongside the
   structured curriculum.
@@ -645,10 +671,10 @@ Even as the repository grows:
    pre-packaged environment? The distribution model affects repository
    organization.
 
-3. **Student workspace versioning.** Should each student's workspace be a
-   separate Git branch? A subdirectory in a shared repository? Individual
-   repositories? The choice affects collaboration patterns and teacher
-   workflows.
+3. **Student repository provisioning.** Will independent repositories be
+   created through GitHub Classroom or another system, and are they private by
+   default? The architecture fixes the repository boundary but not its provider
+   or access policy.
 
 4. **Third-party lesson ecosystem.** If third-party teachers create and
    share lessons, where do they live? A separate repository? A `contrib/`

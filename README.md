@@ -38,21 +38,34 @@ creative problem-solving — one interactive lesson at a time.
 
 See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 
+## Architecture and Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — architecture index.
+- [`docs/architecture/student-contribution-model.md`](docs/architecture/student-contribution-model.md)
+  — student repositories, Explorer Packages, execution modes, progression, and
+  class-world assembly.
+- [`docs/architecture/decisions/`](docs/architecture/decisions/) — accepted
+  architecture decision records.
+- [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
+  implemented Student API contract.
+
 ## Repository Organization
 
 ```
 explore-studio/
 ├── docs/           # Project documentation
 ├── engine/         # Core game engine (rendering, physics, input)
-├── world/          # World state, entities, and simulation
-├── assets/         # Sprites, sounds, and other media
+├── explore/        # Student API
 ├── lessons/        # Lesson definitions and curriculum content
-├── examples/       # Standalone example projects
-├── students/       # Student-facing entry points
-├── teacher/        # Teacher tools and dashboard
 ├── tests/          # Test suite
-└── .vscode/        # Recommended VS Code workspace settings
+└── pyproject.toml  # Package and tool configuration
 ```
+
+This repository is the official platform repository. The target course model
+uses one independent repository per student; students publish versioned Explorer
+Packages that are assembled into a class-world release. Student repositories are
+not directories in this repository and are not merged to produce a release. See
+the [student contribution model](docs/architecture/student-contribution-model.md).
 
 ## License
 

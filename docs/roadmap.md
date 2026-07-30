@@ -37,6 +37,13 @@
 - Student progress tracking and assessment.
 - Classroom management.
 
+The student contribution, online identity, package approval, and reproducible
+class-world target is defined in the
+[Student Contribution and Class-World Model](architecture/student-contribution-model.md).
+Its phased follow-up plan is the authoritative sequence for that work; roadmap
+phase labels do not imply that a running cohort should receive unfinished
+capabilities.
+
 ## Phase 4 — Ecosystem
 
 *Planned — no date set.*

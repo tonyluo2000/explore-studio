@@ -3,6 +3,9 @@
 > *The educational interface between students and the engine. Defines what
 > students think about, interact with, and learn — not what the engine
 > implements. A design specification, not a reference manual.*
+>
+> Student projects publish through the package boundary defined by the
+> [Student Contribution and Class-World Model](architecture/student-contribution-model.md).
 
 ---
 
@@ -69,14 +72,16 @@ pattern for every feature is a student who never builds confidence.
 
 ### Progressive Learning
 
-The API reveals itself gradually. A student writing their first character
-encounters perhaps three concepts. By the semester's end, the full API is
-available — but students have arrived there through six sprints of incremental
-expansion, not through a single overwhelming exposure.
+> **Everything is already built. Students gradually learn how to use it.**
 
-No student ever sees "the entire API" on day one. They see what they need,
-when they need it, and each new concept builds on concepts they have already
-mastered.
+The course presents the API gradually. A student writing their first character
+encounters perhaps three concepts. By the semester's end, the full course API
+has been introduced through 30 missions grouped into six sprints.
+
+The API and required engine capabilities are implemented and tested before the
+course begins. Documentation, mission configuration, feature flags, or
+fog-of-war presentation can guide attention, but do not prohibit source
+exploration. Students may inspect or experiment with later capabilities locally.
 
 ---
 
@@ -469,25 +474,25 @@ is not just a backdrop — it is an active participant.
 
 ## 9. Progressive Disclosure
 
-Not all API capabilities are available from day one. The API reveals itself
-in layers, matching the curriculum.
+Not all API capabilities are introduced in missions on day one. The curriculum
+reveals them in layers even though the platform support already exists.
 
 ### Semester Beginning — Basic Presence
 
-Available: character identity, position, simple dialogue, basic movement.
+Introduced: character identity, position, simple dialogue, basic movement.
 
-Hidden: complex interactions, inventory, quests, custom events, animation
-control, world modification.
+Not yet taught: complex interactions, inventory, quests, custom events,
+animation control, world modification.
 
 A student's first experience is: "Here is my character. It has a name. It
 stands here. When someone talks to it, it says this."
 
 ### Early Middle — Interaction and Response
 
-Available: dialogue with choices, object interactions, simple event response,
+Introduced: dialogue with choices, object interactions, simple event response,
 basic state.
 
-Hidden: multi-step quests, complex state management, composition patterns,
+Not yet taught: multi-step quests, complex state management, composition patterns,
 custom events.
 
 A student's mid-semester experience: "My character has conversations. It
@@ -495,10 +500,10 @@ remembers who it has talked to. It reacts differently based on friendship."
 
 ### Late Middle — State and Persistence
 
-Available: inventory, quests, relationship state, world modification, timer
+Introduced: inventory, quests, relationship state, world modification, timer
 events.
 
-Hidden: advanced composition, custom event systems, cross-entity coordination
+Not yet taught: advanced composition, custom event systems, cross-entity coordination
 patterns.
 
 A student's late-middle experience: "My character carries items, completes
@@ -506,7 +511,7 @@ quests, and changes the world. Progress persists across sessions."
 
 ### Semester End — Full Ownership
 
-Available: everything. Custom events, advanced composition, full state
+Introduced: everything. Custom events, advanced composition, full state
 management, world modification, animation sequences.
 
 A student's final experience: "My character is a complete entity with
@@ -518,9 +523,11 @@ that interact with the entire world."
 If every capability is available on day one, students are paralyzed by choice.
 They do not know what to do first, what matters, or how capabilities relate.
 
-Progressive disclosure solves this: each sprint unlocks a small, coherent set
-of new capabilities. Students master what they have before they receive more.
-Confidence builds incrementally.
+Progressive disclosure solves this: each mission introduces a small, coherent
+set of capabilities. Students master what they have before the course calls for
+more. Confidence builds incrementally. This sequencing is an educational and
+user-experience mechanism, not authentication, authorization, or source-code
+security.
 
 ---
 
@@ -699,22 +706,24 @@ The Student API grows by addition, not by modification.
 
 ### How New Capabilities Arrive
 
-A new capability — weather effects, pets, a sound system — follows this path:
+A future platform capability — weather effects, pets, a sound system — follows
+this development path before it can be included in a cohort:
 
 1. **Design.** The capability is designed as a standalone addition to the
    existing API surface. It uses existing patterns and naming conventions.
 
-2. **Prototype.** The capability is implemented behind a feature flag.
-   Teachers can enable it for advanced students.
+2. **Prototype.** The capability is implemented and may be exercised behind a
+   development feature flag.
 
 3. **Validate.** The capability is tested with real students. Does it teach
    something valuable? Is it discoverable? Does it confuse beginners?
 
 4. **Graduate.** If validated, the capability becomes part of the stable API
-   in the next semester. Documentation, examples, and curriculum are updated.
+   for a future cohort. Documentation, examples, and curriculum are updated.
 
-5. **Default.** After one semester as an opt-in feature, the capability may
-   become available by default — but never required.
+5. **Teach.** Once stable and tested, mission content can introduce the
+   capability at the appropriate educational point. A running cohort does not
+   wait for the engine feature to be completed.
 
 ### What Extension Must Not Do
 
@@ -805,7 +814,8 @@ When a class completes the structured semester, the same API supports
 Builder Studio — an open-ended creative environment.
 
 In Builder Studio:
-- The sprint structure is removed. All API capabilities are available.
+- The sprint structure is removed. All API capabilities are introduced without
+  course sequencing.
 - Students build persistent worlds without curriculum constraints.
 - Worlds can be shared, forked, and remixed across classes.
 - Advanced students create custom events, interaction types, and world
@@ -869,10 +879,11 @@ and discover that functions are the tool for that job.
 
 ### Why progressive disclosure?
 
-Revealing the full API on day one would be like handing a student a dictionary
+Teaching the full API on day one would be like handing a student a dictionary
 and saying "learn English." Progressive disclosure provides vocabulary in
-usable chunks, each building on the last. Students are never asked to use a
-concept they have not been taught.
+usable chunks, each building on the last. Students are never asked by a mission
+to use a concept they have not been taught, though they remain free to inspect
+and experiment locally.
 
 ### Why no Pygame exposure?
 
