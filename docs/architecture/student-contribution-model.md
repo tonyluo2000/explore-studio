@@ -216,7 +216,11 @@ implements only the declarative subset supported by Student API v0.1; fields
 listed below as proposed or deferred are not silently accepted by that contract.
 The [Local Explorer Package Loader v0.1](../explorer-package-loader-v0.1.md)
 now validates and parses that subset into immutable typed contributions. Engine
-registration, approval, and class-world assembly remain deferred.
+registration planning is implemented by
+[Student API Registration Adapter v0.1](../student-api-registration-adapter-v0.1.md),
+which produces a pure immutable plan without applying it to a world.
+Registration-plan application, approval, and class-world assembly remain
+deferred.
 
 ### 7.2 Manifest responsibilities
 
