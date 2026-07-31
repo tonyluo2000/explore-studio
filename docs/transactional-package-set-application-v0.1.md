@@ -1,8 +1,9 @@
 # Transactional Package-Set Application v0.1
 
-> **Status:** Implemented explicit-target package-set transaction. Class-world
-> configuration, assembly, release artifacts, publication, approval,
-> authentication, registries, and online services remain deferred.
+> **Status:** Implemented explicit-target package-set transaction. Immutable
+> class-world configuration is implemented separately; assembly, release
+> artifacts, publication, approval, authentication, registries, and online
+> services remain deferred.
 
 Transactional Package-Set Application v0.1 is the controlled mutation boundary
 after package-set preflight:
@@ -24,6 +25,13 @@ caller-supplied `StudentAPIRegistrationTarget`. It does not accept manifests,
 package directories, selections, loader results, or failed planning results. It
 does not repeat package validation, loading, single-package planning, or
 package-set planning.
+
+The pure
+[Immutable Class-World Configuration Model v0.1](class-world-configuration-v0.1.md)
+sits above this runtime boundary and declares the intended exact package-set
+composition. Building a configuration does not call application or mutate a
+target; applying a package set does not create configuration, assemble a class
+world, or generate a release artifact.
 
 ## Explicit target boundary
 
@@ -246,14 +254,15 @@ Package-set application performs no:
 - transactional single-plan application: implemented;
 - multi-package package-set preflight: implemented;
 - transactional package-set application: implemented;
-- class-world configuration and assembly: not implemented;
+- immutable class-world configuration: implemented;
+- class-world assembly: not implemented;
 - release artifacts and reproducible release manifests: not implemented;
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
 ## Deferred work
 
-- class-world configuration and assembly;
+- class-world assembly;
 - reproducible release manifests and artifact hashing;
 - package approval, publication, authentication, and registry services;
 - persistent transaction and audit records;

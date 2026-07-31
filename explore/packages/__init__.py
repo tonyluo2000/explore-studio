@@ -1,5 +1,18 @@
 """Public Explorer Package validation and local loading API."""
 
+from explore.packages.class_world_configuration import build_class_world_configuration
+from explore.packages.class_world_configuration_models import (
+    CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH,
+    COHORT_DISPLAY_NAME_MAX_LENGTH,
+    SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION,
+    ClassWorldCohort,
+    ClassWorldConfiguration,
+    ClassWorldConfigurationIssue,
+    ClassWorldConfigurationIssueCode,
+    ClassWorldConfigurationResult,
+    ClassWorldConfigurationSpec,
+    ClassWorldPackagePin,
+)
 from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
@@ -79,7 +92,16 @@ __all__ = [
     "AssetDeclaration",
     "AppliedRegistration",
     "AppliedPackageSetRegistration",
+    "CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH",
+    "COHORT_DISPLAY_NAME_MAX_LENGTH",
     "Compatibility",
+    "ClassWorldCohort",
+    "ClassWorldConfiguration",
+    "ClassWorldConfigurationIssue",
+    "ClassWorldConfigurationIssueCode",
+    "ClassWorldConfigurationResult",
+    "ClassWorldConfigurationSpec",
+    "ClassWorldPackagePin",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -115,6 +137,7 @@ __all__ = [
     "RegistrationPlanResult",
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
@@ -127,6 +150,7 @@ __all__ = [
     "WorldObjectRegistrationSpec",
     "apply_student_api_registration_plan",
     "apply_package_set_plan",
+    "build_class_world_configuration",
     "build_package_set_plan",
     "build_student_api_registration_plan",
     "load_explorer_package",
