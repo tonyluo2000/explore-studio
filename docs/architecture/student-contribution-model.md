@@ -226,7 +226,12 @@ checks an ordered set of exact package pins and registration plans without
 applying them.
 [Transactional Package-Set Application v0.1](../transactional-package-set-application-v0.1.md)
 now applies one valid package-set plan to one explicit target with cross-package
-rollback. Approval, release artifacts, and class-world assembly remain deferred.
+rollback. The
+[Immutable Class-World Configuration Model v0.1](../class-world-configuration-v0.1.md)
+now declares class-world identity, exact platform and package pins, cohort
+metadata, and one validated package-set plan without runtime application or
+artifact generation. Serialization, class-world assembly, release artifacts,
+hashing, signing, approval, and publication remain deferred.
 
 ### 7.2 Manifest responsibilities
 

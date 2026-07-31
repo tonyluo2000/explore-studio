@@ -231,6 +231,12 @@ Package-set preflight performs no:
 - package publication, approval, authentication, or authorization; or
 - class-world artifact or release-manifest generation.
 
+Successful plans can now be consumed by the pure
+[Immutable Class-World Configuration Model v0.1](class-world-configuration-v0.1.md),
+which requires exact ordered pin agreement while retaining `PackageSetPlan` as
+the canonical composition. Configuration construction does not rerun this
+planner.
+
 The trusted caller supplies selections and already completed plans. Approval and
 ownership policy remain separate concerns.
 
@@ -242,6 +248,7 @@ ownership policy remain separate concerns.
 - single-plan transactional application: implemented;
 - multi-package package-set preflight: implemented;
 - transactional package-set application: implemented;
+- immutable class-world configuration: implemented;
 - class-world assembly: not implemented;
 - release artifacts and release manifests: not implemented;
 - publication and approval: not implemented.
@@ -249,7 +256,7 @@ ownership policy remain separate concerns.
 ## Deferred work
 
 - class-world target selection and target-state orchestration;
-- class-world configuration and assembly;
+- class-world assembly;
 - release-manifest schemas;
 - cross-package policy beyond current identity and cardinality rules;
 - approval, publication, authentication, and registry services;
