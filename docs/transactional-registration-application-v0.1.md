@@ -26,6 +26,12 @@ explicit caller-supplied target. It does not discover a world through global
 state and does not repeat validation, loading, parsing, publication, approval,
 or release assembly.
 
+For multiple packages, the upstream
+[Package-Set Preflight and Selection Model v0.1](package-set-preflight-v0.1.md)
+checks exact package pins, cross-package identities, and aggregate Student API
+cardinality without applying any plan. This transactional adapter still applies
+only one `StudentAPIRegistrationPlan`; package-set application remains deferred.
+
 ## Explicit target boundary
 
 The public `StudentAPIRegistrationTarget` protocol exposes only the operations
@@ -275,8 +281,10 @@ The implemented pipeline status is:
 - declarative package loading: implemented;
 - immutable registration planning: implemented;
 - transactional application to one explicit target: implemented;
-- package-set and class-world assembly: not implemented;
-- cross-package orchestration and collision policy: not implemented;
+- multi-package package-set preflight: implemented;
+- package-set application and class-world assembly: not implemented;
+- cross-package policy beyond current identity and cardinality checks: not
+  implemented;
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
