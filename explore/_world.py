@@ -106,6 +106,23 @@ class World:
                 f"You gave: {type(entity).__name__}"
             )
 
+    def _remove_registration_entity(self, entity: Character | Object) -> None:
+        """Remove an exact entity during registration-transaction rollback.
+
+        This is an internal hook for the explicit package application adapter,
+        not part of the student-facing API. Identity checks ensure rollback
+        cannot remove pre-existing or replacement state.
+        """
+        if self._has_run:
+            raise StudentAPIError(_FREEZE_MESSAGE)
+        if isinstance(entity, Character) and self._character is entity:
+            self._character = None
+            return
+        if isinstance(entity, Object) and self._object is entity:
+            self._object = None
+            return
+        raise StudentAPIError("The registration entity is not owned by this world.")
+
     # ------------------------------------------------------------------
     # Execution
     # ------------------------------------------------------------------

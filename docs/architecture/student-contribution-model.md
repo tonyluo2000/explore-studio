@@ -219,8 +219,9 @@ now validates and parses that subset into immutable typed contributions. Engine
 registration planning is implemented by
 [Student API Registration Adapter v0.1](../student-api-registration-adapter-v0.1.md),
 which produces a pure immutable plan without applying it to a world.
-Registration-plan application, approval, and class-world assembly remain
-deferred.
+[Transactional Registration Plan Application v0.1](../transactional-registration-application-v0.1.md)
+now applies one plan atomically to an explicit compatible target. Package-set
+orchestration, approval, and class-world assembly remain deferred.
 
 ### 7.2 Manifest responsibilities
 

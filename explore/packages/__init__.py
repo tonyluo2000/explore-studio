@@ -33,6 +33,19 @@ from explore.packages.registration_adapter import (
     build_student_api_registration_plan,
     plan_loaded_explorer_package,
 )
+from explore.packages.registration_application import (
+    StudentAPIWorldRegistrationTarget,
+    apply_student_api_registration_plan,
+)
+from explore.packages.registration_application_models import (
+    AppliedRegistration,
+    RegistrationApplicationIssue,
+    RegistrationApplicationIssueCode,
+    RegistrationApplicationResult,
+    RegistrationApplicationState,
+    RegistrationType,
+    StudentAPIRegistrationTarget,
+)
 from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -48,6 +61,7 @@ from explore.packages.validator import validate_explorer_package
 
 __all__ = [
     "AssetDeclaration",
+    "AppliedRegistration",
     "Compatibility",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
@@ -67,17 +81,25 @@ __all__ = [
     "PackageLoadResult",
     "PackageMetadata",
     "PackageProvenance",
+    "RegistrationApplicationIssue",
+    "RegistrationApplicationIssueCode",
+    "RegistrationApplicationResult",
+    "RegistrationApplicationState",
     "RegistrationPlanIssue",
     "RegistrationPlanIssueCode",
     "RegistrationPlanResult",
+    "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "StudentAPIRegistrationEntry",
     "StudentAPIRegistrationPlan",
+    "StudentAPIRegistrationTarget",
+    "StudentAPIWorldRegistrationTarget",
     "ValidationIssue",
     "ValidationReport",
     "WorldObjectRegistration",
     "WorldObjectRegistrationSpec",
+    "apply_student_api_registration_plan",
     "build_student_api_registration_plan",
     "load_explorer_package",
     "plan_loaded_explorer_package",
