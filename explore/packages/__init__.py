@@ -1,5 +1,17 @@
-"""Public Explorer Package contract and validation API."""
+"""Public Explorer Package validation and local loading API."""
 
+from explore.packages.contribution_models import (
+    LoadedCharacter,
+    LoadedContribution,
+    LoadedExplorerPackage,
+    LoadedWorldObject,
+    PackageAssetReference,
+    PackageLoadIssue,
+    PackageLoadIssueCode,
+    PackageLoadResult,
+    PackageProvenance,
+)
+from explore.packages.loader import load_explorer_package
 from explore.packages.models import (
     AssetDeclaration,
     Compatibility,
@@ -27,11 +39,21 @@ __all__ = [
     "ExplorerPackageManifest",
     "IDENTIFIER_MAX_LENGTH",
     "IssueCode",
+    "LoadedCharacter",
+    "LoadedContribution",
+    "LoadedExplorerPackage",
+    "LoadedWorldObject",
     "MAX_ASSET_SIZE_BYTES",
+    "PackageAssetReference",
+    "PackageLoadIssue",
+    "PackageLoadIssueCode",
+    "PackageLoadResult",
     "PackageMetadata",
+    "PackageProvenance",
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "ValidationIssue",
     "ValidationReport",
+    "load_explorer_package",
     "validate_explorer_package",
 ]

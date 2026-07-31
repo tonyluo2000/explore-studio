@@ -214,6 +214,9 @@ The implemented prototype is documented in
 [Explorer Package Contract v0.1](../explorer-package-v0.1.md). It deliberately
 implements only the declarative subset supported by Student API v0.1; fields
 listed below as proposed or deferred are not silently accepted by that contract.
+The [Local Explorer Package Loader v0.1](../explorer-package-loader-v0.1.md)
+now validates and parses that subset into immutable typed contributions. Engine
+registration, approval, and class-world assembly remain deferred.
 
 ### 7.2 Manifest responsibilities
 
