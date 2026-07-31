@@ -30,7 +30,10 @@ For multiple packages, the upstream
 [Package-Set Preflight and Selection Model v0.1](package-set-preflight-v0.1.md)
 checks exact package pins, cross-package identities, and aggregate Student API
 cardinality without applying any plan. This transactional adapter still applies
-only one `StudentAPIRegistrationPlan`; package-set application remains deferred.
+only one `StudentAPIRegistrationPlan`. The higher-level
+[Transactional Package-Set Application v0.1](transactional-package-set-application-v0.1.md)
+reuses its validation, staging, and target-operation primitives inside one
+package-aware transaction spanning the full set.
 
 ## Explicit target boundary
 
@@ -282,7 +285,8 @@ The implemented pipeline status is:
 - immutable registration planning: implemented;
 - transactional application to one explicit target: implemented;
 - multi-package package-set preflight: implemented;
-- package-set application and class-world assembly: not implemented;
+- transactional package-set application: implemented;
+- class-world assembly: not implemented;
 - cross-package policy beyond current identity and cardinality checks: not
   implemented;
 - publication, approval, authentication, registries, and online services: not
@@ -290,7 +294,7 @@ The implemented pipeline status is:
 
 ## Deferred work
 
-- package-set application for a class-world build;
+- class-world orchestration using package-set application;
 - cross-package namespace and collision policy;
 - asset materialization and rendering integration;
 - online approval, publishing, authentication, and registry services;
