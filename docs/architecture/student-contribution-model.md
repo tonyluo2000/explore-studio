@@ -220,8 +220,11 @@ registration planning is implemented by
 [Student API Registration Adapter v0.1](../student-api-registration-adapter-v0.1.md),
 which produces a pure immutable plan without applying it to a world.
 [Transactional Registration Plan Application v0.1](../transactional-registration-application-v0.1.md)
-now applies one plan atomically to an explicit compatible target. Package-set
-orchestration, approval, and class-world assembly remain deferred.
+now applies one plan atomically to an explicit compatible target.
+[Package-Set Preflight and Selection Model v0.1](../package-set-preflight-v0.1.md)
+checks an ordered set of exact package pins and registration plans without
+applying them. Package-set application, approval, release artifacts, and
+class-world assembly remain deferred.
 
 ### 7.2 Manifest responsibilities
 

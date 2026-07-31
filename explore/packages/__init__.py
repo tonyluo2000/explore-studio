@@ -22,6 +22,15 @@ from explore.packages.models import (
     ValidationIssue,
     ValidationReport,
 )
+from explore.packages.package_set_models import (
+    PackageSelection,
+    PackageSetIssue,
+    PackageSetIssueCode,
+    PackageSetPlan,
+    PackageSetPlanResult,
+    SelectedPackagePlan,
+)
+from explore.packages.package_set_planner import build_package_set_plan
 from explore.packages.policy import (
     DISPLAY_NAME_MAX_LENGTH,
     IDENTIFIER_MAX_LENGTH,
@@ -81,6 +90,11 @@ __all__ = [
     "PackageLoadResult",
     "PackageMetadata",
     "PackageProvenance",
+    "PackageSelection",
+    "PackageSetIssue",
+    "PackageSetIssueCode",
+    "PackageSetPlan",
+    "PackageSetPlanResult",
     "RegistrationApplicationIssue",
     "RegistrationApplicationIssueCode",
     "RegistrationApplicationResult",
@@ -91,6 +105,7 @@ __all__ = [
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
+    "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
     "StudentAPIRegistrationPlan",
     "StudentAPIRegistrationTarget",
@@ -100,6 +115,7 @@ __all__ = [
     "WorldObjectRegistration",
     "WorldObjectRegistrationSpec",
     "apply_student_api_registration_plan",
+    "build_package_set_plan",
     "build_student_api_registration_plan",
     "load_explorer_package",
     "plan_loaded_explorer_package",
