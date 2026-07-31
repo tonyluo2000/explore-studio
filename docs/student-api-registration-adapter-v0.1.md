@@ -1,7 +1,7 @@
 # Student API Registration Adapter v0.1
 
-> **Status:** Implemented local planning layer. Registration-plan application
-> remains deferred.
+> **Status:** Implemented local planning layer. Transactional application is
+> implemented as a separate explicit-target boundary.
 
 The Student API Registration Adapter converts one successfully loaded
 `LoadedExplorerPackage` into a deterministic, immutable description of what a
@@ -21,7 +21,7 @@ Student API Registration Adapter
         ↓
 immutable StudentAPIRegistrationPlan
         ↓
-future explicit application step (not implemented)
+explicit transactional application
 ```
 
 The primary API accepts only an in-memory `LoadedExplorerPackage`. It does not
@@ -38,6 +38,11 @@ Planning is deliberately separate from application. Building a plan does not:
 - materialize an image or audio asset;
 - initialize Pygame, a renderer, or an event loop; or
 - publish, approve, or assemble packages.
+
+The separate
+[Transactional Registration Plan Application v0.1](transactional-registration-application-v0.1.md)
+consumes a completed plan and an explicitly supplied compatible target. It does
+not change the planning contract or make planning itself stateful.
 
 ## Public API
 
@@ -170,13 +175,13 @@ identical results.
 Implemented:
 
 - deterministic Explorer Package validation;
-- local declarative package loading; and
-- pure Student API registration planning.
+- local declarative package loading;
+- pure Student API registration planning; and
+- explicit-target transactional registration application.
 
 Not implemented:
 
-- transactional application of a registration plan;
-- live-world registration or engine asset materialization;
+- engine scene registration or asset materialization;
 - planning across a set of packages or cross-package collision resolution;
 - class-world assembly;
 - authentication, online approval, publication, or registries;
