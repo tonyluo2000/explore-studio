@@ -22,6 +22,13 @@ from explore.packages.models import (
     ValidationIssue,
     ValidationReport,
 )
+from explore.packages.package_set_application import apply_package_set_plan
+from explore.packages.package_set_application_models import (
+    AppliedPackageSetRegistration,
+    PackageSetApplicationIssue,
+    PackageSetApplicationIssueCode,
+    PackageSetApplicationResult,
+)
 from explore.packages.package_set_models import (
     PackageSelection,
     PackageSetIssue,
@@ -71,6 +78,7 @@ from explore.packages.validator import validate_explorer_package
 __all__ = [
     "AssetDeclaration",
     "AppliedRegistration",
+    "AppliedPackageSetRegistration",
     "Compatibility",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
@@ -91,6 +99,9 @@ __all__ = [
     "PackageMetadata",
     "PackageProvenance",
     "PackageSelection",
+    "PackageSetApplicationIssue",
+    "PackageSetApplicationIssueCode",
+    "PackageSetApplicationResult",
     "PackageSetIssue",
     "PackageSetIssueCode",
     "PackageSetPlan",
@@ -115,6 +126,7 @@ __all__ = [
     "WorldObjectRegistration",
     "WorldObjectRegistrationSpec",
     "apply_student_api_registration_plan",
+    "apply_package_set_plan",
     "build_package_set_plan",
     "build_student_api_registration_plan",
     "load_explorer_package",

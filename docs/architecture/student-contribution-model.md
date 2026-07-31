@@ -223,8 +223,10 @@ which produces a pure immutable plan without applying it to a world.
 now applies one plan atomically to an explicit compatible target.
 [Package-Set Preflight and Selection Model v0.1](../package-set-preflight-v0.1.md)
 checks an ordered set of exact package pins and registration plans without
-applying them. Package-set application, approval, release artifacts, and
-class-world assembly remain deferred.
+applying them.
+[Transactional Package-Set Application v0.1](../transactional-package-set-application-v0.1.md)
+now applies one valid package-set plan to one explicit target with cross-package
+rollback. Approval, release artifacts, and class-world assembly remain deferred.
 
 ### 7.2 Manifest responsibilities
 

@@ -22,6 +22,11 @@ immutable PackageSetPlan
 This is a planning boundary. It does not apply a registration plan, select a
 target, mutate a `World`, or create a class-world release.
 
+The downstream
+[Transactional Package-Set Application v0.1](transactional-package-set-application-v0.1.md)
+applies one successful immutable `PackageSetPlan` to one explicit compatible
+target with staging and cross-package rollback. Planning itself remains pure.
+
 ## Input boundary
 
 Each `PackageSelection` explicitly contains:
@@ -236,15 +241,14 @@ ownership policy remain separate concerns.
 - single-package registration planning: implemented;
 - single-plan transactional application: implemented;
 - multi-package package-set preflight: implemented;
-- transactional package-set application: not implemented;
+- transactional package-set application: implemented;
 - class-world assembly: not implemented;
 - release artifacts and release manifests: not implemented;
 - publication and approval: not implemented.
 
 ## Deferred work
 
-- transactional package-set application and rollback policy;
-- explicit target selection and target-state preflight;
+- class-world target selection and target-state orchestration;
 - class-world configuration and assembly;
 - release-manifest schemas;
 - cross-package policy beyond current identity and cardinality rules;
