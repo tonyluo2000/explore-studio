@@ -29,11 +29,28 @@ from explore.packages.policy import (
     SUPPORTED_SCHEMA_VERSION,
     SUPPORTED_STUDENT_API_VERSION,
 )
+from explore.packages.registration_adapter import (
+    build_student_api_registration_plan,
+    plan_loaded_explorer_package,
+)
+from explore.packages.registration_models import (
+    CharacterRegistration,
+    CharacterRegistrationSpec,
+    RegistrationPlanIssue,
+    RegistrationPlanIssueCode,
+    RegistrationPlanResult,
+    StudentAPIRegistrationEntry,
+    StudentAPIRegistrationPlan,
+    WorldObjectRegistration,
+    WorldObjectRegistrationSpec,
+)
 from explore.packages.validator import validate_explorer_package
 
 __all__ = [
     "AssetDeclaration",
     "Compatibility",
+    "CharacterRegistration",
+    "CharacterRegistrationSpec",
     "ContributionDeclaration",
     "DISPLAY_NAME_MAX_LENGTH",
     "ExplorerPackageManifest",
@@ -50,10 +67,19 @@ __all__ = [
     "PackageLoadResult",
     "PackageMetadata",
     "PackageProvenance",
+    "RegistrationPlanIssue",
+    "RegistrationPlanIssueCode",
+    "RegistrationPlanResult",
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
+    "StudentAPIRegistrationEntry",
+    "StudentAPIRegistrationPlan",
     "ValidationIssue",
     "ValidationReport",
+    "WorldObjectRegistration",
+    "WorldObjectRegistrationSpec",
+    "build_student_api_registration_plan",
     "load_explorer_package",
+    "plan_loaded_explorer_package",
     "validate_explorer_package",
 ]

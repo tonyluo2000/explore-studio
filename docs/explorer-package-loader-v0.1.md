@@ -154,7 +154,11 @@ Both checked-in examples load through this API:
   a `LoadedWorldObject` with interaction messages.
 
 Package contract validation and local declarative loading are implemented.
-Engine or Student API registration adapters, cross-package namespace policy,
-class-world assembly, archive loading, online publishing and approval, schema
-migration, semantic-version ranges, dependencies, and executable extensions
-remain deferred.
+The next pure layer,
+[Student API Registration Adapter v0.1](student-api-registration-adapter-v0.1.md),
+converts a successful in-memory `LoadedExplorerPackage` into an immutable
+registration plan without rereading package files or mutating a world.
+Registration-plan application, cross-package namespace policy, class-world
+assembly, archive loading, online publishing and approval, schema migration,
+semantic-version ranges, dependencies, and executable extensions remain
+deferred.
