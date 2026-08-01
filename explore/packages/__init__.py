@@ -13,6 +13,16 @@ from explore.packages.class_world_configuration_models import (
     ClassWorldConfigurationSpec,
     ClassWorldPackagePin,
 )
+from explore.packages.class_world_manifest import (
+    parse_class_world_manifest,
+    serialize_class_world_manifest,
+)
+from explore.packages.class_world_manifest_models import (
+    SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION,
+    ClassWorldManifestIssue,
+    ClassWorldManifestIssueCode,
+    ClassWorldManifestParseResult,
+)
 from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
@@ -102,6 +112,9 @@ __all__ = [
     "ClassWorldConfigurationResult",
     "ClassWorldConfigurationSpec",
     "ClassWorldPackagePin",
+    "ClassWorldManifestIssue",
+    "ClassWorldManifestIssueCode",
+    "ClassWorldManifestParseResult",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -138,6 +151,7 @@ __all__ = [
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
@@ -155,5 +169,7 @@ __all__ = [
     "build_student_api_registration_plan",
     "load_explorer_package",
     "plan_loaded_explorer_package",
+    "parse_class_world_manifest",
+    "serialize_class_world_manifest",
     "validate_explorer_package",
 ]
