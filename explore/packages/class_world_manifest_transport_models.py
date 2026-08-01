@@ -9,6 +9,7 @@ from explore.packages.class_world_configuration_models import ClassWorldConfigur
 from explore.packages.class_world_manifest_models import ClassWorldManifestIssue
 
 MAX_CLASS_WORLD_MANIFEST_BYTES = 1 * 1024 * 1024
+SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION = "0.1"
 
 
 class ClassWorldManifestFileIssueCode(StrEnum):

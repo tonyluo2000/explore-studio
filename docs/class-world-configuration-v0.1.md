@@ -2,9 +2,10 @@
 
 > **Status:** Implemented pure in-memory configuration boundary. Deterministic
 > JSON manifest serialization, parsing, and explicit local UTF-8 file transport
-> are implemented separately. Class-world assembly, release artifacts, hashing,
-> signing, publication, approval, authentication, registries, and deployment
-> remain deferred.
+> are implemented separately. Immutable release identity and declared
+> provenance are also implemented separately. Class-world assembly, release
+> artifacts, hashing, signing, publication, approval, authentication,
+> registries, and deployment remain deferred.
 
 Immutable Class-World Configuration Model v0.1 describes what one class world
 is intended to contain. It combines class-world identity and display metadata,
@@ -50,6 +51,11 @@ The further
 [Class-World Manifest File Transport v0.1](class-world-manifest-file-transport-v0.1.md)
 reads and atomically replaces manifest files at explicit local paths without
 adding release-artifact semantics.
+The downstream
+[Class-World Release Identity and Provenance Model v0.1](class-world-release-identity-and-provenance-v0.1.md)
+retains an exact configuration and derives immutable release identity and
+declared provenance without serializing a release declaration or producing an
+artifact.
 
 ## Schema and identity
 
@@ -227,13 +233,15 @@ Configuration construction performs no:
 - immutable class-world configuration: implemented;
 - serialized class-world manifest schema: implemented;
 - explicit local UTF-8 manifest file transport: implemented;
+- immutable release identity and declared provenance: implemented;
+- release-declaration serialization and file transport: not implemented;
 - class-world assembly: not implemented;
-- reproducible release manifests and release artifacts: not implemented;
+- release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
-Deferred work includes a release-manifest model, runtime engine-version
-verification, artifact hashing and signing,
+Deferred work includes release-declaration serialization and file transport,
+runtime engine-version verification, artifact hashing and signing,
 class-world assembly, release packaging, approval and publication, deployment,
 and persistent audit records.

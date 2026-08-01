@@ -2,9 +2,11 @@
 
 > **Status:** Implemented explicit local UTF-8 file transport. Immutable
 > configuration and deterministic JSON manifest semantics are implemented in
-> separate layers. Hashing, signing, class-world assembly, release artifacts,
-> publication, approval, authentication, registries, online storage, and
-> deployment are not implemented.
+> separate layers. Immutable release identity and declared provenance are also
+> implemented separately. Release-declaration serialization and file transport,
+> hashing, signing, class-world assembly, release artifacts, publication,
+> approval, authentication, registries, online storage, and deployment are not
+> implemented.
 
 Class-World Manifest File Transport v0.1 moves deterministic class-world
 manifest text across one explicit local filesystem boundary:
@@ -58,7 +60,9 @@ to this filesystem layer.
 File transport encodes, reads, writes, and replaces only that manifest text. A
 transported manifest is not a release artifact. A future release artifact may
 include packaged assets, generated files, hashes, signatures, deployment
-metadata, or release provenance; v0.1 creates none of those.
+metadata, or release provenance; this transport creates none of those. The
+[Class-World Release Identity and Provenance Model v0.1](class-world-release-identity-and-provenance-v0.1.md)
+records declared release inputs in memory without reusing this file transport.
 
 ## Public API
 
@@ -87,7 +91,13 @@ The intentional public surface is:
 - `ClassWorldManifestFileWriteResult`;
 - `ClassWorldManifestFileIssue`;
 - `ClassWorldManifestFileIssueCode`; and
-- `MAX_CLASS_WORLD_MANIFEST_BYTES`.
+- `MAX_CLASS_WORLD_MANIFEST_BYTES`; and
+- `SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION`.
+
+The transport policy is explicitly versioned as `"0.1"` through
+`SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION`. The release
+provenance model references this constant; it does not infer a contract version
+from the recommended filename.
 
 All result and issue models are frozen dataclasses. Issue collections and
 preserved manifest-issue collections are tuples. No result exposes a file
@@ -246,7 +256,7 @@ Deferred work includes:
 - portable directory `fsync` durability;
 - file locking and explicit concurrent-writer coordination;
 - optional verified readback;
-- release-manifest identity and retained provenance;
+- release-declaration serialization and file transport;
 - deterministic artifact hashing and signing;
 - class-world assembly and asset materialization;
 - publication, approval, authentication, registries, and online storage;

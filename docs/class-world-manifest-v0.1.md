@@ -2,8 +2,10 @@
 
 > **Status:** Implemented deterministic in-memory JSON serialization and strict
 > parsing. Explicit local UTF-8 file transport is implemented separately.
-> Class-world assembly, release artifacts, hashing, signing, publication,
-> approval, authentication, registries, and online services remain deferred.
+> Immutable release identity and declared provenance are implemented separately.
+> Release-declaration serialization and file transport, class-world assembly,
+> release artifacts, hashing, signing, publication, approval, authentication,
+> registries, and online services remain deferred.
 
 Serialized Class-World Manifest Schema v0.1 gives an immutable
 `ClassWorldConfiguration` a deterministic, portable JSON declaration. It
@@ -54,6 +56,11 @@ This schema API continues to operate on Unicode `str` values only. The separate
 provides explicit-path bounded reads, strict UTF-8 without BOM, and canonical
 same-directory atomic replacement. It delegates JSON semantics back to this
 layer and does not turn the manifest into a release artifact.
+The further
+[Class-World Release Identity and Provenance Model v0.1](class-world-release-identity-and-provenance-v0.1.md)
+records explicit release identity and declared provenance from the exact
+configuration. It does not serialize the release declaration or verify artifact
+bytes.
 
 ## Schema
 
@@ -193,7 +200,7 @@ inspection, runtime object construction, asset materialization, Pygame
 initialization, publication, approval, authentication, or deployment. They do
 not assemble a class world or generate a release artifact.
 
-Deferred work includes a release-manifest model, deterministic artifact hashing,
-signing, class-world assembly, release packaging, publication and approval,
-deployment, persistent audit records, registry services, target locking, and
-persistent recovery.
+Deferred work includes release-declaration serialization and file transport,
+deterministic artifact hashing, signing, class-world assembly, release
+packaging, publication and approval, deployment, persistent audit records,
+registry services, target locking, and persistent recovery.

@@ -29,10 +29,23 @@ from explore.packages.class_world_manifest_transport import (
 )
 from explore.packages.class_world_manifest_transport_models import (
     MAX_CLASS_WORLD_MANIFEST_BYTES,
+    SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION,
     ClassWorldManifestFileIssue,
     ClassWorldManifestFileIssueCode,
     ClassWorldManifestFileReadResult,
     ClassWorldManifestFileWriteResult,
+)
+from explore.packages.class_world_release_declaration import (
+    build_class_world_release_declaration,
+)
+from explore.packages.class_world_release_declaration_models import (
+    SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION,
+    ClassWorldReleaseDeclaration,
+    ClassWorldReleaseDeclarationIssue,
+    ClassWorldReleaseDeclarationIssueCode,
+    ClassWorldReleaseDeclarationResult,
+    ClassWorldReleaseIdentity,
+    ClassWorldReleaseProvenance,
 )
 from explore.packages.contribution_models import (
     LoadedCharacter,
@@ -130,6 +143,12 @@ __all__ = [
     "ClassWorldManifestFileIssueCode",
     "ClassWorldManifestFileReadResult",
     "ClassWorldManifestFileWriteResult",
+    "ClassWorldReleaseDeclaration",
+    "ClassWorldReleaseDeclarationIssue",
+    "ClassWorldReleaseDeclarationIssueCode",
+    "ClassWorldReleaseDeclarationResult",
+    "ClassWorldReleaseIdentity",
+    "ClassWorldReleaseProvenance",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -168,6 +187,8 @@ __all__ = [
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
@@ -181,6 +202,7 @@ __all__ = [
     "apply_student_api_registration_plan",
     "apply_package_set_plan",
     "build_class_world_configuration",
+    "build_class_world_release_declaration",
     "build_package_set_plan",
     "build_student_api_registration_plan",
     "load_explorer_package",
