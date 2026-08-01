@@ -1,9 +1,9 @@
 # Serialized Class-World Manifest Schema v0.1
 
 > **Status:** Implemented deterministic in-memory JSON serialization and strict
-> parsing. File transport, class-world assembly, release artifacts, hashing,
-> signing, publication, approval, authentication, registries, and online
-> services remain deferred.
+> parsing. Explicit local UTF-8 file transport is implemented separately.
+> Class-world assembly, release artifacts, hashing, signing, publication,
+> approval, authentication, registries, and online services remain deferred.
 
 Serialized Class-World Manifest Schema v0.1 gives an immutable
 `ClassWorldConfiguration` a deterministic, portable JSON declaration. It
@@ -42,16 +42,18 @@ release artifact and does not rebuild a plan.
 
 A future release artifact may include generated files, packaged assets, hashes,
 signatures, lock data, build provenance, or deployment metadata. This layer
-creates none of those. The recommended filename for a future explicit file
-transport is:
+creates none of those. The recommended filename for the implemented explicit
+local file transport is:
 
 ```text
 class-world.manifest.json
 ```
 
-The current API never reads or writes that file; it operates on Unicode `str`
-values only. Callers are responsible for UTF-8 encoding and decoding at a
-future transport boundary.
+This schema API continues to operate on Unicode `str` values only. The separate
+[Class-World Manifest File Transport v0.1](class-world-manifest-file-transport-v0.1.md)
+provides explicit-path bounded reads, strict UTF-8 without BOM, and canonical
+same-directory atomic replacement. It delegates JSON semantics back to this
+layer and does not turn the manifest into a release artifact.
 
 ## Schema
 
@@ -191,7 +193,7 @@ inspection, runtime object construction, asset materialization, Pygame
 initialization, publication, approval, authentication, or deployment. They do
 not assemble a class world or generate a release artifact.
 
-Deferred work includes explicit file read/write transport, a release-manifest
-model, deterministic artifact hashing, signing, class-world assembly, release
-packaging, publication and approval, deployment, persistent audit records,
-registry services, target locking, and persistent recovery.
+Deferred work includes a release-manifest model, deterministic artifact hashing,
+signing, class-world assembly, release packaging, publication and approval,
+deployment, persistent audit records, registry services, target locking, and
+persistent recovery.
