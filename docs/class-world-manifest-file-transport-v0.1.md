@@ -3,10 +3,11 @@
 > **Status:** Implemented explicit local UTF-8 file transport. Immutable
 > configuration and deterministic JSON manifest semantics are implemented in
 > separate layers. Immutable release identity and declared provenance are also
-> implemented separately. Release-declaration serialization and file transport,
-> hashing, signing, class-world assembly, release artifacts, publication,
-> approval, authentication, registries, online storage, and deployment are not
-> implemented.
+> implemented separately. Deterministic release-declaration JSON serialization
+> and strict parsing are implemented separately. Release-declaration file
+> transport, hashing, signing, class-world assembly, release artifacts,
+> publication, approval, authentication, registries, online storage, and
+> deployment are not implemented.
 
 Class-World Manifest File Transport v0.1 moves deterministic class-world
 manifest text across one explicit local filesystem boundary:
@@ -256,7 +257,7 @@ Deferred work includes:
 - portable directory `fsync` durability;
 - file locking and explicit concurrent-writer coordination;
 - optional verified readback;
-- release-declaration serialization and file transport;
+- release-declaration file transport;
 - deterministic artifact hashing and signing;
 - class-world assembly and asset materialization;
 - publication, approval, authentication, registries, and online storage;

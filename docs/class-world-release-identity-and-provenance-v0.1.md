@@ -1,7 +1,8 @@
 # Class-World Release Identity and Provenance Model v0.1
 
 > **Status:** Implemented pure immutable in-memory release declaration.
-> Release-declaration serialization and file transport, hashing, signing,
+> Deterministic release-declaration JSON serialization and strict parsing are
+> implemented separately. Release-declaration file transport, hashing, signing,
 > class-world assembly, release artifacts, publication, and deployment remain
 > deferred.
 
@@ -37,8 +38,10 @@ The implemented boundaries are distinct:
    files, hashes, signatures, archives, publication metadata, or deployment
    metadata.
 
-This model implements only step 4. It does not serialize or transport the
-release declaration and does not assemble step 5.
+This model implements only step 4. The separate
+[Class-World Release Declaration Serialization v0.1](class-world-release-declaration-serialization-v0.1.md)
+serializes it and strictly parses it against an authoritative supplied
+configuration. Neither layer transports the text or assembles step 5.
 
 ## Public API
 
@@ -71,7 +74,8 @@ The intentional public surface is:
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION`; and
 - `SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION`.
 
-The only supported release-declaration contract version is exactly `"0.1"`.
+The only supported release-declaration contract and JSON schema version is
+exactly `"0.1"`.
 The declaration also references the existing class-world manifest schema
 version and the explicit manifest transport contract version, both exactly
 `"0.1"`.
@@ -184,7 +188,6 @@ published, signed, verified, or deployed release artifact.
 
 Deferred work includes:
 
-- release-declaration serialization and parsing;
 - release-declaration file transport and any filename policy;
 - class-world assembly and asset materialization;
 - release artifact and archive creation;
