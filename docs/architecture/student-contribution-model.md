@@ -230,8 +230,11 @@ rollback. The
 [Immutable Class-World Configuration Model v0.1](../class-world-configuration-v0.1.md)
 now declares class-world identity, exact platform and package pins, cohort
 metadata, and one validated package-set plan without runtime application or
-artifact generation. Serialization, class-world assembly, release artifacts,
-hashing, signing, approval, and publication remain deferred.
+artifact generation. The
+[Serialized Class-World Manifest Schema v0.1](../class-world-manifest-v0.1.md)
+now provides deterministic in-memory JSON serialization and strict parsing
+against that validated package-set plan. File transport, class-world assembly,
+release artifacts, hashing, signing, approval, and publication remain deferred.
 
 ### 7.2 Manifest responsibilities
 

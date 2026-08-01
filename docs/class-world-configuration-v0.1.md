@@ -1,7 +1,8 @@
 # Immutable Class-World Configuration Model v0.1
 
-> **Status:** Implemented pure in-memory configuration boundary. Class-world
-> assembly, serialized manifests, release artifacts, hashing, signing,
+> **Status:** Implemented pure in-memory configuration boundary. Deterministic
+> JSON manifest serialization and parsing are implemented separately. Class-world
+> assembly, release artifacts, hashing, signing,
 > publication, approval, authentication, registries, and deployment remain
 > deferred.
 
@@ -39,6 +40,12 @@ Runtime application is a separate boundary too. Transactional package-set
 application uses a `PackageSetPlan` and an explicit target to create Student API
 runtime instances and mutate that target. Configuration construction does not
 call application and does not inspect target capacity or state.
+
+The downstream
+[Serialized Class-World Manifest Schema v0.1](class-world-manifest-v0.1.md)
+provides deterministic JSON serialization and strict parsing for this immutable
+configuration. Parsing requires the matching validated `PackageSetPlan`; it
+does not rebuild package composition or create a release artifact.
 
 ## Schema and identity
 
@@ -214,14 +221,14 @@ Configuration construction performs no:
 - package-set preflight planning: implemented;
 - transactional package-set application: implemented;
 - immutable class-world configuration: implemented;
-- serialized class-world configuration schema: not implemented;
+- serialized class-world manifest schema: implemented;
 - class-world assembly: not implemented;
 - reproducible release manifests and release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
-Deferred work includes a serialized configuration schema, reproducible release
-manifest, runtime engine-version verification, artifact hashing and signing,
+Deferred work includes explicit manifest file transport, a release-manifest
+model, runtime engine-version verification, artifact hashing and signing,
 class-world assembly, release packaging, approval and publication, deployment,
 and persistent audit records.
