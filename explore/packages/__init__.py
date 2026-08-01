@@ -47,6 +47,15 @@ from explore.packages.class_world_release_declaration_models import (
     ClassWorldReleaseIdentity,
     ClassWorldReleaseProvenance,
 )
+from explore.packages.class_world_release_declaration_serialization import (
+    parse_class_world_release_declaration,
+    serialize_class_world_release_declaration,
+)
+from explore.packages.class_world_release_declaration_serialization_models import (
+    ClassWorldReleaseDeclarationParseResult,
+    ClassWorldReleaseDeclarationSerializationIssue,
+    ClassWorldReleaseDeclarationSerializationIssueCode,
+)
 from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
@@ -146,7 +155,10 @@ __all__ = [
     "ClassWorldReleaseDeclaration",
     "ClassWorldReleaseDeclarationIssue",
     "ClassWorldReleaseDeclarationIssueCode",
+    "ClassWorldReleaseDeclarationParseResult",
     "ClassWorldReleaseDeclarationResult",
+    "ClassWorldReleaseDeclarationSerializationIssue",
+    "ClassWorldReleaseDeclarationSerializationIssueCode",
     "ClassWorldReleaseIdentity",
     "ClassWorldReleaseProvenance",
     "CharacterRegistration",
@@ -208,8 +220,10 @@ __all__ = [
     "load_explorer_package",
     "plan_loaded_explorer_package",
     "parse_class_world_manifest",
+    "parse_class_world_release_declaration",
     "read_class_world_manifest_file",
     "serialize_class_world_manifest",
+    "serialize_class_world_release_declaration",
     "validate_explorer_package",
     "write_class_world_manifest_file",
 ]
