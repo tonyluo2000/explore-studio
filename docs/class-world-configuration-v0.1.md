@@ -1,10 +1,10 @@
 # Immutable Class-World Configuration Model v0.1
 
 > **Status:** Implemented pure in-memory configuration boundary. Deterministic
-> JSON manifest serialization and parsing are implemented separately. Class-world
-> assembly, release artifacts, hashing, signing,
-> publication, approval, authentication, registries, and deployment remain
-> deferred.
+> JSON manifest serialization, parsing, and explicit local UTF-8 file transport
+> are implemented separately. Class-world assembly, release artifacts, hashing,
+> signing, publication, approval, authentication, registries, and deployment
+> remain deferred.
 
 Immutable Class-World Configuration Model v0.1 describes what one class world
 is intended to contain. It combines class-world identity and display metadata,
@@ -46,6 +46,10 @@ The downstream
 provides deterministic JSON serialization and strict parsing for this immutable
 configuration. Parsing requires the matching validated `PackageSetPlan`; it
 does not rebuild package composition or create a release artifact.
+The further
+[Class-World Manifest File Transport v0.1](class-world-manifest-file-transport-v0.1.md)
+reads and atomically replaces manifest files at explicit local paths without
+adding release-artifact semantics.
 
 ## Schema and identity
 
@@ -222,13 +226,14 @@ Configuration construction performs no:
 - transactional package-set application: implemented;
 - immutable class-world configuration: implemented;
 - serialized class-world manifest schema: implemented;
+- explicit local UTF-8 manifest file transport: implemented;
 - class-world assembly: not implemented;
 - reproducible release manifests and release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
-Deferred work includes explicit manifest file transport, a release-manifest
-model, runtime engine-version verification, artifact hashing and signing,
+Deferred work includes a release-manifest model, runtime engine-version
+verification, artifact hashing and signing,
 class-world assembly, release packaging, approval and publication, deployment,
 and persistent audit records.

@@ -23,6 +23,17 @@ from explore.packages.class_world_manifest_models import (
     ClassWorldManifestIssueCode,
     ClassWorldManifestParseResult,
 )
+from explore.packages.class_world_manifest_transport import (
+    read_class_world_manifest_file,
+    write_class_world_manifest_file,
+)
+from explore.packages.class_world_manifest_transport_models import (
+    MAX_CLASS_WORLD_MANIFEST_BYTES,
+    ClassWorldManifestFileIssue,
+    ClassWorldManifestFileIssueCode,
+    ClassWorldManifestFileReadResult,
+    ClassWorldManifestFileWriteResult,
+)
 from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
@@ -115,6 +126,10 @@ __all__ = [
     "ClassWorldManifestIssue",
     "ClassWorldManifestIssueCode",
     "ClassWorldManifestParseResult",
+    "ClassWorldManifestFileIssue",
+    "ClassWorldManifestFileIssueCode",
+    "ClassWorldManifestFileReadResult",
+    "ClassWorldManifestFileWriteResult",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -127,6 +142,7 @@ __all__ = [
     "LoadedExplorerPackage",
     "LoadedWorldObject",
     "MAX_ASSET_SIZE_BYTES",
+    "MAX_CLASS_WORLD_MANIFEST_BYTES",
     "PackageAssetReference",
     "PackageLoadIssue",
     "PackageLoadIssueCode",
@@ -170,6 +186,8 @@ __all__ = [
     "load_explorer_package",
     "plan_loaded_explorer_package",
     "parse_class_world_manifest",
+    "read_class_world_manifest_file",
     "serialize_class_world_manifest",
     "validate_explorer_package",
+    "write_class_world_manifest_file",
 ]
