@@ -236,9 +236,13 @@ now provides deterministic in-memory JSON serialization and strict parsing
 against that validated package-set plan. The
 [Class-World Manifest File Transport v0.1](../class-world-manifest-file-transport-v0.1.md)
 now provides bounded strict UTF-8 reads and canonical atomic local-file
-replacement at explicit caller-supplied paths. Class-world assembly, release
-artifacts, hashing, signing, approval, publication, authentication, registries,
-online storage, and deployment remain deferred.
+replacement at explicit caller-supplied paths. The
+[Class-World Release Identity and Provenance Model v0.1](../class-world-release-identity-and-provenance-v0.1.md)
+now declares explicit release identity and authoritative configuration and
+package-version inputs without producing an artifact. Release-declaration
+serialization and file transport, class-world assembly, release artifacts,
+hashing, signing, approval, publication, authentication, registries, online
+storage, and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 
