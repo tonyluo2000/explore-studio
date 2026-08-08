@@ -54,8 +54,10 @@ adding release-artifact semantics.
 The downstream
 [Class-World Release Identity and Provenance Model v0.1](class-world-release-identity-and-provenance-v0.1.md)
 retains an exact configuration and derives immutable release identity and
-declared provenance without serializing a release declaration or producing an
-artifact.
+declared provenance without producing an artifact. The separate
+[Class-World Release Declaration Serialization v0.1](class-world-release-declaration-serialization-v0.1.md)
+provides canonical JSON and strict parsing that requires this authoritative
+configuration and rejects disagreement.
 
 ## Schema and identity
 
@@ -234,14 +236,16 @@ Configuration construction performs no:
 - serialized class-world manifest schema: implemented;
 - explicit local UTF-8 manifest file transport: implemented;
 - immutable release identity and declared provenance: implemented;
-- release-declaration serialization and file transport: not implemented;
+- deterministic release-declaration JSON serialization and strict parsing:
+  implemented;
+- release-declaration file transport: not implemented;
 - class-world assembly: not implemented;
 - release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
-Deferred work includes release-declaration serialization and file transport,
-runtime engine-version verification, artifact hashing and signing,
+Deferred work includes release-declaration file transport, runtime
+engine-version verification, artifact hashing and signing,
 class-world assembly, release packaging, approval and publication, deployment,
 and persistent audit records.

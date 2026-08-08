@@ -239,10 +239,13 @@ now provides bounded strict UTF-8 reads and canonical atomic local-file
 replacement at explicit caller-supplied paths. The
 [Class-World Release Identity and Provenance Model v0.1](../class-world-release-identity-and-provenance-v0.1.md)
 now declares explicit release identity and authoritative configuration and
-package-version inputs without producing an artifact. Release-declaration
-serialization and file transport, class-world assembly, release artifacts,
-hashing, signing, approval, publication, authentication, registries, online
-storage, and deployment remain deferred.
+package-version inputs without producing an artifact. The
+[Class-World Release Declaration Serialization v0.1](../class-world-release-declaration-serialization-v0.1.md)
+now provides canonical deterministic JSON and strict parsing against the
+authoritative immutable configuration. Release-declaration file transport,
+class-world assembly, release artifacts, hashing, signing, approval,
+publication, authentication, registries, online storage, and deployment remain
+deferred.
 
 ### 7.2 Manifest responsibilities
 
