@@ -38,6 +38,18 @@ from explore.packages.class_world_manifest_transport_models import (
 from explore.packages.class_world_release_declaration import (
     build_class_world_release_declaration,
 )
+from explore.packages.class_world_release_declaration_file_transport import (
+    read_class_world_release_declaration_file,
+    write_class_world_release_declaration_file,
+)
+from explore.packages.class_world_release_declaration_file_transport_models import (
+    MAX_CLASS_WORLD_RELEASE_DECLARATION_BYTES,
+    SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION,
+    ClassWorldReleaseDeclarationFileIssue,
+    ClassWorldReleaseDeclarationFileIssueCode,
+    ClassWorldReleaseDeclarationFileReadResult,
+    ClassWorldReleaseDeclarationFileWriteResult,
+)
 from explore.packages.class_world_release_declaration_models import (
     SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION,
     ClassWorldReleaseDeclaration,
@@ -153,6 +165,10 @@ __all__ = [
     "ClassWorldManifestFileReadResult",
     "ClassWorldManifestFileWriteResult",
     "ClassWorldReleaseDeclaration",
+    "ClassWorldReleaseDeclarationFileIssue",
+    "ClassWorldReleaseDeclarationFileIssueCode",
+    "ClassWorldReleaseDeclarationFileReadResult",
+    "ClassWorldReleaseDeclarationFileWriteResult",
     "ClassWorldReleaseDeclarationIssue",
     "ClassWorldReleaseDeclarationIssueCode",
     "ClassWorldReleaseDeclarationParseResult",
@@ -174,6 +190,7 @@ __all__ = [
     "LoadedWorldObject",
     "MAX_ASSET_SIZE_BYTES",
     "MAX_CLASS_WORLD_MANIFEST_BYTES",
+    "MAX_CLASS_WORLD_RELEASE_DECLARATION_BYTES",
     "PackageAssetReference",
     "PackageLoadIssue",
     "PackageLoadIssueCode",
@@ -201,6 +218,7 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
@@ -221,9 +239,11 @@ __all__ = [
     "plan_loaded_explorer_package",
     "parse_class_world_manifest",
     "parse_class_world_release_declaration",
+    "read_class_world_release_declaration_file",
     "read_class_world_manifest_file",
     "serialize_class_world_manifest",
     "serialize_class_world_release_declaration",
     "validate_explorer_package",
+    "write_class_world_release_declaration_file",
     "write_class_world_manifest_file",
 ]

@@ -2,8 +2,9 @@
 
 > **Status:** Implemented deterministic in-memory JSON serialization and strict
 > parsing against an authoritative immutable `ClassWorldConfiguration`.
-> Release-declaration file transport, hashing, signing, class-world assembly,
-> release artifacts, publication, approval, and deployment remain deferred.
+> Explicit bounded local file transport is implemented separately. Hashing,
+> signing, class-world assembly, release artifacts, publication, approval, and
+> deployment remain deferred.
 
 This contract gives the existing immutable `ClassWorldReleaseDeclaration` a
 canonical JSON representation:
@@ -43,8 +44,8 @@ The layers remain distinct:
    provenance derived from the authoritative configuration.
 5. Release-declaration serialization is the deterministic JSON text contract
    documented here.
-6. Future release-declaration file transport may move this text across a
-   filesystem boundary.
+6. [Release-declaration file transport](class-world-release-declaration-file-transport-v0.1.md)
+   moves this text across an explicit bounded local filesystem boundary.
 7. A future release artifact may contain assembled files, assets, inventories,
    hashes, signatures, archives, and deployment metadata.
 
@@ -219,17 +220,18 @@ package-set planning, package-set application, runtime construction, Pygame
 initialization, student-code execution, asset copying, assembly, publication,
 approval, or deployment.
 
-This contract defines no release-declaration filename, byte-size limit, BOM
-transport policy, encoding or atomic replacement behavior. Those belong to
-future release-declaration file transport. It creates no hash, signature,
-integrity proof, inventory, archive, or persistent audit record.
+This serialization contract itself defines no release-declaration filename,
+byte-size limit, BOM transport policy, encoding, or atomic replacement
+behavior. Those belong to the separate
+[Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md).
+Serialization creates no hash, signature, integrity proof, inventory, archive,
+or persistent audit record.
 
 ## Deferred work
 
 Deferred work includes:
 
-- release-declaration file transport;
-- a recommended release-declaration filename and byte-size policy;
+- stale-temporary-file recovery and concurrent-writer coordination;
 - deterministic content hashing and verified readback;
 - artifact inventory and archive creation;
 - class-world assembly and asset materialization;
