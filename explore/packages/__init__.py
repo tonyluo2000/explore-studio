@@ -38,6 +38,14 @@ from explore.packages.class_world_manifest_transport_models import (
 from explore.packages.class_world_release_declaration import (
     build_class_world_release_declaration,
 )
+from explore.packages.class_world_release_declaration_digest import (
+    compute_class_world_release_declaration_digest,
+)
+from explore.packages.class_world_release_declaration_digest_models import (
+    SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM,
+    SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION,
+    ClassWorldReleaseDeclarationDigest,
+)
 from explore.packages.class_world_release_declaration_file_transport import (
     read_class_world_release_declaration_file,
     write_class_world_release_declaration_file,
@@ -165,6 +173,7 @@ __all__ = [
     "ClassWorldManifestFileReadResult",
     "ClassWorldManifestFileWriteResult",
     "ClassWorldReleaseDeclaration",
+    "ClassWorldReleaseDeclarationDigest",
     "ClassWorldReleaseDeclarationFileIssue",
     "ClassWorldReleaseDeclarationFileIssueCode",
     "ClassWorldReleaseDeclarationFileReadResult",
@@ -218,6 +227,8 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM",
+    "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
@@ -235,6 +246,7 @@ __all__ = [
     "build_class_world_release_declaration",
     "build_package_set_plan",
     "build_student_api_registration_plan",
+    "compute_class_world_release_declaration_digest",
     "load_explorer_package",
     "plan_loaded_explorer_package",
     "parse_class_world_manifest",
