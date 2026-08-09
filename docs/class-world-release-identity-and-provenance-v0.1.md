@@ -2,9 +2,9 @@
 
 > **Status:** Implemented pure immutable in-memory release declaration.
 > Deterministic release-declaration JSON serialization and strict parsing are
-> implemented separately. Release-declaration file transport, hashing, signing,
-> class-world assembly, release artifacts, publication, and deployment remain
-> deferred.
+> implemented separately. Explicit bounded local release-declaration file
+> transport is also implemented separately. Hashing, signing, class-world
+> assembly, release artifacts, publication, and deployment remain deferred.
 
 Class-World Release Identity and Provenance Model v0.1 declares which release
 is intended and records the authoritative configuration and exact package pins
@@ -41,7 +41,10 @@ The implemented boundaries are distinct:
 This model implements only step 4. The separate
 [Class-World Release Declaration Serialization v0.1](class-world-release-declaration-serialization-v0.1.md)
 serializes it and strictly parses it against an authoritative supplied
-configuration. Neither layer transports the text or assembles step 5.
+configuration. The separate
+[Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
+moves that text through explicit bounded local UTF-8 paths. None of these layers
+assembles step 5.
 
 ## Public API
 
@@ -188,10 +191,10 @@ published, signed, verified, or deployed release artifact.
 
 Deferred work includes:
 
-- release-declaration file transport and any filename policy;
+- deterministic content hashing and integrity verification, including verified
+  readback;
 - class-world assembly and asset materialization;
 - release artifact and archive creation;
-- deterministic content hashing and integrity verification;
 - signing, key management, and attestations;
 - package approval and publication;
 - authentication, authorization, and registry services;

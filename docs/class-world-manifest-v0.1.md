@@ -4,9 +4,10 @@
 > parsing. Explicit local UTF-8 file transport is implemented separately.
 > Immutable release identity and declared provenance are implemented separately.
 > Deterministic release-declaration JSON serialization and strict parsing are
-> implemented separately. Release-declaration file transport, class-world
-> assembly, release artifacts, hashing, signing, publication, approval,
-> authentication, registries, and online services remain deferred.
+> implemented separately. Explicit release-declaration file transport is also
+> implemented separately. Class-world assembly, release artifacts, hashing,
+> signing, publication, approval, authentication, registries, and online
+> services remain deferred.
 
 Serialized Class-World Manifest Schema v0.1 gives an immutable
 `ClassWorldConfiguration` a deterministic, portable JSON declaration. It
@@ -63,7 +64,10 @@ records explicit release identity and declared provenance from the exact
 configuration. The separate
 [Class-World Release Declaration Serialization v0.1](class-world-release-declaration-serialization-v0.1.md)
 serializes that declaration and parses it only with an authoritative supplied
-configuration. Neither layer verifies artifact bytes.
+configuration. The separate
+[Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
+moves its JSON at explicit bounded local UTF-8 paths. None of these layers
+verifies artifact bytes.
 
 ## Schema
 
@@ -203,7 +207,7 @@ inspection, runtime object construction, asset materialization, Pygame
 initialization, publication, approval, authentication, or deployment. They do
 not assemble a class world or generate a release artifact.
 
-Deferred work includes release-declaration file transport, deterministic
-artifact hashing, signing, class-world assembly, release
+Deferred work includes deterministic artifact hashing, signing, class-world
+assembly, release
 packaging, publication and approval, deployment, persistent audit records,
 registry services, target locking, and persistent recovery.

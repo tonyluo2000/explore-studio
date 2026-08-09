@@ -57,7 +57,10 @@ retains an exact configuration and derives immutable release identity and
 declared provenance without producing an artifact. The separate
 [Class-World Release Declaration Serialization v0.1](class-world-release-declaration-serialization-v0.1.md)
 provides canonical JSON and strict parsing that requires this authoritative
-configuration and rejects disagreement.
+configuration and rejects disagreement. The downstream
+[Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
+moves that JSON through explicit bounded local UTF-8 reads and canonical atomic
+replacement without reconstructing configuration.
 
 ## Schema and identity
 
@@ -238,14 +241,13 @@ Configuration construction performs no:
 - immutable release identity and declared provenance: implemented;
 - deterministic release-declaration JSON serialization and strict parsing:
   implemented;
-- release-declaration file transport: not implemented;
+- explicit local UTF-8 release-declaration file transport: implemented;
 - class-world assembly: not implemented;
 - release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and
 - publication, approval, authentication, registries, and online services: not
   implemented.
 
-Deferred work includes release-declaration file transport, runtime
-engine-version verification, artifact hashing and signing,
-class-world assembly, release packaging, approval and publication, deployment,
-and persistent audit records.
+Deferred work includes runtime engine-version verification, artifact hashing
+and signing, class-world assembly, release packaging, approval and publication,
+deployment, and persistent audit records.

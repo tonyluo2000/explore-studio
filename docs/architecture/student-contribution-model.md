@@ -242,10 +242,12 @@ now declares explicit release identity and authoritative configuration and
 package-version inputs without producing an artifact. The
 [Class-World Release Declaration Serialization v0.1](../class-world-release-declaration-serialization-v0.1.md)
 now provides canonical deterministic JSON and strict parsing against the
-authoritative immutable configuration. Release-declaration file transport,
-class-world assembly, release artifacts, hashing, signing, approval,
-publication, authentication, registries, online storage, and deployment remain
-deferred.
+authoritative immutable configuration. The
+[Class-World Release Declaration File Transport v0.1](../class-world-release-declaration-file-transport-v0.1.md)
+now provides bounded UTF-8 reads and canonical atomic local-file replacement at
+explicit caller-supplied paths. Class-world assembly, release artifacts,
+hashing, signing, approval, publication, authentication, registries, online
+storage, and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 
