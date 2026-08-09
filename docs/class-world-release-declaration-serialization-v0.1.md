@@ -2,9 +2,9 @@
 
 > **Status:** Implemented deterministic in-memory JSON serialization and strict
 > parsing against an authoritative immutable `ClassWorldConfiguration`.
-> Explicit bounded local file transport is implemented separately. Hashing,
-> signing, class-world assembly, release artifacts, publication, approval, and
-> deployment remain deferred.
+> Explicit bounded local file transport and deterministic digesting are
+> implemented separately. Artifact hashing, signing, class-world assembly,
+> release artifacts, publication, approval, and deployment remain deferred.
 
 This contract gives the existing immutable `ClassWorldReleaseDeclaration` a
 canonical JSON representation:
@@ -46,7 +46,9 @@ The layers remain distinct:
    documented here.
 6. [Release-declaration file transport](class-world-release-declaration-file-transport-v0.1.md)
    moves this text across an explicit bounded local filesystem boundary.
-7. A future release artifact may contain assembled files, assets, inventories,
+7. [Release-declaration digesting](class-world-release-declaration-digest-v0.1.md)
+   identifies the exact canonical serialized bytes with SHA-256.
+8. A future release artifact may contain assembled files, assets, inventories,
    hashes, signatures, archives, and deployment metadata.
 
 This layer implements only step 5. It does not reuse manifest file transport,
@@ -225,14 +227,17 @@ byte-size limit, BOM transport policy, encoding, or atomic replacement
 behavior. Those belong to the separate
 [Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md).
 Serialization creates no hash, signature, integrity proof, inventory, archive,
-or persistent audit record.
+or persistent audit record. The separate
+[Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
+hashes this serializer's exact final-newline-terminated UTF-8 output.
 
 ## Deferred work
 
 Deferred work includes:
 
 - stale-temporary-file recovery and concurrent-writer coordination;
-- deterministic content hashing and verified readback;
+- digest verification policy and verified file readback;
+- assembled-artifact hashing and integrity verification;
 - artifact inventory and archive creation;
 - class-world assembly and asset materialization;
 - signing, key management, and attestations;

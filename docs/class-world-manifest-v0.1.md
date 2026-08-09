@@ -5,8 +5,9 @@
 > Immutable release identity and declared provenance are implemented separately.
 > Deterministic release-declaration JSON serialization and strict parsing are
 > implemented separately. Explicit release-declaration file transport is also
-> implemented separately. Class-world assembly, release artifacts, hashing,
-> signing, publication, approval, authentication, registries, and online
+> implemented separately. Deterministic release-declaration digesting is
+> implemented separately. Class-world assembly, release artifacts, artifact
+> hashing, signing, publication, approval, authentication, registries, and online
 > services remain deferred.
 
 Serialized Class-World Manifest Schema v0.1 gives an immutable
@@ -66,8 +67,10 @@ configuration. The separate
 serializes that declaration and parses it only with an authoritative supplied
 configuration. The separate
 [Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
-moves its JSON at explicit bounded local UTF-8 paths. None of these layers
-verifies artifact bytes.
+moves its JSON at explicit bounded local UTF-8 paths. The separate
+[Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
+identifies its canonical serialized bytes. None of these layers verifies
+artifact bytes.
 
 ## Schema
 

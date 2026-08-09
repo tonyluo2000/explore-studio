@@ -2,8 +2,9 @@
 
 > **Status:** Implemented explicit bounded local UTF-8 file transport for
 > release-declaration JSON. Deterministic release-declaration serialization and
-> strict parsing are separate layers. Hashing, verified readback, inventories,
-> class-world assembly, signing, publication, and deployment remain deferred.
+> strict parsing are separate layers. Deterministic digesting is implemented
+> separately. Verified readback, artifact hashing, inventories, class-world
+> assembly, signing, publication, and deployment remain deferred.
 
 Class-World Release Declaration File Transport v0.1 moves deterministic
 release-declaration JSON across one explicit local filesystem boundary:
@@ -52,7 +53,10 @@ The architecture layers remain distinct:
    parsing against that exact configuration.
 6. Release-declaration file transport, implemented here, moves that JSON at an
    explicit local path.
-7. Future integrity and artifact layers may hash, verify, inventory, assemble,
+7. [Release-declaration digesting](class-world-release-declaration-digest-v0.1.md)
+   identifies canonical in-memory serialized declaration bytes without a file
+   read.
+8. Future integrity and artifact layers may verify, inventory, assemble,
    archive, sign, approve, publish, or deploy release content.
 
 A release-declaration file is metadata, not a release artifact. This layer does
@@ -246,7 +250,9 @@ code, privacy-safe message, and structural location such as `path`, `parent`,
 
 After `os.replace`, the writer does not reopen, parse, compare, or hash the
 destination. Verified readback and integrity comparison belong to a future
-integrity layer.
+integrity layer. The separate
+[Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
+hashes the in-memory serializer output, not a destination file.
 
 ## Concurrency, crashes, and durability
 
@@ -281,7 +287,8 @@ Release-declaration file transport performs no:
 
 Deferred work includes:
 
-- deterministic content hashing and verified readback;
+- digest verification policy and verified readback;
+- assembled-artifact hashing and integrity verification;
 - artifact, package, and asset inventories;
 - class-world assembly and asset materialization;
 - archive generation;

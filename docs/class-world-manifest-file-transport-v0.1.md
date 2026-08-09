@@ -5,8 +5,9 @@
 > separate layers. Immutable release identity and declared provenance are also
 > implemented separately. Deterministic release-declaration JSON serialization
 > and strict parsing are implemented separately. Explicit bounded local
-> release-declaration file transport is also implemented separately. Hashing,
-> signing, class-world assembly, release artifacts, publication, approval,
+> release-declaration file transport and deterministic digesting are also
+> implemented separately. Artifact hashing, signing, class-world assembly,
+> release artifacts, publication, approval,
 > authentication, registries, online storage, and deployment are not
 > implemented.
 
@@ -65,6 +66,9 @@ include packaged assets, generated files, hashes, signatures, deployment
 metadata, or release provenance; this transport creates none of those. The
 [Class-World Release Identity and Provenance Model v0.1](class-world-release-identity-and-provenance-v0.1.md)
 records declared release inputs in memory without reusing this file transport.
+The
+[Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
+hashes canonical in-memory release-declaration bytes, not manifest files.
 
 ## Public API
 
