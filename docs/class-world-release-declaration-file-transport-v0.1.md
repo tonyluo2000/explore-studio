@@ -3,8 +3,9 @@
 > **Status:** Implemented explicit bounded local UTF-8 file transport for
 > release-declaration JSON. Deterministic release-declaration serialization and
 > strict parsing are separate layers. Deterministic digesting is implemented
-> separately. Verified readback, artifact hashing, inventories, class-world
-> assembly, signing, publication, and deployment remain deferred.
+> separately, as is pure in-memory digest verification. Verified readback,
+> artifact hashing, inventories, class-world assembly, signing, publication,
+> and deployment remain deferred.
 
 Class-World Release Declaration File Transport v0.1 moves deterministic
 release-declaration JSON across one explicit local filesystem boundary:
@@ -56,7 +57,10 @@ The architecture layers remain distinct:
 7. [Release-declaration digesting](class-world-release-declaration-digest-v0.1.md)
    identifies canonical in-memory serialized declaration bytes without a file
    read.
-8. Future integrity and artifact layers may verify, inventory, assemble,
+8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
+   validates an expected digest and compares it with a recomputed in-memory
+   declaration digest.
+9. Future file and artifact layers may read back, verify, inventory, assemble,
    archive, sign, approve, publish, or deploy release content.
 
 A release-declaration file is metadata, not a release artifact. This layer does
@@ -252,7 +256,10 @@ After `os.replace`, the writer does not reopen, parse, compare, or hash the
 destination. Verified readback and integrity comparison belong to a future
 integrity layer. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
-hashes the in-memory serializer output, not a destination file.
+hashes the in-memory serializer output, not a destination file. The
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+compares expected and recomputed in-memory digests; it also does not read the
+destination.
 
 ## Concurrency, crashes, and durability
 
@@ -287,7 +294,7 @@ Release-declaration file transport performs no:
 
 Deferred work includes:
 
-- digest verification policy and verified readback;
+- verified declaration-file readback and file-digest comparison;
 - assembled-artifact hashing and integrity verification;
 - artifact, package, and asset inventories;
 - class-world assembly and asset materialization;

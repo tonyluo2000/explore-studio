@@ -3,9 +3,9 @@
 > **Status:** Implemented pure immutable in-memory release declaration.
 > Deterministic release-declaration JSON serialization and strict parsing are
 > implemented separately. Explicit bounded local release-declaration file
-> transport and deterministic digesting are also implemented separately.
-> Artifact hashing, signing, class-world assembly, release artifacts,
-> publication, and deployment remain deferred.
+> transport, deterministic digesting, and pure in-memory digest verification
+> are also implemented separately. Artifact hashing, signing, class-world
+> assembly, release artifacts, publication, and deployment remain deferred.
 
 Class-World Release Identity and Provenance Model v0.1 declares which release
 is intended and records the authoritative configuration and exact package pins
@@ -46,8 +46,10 @@ configuration. The separate
 [Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
 moves that text through explicit bounded local UTF-8 paths. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
-identifies the canonical serialized declaration bytes with SHA-256. None of
-these layers assembles step 5.
+identifies the canonical serialized declaration bytes with SHA-256. The
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+compares a validated expected digest with the recomputed declaration digest
+without proving provenance claims. None of these layers assembles step 5.
 
 ## Public API
 
@@ -194,7 +196,7 @@ published, signed, verified, or deployed release artifact.
 
 Deferred work includes:
 
-- digest verification policy and verified file readback;
+- verified declaration-file readback and file-digest comparison;
 - assembled-artifact hashing and integrity verification;
 - class-world assembly and asset materialization;
 - release artifact and archive creation;
