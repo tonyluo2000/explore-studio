@@ -4,8 +4,9 @@
 > JSON manifest serialization, parsing, and explicit local UTF-8 file transport
 > are implemented separately. Immutable release identity and declared
 > provenance are also implemented separately. Deterministic release-declaration
-> digesting is implemented separately. Class-world assembly, release artifacts,
-> artifact hashing, signing, publication, approval, authentication,
+> digesting and pure in-memory digest verification are implemented separately.
+> Class-world assembly, release artifacts, artifact hashing, signing,
+> publication, approval, authentication,
 > registries, and deployment remain deferred.
 
 Immutable Class-World Configuration Model v0.1 describes what one class world
@@ -64,7 +65,10 @@ moves that JSON through explicit bounded local UTF-8 reads and canonical atomic
 replacement without reconstructing configuration. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
 identifies the canonical serialized declaration bytes without reading files or
-authenticating an artifact.
+authenticating an artifact. The separate
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+validates and compares expected and recomputed declaration digests without file
+or artifact verification.
 
 ## Schema and identity
 
@@ -247,6 +251,7 @@ Configuration construction performs no:
   implemented;
 - explicit local UTF-8 release-declaration file transport: implemented;
 - deterministic canonical release-declaration SHA-256 digest: implemented;
+- pure in-memory release-declaration digest verification: implemented;
 - class-world assembly: not implemented;
 - release artifacts: not implemented;
 - artifact hashing and signing: not implemented; and

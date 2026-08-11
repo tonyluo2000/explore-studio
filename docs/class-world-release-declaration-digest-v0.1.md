@@ -1,9 +1,10 @@
 # Deterministic Class-World Release Declaration Digest v0.1
 
 > **Status:** Implemented pure in-memory SHA-256 digest computation for the
-> canonical serialized class-world release declaration. Digest verification,
-> verified file readback, artifact inventories, class-world assembly, signing,
-> publication, and deployment remain deferred.
+> canonical serialized class-world release declaration. Pure in-memory digest
+> verification is implemented separately. Verified file readback, artifact
+> inventories, class-world assembly, signing, publication, and deployment
+> remain deferred.
 
 Deterministic Class-World Release Declaration Digest v0.1 identifies the exact
 canonical release-declaration text produced by the existing serializer:
@@ -40,11 +41,14 @@ The implemented layers remain distinct:
    local paths.
 7. Release-declaration digest computation identifies the canonical serialized
    declaration bytes.
-8. Future layers may verify stored bytes, inventory and assemble artifacts,
+8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
+   validates a supplied expected digest, recomputes step 7, and compares the
+   complete immutable digest models.
+9. Future layers may verify stored bytes, inventory and assemble artifacts,
    sign or attest content, approve, publish, and deploy releases.
 
 This contract implements only step 7. It does not move files, compare a stored
-file, or make claims about step 8.
+file, or make claims about step 9.
 
 ## Contract constants
 
@@ -63,11 +67,13 @@ SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM = "sha256"
 The digest contract version is distinct from:
 
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION`, which versions the
-  in-memory model and JSON schema; and
+  in-memory model and JSON schema;
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION`,
-  which versions explicit filesystem transport behavior.
+  which versions explicit filesystem transport behavior; and
+- `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION`,
+  which versions expected-digest validation and equality semantics.
 
-All three are currently `"0.1"`, but they describe independent contracts.
+All four are currently `"0.1"`, but they describe independent contracts.
 
 ## Public API
 
@@ -168,7 +174,20 @@ therefore contains bytes equal to the in-memory digest input.
 
 Digest computation itself performs no file I/O. It does not read the written
 file, reopen a destination, hash a caller-supplied path, or verify readback.
-There is no v0.1 file-digest or public verification API.
+There is no v0.1 file-digest or file-verification API.
+
+## Relationship to digest verification
+
+The separate
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+validates a supplied expected digest, calls this public digest computation API
+exactly once, and compares the complete immutable digest models. It does not
+serialize or hash independently.
+
+A matching digest confirms equality with the expected digest under this
+canonical byte contract. It does not establish authenticity, provenance truth,
+package integrity, artifact integrity, approval, or publication status. A
+valid mismatch is a normal verification result.
 
 ## Declaration digest versus artifact digest
 
@@ -221,8 +240,8 @@ standard-library `hashlib.sha256` over in-memory bytes.
 
 Deferred work includes:
 
-- digest verification policy;
 - verified release-declaration file readback;
+- declaration-file digest verification;
 - artifact, package, asset, and output inventories;
 - package and asset digests;
 - class-world assembly and asset materialization;

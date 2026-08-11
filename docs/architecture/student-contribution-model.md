@@ -248,9 +248,13 @@ now provides bounded UTF-8 reads and canonical atomic local-file replacement at
 explicit caller-supplied paths. The
 [Deterministic Class-World Release Declaration Digest v0.1](../class-world-release-declaration-digest-v0.1.md)
 now identifies canonical serialized declaration bytes with SHA-256 without
-reading files or authenticating artifacts. Class-world assembly, release
-artifacts, artifact hashing, signing, approval, publication, authentication,
-registries, online storage, and deployment remain deferred.
+reading files or authenticating artifacts. The
+[Class-World Release Declaration Digest Verification v0.1](../class-world-release-declaration-digest-verification-v0.1.md)
+now validates a supplied expected digest, recomputes the canonical declaration
+digest, and returns immutable equality state without reading files or defining
+trust. Class-world assembly, release artifacts, artifact hashing, signing,
+approval, publication, authentication, registries, online storage, and
+deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 

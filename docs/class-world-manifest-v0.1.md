@@ -6,9 +6,9 @@
 > Deterministic release-declaration JSON serialization and strict parsing are
 > implemented separately. Explicit release-declaration file transport is also
 > implemented separately. Deterministic release-declaration digesting is
-> implemented separately. Class-world assembly, release artifacts, artifact
-> hashing, signing, publication, approval, authentication, registries, and online
-> services remain deferred.
+> implemented separately, as is pure in-memory digest verification. Class-world
+> assembly, release artifacts, artifact hashing, signing, publication, approval,
+> authentication, registries, and online services remain deferred.
 
 Serialized Class-World Manifest Schema v0.1 gives an immutable
 `ClassWorldConfiguration` a deterministic, portable JSON declaration. It
@@ -69,8 +69,10 @@ configuration. The separate
 [Class-World Release Declaration File Transport v0.1](class-world-release-declaration-file-transport-v0.1.md)
 moves its JSON at explicit bounded local UTF-8 paths. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
-identifies its canonical serialized bytes. None of these layers verifies
-artifact bytes.
+identifies its canonical serialized bytes. The separate
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+compares a validated expected digest with a recomputed declaration digest. None
+of these layers verifies artifact bytes.
 
 ## Schema
 

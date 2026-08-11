@@ -5,8 +5,9 @@
 > separate layers. Immutable release identity and declared provenance are also
 > implemented separately. Deterministic release-declaration JSON serialization
 > and strict parsing are implemented separately. Explicit bounded local
-> release-declaration file transport and deterministic digesting are also
-> implemented separately. Artifact hashing, signing, class-world assembly,
+> release-declaration file transport, deterministic digesting, and pure
+> in-memory digest verification are also implemented separately. Artifact
+> hashing, signing, class-world assembly,
 > release artifacts, publication, approval,
 > authentication, registries, online storage, and deployment are not
 > implemented.
@@ -69,6 +70,10 @@ records declared release inputs in memory without reusing this file transport.
 The
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
 hashes canonical in-memory release-declaration bytes, not manifest files.
+The
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+compares expected and recomputed in-memory declaration digests, not manifest
+files.
 
 ## Public API
 

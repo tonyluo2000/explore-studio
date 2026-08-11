@@ -2,9 +2,10 @@
 
 > **Status:** Implemented deterministic in-memory JSON serialization and strict
 > parsing against an authoritative immutable `ClassWorldConfiguration`.
-> Explicit bounded local file transport and deterministic digesting are
-> implemented separately. Artifact hashing, signing, class-world assembly,
-> release artifacts, publication, approval, and deployment remain deferred.
+> Explicit bounded local file transport, deterministic digesting, and pure
+> in-memory digest verification are implemented separately. Artifact hashing,
+> signing, class-world assembly, release artifacts, publication, approval, and
+> deployment remain deferred.
 
 This contract gives the existing immutable `ClassWorldReleaseDeclaration` a
 canonical JSON representation:
@@ -48,7 +49,10 @@ The layers remain distinct:
    moves this text across an explicit bounded local filesystem boundary.
 7. [Release-declaration digesting](class-world-release-declaration-digest-v0.1.md)
    identifies the exact canonical serialized bytes with SHA-256.
-8. A future release artifact may contain assembled files, assets, inventories,
+8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
+   validates an expected digest, recomputes step 7, and compares the immutable
+   digest models in memory.
+9. A future release artifact may contain assembled files, assets, inventories,
    hashes, signatures, archives, and deployment metadata.
 
 This layer implements only step 5. It does not reuse manifest file transport,
@@ -229,14 +233,16 @@ behavior. Those belong to the separate
 Serialization creates no hash, signature, integrity proof, inventory, archive,
 or persistent audit record. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
-hashes this serializer's exact final-newline-terminated UTF-8 output.
+hashes this serializer's exact final-newline-terminated UTF-8 output. The
+[Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
+reuses that digest API rather than serializing or hashing independently.
 
 ## Deferred work
 
 Deferred work includes:
 
 - stale-temporary-file recovery and concurrent-writer coordination;
-- digest verification policy and verified file readback;
+- verified declaration-file readback and file-digest comparison;
 - assembled-artifact hashing and integrity verification;
 - artifact inventory and archive creation;
 - class-world assembly and asset materialization;

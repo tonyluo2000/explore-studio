@@ -46,6 +46,13 @@ from explore.packages.class_world_release_declaration_digest_models import (
     SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION,
     ClassWorldReleaseDeclarationDigest,
 )
+from explore.packages.class_world_release_declaration_digest_verification import (
+    verify_class_world_release_declaration_digest,
+)
+from explore.packages.class_world_release_declaration_digest_verification_models import (
+    SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION,
+    ClassWorldReleaseDeclarationDigestVerificationResult,
+)
 from explore.packages.class_world_release_declaration_file_transport import (
     read_class_world_release_declaration_file,
     write_class_world_release_declaration_file,
@@ -174,6 +181,7 @@ __all__ = [
     "ClassWorldManifestFileWriteResult",
     "ClassWorldReleaseDeclaration",
     "ClassWorldReleaseDeclarationDigest",
+    "ClassWorldReleaseDeclarationDigestVerificationResult",
     "ClassWorldReleaseDeclarationFileIssue",
     "ClassWorldReleaseDeclarationFileIssueCode",
     "ClassWorldReleaseDeclarationFileReadResult",
@@ -229,6 +237,7 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
@@ -256,6 +265,7 @@ __all__ = [
     "serialize_class_world_manifest",
     "serialize_class_world_release_declaration",
     "validate_explorer_package",
+    "verify_class_world_release_declaration_digest",
     "write_class_world_release_declaration_file",
     "write_class_world_manifest_file",
 ]
