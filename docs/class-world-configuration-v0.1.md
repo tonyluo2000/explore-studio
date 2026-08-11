@@ -68,7 +68,10 @@ identifies the canonical serialized declaration bytes without reading files or
 authenticating an artifact. The separate
 [Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
 validates and compares expected and recomputed declaration digests without file
-or artifact verification.
+or artifact verification. The downstream
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+reads an explicit release-declaration path with this exact authoritative
+configuration, then delegates comparison to the in-memory verifier.
 
 ## Schema and identity
 

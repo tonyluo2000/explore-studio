@@ -72,7 +72,10 @@ moves its JSON at explicit bounded local UTF-8 paths. The separate
 identifies its canonical serialized bytes. The separate
 [Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
 compares a validated expected digest with a recomputed declaration digest. None
-of these layers verifies artifact bytes.
+of these layers verifies artifact bytes. The further
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+composes release-declaration file reading and canonical declaration digest
+verification; it does not hash manifest or release-file bytes directly.
 
 ## Schema
 

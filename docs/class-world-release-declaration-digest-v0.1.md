@@ -2,9 +2,9 @@
 
 > **Status:** Implemented pure in-memory SHA-256 digest computation for the
 > canonical serialized class-world release declaration. Pure in-memory digest
-> verification is implemented separately. Verified file readback, artifact
-> inventories, class-world assembly, signing, publication, and deployment
-> remain deferred.
+> verification and verified declaration-file readback are implemented
+> separately. Raw file-byte hashing, artifact inventories, class-world
+> assembly, signing, publication, and deployment remain deferred.
 
 Deterministic Class-World Release Declaration Digest v0.1 identifies the exact
 canonical release-declaration text produced by the existing serializer:
@@ -44,7 +44,10 @@ The implemented layers remain distinct:
 8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
    validates a supplied expected digest, recomputes step 7, and compares the
    complete immutable digest models.
-9. Future layers may verify stored bytes, inventory and assemble artifacts,
+9. [Release-declaration file digest verification](class-world-release-declaration-file-digest-verification-v0.1.md)
+   reads a declaration file through the authoritative transport and invokes
+   step 8 on the resulting declaration; it does not hash raw file bytes.
+10. Future layers may verify stored bytes, inventory and assemble artifacts,
    sign or attest content, approve, publish, and deploy releases.
 
 This contract implements only step 7. It does not move files, compare a stored
@@ -71,9 +74,11 @@ The digest contract version is distinct from:
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION`,
   which versions explicit filesystem transport behavior; and
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION`,
-  which versions expected-digest validation and equality semantics.
+  which versions expected-digest validation and equality semantics; and
+- `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_FILE_DIGEST_VERIFICATION_CONTRACT_VERSION`,
+  which versions reader-first file-readback composition semantics.
 
-All four are currently `"0.1"`, but they describe independent contracts.
+All five are currently `"0.1"`, but they describe independent contracts.
 
 ## Public API
 

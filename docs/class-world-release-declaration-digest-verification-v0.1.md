@@ -2,9 +2,9 @@
 
 > **Status:** Implemented pure in-memory validation and equality comparison
 > between a supplied expected declaration digest and the digest recomputed from
-> a release declaration. File readback, file-digest verification, artifact
-> inventories, signing, trust-source policy, publication, and deployment remain
-> deferred.
+> a release declaration. Verified declaration-file readback is implemented as
+> a separate composition layer. Raw file-byte hashing, artifact inventories,
+> signing, trust-source policy, publication, and deployment remain deferred.
 
 Class-World Release Declaration Digest Verification v0.1 answers one narrow
 question:
@@ -52,7 +52,10 @@ The implemented layers remain distinct:
    identifies canonical serialized declaration bytes.
 8. Release-declaration digest verification validates an expected digest,
    recomputes step 7, and compares the complete immutable digest models.
-9. Future layers may verify stored files, inventory and assemble artifacts,
+9. [Release-declaration file digest verification](class-world-release-declaration-file-digest-verification-v0.1.md)
+   composes the authoritative file reader with this verifier after a successful
+   read.
+10. Future layers may verify raw stored bytes, inventory and assemble artifacts,
    sign or attest content, define trust sources, approve, publish, and deploy.
 
 This contract implements only step 8. It does not read a file, verify package
@@ -104,8 +107,9 @@ The intentional public surface is:
 - `ClassWorldReleaseDeclarationDigestVerificationResult`; and
 - `SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION`.
 
-No bare-string overload, actual-digest argument, file-verification API, or
-custom mismatch exception is provided.
+No bare-string overload, actual-digest argument, or custom mismatch exception
+is provided. File readback uses the separate composition API rather than
+overloading this in-memory verifier.
 
 ## Expected digest input
 
@@ -255,9 +259,10 @@ moves canonical JSON through explicit local paths. This verification API does
 not invoke that transport and does not read, reopen, stat, hash, or compare a
 release-declaration file.
 
-There is no `verify_class_world_release_declaration_file` API in v0.1.
-Verified readback and declaration-file digest verification remain separate
-future contracts.
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+is the separate implemented reader-first composition contract. It preserves
+reader failures before invoking this verifier and verifies the canonical
+declaration represented by a file, not the file's raw bytes.
 
 ## No provenance truth verification
 
@@ -320,8 +325,7 @@ model.
 
 Deferred work includes:
 
-- verified release-declaration file readback;
-- declaration-file digest verification;
+- raw release-file byte digests, if separately required;
 - artifact, package, asset, and output inventories;
 - package and asset hashes;
 - class-world assembly and asset materialization;

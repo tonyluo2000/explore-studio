@@ -3,9 +3,10 @@
 > **Status:** Implemented explicit bounded local UTF-8 file transport for
 > release-declaration JSON. Deterministic release-declaration serialization and
 > strict parsing are separate layers. Deterministic digesting is implemented
-> separately, as is pure in-memory digest verification. Verified readback,
-> artifact hashing, inventories, class-world assembly, signing, publication,
-> and deployment remain deferred.
+> separately, as is pure in-memory digest verification. Verified declaration-
+> file readback is implemented as a separate composition layer. Raw file-byte
+> hashing, artifact hashing, inventories, class-world assembly, signing,
+> publication, and deployment remain deferred.
 
 Class-World Release Declaration File Transport v0.1 moves deterministic
 release-declaration JSON across one explicit local filesystem boundary:
@@ -60,7 +61,10 @@ The architecture layers remain distinct:
 8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
    validates an expected digest and compares it with a recomputed in-memory
    declaration digest.
-9. Future file and artifact layers may read back, verify, inventory, assemble,
+9. [Release-declaration file digest verification](class-world-release-declaration-file-digest-verification-v0.1.md)
+   composes this reader with step 8 and verifies the canonical declaration
+   represented by a file without hashing its raw bytes.
+10. Future artifact layers may inventory, assemble,
    archive, sign, approve, publish, or deploy release content.
 
 A release-declaration file is metadata, not a release artifact. This layer does
@@ -250,16 +254,18 @@ committed `bytes_written` and an immutable tuple of transport issues.
 code, privacy-safe message, and structural location such as `path`, `parent`,
 `declaration`, `temporary_file`, or `destination`.
 
-## No verification readback
+## Separate verification readback
 
 After `os.replace`, the writer does not reopen, parse, compare, or hash the
-destination. Verified readback and integrity comparison belong to a future
-integrity layer. The separate
+destination. The separate
 [Deterministic Class-World Release Declaration Digest v0.1](class-world-release-declaration-digest-v0.1.md)
 hashes the in-memory serializer output, not a destination file. The
 [Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
 compares expected and recomputed in-memory digests; it also does not read the
-destination.
+destination. The separate
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+now composes this reader with that verifier. The writer remains unchanged and
+does not automatically read back or verify its output.
 
 ## Concurrency, crashes, and durability
 
@@ -294,7 +300,7 @@ Release-declaration file transport performs no:
 
 Deferred work includes:
 
-- verified declaration-file readback and file-digest comparison;
+- raw release-file byte digests, if separately required;
 - assembled-artifact hashing and integrity verification;
 - artifact, package, and asset inventories;
 - class-world assembly and asset materialization;
