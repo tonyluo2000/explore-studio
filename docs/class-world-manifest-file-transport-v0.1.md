@@ -73,7 +73,10 @@ hashes canonical in-memory release-declaration bytes, not manifest files.
 The
 [Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
 compares expected and recomputed in-memory declaration digests, not manifest
-files.
+files. The downstream
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+reads release-declaration files through their own transport and verifies the
+canonical declaration they represent; it does not inspect manifest files.
 
 ## Public API
 

@@ -52,7 +52,10 @@ The layers remain distinct:
 8. [Release-declaration digest verification](class-world-release-declaration-digest-verification-v0.1.md)
    validates an expected digest, recomputes step 7, and compares the immutable
    digest models in memory.
-9. A future release artifact may contain assembled files, assets, inventories,
+9. [Release-declaration file digest verification](class-world-release-declaration-file-digest-verification-v0.1.md)
+   composes step 6 reading with step 8 verification of the canonical
+   declaration represented by the file, not its raw bytes.
+10. A future release artifact may contain assembled files, assets, inventories,
    hashes, signatures, archives, and deployment metadata.
 
 This layer implements only step 5. It does not reuse manifest file transport,

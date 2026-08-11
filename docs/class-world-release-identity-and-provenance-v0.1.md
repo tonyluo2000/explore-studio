@@ -49,7 +49,11 @@ moves that text through explicit bounded local UTF-8 paths. The separate
 identifies the canonical serialized declaration bytes with SHA-256. The
 [Class-World Release Declaration Digest Verification v0.1](class-world-release-declaration-digest-verification-v0.1.md)
 compares a validated expected digest with the recomputed declaration digest
-without proving provenance claims. None of these layers assembles step 5.
+without proving provenance claims. The downstream
+[Class-World Release Declaration File Digest Verification v0.1](class-world-release-declaration-file-digest-verification-v0.1.md)
+composes explicit declaration-file reading with that verifier without proving
+the declaration's provenance statements are true. None of these layers
+assembles step 5.
 
 ## Public API
 

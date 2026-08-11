@@ -252,7 +252,11 @@ reading files or authenticating artifacts. The
 [Class-World Release Declaration Digest Verification v0.1](../class-world-release-declaration-digest-verification-v0.1.md)
 now validates a supplied expected digest, recomputes the canonical declaration
 digest, and returns immutable equality state without reading files or defining
-trust. Class-world assembly, release artifacts, artifact hashing, signing,
+trust. The downstream
+[Class-World Release Declaration File Digest Verification v0.1](../class-world-release-declaration-file-digest-verification-v0.1.md)
+now composes the authoritative file reader and in-memory verifier. It verifies
+the canonical declaration represented by an explicit file, not raw file bytes.
+Class-world assembly, release artifacts, artifact hashing, signing,
 approval, publication, authentication, registries, online storage, and
 deployment remain deferred.
 
