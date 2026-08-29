@@ -274,9 +274,12 @@ package loading, or assembly-plan recomputation. The downstream
 [Class-World Package Artifact File Verification v0.1](../class-world-artifact-file-verification-v0.1.md)
 now binds exact packages to canonical root-relative files, rejects escaping or
 ambiguous bindings, performs bounded read-only access, and delegates bytes to
-the existing content verifier. Class-world materialization, signing, approval,
-publication, authentication, registries, online storage, and deployment remain
-deferred.
+the existing content verifier. The downstream
+[Deterministic Class-World Materialization Layout Plan v0.1](../class-world-materialization-plan-v0.1.md)
+now requires complete matching verification and projects canonical
+package-separated output-relative paths without filesystem access. Actual
+class-world materialization, signing, approval, publication, authentication,
+registries, online storage, and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 
