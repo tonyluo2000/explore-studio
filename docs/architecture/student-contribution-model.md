@@ -266,7 +266,12 @@ The downstream
 now composes that successful inventory into an immutable plan with a canonical
 SHA-256 identity over the verified declaration digest and ordered declared
 package artifact identities. It performs no artifact I/O or materialization.
-Class-world materialization, artifact-file verification, signing, approval,
+The downstream
+[Class-World Package Artifact Content Verification v0.1](../class-world-artifact-content-verification-v0.1.md)
+now hashes caller-supplied immutable package artifact bytes in canonical plan
+order and records deterministic digest match state. It performs no file I/O,
+package loading, or assembly-plan recomputation. Class-world materialization,
+artifact-file transport and resolution, signing, approval,
 publication, authentication, registries, online storage, and deployment remain
 deferred.
 
