@@ -148,6 +148,17 @@ from explore.packages.class_world_release_declaration_serialization_models impor
     ClassWorldReleaseDeclarationSerializationIssue,
     ClassWorldReleaseDeclarationSerializationIssueCode,
 )
+from explore.packages.class_world_verified_materialization import (
+    materialize_verified_class_world_artifacts,
+)
+from explore.packages.class_world_verified_materialization_models import (
+    SUPPORTED_CLASS_WORLD_VERIFIED_MATERIALIZATION_CONTRACT_VERSION,
+    ClassWorldMaterializedPackage,
+    ClassWorldVerifiedMaterialization,
+    ClassWorldVerifiedMaterializationIssue,
+    ClassWorldVerifiedMaterializationIssueCode,
+    ClassWorldVerifiedMaterializationResult,
+)
 from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
@@ -269,6 +280,7 @@ __all__ = [
     "ClassWorldMaterializationPlanIssue",
     "ClassWorldMaterializationPlanIssueCode",
     "ClassWorldMaterializationPlanResult",
+    "ClassWorldMaterializedPackage",
     "ClassWorldPackageMaterialization",
     "ClassWorldReleaseDeclaration",
     "ClassWorldReleaseDeclarationDigest",
@@ -286,6 +298,10 @@ __all__ = [
     "ClassWorldReleaseDeclarationSerializationIssueCode",
     "ClassWorldReleaseIdentity",
     "ClassWorldReleaseProvenance",
+    "ClassWorldVerifiedMaterialization",
+    "ClassWorldVerifiedMaterializationIssue",
+    "ClassWorldVerifiedMaterializationIssueCode",
+    "ClassWorldVerifiedMaterializationResult",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -341,6 +357,7 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_FILE_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_VERIFIED_MATERIALIZATION_CONTRACT_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
     "StudentAPIRegistrationEntry",
@@ -362,6 +379,7 @@ __all__ = [
     "build_student_api_registration_plan",
     "compute_class_world_release_declaration_digest",
     "load_explorer_package",
+    "materialize_verified_class_world_artifacts",
     "plan_loaded_explorer_package",
     "parse_class_world_manifest",
     "parse_class_world_release_declaration",

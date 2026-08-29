@@ -277,9 +277,13 @@ ambiguous bindings, performs bounded read-only access, and delegates bytes to
 the existing content verifier. The downstream
 [Deterministic Class-World Materialization Layout Plan v0.1](../class-world-materialization-plan-v0.1.md)
 now requires complete matching verification and projects canonical
-package-separated output-relative paths without filesystem access. Actual
-class-world materialization, signing, approval, publication, authentication,
-registries, online storage, and deployment remain deferred.
+package-separated output-relative paths without filesystem access. The
+downstream
+[Verified Class-World Package Artifact Materialization v0.1](../class-world-verified-materialization-v0.1.md)
+now reverifies descriptor-confined source files and atomically publishes the
+exact verified bytes to a new plan-authorized local output tree. Assembled
+output manifests and hashing, signing, approval, external publication,
+authentication, registries, online storage, and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 

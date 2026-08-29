@@ -523,6 +523,9 @@ def _inspect_files(
 
 def _read_files(
     inspected: tuple[tuple[int, ClassWorldPackageArtifactFileBinding, Path, os.stat_result], ...],
+    *,
+    root: Path | None = None,
+    require_descriptor_confinement: bool = False,
 ) -> tuple[
     tuple[bytes, ...],
     tuple[ClassWorldPackageArtifactFileRead, ...],
@@ -531,12 +534,45 @@ def _read_files(
     contents: list[bytes] = []
     reads: list[ClassWorldPackageArtifactFileRead] = []
     total_read = 0
+    if require_descriptor_confinement and (
+        root is None
+        or os.open not in os.supports_dir_fd
+        or not hasattr(os, "O_DIRECTORY")
+        or not hasattr(os, "O_NOFOLLOW")
+    ):
+        return (
+            (),
+            (),
+            _issue(
+                ClassWorldArtifactFileVerificationIssueCode.FILE_READ_FAILED,
+                "Descriptor-confined artifact reads are unavailable on this platform.",
+                "bindings",
+            ),
+        )
     for index, binding, path, inspected_metadata in inspected:
         location = f"bindings[{index}].relative_path"
         descriptor: int | None = None
+        parent_descriptor: int | None = None
         try:
             flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
-            descriptor = os.open(path, flags)
+            if not require_descriptor_confinement:
+                descriptor = os.open(path, flags)
+            else:
+                assert root is not None
+                parent_descriptor = os.open(
+                    root,
+                    os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                )
+                parts = PurePosixPath(binding.relative_path).parts
+                for part in parts[:-1]:
+                    next_descriptor = os.open(
+                        part,
+                        os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                        dir_fd=parent_descriptor,
+                    )
+                    os.close(parent_descriptor)
+                    parent_descriptor = next_descriptor
+                descriptor = os.open(parts[-1], flags, dir_fd=parent_descriptor)
             metadata = os.fstat(descriptor)
             if not stat.S_ISREG(metadata.st_mode):
                 return (
@@ -599,6 +635,9 @@ def _read_files(
             if descriptor is not None:
                 with suppress(OSError):
                     os.close(descriptor)
+            if parent_descriptor is not None:
+                with suppress(OSError):
+                    os.close(parent_descriptor)
 
         if len(content) > MAX_CLASS_WORLD_PACKAGE_ARTIFACT_BYTES:
             return (
@@ -634,44 +673,67 @@ def _read_files(
     return tuple(contents), tuple(reads), None
 
 
+def _verify_class_world_artifact_files_with_contents(
+    plan_result: ClassWorldAssemblyPlanResult,
+    artifact_root: str | Path,
+    bindings: tuple[ClassWorldPackageArtifactFileBinding, ...],
+    *,
+    require_descriptor_confinement: bool = False,
+) -> tuple[ClassWorldArtifactFileVerificationResult, tuple[bytes, ...]]:
+    """Run the existing pipeline and retain the exact delegated byte tuple."""
+    plan_failure = _plan_issue(plan_result)
+    if plan_failure is not None:
+        return _failure(plan_failure), ()
+
+    root, root_value_issue = _validated_root_value(artifact_root)
+    if root_value_issue is not None:
+        return _failure(root_value_issue), ()
+
+    assert type(plan_result) is ClassWorldAssemblyPlanResult
+    assert plan_result.plan is not None
+    ordered_bindings, binding_issues = _validated_bindings(plan_result.plan, bindings)
+    if binding_issues:
+        return _failure(*binding_issues), ()
+
+    assert root is not None
+    resolved_root, root_issue = _inspected_root(root)
+    if root_issue is not None:
+        return _failure(root_issue), ()
+
+    assert resolved_root is not None
+    inspected, file_issues = _inspect_files(resolved_root, ordered_bindings)
+    if file_issues:
+        return _failure(*file_issues), ()
+
+    contents, reads, read_issue = _read_files(
+        inspected,
+        root=resolved_root,
+        require_descriptor_confinement=require_descriptor_confinement,
+    )
+    if read_issue is not None:
+        return _failure(read_issue), ()
+
+    content_verification = verify_class_world_artifact_contents(plan_result, contents)
+    return (
+        ClassWorldArtifactFileVerificationResult(
+            contract_version=SUPPORTED_CLASS_WORLD_ARTIFACT_FILE_VERIFICATION_CONTRACT_VERSION,
+            files=reads,
+            content_verification=content_verification,
+            issues=(),
+        ),
+        contents,
+    )
+
+
 def verify_class_world_artifact_files(
     plan_result: ClassWorldAssemblyPlanResult,
     artifact_root: str | Path,
     bindings: tuple[ClassWorldPackageArtifactFileBinding, ...],
 ) -> ClassWorldArtifactFileVerificationResult:
     """Bind, bounded-read, and delegate verification for planned artifacts."""
-    plan_failure = _plan_issue(plan_result)
-    if plan_failure is not None:
-        return _failure(plan_failure)
-
-    root, root_value_issue = _validated_root_value(artifact_root)
-    if root_value_issue is not None:
-        return _failure(root_value_issue)
-
-    assert type(plan_result) is ClassWorldAssemblyPlanResult
-    assert plan_result.plan is not None
-    ordered_bindings, binding_issues = _validated_bindings(plan_result.plan, bindings)
-    if binding_issues:
-        return _failure(*binding_issues)
-
-    assert root is not None
-    resolved_root, root_issue = _inspected_root(root)
-    if root_issue is not None:
-        return _failure(root_issue)
-
-    assert resolved_root is not None
-    inspected, file_issues = _inspect_files(resolved_root, ordered_bindings)
-    if file_issues:
-        return _failure(*file_issues)
-
-    contents, reads, read_issue = _read_files(inspected)
-    if read_issue is not None:
-        return _failure(read_issue)
-
-    content_verification = verify_class_world_artifact_contents(plan_result, contents)
-    return ClassWorldArtifactFileVerificationResult(
-        contract_version=SUPPORTED_CLASS_WORLD_ARTIFACT_FILE_VERIFICATION_CONTRACT_VERSION,
-        files=reads,
-        content_verification=content_verification,
-        issues=(),
+    result, _ = _verify_class_world_artifact_files_with_contents(
+        plan_result,
+        artifact_root,
+        bindings,
     )
+    return result

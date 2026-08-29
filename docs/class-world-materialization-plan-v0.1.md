@@ -123,7 +123,10 @@ execution, runtime registration, network, database, Git, environment, clock,
 randomness, subprocess, Pygame, authentication, signing, approval, publication,
 or deployment work.
 
-Later contracts may define integrated verified materialization, deterministic
-assembled-output manifests and hashing, safe archive parsing, attribution
-output, archive construction, signing or attestation, approval, publication,
-and deployment.
+The downstream
+[Verified Class-World Package Artifact Materialization v0.1](class-world-verified-materialization-v0.1.md)
+now reverifies descriptor-confined source files and atomically places the exact
+verified byte tuple at only these plan-authorized paths. Later contracts may
+define deterministic assembled-output manifests and hashing, safe archive
+parsing, attribution output, archive construction, signing or attestation,
+approval, external publication, and deployment.
