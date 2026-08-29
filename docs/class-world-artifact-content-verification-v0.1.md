@@ -2,8 +2,9 @@
 
 > **Status:** Implemented pure in-memory SHA-256 verification of one immutable
 > artifact byte payload per package in a successful assembly-input plan.
-> Artifact-file reading and resolution, materialization, execution, archive
-> creation, signing, approval, publication, and deployment remain deferred.
+> Bounded artifact-file binding and read composition is implemented separately.
+> Materialization, execution, archive creation, signing, approval, publication,
+> and deployment remain deferred.
 
 Artifact Content Verification v0.1 answers one narrow question:
 
@@ -120,7 +121,10 @@ student-code operation. It does not parse archives, load Explorer Packages,
 copy assets, execute registration plans, authenticate users, sign or approve
 content, publish releases, or deploy anything.
 
-Later contracts may add explicit artifact-file binding and bounded read-only
-transport, deterministic output layout and materialization, assembled-output
-hashing, archive construction, attribution output, signing or attestation,
-approval, publication, and deployment.
+The downstream
+[Class-World Package Artifact File Verification v0.1](class-world-artifact-file-verification-v0.1.md)
+now binds explicit root-relative files, reads them within fixed limits, and
+delegates their bytes back to this verifier. Later contracts may add
+deterministic output layout and materialization, assembled-output hashing,
+archive construction, attribution output, signing or attestation, approval,
+publication, and deployment.

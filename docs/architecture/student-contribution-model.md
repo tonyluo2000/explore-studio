@@ -270,8 +270,11 @@ The downstream
 [Class-World Package Artifact Content Verification v0.1](../class-world-artifact-content-verification-v0.1.md)
 now hashes caller-supplied immutable package artifact bytes in canonical plan
 order and records deterministic digest match state. It performs no file I/O,
-package loading, or assembly-plan recomputation. Class-world materialization,
-artifact-file transport and resolution, signing, approval,
+package loading, or assembly-plan recomputation. The downstream
+[Class-World Package Artifact File Verification v0.1](../class-world-artifact-file-verification-v0.1.md)
+now binds exact packages to canonical root-relative files, rejects escaping or
+ambiguous bindings, performs bounded read-only access, and delegates bytes to
+the existing content verifier. Class-world materialization, signing, approval,
 publication, authentication, registries, online storage, and deployment remain
 deferred.
 
