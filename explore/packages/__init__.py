@@ -1,5 +1,17 @@
 """Public Explorer Package validation and local loading API."""
 
+from explore.packages.class_world_artifact_inventory import (
+    build_class_world_artifact_inventory,
+)
+from explore.packages.class_world_artifact_inventory_models import (
+    SUPPORTED_CLASS_WORLD_ARTIFACT_INVENTORY_CONTRACT_VERSION,
+    SUPPORTED_CLASS_WORLD_PACKAGE_ARTIFACT_DIGEST_ALGORITHM,
+    ClassWorldArtifactInventory,
+    ClassWorldArtifactInventoryIssue,
+    ClassWorldArtifactInventoryIssueCode,
+    ClassWorldArtifactInventoryResult,
+    ClassWorldPackageArtifactDeclaration,
+)
 from explore.packages.class_world_configuration import build_class_world_configuration
 from explore.packages.class_world_configuration_models import (
     CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH,
@@ -172,6 +184,10 @@ __all__ = [
     "CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH",
     "COHORT_DISPLAY_NAME_MAX_LENGTH",
     "Compatibility",
+    "ClassWorldArtifactInventory",
+    "ClassWorldArtifactInventoryIssue",
+    "ClassWorldArtifactInventoryIssueCode",
+    "ClassWorldArtifactInventoryResult",
     "ClassWorldCohort",
     "ClassWorldConfiguration",
     "ClassWorldConfigurationIssue",
@@ -179,6 +195,7 @@ __all__ = [
     "ClassWorldConfigurationResult",
     "ClassWorldConfigurationSpec",
     "ClassWorldPackagePin",
+    "ClassWorldPackageArtifactDeclaration",
     "ClassWorldManifestIssue",
     "ClassWorldManifestIssueCode",
     "ClassWorldManifestParseResult",
@@ -239,6 +256,8 @@ __all__ = [
     "RegistrationPlanResult",
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_ARTIFACT_INVENTORY_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_PACKAGE_ARTIFACT_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
@@ -260,6 +279,7 @@ __all__ = [
     "WorldObjectRegistrationSpec",
     "apply_student_api_registration_plan",
     "apply_package_set_plan",
+    "build_class_world_artifact_inventory",
     "build_class_world_configuration",
     "build_class_world_release_declaration",
     "build_package_set_plan",
