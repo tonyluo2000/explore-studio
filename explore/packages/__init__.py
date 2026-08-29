@@ -82,6 +82,17 @@ from explore.packages.class_world_manifest_transport_models import (
     ClassWorldManifestFileReadResult,
     ClassWorldManifestFileWriteResult,
 )
+from explore.packages.class_world_materialization_plan import (
+    build_class_world_materialization_plan,
+)
+from explore.packages.class_world_materialization_plan_models import (
+    SUPPORTED_CLASS_WORLD_MATERIALIZATION_PLAN_CONTRACT_VERSION,
+    ClassWorldMaterializationPlan,
+    ClassWorldMaterializationPlanIssue,
+    ClassWorldMaterializationPlanIssueCode,
+    ClassWorldMaterializationPlanResult,
+    ClassWorldPackageMaterialization,
+)
 from explore.packages.class_world_release_declaration import (
     build_class_world_release_declaration,
 )
@@ -254,6 +265,11 @@ __all__ = [
     "ClassWorldManifestFileIssueCode",
     "ClassWorldManifestFileReadResult",
     "ClassWorldManifestFileWriteResult",
+    "ClassWorldMaterializationPlan",
+    "ClassWorldMaterializationPlanIssue",
+    "ClassWorldMaterializationPlanIssueCode",
+    "ClassWorldMaterializationPlanResult",
+    "ClassWorldPackageMaterialization",
     "ClassWorldReleaseDeclaration",
     "ClassWorldReleaseDeclarationDigest",
     "ClassWorldReleaseDeclarationDigestVerificationResult",
@@ -318,6 +334,7 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_MATERIALIZATION_PLAN_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION",
@@ -339,6 +356,7 @@ __all__ = [
     "build_class_world_artifact_inventory",
     "build_class_world_assembly_plan",
     "build_class_world_configuration",
+    "build_class_world_materialization_plan",
     "build_class_world_release_declaration",
     "build_package_set_plan",
     "build_student_api_registration_plan",

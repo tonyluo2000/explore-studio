@@ -176,6 +176,10 @@ package loading, student-code execution, runtime registration, network,
 database, Git, environment, clock, randomness, Pygame, authentication, signing,
 approval, publication, or deployment work.
 
-Later contracts may define deterministic output layout and materialization,
-safe archive parsing, assembled-output hashing, attribution output, signing or
-attestation, approval, publication, and deployment.
+The downstream
+[Deterministic Class-World Materialization Layout Plan v0.1](class-world-materialization-plan-v0.1.md)
+now projects complete matching file-verification output into canonical
+package-separated relative output paths without filesystem access. Later
+contracts may define integrated verified materialization, safe archive parsing,
+assembled-output hashing, attribution output, signing or attestation, approval,
+publication, and deployment.
