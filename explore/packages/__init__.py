@@ -37,6 +37,20 @@ from explore.packages.class_world_artifact_inventory_models import (
     ClassWorldArtifactInventoryResult,
     ClassWorldPackageArtifactDeclaration,
 )
+from explore.packages.class_world_assembled_output_manifest import (
+    build_class_world_assembled_output_manifest,
+    serialize_class_world_assembled_output_manifest,
+)
+from explore.packages.class_world_assembled_output_manifest_models import (
+    SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_CONTRACT_VERSION,
+    SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM,
+    ClassWorldAssembledOutputManifest,
+    ClassWorldAssembledOutputManifestDigest,
+    ClassWorldAssembledOutputManifestIssue,
+    ClassWorldAssembledOutputManifestIssueCode,
+    ClassWorldAssembledOutputManifestResult,
+    ClassWorldAssembledOutputPackage,
+)
 from explore.packages.class_world_assembly_plan import build_class_world_assembly_plan
 from explore.packages.class_world_assembly_plan_models import (
     SUPPORTED_CLASS_WORLD_ASSEMBLY_INPUT_DIGEST_ALGORITHM,
@@ -241,6 +255,12 @@ __all__ = [
     "CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH",
     "COHORT_DISPLAY_NAME_MAX_LENGTH",
     "Compatibility",
+    "ClassWorldAssembledOutputManifest",
+    "ClassWorldAssembledOutputManifestDigest",
+    "ClassWorldAssembledOutputManifestIssue",
+    "ClassWorldAssembledOutputManifestIssueCode",
+    "ClassWorldAssembledOutputManifestResult",
+    "ClassWorldAssembledOutputPackage",
     "ClassWorldArtifactContentVerification",
     "ClassWorldArtifactContentVerificationIssue",
     "ClassWorldArtifactContentVerificationIssueCode",
@@ -341,6 +361,8 @@ __all__ = [
     "RegistrationPlanResult",
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_CONTENT_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_FILE_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_INVENTORY_CONTRACT_VERSION",
@@ -371,6 +393,7 @@ __all__ = [
     "apply_student_api_registration_plan",
     "apply_package_set_plan",
     "build_class_world_artifact_inventory",
+    "build_class_world_assembled_output_manifest",
     "build_class_world_assembly_plan",
     "build_class_world_configuration",
     "build_class_world_materialization_plan",
@@ -386,6 +409,7 @@ __all__ = [
     "read_class_world_release_declaration_file",
     "read_class_world_manifest_file",
     "serialize_class_world_manifest",
+    "serialize_class_world_assembled_output_manifest",
     "serialize_class_world_release_declaration",
     "validate_explorer_package",
     "verify_class_world_artifact_contents",

@@ -281,9 +281,13 @@ package-separated output-relative paths without filesystem access. The
 downstream
 [Verified Class-World Package Artifact Materialization v0.1](../class-world-verified-materialization-v0.1.md)
 now reverifies descriptor-confined source files and atomically publishes the
-exact verified bytes to a new plan-authorized local output tree. Assembled
-output manifests and hashing, signing, approval, external publication,
-authentication, registries, online storage, and deployment remain deferred.
+exact verified bytes to a new plan-authorized local output tree. The downstream
+[Deterministic Class-World Assembled-Output Manifest v0.1](../class-world-assembled-output-manifest-v0.1.md)
+now projects that coherent materialization into canonical package identity,
+path, digest, and byte-count records and computes SHA-256 over canonical JSON
+without rereading files. Manifest readback and digest verification, signing,
+approval, external publication, authentication, registries, online storage,
+and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 
@@ -512,6 +516,29 @@ packages:
 The exact schema is proposed. A reproducible implementation will likely need
 additional Student API, integrity, class-configuration, builder, and provenance
 fields.
+
+### 11.2 Implemented assembled-output manifest boundary
+
+The implemented
+[Deterministic Class-World Assembled-Output Manifest v0.1](../class-world-assembled-output-manifest-v0.1.md)
+is narrower than the proposed class release manifest above. It composes an
+in-memory record only after successful verified materialization and inherits
+that operation's trust boundary.
+
+Its canonical JSON contains, in order, `contract_version`, `packages`, and
+`total_bytes`. Each package entry preserves canonical materialization-plan
+order and contains, in order, `package_id`, `package_version`,
+`digest_algorithm`, `digest_hex`, `relative_path`, and `bytes_written`.
+Serialization is compact JSON with UTF-8 content, no insignificant whitespace,
+and one terminal line feed. SHA-256 over those exact canonical bytes identifies
+the manifest.
+
+Composition performs no filesystem reread and does not reimplement source or
+artifact verification. It fails closed unless the complete materialization,
+its canonically rebuilt plan, package tuple, authorized paths, declared
+digests, byte counts, and aggregate total remain coherent. Manifest file
+transport, readback, and supplied or pinned digest verification remain
+deferred to a later contract.
 
 ## 12. Validation and Safety Boundaries
 
