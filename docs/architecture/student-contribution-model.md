@@ -256,9 +256,14 @@ trust. The downstream
 [Class-World Release Declaration File Digest Verification v0.1](../class-world-release-declaration-file-digest-verification-v0.1.md)
 now composes the authoritative file reader and in-memory verifier. It verifies
 the canonical declaration represented by an explicit file, not raw file bytes.
-Class-world assembly, release artifacts, artifact hashing, signing,
-approval, publication, authentication, registries, online storage, and
-deployment remain deferred.
+The downstream
+[Class-World Package Artifact Inventory v0.1](../class-world-artifact-inventory-v0.1.md)
+now joins one successfully verified declaration to exactly one
+content-addressed artifact declaration per pinned Explorer Package and emits
+them in canonical release pin order. It does not read or hash artifact files.
+Class-world assembly, artifact-file verification, signing, approval,
+publication, authentication, registries, online storage, and deployment remain
+deferred.
 
 ### 7.2 Manifest responsibilities
 
