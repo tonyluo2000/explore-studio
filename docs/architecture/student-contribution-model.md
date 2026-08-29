@@ -261,7 +261,12 @@ The downstream
 now joins one successfully verified declaration to exactly one
 content-addressed artifact declaration per pinned Explorer Package and emits
 them in canonical release pin order. It does not read or hash artifact files.
-Class-world assembly, artifact-file verification, signing, approval,
+The downstream
+[Deterministic Class-World Assembly Input Plan v0.1](../class-world-assembly-plan-v0.1.md)
+now composes that successful inventory into an immutable plan with a canonical
+SHA-256 identity over the verified declaration digest and ordered declared
+package artifact identities. It performs no artifact I/O or materialization.
+Class-world materialization, artifact-file verification, signing, approval,
 publication, authentication, registries, online storage, and deployment remain
 deferred.
 
