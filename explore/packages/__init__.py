@@ -1,5 +1,17 @@
 """Public Explorer Package validation and local loading API."""
 
+from explore.packages.class_world_artifact_content_verification import (
+    verify_class_world_artifact_contents,
+)
+from explore.packages.class_world_artifact_content_verification_models import (
+    SUPPORTED_CLASS_WORLD_ARTIFACT_CONTENT_VERIFICATION_CONTRACT_VERSION,
+    ClassWorldArtifactContentVerification,
+    ClassWorldArtifactContentVerificationIssue,
+    ClassWorldArtifactContentVerificationIssueCode,
+    ClassWorldArtifactContentVerificationResult,
+    ClassWorldPackageArtifactContentDigest,
+    ClassWorldPackageArtifactContentVerification,
+)
 from explore.packages.class_world_artifact_inventory import (
     build_class_world_artifact_inventory,
 )
@@ -194,6 +206,10 @@ __all__ = [
     "CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH",
     "COHORT_DISPLAY_NAME_MAX_LENGTH",
     "Compatibility",
+    "ClassWorldArtifactContentVerification",
+    "ClassWorldArtifactContentVerificationIssue",
+    "ClassWorldArtifactContentVerificationIssueCode",
+    "ClassWorldArtifactContentVerificationResult",
     "ClassWorldArtifactInventory",
     "ClassWorldArtifactInventoryIssue",
     "ClassWorldArtifactInventoryIssueCode",
@@ -211,6 +227,8 @@ __all__ = [
     "ClassWorldConfigurationSpec",
     "ClassWorldPackagePin",
     "ClassWorldPackageArtifactDeclaration",
+    "ClassWorldPackageArtifactContentDigest",
+    "ClassWorldPackageArtifactContentVerification",
     "ClassWorldManifestIssue",
     "ClassWorldManifestIssueCode",
     "ClassWorldManifestParseResult",
@@ -271,6 +289,7 @@ __all__ = [
     "RegistrationPlanResult",
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
+    "SUPPORTED_CLASS_WORLD_ARTIFACT_CONTENT_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_INVENTORY_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_PACKAGE_ARTIFACT_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_ASSEMBLY_INPUT_DIGEST_ALGORITHM",
@@ -312,6 +331,7 @@ __all__ = [
     "serialize_class_world_manifest",
     "serialize_class_world_release_declaration",
     "validate_explorer_package",
+    "verify_class_world_artifact_contents",
     "verify_class_world_release_declaration_digest",
     "verify_class_world_release_declaration_file_digest",
     "write_class_world_release_declaration_file",

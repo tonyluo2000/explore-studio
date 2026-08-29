@@ -2,8 +2,9 @@
 
 > **Status:** Implemented pure in-memory composition of one successful package
 > artifact inventory into a content-addressed assembly input plan. Artifact
-> reading, artifact verification, materialization, execution, archive creation,
-> signing, approval, publication, and deployment remain deferred.
+> content verification is implemented separately. Artifact-file reading and
+> resolution, materialization, execution, archive creation, signing, approval,
+> publication, and deployment remain deferred.
 
 Assembly Input Plan v0.1 answers one narrow question:
 
@@ -104,7 +105,11 @@ randomness, subprocess, Pygame, runtime-target, or student-code operation. It
 does not load packages, verify artifact bytes, copy assets, execute registration
 plans, authenticate users, publish releases, or deploy anything.
 
-Later contracts may add explicit artifact-file verification and resolution,
+The downstream
+[Class-World Package Artifact Content Verification v0.1](class-world-artifact-content-verification-v0.1.md)
+now verifies caller-supplied immutable bytes against every ordered artifact
+digest without file I/O or plan recomputation. Later contracts may add explicit
+artifact-file binding and resolution,
 deterministic output layout and materialization, assembled-output hashing,
 archive construction, attribution output, signing or attestation, approval,
 publication, and deployment.
