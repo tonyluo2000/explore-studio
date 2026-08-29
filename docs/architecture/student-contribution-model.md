@@ -285,9 +285,14 @@ exact verified bytes to a new plan-authorized local output tree. The downstream
 [Deterministic Class-World Assembled-Output Manifest v0.1](../class-world-assembled-output-manifest-v0.1.md)
 now projects that coherent materialization into canonical package identity,
 path, digest, and byte-count records and computes SHA-256 over canonical JSON
-without rereading files. Manifest readback and digest verification, signing,
-approval, external publication, authentication, registries, online storage,
-and deployment remain deferred.
+without rereading files. The downstream
+[Class-World Assembled-Output Manifest File Digest Verification v0.1](../class-world-assembled-output-manifest-file-digest-verification-v0.1.md)
+now performs bounded strict UTF-8/JSON readback of one explicit manifest file,
+binds its complete ordered fields to that coherent materialization, and
+compares the recomputed canonical SHA-256 identity with one explicit expected
+digest. Artifact and output-tree rereads, signing, approval, external
+publication, authentication, registries, online storage, and deployment remain
+deferred.
 
 ### 7.2 Manifest responsibilities
 
@@ -537,8 +542,9 @@ Composition performs no filesystem reread and does not reimplement source or
 artifact verification. It fails closed unless the complete materialization,
 its canonically rebuilt plan, package tuple, authorized paths, declared
 digests, byte counts, and aggregate total remain coherent. Manifest file
-transport, readback, and supplied or pinned digest verification remain
-deferred to a later contract.
+transport and writing remain deferred. Bounded readback and comparison with an
+explicit supplied digest are implemented by
+[Class-World Assembled-Output Manifest File Digest Verification v0.1](../class-world-assembled-output-manifest-file-digest-verification-v0.1.md).
 
 ## 12. Validation and Safety Boundaries
 
