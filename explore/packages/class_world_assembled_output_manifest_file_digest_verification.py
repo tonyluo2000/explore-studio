@@ -102,6 +102,7 @@ def _expected_digest_issue(
 ) -> ClassWorldAssembledOutputManifestFileIssue | None:
     if (
         type(candidate) is not ClassWorldAssembledOutputManifestDigest
+        or type(candidate.algorithm) is not str
         or candidate.algorithm != SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM
         or type(candidate.hex_digest) is not str
         or len(candidate.hex_digest) != 64

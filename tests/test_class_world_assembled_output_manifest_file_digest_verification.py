@@ -607,3 +607,28 @@ def test_expected_digest_value_is_preserved_not_replaced(tmp_path: Path) -> None
     )
 
     assert result.expected_digest is expected
+
+
+def test_equality_permissive_algorithm_object_cannot_verify(tmp_path: Path) -> None:
+    class _AlwaysEqual:
+        def __eq__(self, other: object) -> bool:
+            return True
+
+        def __ne__(self, other: object) -> bool:
+            return False
+
+    materialization, built = _state(tmp_path)
+    path = tmp_path / "assembled-output.json"
+    _write(path, built)
+    crafted = replace(built.digest, algorithm=_AlwaysEqual())
+
+    result = verify_class_world_assembled_output_manifest_file_digest(
+        path,
+        materialization,
+        crafted,  # type: ignore[arg-type]
+    )
+
+    assert not result.is_verified
+    assert _codes(result) == [
+        ClassWorldAssembledOutputManifestFileIssueCode.EXPECTED_DIGEST_INVALID
+    ]
