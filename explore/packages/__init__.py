@@ -41,6 +41,16 @@ from explore.packages.class_world_assembled_output_manifest import (
     build_class_world_assembled_output_manifest,
     serialize_class_world_assembled_output_manifest,
 )
+from explore.packages.class_world_assembled_output_manifest_file_digest_verification import (
+    verify_class_world_assembled_output_manifest_file_digest,
+)
+from explore.packages.class_world_assembled_output_manifest_file_digest_verification_models import (
+    MAX_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_BYTES,
+    SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_FILE_DIGEST_VERIFICATION_CONTRACT_VERSION,
+    ClassWorldAssembledOutputManifestFileDigestVerificationResult,
+    ClassWorldAssembledOutputManifestFileIssue,
+    ClassWorldAssembledOutputManifestFileIssueCode,
+)
 from explore.packages.class_world_assembled_output_manifest_models import (
     SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_CONTRACT_VERSION,
     SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM,
@@ -257,6 +267,9 @@ __all__ = [
     "Compatibility",
     "ClassWorldAssembledOutputManifest",
     "ClassWorldAssembledOutputManifestDigest",
+    "ClassWorldAssembledOutputManifestFileDigestVerificationResult",
+    "ClassWorldAssembledOutputManifestFileIssue",
+    "ClassWorldAssembledOutputManifestFileIssueCode",
     "ClassWorldAssembledOutputManifestIssue",
     "ClassWorldAssembledOutputManifestIssueCode",
     "ClassWorldAssembledOutputManifestResult",
@@ -334,6 +347,7 @@ __all__ = [
     "LoadedExplorerPackage",
     "LoadedWorldObject",
     "MAX_ASSET_SIZE_BYTES",
+    "MAX_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_BYTES",
     "MAX_CLASS_WORLD_ARTIFACT_SET_BYTES",
     "MAX_CLASS_WORLD_PACKAGE_ARTIFACT_BYTES",
     "MAX_CLASS_WORLD_MANIFEST_BYTES",
@@ -363,6 +377,7 @@ __all__ = [
     "SUPPORTED_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM",
+    "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_FILE_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_CONTENT_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_FILE_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ARTIFACT_INVENTORY_CONTRACT_VERSION",
@@ -414,6 +429,7 @@ __all__ = [
     "validate_explorer_package",
     "verify_class_world_artifact_contents",
     "verify_class_world_artifact_files",
+    "verify_class_world_assembled_output_manifest_file_digest",
     "verify_class_world_release_declaration_digest",
     "verify_class_world_release_declaration_file_digest",
     "write_class_world_release_declaration_file",
