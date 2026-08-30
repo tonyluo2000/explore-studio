@@ -117,6 +117,16 @@ from explore.packages.class_world_materialization_plan_models import (
     ClassWorldMaterializationPlanResult,
     ClassWorldPackageMaterialization,
 )
+from explore.packages.class_world_output_tree_verification import (
+    verify_class_world_output_tree,
+)
+from explore.packages.class_world_output_tree_verification_models import (
+    SUPPORTED_CLASS_WORLD_OUTPUT_TREE_VERIFICATION_CONTRACT_VERSION,
+    ClassWorldOutputTreeVerificationIssue,
+    ClassWorldOutputTreeVerificationIssueCode,
+    ClassWorldOutputTreeVerificationResult,
+    ClassWorldVerifiedOutputArtifact,
+)
 from explore.packages.class_world_release_declaration import (
     build_class_world_release_declaration,
 )
@@ -314,6 +324,9 @@ __all__ = [
     "ClassWorldMaterializationPlanIssueCode",
     "ClassWorldMaterializationPlanResult",
     "ClassWorldMaterializedPackage",
+    "ClassWorldOutputTreeVerificationIssue",
+    "ClassWorldOutputTreeVerificationIssueCode",
+    "ClassWorldOutputTreeVerificationResult",
     "ClassWorldPackageMaterialization",
     "ClassWorldReleaseDeclaration",
     "ClassWorldReleaseDeclarationDigest",
@@ -335,6 +348,7 @@ __all__ = [
     "ClassWorldVerifiedMaterializationIssue",
     "ClassWorldVerifiedMaterializationIssueCode",
     "ClassWorldVerifiedMaterializationResult",
+    "ClassWorldVerifiedOutputArtifact",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "ContributionDeclaration",
@@ -388,6 +402,7 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_MANIFEST_SCHEMA_VERSION",
     "SUPPORTED_CLASS_WORLD_MANIFEST_TRANSPORT_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_MATERIALIZATION_PLAN_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_OUTPUT_TREE_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_CONTRACT_VERSION",
@@ -430,6 +445,7 @@ __all__ = [
     "verify_class_world_artifact_contents",
     "verify_class_world_artifact_files",
     "verify_class_world_assembled_output_manifest_file_digest",
+    "verify_class_world_output_tree",
     "verify_class_world_release_declaration_digest",
     "verify_class_world_release_declaration_file_digest",
     "write_class_world_release_declaration_file",
