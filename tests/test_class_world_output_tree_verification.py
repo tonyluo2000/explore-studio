@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import time
 from dataclasses import FrozenInstanceError, fields, replace
 from pathlib import Path
 
@@ -553,3 +555,128 @@ def test_public_exports_are_available() -> None:
 
     assert expected <= set(packages.__all__)
     assert all(hasattr(packages, name) for name in expected)
+
+
+def test_rejects_fifo_authorized_artifact_promptly(tmp_path: Path) -> None:
+    if not hasattr(os, "mkfifo") or not hasattr(os, "O_NONBLOCK"):
+        pytest.skip("FIFO artifacts are not supported on this platform")
+    verified, output_root, built = _verified_manifest(tmp_path)
+    target = output_root / built.manifest.packages[0].relative_path
+    target.unlink()
+    os.mkfifo(target)
+
+    started = time.monotonic()
+    result = verify_class_world_output_tree(verified, output_root)
+    elapsed = time.monotonic() - started
+
+    # Without O_NONBLOCK the final open would block forever waiting for a writer.
+    assert elapsed < 10.0
+    assert not result.is_verified
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.ARTIFACT_NOT_REGULAR]
+    assert result.artifacts == ()
+
+
+def test_rejects_path_that_resolves_outside_output_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    verified, output_root, built = _verified_manifest(tmp_path)
+    nested = Path(built.manifest.packages[1].relative_path).parent
+    real_dir = output_root / nested
+    outside = tmp_path / "outside-nested"
+    real_dir.rename(outside)
+    (output_root / nested).symlink_to(outside)
+    # Isolate the resolved-path escape branch from the earlier symlink-component gate.
+    monkeypatch.setattr(tree_module, "_contains_symlink", lambda *args, **kwargs: False)
+
+    result = verify_class_world_output_tree(verified, output_root)
+
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.ARTIFACT_OUTSIDE_ROOT]
+    assert result.artifacts == ()
+
+
+def test_rejects_hard_link_alias_between_authorized_artifacts(tmp_path: Path) -> None:
+    verified, output_root, built = _verified_manifest(tmp_path)
+    first = output_root / built.manifest.packages[0].relative_path
+    second = output_root / built.manifest.packages[1].relative_path
+    second.unlink()
+    try:
+        os.link(first, second)
+    except (OSError, NotImplementedError, AttributeError) as error:
+        pytest.skip(f"Hard links unavailable: {error}")
+
+    result = verify_class_world_output_tree(verified, output_root)
+
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.ARTIFACT_IDENTITY_DUPLICATE]
+    assert result.artifacts == ()
+
+
+def test_rejects_relative_path_collision_after_nfc_and_casefold(tmp_path: Path) -> None:
+    verified, _output_root, built = _verified_manifest(tmp_path)
+    first, second = built.manifest.packages[0], built.manifest.packages[1]
+    forged = replace(
+        verified,
+        manifest=replace(
+            built.manifest,
+            packages=(
+                replace(first, relative_path="packages/shared/artifact"),
+                replace(second, relative_path="packages/SHARED/artifact"),
+            ),
+        ),
+    )
+
+    result = verify_class_world_output_tree(forged, tmp_path)
+
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.RELATIVE_PATH_COLLISION]
+
+
+@pytest.mark.parametrize(
+    "forged_field",
+    [{"digest_algorithm": "sha512"}, {"digest_hex": "00"}, {"digest_hex": "Z" * 64}],
+    ids=["algorithm", "short-hex", "non-lowercase-hex"],
+)
+def test_rejects_unsupported_or_invalid_digest_algorithm(
+    tmp_path: Path, forged_field: dict[str, str]
+) -> None:
+    verified, _output_root, built = _verified_manifest(tmp_path)
+    forged = replace(
+        verified,
+        manifest=replace(
+            built.manifest,
+            packages=(
+                replace(built.manifest.packages[0], **forged_field),
+                built.manifest.packages[1],
+            ),
+        ),
+    )
+
+    result = verify_class_world_output_tree(forged, tmp_path)
+
+    assert _codes(result) == [
+        ClassWorldOutputTreeVerificationIssueCode.DIGEST_ALGORITHM_UNSUPPORTED
+    ]
+
+
+def test_rejects_artifact_over_per_file_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    verified, output_root, _built = _verified_manifest(tmp_path)
+    monkeypatch.setattr(tree_module, "MAX_CLASS_WORLD_PACKAGE_ARTIFACT_BYTES", 4)
+
+    result = verify_class_world_output_tree(verified, output_root)
+
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.ARTIFACT_TOO_LARGE]
+
+
+def test_rejects_output_tree_over_aggregate_limit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    verified, output_root, built = _verified_manifest(tmp_path)
+    monkeypatch.setattr(
+        tree_module,
+        "MAX_CLASS_WORLD_ARTIFACT_SET_BYTES",
+        built.manifest.total_bytes - 1,
+    )
+
+    result = verify_class_world_output_tree(verified, output_root)
+
+    assert _codes(result) == [ClassWorldOutputTreeVerificationIssueCode.OUTPUT_TREE_TOO_LARGE]

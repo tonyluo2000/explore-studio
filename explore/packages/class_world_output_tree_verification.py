@@ -336,9 +336,13 @@ def _open_confined(root_descriptor: int, parts: tuple[str, ...]) -> int:
             )
             os.close(parent)
             parent = child
+        # O_NONBLOCK guarantees the final open cannot hang on a FIFO, device, or
+        # other non-regular path that slipped past the symlink checks; the
+        # S_ISREG gate below rejects any such file and blocking mode is restored
+        # before the regular file is read.
         return os.open(
             parts[-1],
-            os.O_RDONLY | getattr(os, "O_BINARY", 0) | os.O_NOFOLLOW,
+            os.O_RDONLY | getattr(os, "O_BINARY", 0) | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0),
             dir_fd=parent,
         )
     finally:
@@ -370,6 +374,12 @@ def _load_artifact(
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
             return None, _Code.ARTIFACT_NOT_REGULAR
+        # The descriptor is a confirmed regular file: restore blocking mode so the
+        # bounded read behaves identically to a plain open.
+        set_blocking = getattr(os, "set_blocking", None)
+        if set_blocking is not None:
+            with suppress(OSError):
+                set_blocking(descriptor, True)
         identity = (metadata.st_dev, metadata.st_ino)
         if identity in seen_identities:
             return None, _Code.ARTIFACT_IDENTITY_DUPLICATE
