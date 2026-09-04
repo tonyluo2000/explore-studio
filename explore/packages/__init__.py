@@ -127,6 +127,25 @@ from explore.packages.class_world_output_tree_verification_models import (
     ClassWorldOutputTreeVerificationResult,
     ClassWorldVerifiedOutputArtifact,
 )
+from explore.packages.class_world_release_bundle import (
+    verify_class_world_release_bundle_file,
+    write_class_world_release_bundle,
+)
+from explore.packages.class_world_release_bundle_models import (
+    CLASS_WORLD_RELEASE_BUNDLE_DECLARATION_PATH,
+    CLASS_WORLD_RELEASE_BUNDLE_FILE_MODE,
+    CLASS_WORLD_RELEASE_BUNDLE_OUTPUT_MANIFEST_PATH,
+    MAX_CLASS_WORLD_RELEASE_BUNDLE_BYTES,
+    SUPPORTED_CLASS_WORLD_RELEASE_BUNDLE_CONTRACT_VERSION,
+    SUPPORTED_CLASS_WORLD_RELEASE_BUNDLE_DIGEST_ALGORITHM,
+    ClassWorldReleaseBundle,
+    ClassWorldReleaseBundleDigest,
+    ClassWorldReleaseBundleEntry,
+    ClassWorldReleaseBundleIssue,
+    ClassWorldReleaseBundleIssueCode,
+    ClassWorldReleaseBundleVerificationResult,
+    ClassWorldReleaseBundleWriteResult,
+)
 from explore.packages.class_world_release_declaration import (
     build_class_world_release_declaration,
 )
@@ -344,6 +363,13 @@ __all__ = [
     "ClassWorldReleaseDeclarationSerializationIssueCode",
     "ClassWorldReleaseIdentity",
     "ClassWorldReleaseProvenance",
+    "ClassWorldReleaseBundle",
+    "ClassWorldReleaseBundleDigest",
+    "ClassWorldReleaseBundleEntry",
+    "ClassWorldReleaseBundleIssue",
+    "ClassWorldReleaseBundleIssueCode",
+    "ClassWorldReleaseBundleVerificationResult",
+    "ClassWorldReleaseBundleWriteResult",
     "ClassWorldVerifiedMaterialization",
     "ClassWorldVerifiedMaterializationIssue",
     "ClassWorldVerifiedMaterializationIssueCode",
@@ -366,6 +392,7 @@ __all__ = [
     "MAX_CLASS_WORLD_PACKAGE_ARTIFACT_BYTES",
     "MAX_CLASS_WORLD_MANIFEST_BYTES",
     "MAX_CLASS_WORLD_RELEASE_DECLARATION_BYTES",
+    "MAX_CLASS_WORLD_RELEASE_BUNDLE_BYTES",
     "PackageAssetReference",
     "PackageLoadIssue",
     "PackageLoadIssueCode",
@@ -409,6 +436,8 @@ __all__ = [
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_FILE_DIGEST_VERIFICATION_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_RELEASE_DECLARATION_TRANSPORT_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_BUNDLE_CONTRACT_VERSION",
+    "SUPPORTED_CLASS_WORLD_RELEASE_BUNDLE_DIGEST_ALGORITHM",
     "SUPPORTED_CLASS_WORLD_VERIFIED_MATERIALIZATION_CONTRACT_VERSION",
     "SUPPORTED_STUDENT_API_VERSION",
     "SelectedPackagePlan",
@@ -448,6 +477,11 @@ __all__ = [
     "verify_class_world_output_tree",
     "verify_class_world_release_declaration_digest",
     "verify_class_world_release_declaration_file_digest",
+    "verify_class_world_release_bundle_file",
+    "write_class_world_release_bundle",
     "write_class_world_release_declaration_file",
     "write_class_world_manifest_file",
+    "CLASS_WORLD_RELEASE_BUNDLE_DECLARATION_PATH",
+    "CLASS_WORLD_RELEASE_BUNDLE_FILE_MODE",
+    "CLASS_WORLD_RELEASE_BUNDLE_OUTPUT_MANIFEST_PATH",
 ]

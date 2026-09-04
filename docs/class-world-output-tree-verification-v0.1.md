@@ -137,3 +137,8 @@ This tranche performs no output-tree mutation, directory enumeration, detection
 of unlisted files, manifest reparse or recomposition, archive parsing or
 extraction, package loading, student-code execution, runtime registration,
 network, signing, approval, authentication, publication, or deployment work.
+
+The downstream
+[Deterministic Class-World Release Bundle v0.1](class-world-release-bundle-v0.1.md)
+uses this successful verification boundary, safely rereads the authorized
+payloads, and creates one self-contained deterministic archive.
