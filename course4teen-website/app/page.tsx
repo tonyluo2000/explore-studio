@@ -148,7 +148,7 @@ export default function Home() {
             <aside className="school-note" aria-label="School relationship">
               <span>Course offering</span>
               <p>
-                Course4Teen is offered through{" "}
+                Course4Teen is being developed for students and families at{" "}
                 <a href="https://www.hxgny.org/">Huaxia Chinese Academy Greater New York</a>.
               </p>
             </aside>
