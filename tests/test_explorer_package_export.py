@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import stat
 import zipfile
 from dataclasses import FrozenInstanceError
@@ -311,6 +312,18 @@ def test_student_repository_template_is_asset_free_and_loads() -> None:
     assert (TEMPLATE_ROOT / "tests" / "test_package.py").is_file()
     assert not (TEMPLATE_ROOT / "explore").exists()
     assert not (TEMPLATE_ROOT / "engine").exists()
+
+
+def test_pristine_student_template_supports_documented_dist_export(tmp_path: Path) -> None:
+    assert (TEMPLATE_ROOT / "dist" / ".gitkeep").is_file()
+    checkout = tmp_path / "student-repository"
+    shutil.copytree(TEMPLATE_ROOT, checkout)
+    destination = checkout / "dist" / "student-beacon-1.0.0.explorer-package.zip"
+
+    result = export_explorer_package(checkout / "explorer-package", destination)
+
+    assert result.is_exported
+    assert destination.is_file()
 
 
 def test_export_contract_does_not_cross_forbidden_boundaries() -> None:
