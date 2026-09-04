@@ -290,9 +290,16 @@ without rereading files. The downstream
 now performs bounded strict UTF-8/JSON readback of one explicit manifest file,
 binds its complete ordered fields to that coherent materialization, and
 compares the recomputed canonical SHA-256 identity with one explicit expected
-digest. Artifact and output-tree rereads, signing, approval, external
-publication, authentication, registries, online storage, and deployment remain
-deferred.
+digest. The downstream
+[Class-World Materialized Output-Tree Verification v0.1](../class-world-output-tree-verification-v0.1.md)
+now performs descriptor-confined readback of every manifest-authorized payload
+and verifies its byte count and SHA-256. The downstream
+[Deterministic Class-World Release Bundle v0.1](../class-world-release-bundle-v0.1.md)
+now atomically composes the canonical release declaration, canonical
+assembled-output manifest, and verified payloads into one byte-reproducible
+stored ZIP with fixed member metadata and a whole-archive SHA-256. Signing,
+approval, external publication, authentication, registries, online storage,
+and deployment remain deferred.
 
 ### 7.2 Manifest responsibilities
 
@@ -545,6 +552,27 @@ digests, byte counts, and aggregate total remain coherent. Manifest file
 transport and writing remain deferred. Bounded readback and comparison with an
 explicit supplied digest are implemented by
 [Class-World Assembled-Output Manifest File Digest Verification v0.1](../class-world-assembled-output-manifest-file-digest-verification-v0.1.md).
+
+Descriptor-confined verification of the manifest-authorized materialized files
+is implemented by
+[Class-World Materialized Output-Tree Verification v0.1](../class-world-output-tree-verification-v0.1.md).
+
+### 11.3 Implemented deterministic release bundle
+
+The implemented
+[Deterministic Class-World Release Bundle v0.1](../class-world-release-bundle-v0.1.md)
+is the final local Phase C artifact boundary. It contains exactly the canonical
+release declaration, canonical assembled-output manifest, and verified package
+payload files in one stored ZIP. Member order, paths, regular-file mode,
+timestamp, creator system, extra fields, and comments are fixed. SHA-256 over
+the raw ZIP bytes identifies the complete bundle, and equivalent verified
+inputs produce byte-identical archive bytes.
+
+Readback is bounded and does not extract members. It binds the exact member set,
+metadata, canonical metadata bytes, package byte counts and digests, and the
+whole-archive digest back to an authoritative successful output-tree
+verification result. This provides deterministic local artifact identity, not
+authenticity, approval, publication, or safety to execute package contents.
 
 ## 12. Validation and Safety Boundaries
 
