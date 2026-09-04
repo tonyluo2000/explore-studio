@@ -722,6 +722,12 @@ These phases are future work and are not implemented by this decision.
 - Add local tests and a package-export command.
 - Document commit and publish workflows.
 
+The first local Phase D slice is implemented by the asset-free student
+repository template and
+[Deterministic Explorer Package Export v0.1](../explorer-package-export-v0.1.md).
+It deliberately stops at a validated, reproducible local export; publishing and
+approval remain later trusted workflows.
+
 ### Phase E — Online registry and approval
 
 - Add authentication.

@@ -25,6 +25,9 @@ classifiers = [
     "Topic :: Games/Entertainment",
 ]
 
+[project.scripts]
+explore-package = "explore.packages.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "black>=24.0",
