@@ -134,11 +134,6 @@ h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size
 .studio-copy > p:not(.kicker) { color: #c2ccd2; line-height: 1.7; max-width: 590px; }
 .studio-copy .kicker { color: var(--coral-dark); }
 .text-link.light { color: white; margin-top: 1rem; }
-.school-note { max-width: 590px; margin-top: 2rem; padding: 1.2rem 1.3rem; border-left: 3px solid var(--mint); background: rgba(255,255,255,.06); }
-.school-note > span { display: block; margin-bottom: .55rem; color: var(--mint); font: 700 .65rem/1 Arial, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
-.school-note p { margin: 0; color: #d9e1e5; font-size: .82rem; line-height: 1.6; }
-.school-note a { color: white; text-decoration: underline; text-decoration-color: rgba(255,255,255,.45); text-underline-offset: .2em; }
-.school-note a:hover { text-decoration-color: white; }
 
 .parent-heading { max-width: 670px; }
 .parent-content { display: grid; gap: 3rem; margin-top: 3rem; }
