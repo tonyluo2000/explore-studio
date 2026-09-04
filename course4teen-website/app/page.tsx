@@ -145,6 +145,13 @@ export default function Home() {
             <p>Course4Teen is the guided learning experience. Explore Studio is the open-source environment students use to build and explore.</p>
             <p>It bridges the instant feedback of a game with the depth of Python—so the work feels playful without being pretend.</p>
             <a className="text-link light" href="https://github.com/tonyluo2000/explore-studio">Explore the open-source project <ArrowIcon /></a>
+            <aside className="school-note" aria-label="School relationship">
+              <span>Course offering</span>
+              <p>
+                Course4Teen is offered through{" "}
+                <a href="https://www.hxgny.org/">Huaxia Chinese Academy Greater New York</a>.
+              </p>
+            </aside>
           </div>
         </section>
 
