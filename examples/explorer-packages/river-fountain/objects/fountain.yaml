@@ -1,0 +1,6 @@
+name: "River Fountain"
+x: 700
+y: 120
+color: "blue"
+when_near: "The fountain hums with class-made magic."
+when_interacted: "You found the river student's ripple!"

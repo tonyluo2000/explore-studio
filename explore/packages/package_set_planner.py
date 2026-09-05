@@ -373,10 +373,14 @@ def _validate_entry(
     return entry
 
 
-def build_package_set_plan(
+def _build_package_set_plan(
     selections: Iterable[PackageSelection],
+    *,
+    maximum_characters: int | None,
+    maximum_world_objects: int | None,
+    cardinality_contract: str,
 ) -> PackageSetPlanResult:
-    """Preflight exact package selections without loading or applying them.
+    """Preflight exact package selections under an explicit cardinality policy.
 
     Caller-provided package order is preserved. Entries are flattened by that
     package order and then by each registration plan's existing entry order.
@@ -590,15 +594,22 @@ def build_package_set_plan(
 
     character_count = sum(type(item[3]) is CharacterRegistration for item in flattened)
     world_object_count = sum(type(item[3]) is WorldObjectRegistration for item in flattened)
-    if character_count > 1 or world_object_count > 1:
+    character_limit_exceeded = (
+        maximum_characters is not None and character_count > maximum_characters
+    )
+    world_object_limit_exceeded = (
+        maximum_world_objects is not None and world_object_count > maximum_world_objects
+    )
+    if character_limit_exceeded or world_object_limit_exceeded:
         for package_index, entry_index, package_id, entry in flattened:
             location = f"selections[{package_index}].registration_plan.entries[{entry_index}]"
-            if type(entry) is CharacterRegistration and character_count > 1:
+            if type(entry) is CharacterRegistration and character_limit_exceeded:
                 cross_selection_issues.append(
                     _issue(
                         PackageSetIssueCode.CHARACTER_CARDINALITY_EXCEEDED,
                         (
-                            "Student API v0.1 package sets support at most one character; "
+                            f"{cardinality_contract} at most "
+                            f"{maximum_characters} character; "
                             f"this set contains {character_count}."
                         ),
                         location,
@@ -608,12 +619,13 @@ def build_package_set_plan(
                         entry=entry,
                     )
                 )
-            elif type(entry) is WorldObjectRegistration and world_object_count > 1:
+            elif type(entry) is WorldObjectRegistration and world_object_limit_exceeded:
                 cross_selection_issues.append(
                     _issue(
                         PackageSetIssueCode.WORLD_OBJECT_CARDINALITY_EXCEEDED,
                         (
-                            "Student API v0.1 package sets support at most one world object; "
+                            f"{cardinality_contract} at most "
+                            f"{maximum_world_objects} world object; "
                             f"this set contains {world_object_count}."
                         ),
                         location,
@@ -635,4 +647,16 @@ def build_package_set_plan(
             entries=tuple(item[3] for item in flattened),
         ),
         issues=(),
+    )
+
+
+def build_package_set_plan(
+    selections: Iterable[PackageSelection],
+) -> PackageSetPlanResult:
+    """Build one unchanged Student API v0.1 package-set plan."""
+    return _build_package_set_plan(
+        selections,
+        maximum_characters=1,
+        maximum_world_objects=1,
+        cardinality_contract="Student API v0.1 package sets support",
     )

@@ -1,4 +1,4 @@
-"""Command-line interface for local Explorer Package validation and export."""
+"""Command-line interface for local Explorer Package workflows."""
 
 from __future__ import annotations
 
@@ -7,6 +7,10 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
+from explore.packages.classroom_trail import (
+    plan_local_classroom_trail,
+    run_classroom_trail,
+)
 from explore.packages.contribution_models import PackageLoadResult
 from explore.packages.explorer_package_export import (
     export_explorer_package,
@@ -44,7 +48,7 @@ def _validation_json(result: PackageLoadResult) -> str:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="explore-package",
-        description="Validate and deterministically export declarative Explorer Packages.",
+        description="Validate, export, and locally explore declarative Explorer Packages.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
     validate = commands.add_parser("validate", help="validate one unpacked package")
@@ -54,14 +58,17 @@ def _parser() -> argparse.ArgumentParser:
     export.add_argument("package_root", type=Path)
     export.add_argument("--output", type=Path, required=True, help="canonical archive path")
     export.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    trail = commands.add_parser("trail", help="run a local multi-package Classroom Trail")
+    trail.add_argument("package_roots", type=Path, nargs="+")
+    trail.add_argument("--name", default="Classroom Trail", help="local window title")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the local package command and return a process exit status."""
     args = _parser().parse_args(argv)
-    package_root = args.package_root.resolve()
     if args.command == "validate":
+        package_root = args.package_root.resolve()
         result = load_explorer_package(package_root)
         if args.json:
             print(_validation_json(result))
@@ -73,6 +80,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"{issue.code.value}: {issue.location}: {issue.message}")
         return 0 if result.is_loaded else 1
 
+    if args.command == "trail":
+        result = plan_local_classroom_trail(
+            package_root.resolve() for package_root in args.package_roots
+        )
+        if not result.is_planned:
+            for issue in result.issues:
+                print(f"{issue.code.value}: {issue.location}: {issue.message}")
+            return 1
+        assert result.plan is not None
+        run_classroom_trail(result.plan, name=args.name)
+        return 0
+
+    package_root = args.package_root.resolve()
     result = export_explorer_package(package_root, args.output.resolve())
     if args.json:
         print(serialize_explorer_package_export_result(result), end="")
