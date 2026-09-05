@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "river-fountain"
+  display_name: "River Fountain"
+  version: "1.0.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "fountain"
+    type: "world_object"
+    path: "objects/fountain.yaml"

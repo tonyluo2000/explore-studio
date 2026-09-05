@@ -1,0 +1,262 @@
+"""Planning and local execution for Classroom Trail contract v0.2.
+
+Each input package is first checked through the unchanged v0.1 package-set
+contract. The additive trail contract then permits multiple world objects only
+across that validated package boundary while retaining exactly one player.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from explore._colors import resolve_color
+from explore.packages.classroom_trail_models import (
+    SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION,
+    ClassroomTrailPlan,
+    ClassroomTrailPlanIssue,
+    ClassroomTrailPlanIssueCode,
+    ClassroomTrailPlanResult,
+)
+from explore.packages.loader import load_explorer_package
+from explore.packages.package_set_models import PackageSelection, SelectedPackagePlan
+from explore.packages.package_set_planner import _build_package_set_plan
+from explore.packages.registration_adapter import plan_loaded_explorer_package
+from explore.packages.registration_models import (
+    CharacterRegistration,
+    WorldObjectRegistration,
+)
+
+if TYPE_CHECKING:
+    from engine.scenes import ClassroomTrailScene
+
+
+def _issue(
+    code: ClassroomTrailPlanIssueCode,
+    message: str,
+    location: str,
+    *,
+    package_id: str | None = None,
+    qualified_id: str | None = None,
+) -> ClassroomTrailPlanIssue:
+    return ClassroomTrailPlanIssue(code, message, location, package_id, qualified_id)
+
+
+def build_classroom_trail_plan(
+    selections: Iterable[PackageSelection],
+) -> ClassroomTrailPlanResult:
+    """Build a canonical v0.2 trail without changing v0.1 cardinality."""
+    if isinstance(selections, (str, bytes)):
+        raise TypeError("selections must be an iterable of PackageSelection values")
+    try:
+        candidates = tuple(selections)
+    except TypeError as error:
+        raise TypeError("selections must be an iterable of PackageSelection values") from error
+    if not candidates:
+        return ClassroomTrailPlanResult(
+            None,
+            (
+                _issue(
+                    ClassroomTrailPlanIssueCode.PACKAGE_SET_REQUIRED,
+                    "selections must contain at least one package selection.",
+                    "selections",
+                ),
+            ),
+        )
+
+    package_set = _build_package_set_plan(
+        candidates,
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.2 supports",
+    )
+    if not package_set.is_planned or package_set.plan is None:
+        return ClassroomTrailPlanResult(
+            None,
+            tuple(
+                _issue(
+                    ClassroomTrailPlanIssueCode.PACKAGE_INVALID,
+                    issue.message,
+                    issue.location,
+                    package_id=issue.package_id,
+                    qualified_id=issue.qualified_id,
+                )
+                for issue in package_set.issues
+            ),
+        )
+
+    packages = package_set.plan.packages
+    entries = package_set.plan.entries
+
+    players = tuple(entry for entry in entries if type(entry) is CharacterRegistration)
+    world_objects = tuple(
+        sorted(
+            (entry for entry in entries if type(entry) is WorldObjectRegistration),
+            key=lambda entry: entry.qualified_id,
+        )
+    )
+    issues: list[ClassroomTrailPlanIssue] = []
+    if not players:
+        issues.append(
+            _issue(
+                ClassroomTrailPlanIssueCode.PLAYER_REQUIRED,
+                "A Classroom Trail requires exactly one character as its player.",
+                "selections",
+            )
+        )
+    elif len(players) > 1:
+        issues.append(
+            _issue(
+                ClassroomTrailPlanIssueCode.PLAYER_CARDINALITY_EXCEEDED,
+                f"A Classroom Trail requires one player; this set contains {len(players)}.",
+                "selections",
+            )
+        )
+    if not world_objects:
+        issues.append(
+            _issue(
+                ClassroomTrailPlanIssueCode.WORLD_OBJECT_REQUIRED,
+                "A Classroom Trail requires at least one world object.",
+                "selections",
+            )
+        )
+    if issues:
+        return ClassroomTrailPlanResult(None, tuple(issues))
+
+    return ClassroomTrailPlanResult(
+        ClassroomTrailPlan(
+            contract_version=SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION,
+            packages=tuple(sorted(packages, key=lambda package: package.package_id)),
+            player=players[0],
+            world_objects=world_objects,
+        ),
+        (),
+    )
+
+
+def plan_local_classroom_trail(
+    package_roots: Iterable[str | Path],
+) -> ClassroomTrailPlanResult:
+    """Load independent local package roots and plan them as one trail."""
+    selections: list[PackageSelection] = []
+    for root in package_roots:
+        loaded = load_explorer_package(root)
+        registration = plan_loaded_explorer_package(loaded)
+        if registration.plan is None:
+            return ClassroomTrailPlanResult(
+                None,
+                (
+                    _issue(
+                        ClassroomTrailPlanIssueCode.PACKAGE_INVALID,
+                        "A local package could not be loaded and planned declaratively.",
+                        "package_roots",
+                    ),
+                ),
+            )
+        provenance = registration.plan.provenance
+        selections.append(
+            PackageSelection(
+                package_id=provenance.package_id,
+                package_version=provenance.package_version,
+                registration_plan=registration.plan,
+            )
+        )
+    return build_classroom_trail_plan(selections)
+
+
+def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> ClassroomTrailScene:
+    """Translate one immutable trail plan into engine-owned runtime objects."""
+    from engine.entities import Character as EngineCharacter
+    from engine.entities import WorldObject as EngineWorldObject
+    from engine.scenes import ClassroomTrailObject, ClassroomTrailScene
+
+    if not isinstance(plan, ClassroomTrailPlan):
+        raise TypeError("plan must be a ClassroomTrailPlan")
+    if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
+        raise ValueError('plan.contract_version must be "0.2"')
+    if (
+        not isinstance(plan.packages, tuple)
+        or not plan.packages
+        or any(type(package) is not SelectedPackagePlan for package in plan.packages)
+    ):
+        raise ValueError("plan.packages must contain canonical selected package plans")
+    if tuple(package.package_id for package in plan.packages) != tuple(
+        sorted(package.package_id for package in plan.packages)
+    ):
+        raise ValueError("plan.packages must be ordered by package ID")
+    canonical_entries = tuple(
+        entry for package in plan.packages for entry in package.registration_plan.entries
+    )
+    canonical_players = tuple(
+        entry for entry in canonical_entries if type(entry) is CharacterRegistration
+    )
+    canonical_objects = tuple(
+        sorted(
+            (entry for entry in canonical_entries if type(entry) is WorldObjectRegistration),
+            key=lambda entry: entry.qualified_id,
+        )
+    )
+    if canonical_players != (plan.player,) or canonical_objects != plan.world_objects:
+        raise ValueError("plan must retain its canonical package contribution projection")
+    player = plan.player.character
+    engine_player = EngineCharacter(
+        name=player.name,
+        x=player.x,
+        y=player.y,
+        width=100,
+        height=100,
+        color=resolve_color(player.color),
+    )
+    engine_objects = tuple(
+        ClassroomTrailObject(
+            qualified_id=entry.qualified_id,
+            world_object=EngineWorldObject(
+                name=entry.world_object.name,
+                x=entry.world_object.x,
+                y=entry.world_object.y,
+                width=80,
+                height=60,
+                color=resolve_color(entry.world_object.color),
+            ),
+            when_near=entry.world_object.when_near,
+            when_interacted=entry.world_object.when_interacted,
+        )
+        for entry in plan.world_objects
+    )
+    return ClassroomTrailScene(renderer, engine_player, engine_objects)  # type: ignore[arg-type]
+
+
+def run_classroom_trail(plan: ClassroomTrailPlan, *, name: str = "Classroom Trail") -> None:
+    """Run one planned trail locally until the window is closed."""
+    from engine._config import Config
+    from engine._platform import Platform
+    from engine.input import InteractionInput
+    from engine.rendering import Renderer
+
+    config = Config(app_name=name)
+    platform = Platform(config)
+    platform.initialize()
+    scene: ClassroomTrailScene | None = None
+    try:
+        renderer = Renderer(platform)
+        scene = create_classroom_trail_scene(renderer, plan)
+        scene.enter()
+        while True:
+            events = platform.poll_frame_events()
+            if events.quit_requested:
+                break
+            dt = platform.tick()
+            directional_input = platform.poll_directional_input()
+            scene.update(
+                directional_input,
+                InteractionInput(interact_pressed=events.interaction_pressed),
+                dt,
+            )
+            renderer.clear_frame(config.background_color)
+            scene.render()
+            renderer.present_frame()
+    finally:
+        if scene is not None:
+            scene.exit()
+        platform.shutdown()
