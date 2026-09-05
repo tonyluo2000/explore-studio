@@ -135,7 +135,9 @@ After the Phase D extraction, this repository contains:
 - a course-admin-only adapter binding existing immutable Class-World
   configuration pins to exact currently approved registry entries;
 - authenticated, audited, idempotent course-admin transitions for cohort
-  membership and global namespace authority; and
+  membership and global namespace authority;
+- immutable server-side Class-World configuration bytes, exact identity,
+  authoritative reconstruction, and audited opaque loading for pinning; and
 - local lesson examples, tests, and architecture documentation.
 
 The repository does not yet provide an OIDC login/session or upload endpoint,
@@ -146,9 +148,12 @@ student-code isolation. The implemented
 [Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md),
 [Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md),
 [Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md),
-and [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md)
+and [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md),
+plus the
+[Phase E Authoritative Class-World Configuration Store v0.1](../phase-e-configuration-store-v0.1.md),
 supply trusted models, policy, verification, state transitions, projection,
-pinning and administrative evidence, and reference persistence for the
+pinning, authoritative configuration loading, administrative evidence, and
+reference persistence for the
 implemented Phase E slices.
 Independent student repositories are still created from the standalone
 template.
@@ -786,8 +791,11 @@ implemented by
 The bounded adapter for an exact pin already present in an existing immutable
 configuration is implemented by
 [Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md);
-registry and pinning endpoints, configuration creation/mutation, and release
-integration remain deferred.
+registry and pinning endpoints, configuration authoring/mutation, and release
+integration remain deferred. Immutable server-side persistence and authoritative
+opaque loading for existing trusted configurations are implemented by
+[Phase E Authoritative Class-World Configuration Store v0.1](../phase-e-configuration-store-v0.1.md);
+configuration authoring and mutation remain deferred.
 Authenticated membership and namespace authority transitions are implemented
 by [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md);
 their HTTP/OIDC/session transport remains deferred.

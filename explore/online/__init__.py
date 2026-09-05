@@ -8,6 +8,29 @@ from explore.online.authorization import (
     authorize,
     authorize_control_plane,
 )
+from explore.online.configuration import (
+    AuthoritativeClassWorldConfigurationService,
+    prepare_class_world_configuration,
+)
+from explore.online.configuration_models import (
+    AuthoritativeClassWorldConfiguration,
+    ConfigurationAccessDeniedError,
+    ConfigurationAuthenticationError,
+    ConfigurationAuthoritySnapshot,
+    ConfigurationConflictError,
+    ConfigurationCreateReceipt,
+    ConfigurationCreateRequest,
+    ConfigurationIntegrityError,
+    ConfigurationLoadReceipt,
+    ConfigurationLoadRequest,
+    PreparedClassWorldConfiguration,
+    StoredClassWorldConfiguration,
+)
+from explore.online.configuration_persistence import (
+    CONFIGURATION_SCHEMA_VERSION,
+    ConfigurationPersistenceConflictError,
+    SQLiteClassWorldConfigurationStore,
+)
 from explore.online.control_plane import ControlPlaneService
 from explore.online.control_plane_models import (
     ControlPlaneAccessDeniedError,
@@ -143,6 +166,7 @@ from explore.online.submission_verification import (
 )
 
 __all__ = [
+    "CONFIGURATION_SCHEMA_VERSION",
     "CONTROL_PLANE_SCHEMA_VERSION",
     "FOUNDATION_SCHEMA_VERSION",
     "Actor",
@@ -154,6 +178,8 @@ __all__ = [
     "AuthorizationDecision",
     "AuthorizationDecisionCode",
     "AuthorizationResource",
+    "AuthoritativeClassWorldConfiguration",
+    "AuthoritativeClassWorldConfigurationService",
     "Cohort",
     "CohortMembership",
     "CohortRole",
@@ -162,6 +188,16 @@ __all__ = [
     "ClassWorldPinReceipt",
     "ClassWorldPinRequest",
     "ClassWorldPinningService",
+    "ConfigurationAccessDeniedError",
+    "ConfigurationAuthenticationError",
+    "ConfigurationAuthoritySnapshot",
+    "ConfigurationConflictError",
+    "ConfigurationCreateReceipt",
+    "ConfigurationCreateRequest",
+    "ConfigurationIntegrityError",
+    "ConfigurationLoadReceipt",
+    "ConfigurationLoadRequest",
+    "ConfigurationPersistenceConflictError",
     "ControlPlaneAccessDeniedError",
     "ControlPlaneAction",
     "ControlPlaneAuthenticationError",
@@ -200,6 +236,7 @@ __all__ = [
     "PinConfigurationError",
     "PinConflictError",
     "PinPersistenceConflictError",
+    "PreparedClassWorldConfiguration",
     "REVIEW_REASON_MAX_LENGTH",
     "REVIEW_RESULT_METADATA_MAX_BYTES",
     "REVIEW_SCHEMA_VERSION",
@@ -221,6 +258,7 @@ __all__ = [
     "RegistryReadReceipt",
     "RegistryScope",
     "SQLiteControlPlaneStore",
+    "SQLiteClassWorldConfigurationStore",
     "SQLiteFoundationStore",
     "SQLitePinningStore",
     "SQLiteReviewStore",
@@ -228,9 +266,11 @@ __all__ = [
     "SQLiteSubmissionStore",
     "ServicePrincipal",
     "StoredPackageVersion",
+    "StoredClassWorldConfiguration",
     "authorize",
     "authorize_control_plane",
     "review_transition",
+    "prepare_class_world_configuration",
     "AuthenticatedOIDCIdentity",
     "MAX_SUBMISSION_ARCHIVE_MEMBERS",
     "MAX_SUBMISSION_MANIFEST_BYTES",
