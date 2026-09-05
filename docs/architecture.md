@@ -68,6 +68,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Phase E Package Review Decisions v0.1](phase-e-review-v0.1.md)
 - [Phase E Approved Registry Projection v0.1](phase-e-registry-v0.1.md)
 - [Phase E Exact Approved-Version Pinning v0.1](phase-e-pinning-v0.1.md)
+- [Phase E Authenticated Control Plane v0.1](phase-e-control-plane-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
