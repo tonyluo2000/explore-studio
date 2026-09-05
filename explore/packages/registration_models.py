@@ -43,12 +43,13 @@ class RegistrationPlanIssue:
 
 @dataclass(frozen=True)
 class CharacterRegistrationSpec:
-    """Detached Student API v0.1 configuration for one character."""
+    """Detached character configuration plus optional inert trail greeting."""
 
     name: str
     x: int
     y: int
     color: str
+    greeting: str | None = None
 
 
 @dataclass(frozen=True)

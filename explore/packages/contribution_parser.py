@@ -20,7 +20,7 @@ from explore.packages.contribution_models import (
 )
 from explore.packages.models import ContributionDeclaration
 
-_CHARACTER_FIELDS = frozenset({"name", "x", "y", "color", "asset_id"})
+_CHARACTER_FIELDS = frozenset({"name", "x", "y", "color", "asset_id", "greeting"})
 _WORLD_OBJECT_FIELDS = frozenset(
     {
         "name",
@@ -242,6 +242,14 @@ def _parse_character(
     y = _coordinate(mapping, "y", source_path, issues, required=False, default=270)
     color = _color(mapping, source_path, issues, default="gold")
     image = _asset_reference(mapping, source_path, assets_by_id, issues)
+    greeting = _text(
+        mapping,
+        "greeting",
+        source_path,
+        issues,
+        required=False,
+        default=None,
+    )
     _unknown_fields(mapping, _CHARACTER_FIELDS, source_path, issues)
 
     if issues:
@@ -250,6 +258,7 @@ def _parse_character(
     assert x is not None
     assert y is not None
     assert color is not None
+    assert greeting is None or isinstance(greeting, str)
     return (
         LoadedCharacter(
             contribution_id=declaration.id,
@@ -261,6 +270,7 @@ def _parse_character(
             y=y,
             color=color,
             image=image,
+            greeting=greeting,
         ),
         (),
     )

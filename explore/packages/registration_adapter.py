@@ -306,6 +306,14 @@ def _map_character(
         location=f"{location}.image",
         issues=issues,
     )
+    _validate_text(
+        contribution.greeting,
+        contribution=contribution,
+        location=f"{location}.greeting",
+        field="greeting",
+        issues=issues,
+        optional=True,
+    )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -315,6 +323,7 @@ def _map_character(
             x=contribution.x,
             y=contribution.y,
             color=contribution.color,
+            greeting=contribution.greeting,
         ),
         asset_reference=contribution.image,
     )

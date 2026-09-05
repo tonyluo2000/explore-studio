@@ -53,7 +53,10 @@ def _codes(report: ValidationReport) -> list[IssueCode]:
     return [issue.code for issue in report.issues]
 
 
-@pytest.mark.parametrize("name", ["nova-character", "crystal-lantern", "river-fountain"])
+@pytest.mark.parametrize(
+    "name",
+    ["nova-character", "forest-guide", "crystal-lantern", "river-fountain"],
+)
 def test_valid_example_packages(name: str) -> None:
     """Checked-in declarative examples satisfy contract v0.1."""
     report = validate_explorer_package(EXAMPLE_ROOT / name)

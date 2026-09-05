@@ -126,6 +126,26 @@ def test_nova_package_produces_exact_character_registration() -> None:
     )
 
 
+def test_character_greeting_is_validated_and_preserved() -> None:
+    greeting = "Welcome to our trail!"
+
+    result = build_student_api_registration_plan(_package(_character(greeting=greeting)))
+
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert entry.character.greeting == greeting
+
+
+@pytest.mark.parametrize("greeting", ["", "   ", 42])
+def test_invalid_character_greeting_is_rejected(greeting: object) -> None:
+    result = build_student_api_registration_plan(_package(_character(greeting=greeting)))
+
+    assert result.plan is None
+    assert result.issues[0].code is RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].field == "greeting"
+
+
 def test_crystal_lantern_produces_exact_world_object_registration() -> None:
     """The lantern maps exactly, retaining both inert interaction messages."""
     loaded = load_explorer_package(EXAMPLE_ROOT / "crystal-lantern")

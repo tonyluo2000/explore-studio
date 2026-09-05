@@ -643,6 +643,24 @@ def test_multiple_independent_issues_accumulate_in_stable_order() -> None:
     assert all("0x" not in issue.message for issue in first.issues)
 
 
+def test_invalid_character_greeting_is_rejected_during_package_preflight() -> None:
+    entry = _character(
+        "nova-character",
+        character=CharacterRegistrationSpec(
+            name="Nova",
+            x=1,
+            y=2,
+            color="gold",
+            greeting=" ",
+        ),
+    )
+
+    result = build_package_set_plan((_selection("nova-character", entry),))
+
+    assert result.plan is None
+    assert _codes(result) == [PackageSetIssueCode.ENTRY_VALUE_INVALID]
+
+
 def test_diagnostics_do_not_expose_malformed_path_or_address_like_identities() -> None:
     leaked = "/private/tmp/entry-at-0x1234"
     selection = _selection(

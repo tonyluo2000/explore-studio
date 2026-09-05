@@ -291,6 +291,16 @@ def _validate_character_entry(
         entry=entry,
         issues=issues,
     )
+    if specification.greeting is not None and not _is_nonblank_text(specification.greeting):
+        field_location = f"{location}.character.greeting"
+        issues.append(
+            _issue(
+                RegistrationApplicationIssueCode.ENTRY_VALUE_INVALID,
+                f"{field_location} must be non-whitespace text when present.",
+                field_location,
+                entry=entry,
+            )
+        )
     _validate_asset(entry.asset_reference, f"{location}.asset_reference", entry, issues)
 
 

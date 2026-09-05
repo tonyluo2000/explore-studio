@@ -60,6 +60,11 @@ def _parser() -> argparse.ArgumentParser:
     export.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     trail = commands.add_parser("trail", help="run a local multi-package Classroom Trail")
     trail.add_argument("package_roots", type=Path, nargs="+")
+    trail.add_argument(
+        "--player",
+        required=True,
+        help="package-qualified character ID to control (for example student:hero)",
+    )
     trail.add_argument("--name", default="Classroom Trail", help="local window title")
     return parser
 
@@ -82,7 +87,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "trail":
         result = plan_local_classroom_trail(
-            package_root.resolve() for package_root in args.package_roots
+            (package_root.resolve() for package_root in args.package_roots),
+            player_qualified_id=args.player,
         )
         if not result.is_planned:
             for issue in result.issues:

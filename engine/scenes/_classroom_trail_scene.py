@@ -1,6 +1,6 @@
 """Deterministic local Classroom Trail scene.
 
-The scene owns one movable player and multiple package-qualified stationary
+The scene owns one movable player plus package-qualified stationary NPCs and
 objects. It executes no student code; callers provide already validated engine
 entities and inert interaction text.
 """
@@ -59,14 +59,37 @@ class ClassroomTrailObject:
                 raise ValueError(f"{field_name} must be non-whitespace text when present")
 
 
+@dataclass(frozen=True)
+class ClassroomTrailNPC:
+    """One stationary character whose NPC role exists only in this trail."""
+
+    qualified_id: str
+    character: Character
+    greeting: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
+            raise ValueError("qualified_id must be non-whitespace text")
+        if not isinstance(self.character, Character):
+            raise TypeError("character must be a Character")
+        if self.greeting is not None and (
+            not isinstance(self.greeting, str) or not self.greeting.strip()
+        ):
+            raise ValueError("greeting must be non-whitespace text when present")
+
+
+ClassroomTrailTarget = ClassroomTrailObject | ClassroomTrailNPC
+
+
 class ClassroomTrailScene(Scene):
-    """One-player, many-object scene with deterministic interaction targeting."""
+    """One-player trail with deterministic object and NPC targeting."""
 
     def __init__(
         self,
         renderer: Renderer,
         player: Character,
         objects: tuple[ClassroomTrailObject, ...],
+        npcs: tuple[ClassroomTrailNPC, ...] = (),
         *,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
     ) -> None:
@@ -77,16 +100,21 @@ class ClassroomTrailScene(Scene):
             raise ValueError("objects must be a non-empty tuple")
         if any(not isinstance(item, ClassroomTrailObject) for item in objects):
             raise TypeError("objects must contain only ClassroomTrailObject values")
-        qualified_ids = tuple(item.qualified_id for item in objects)
+        if not isinstance(npcs, tuple):
+            raise TypeError("npcs must be a tuple")
+        if any(not isinstance(item, ClassroomTrailNPC) for item in npcs):
+            raise TypeError("npcs must contain only ClassroomTrailNPC values")
+        qualified_ids = tuple(item.qualified_id for item in (*objects, *npcs))
         if len(qualified_ids) != len(set(qualified_ids)):
-            raise ValueError("objects must have unique qualified IDs")
+            raise ValueError("objects and npcs must have unique qualified IDs")
 
         self._renderer = renderer
         self._player = player
         self._objects = tuple(sorted(objects, key=lambda item: item.qualified_id))
+        self._npcs = tuple(sorted(npcs, key=lambda item: item.qualified_id))
         self._interaction_range = _validate_interaction_range(interaction_range)
         self._range_sq = self._interaction_range * self._interaction_range
-        self._target: ClassroomTrailObject | None = None
+        self._target: ClassroomTrailTarget | None = None
         self._visited_qualified_ids: frozenset[str] = frozenset()
         self._interaction_pulse = False
         self._feedback_message: str | None = None
@@ -99,6 +127,10 @@ class ClassroomTrailScene(Scene):
     @property
     def objects(self) -> tuple[ClassroomTrailObject, ...]:
         return self._objects
+
+    @property
+    def npcs(self) -> tuple[ClassroomTrailNPC, ...]:
+        return self._npcs
 
     @property
     def target_qualified_id(self) -> str | None:
@@ -132,12 +164,18 @@ class ClassroomTrailScene(Scene):
     ) -> None:
         super().update(input_state, interaction_input, dt)
         self._move_player(input_state, dt)
-        self._target = self._nearest_in_range_object()
+        self._target = self._nearest_in_range_interactable()
         self._interaction_pulse = interaction_input.interact_pressed and self._target is not None
         if self._interaction_pulse:
             assert self._target is not None
-            self._visited_qualified_ids = self._visited_qualified_ids | {self._target.qualified_id}
-            self._feedback_message = self._target.when_interacted or _DEFAULT_INTERACTED_MESSAGE
+            if isinstance(self._target, ClassroomTrailObject):
+                self._visited_qualified_ids = self._visited_qualified_ids | {
+                    self._target.qualified_id
+                }
+                self._feedback_message = self._target.when_interacted or _DEFAULT_INTERACTED_MESSAGE
+            else:
+                assert self._target.greeting is not None
+                self._feedback_message = f"{self._target.character.name}: {self._target.greeting}"
             self._feedback_remaining = _FEEDBACK_DURATION
         elif self._feedback_remaining > 0:
             self._feedback_remaining = max(0.0, self._feedback_remaining - dt)
@@ -152,6 +190,15 @@ class ClassroomTrailScene(Scene):
                 world_object.width,
                 world_object.height,
                 world_object.color,
+            )
+        for item in self._npcs:
+            character = item.character
+            self._renderer.draw_rect(
+                character.x,
+                character.y,
+                character.width,
+                character.height,
+                character.color,
             )
         self._renderer.draw_rect(
             self._player.x,
@@ -177,8 +224,10 @@ class ClassroomTrailScene(Scene):
             )
         if self._feedback_remaining > 0 and self._feedback_message is not None:
             message = self._feedback_message
-        elif self._target is not None:
+        elif isinstance(self._target, ClassroomTrailObject):
             message = self._target.when_near or _DEFAULT_NEAR_MESSAGE
+        elif self._target is not None:
+            message = _DEFAULT_NEAR_MESSAGE
         else:
             message = None
         if message is not None:
@@ -203,19 +252,23 @@ class ClassroomTrailScene(Scene):
             ),
         )
 
-    def _nearest_in_range_object(self) -> ClassroomTrailObject | None:
-        candidates: list[tuple[float, str, ClassroomTrailObject]] = []
-        for item in self._objects:
-            world_object = item.world_object
+    def _nearest_in_range_interactable(self) -> ClassroomTrailTarget | None:
+        candidates: list[tuple[float, str, ClassroomTrailTarget]] = []
+        interactables: tuple[ClassroomTrailTarget, ...] = (
+            *self._objects,
+            *(npc for npc in self._npcs if npc.greeting is not None),
+        )
+        for item in interactables:
+            entity = item.world_object if isinstance(item, ClassroomTrailObject) else item.character
             distance_sq = _center_distance_sq(
                 self._player.x_float,
                 self._player.y_float,
                 self._player.width,
                 self._player.height,
-                world_object.x,
-                world_object.y,
-                world_object.width,
-                world_object.height,
+                entity.x,
+                entity.y,
+                entity.width,
+                entity.height,
             )
             if distance_sq <= self._range_sq:
                 candidates.append((distance_sq, item.qualified_id, item))

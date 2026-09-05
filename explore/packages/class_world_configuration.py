@@ -461,6 +461,11 @@ def _entry_value_issues(
             x=entry.character.x,
             y=entry.character.y,
             color=entry.character.color,
+        ) and (
+            entry.character.greeting is None
+            or (
+                isinstance(entry.character.greeting, str) and bool(entry.character.greeting.strip())
+            )
         )
     elif type(entry) is WorldObjectRegistration and isinstance(
         entry.world_object, WorldObjectRegistrationSpec
