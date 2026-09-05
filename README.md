@@ -62,10 +62,12 @@ explore-studio/
 ```
 
 This repository is the official platform repository. The target course model
-uses one independent repository per student; students publish versioned Explorer
-Packages that are assembled into a class-world release. Student repositories are
-not directories in this repository and are not merged to produce a release. See
-the [student contribution model](docs/architecture/student-contribution-model.md).
+uses one independent repository per student; students export versioned Explorer
+Package candidates that future trusted workflows can publish for class-world
+assembly. Student repositories are created from the standalone
+[`student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template),
+are not directories in this repository, and are not merged to produce a release.
+See the [student contribution model](docs/architecture/student-contribution-model.md).
 
 ## License
 

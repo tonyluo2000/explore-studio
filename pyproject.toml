@@ -66,6 +66,9 @@ indent-style = "space"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    "student_template_integration: networked verification of the pinned standalone template",
+]
 
 [tool.setuptools]
 packages = ["explore", "explore.packages", "engine"]
