@@ -115,20 +115,21 @@ decision as long as the logical ownership boundaries remain intact.
 
 ### 4.2 Current repository state
 
-As of this decision, the repository contains:
+At the Phase D stabilization checkpoint, the repository contains:
 
-- a local Python engine in `engine/`;
-- Student API v0.1 in `explore/`;
-- local lesson examples, tests, and architecture documentation;
-- no Explorer Package schema or validator;
-- no class-world builder or package registry;
-- no formal student repository template;
-- no authentication or online shared-world services; and
-- no implemented mission-progression control.
+- a local Python engine and Student API v0.1;
+- the implemented Explorer Package v0.1 validator, declarative loader, and
+  deterministic local export command;
+- deterministic local class-world planning, assembly, verification, and release
+  bundle contracts from Phase C;
+- an in-repository student project template pending a separate extraction
+  decision; and
+- local lesson examples, tests, and architecture documentation.
 
-The engine and Student API demonstrate local execution for one character and one
-object. The multi-repository contribution flow and online mode in this document
-are target architecture, not claims about current implementation.
+The repository does not provide authentication, package submission or
+publication, approval services, an online registry, deployment, or executable
+student-code isolation. Independent student repositories and online services
+remain physical or operational work beyond this in-repository template slice.
 
 ## 5. Ownership Boundaries
 
@@ -155,34 +156,37 @@ attribution, and reuse terms before contributions are shared. Package metadata
 must preserve attribution, but this architecture does not invent legal terms or
 assume that private student work is licensed for public reuse.
 
-## 6. Student Commit-to-Publish Workflow
+## 6. Student Commit-to-Export-to-Publish Workflow
 
 ```mermaid
 flowchart TD
     A["Create repository from supported template"] --> B["Develop locally"]
     B --> C["Run local tests"]
     C --> D["Commit and push to personal repository"]
-    D --> E["Build versioned Explorer Package"]
-    E --> F["Validate package"]
-    F --> G["Teacher review or approval"]
-    G --> H["Pin approved package version<br/>in class configuration"]
-    H --> I["Build final class world"]
-    I --> J["Release versioned artifact"]
+    D --> E["Validate declarative package"]
+    E --> F["Export local versioned candidate"]
+    F -. future .-> G["Submit or publish exact candidate"]
+    G --> H["Teacher review or approval"]
+    H --> I["Pin approved package version<br/>in class configuration"]
+    I --> J["Build final class world"]
+    J --> K["Release versioned artifact"]
 ```
 
-The lifecycle uses five distinct operations:
+The lifecycle uses six distinct operations:
 
 | Operation | Meaning |
 |-----------|---------|
 | **Committing** | Records a source change in the student's repository. The student may commit freely and often. |
-| **Publishing** | Produces and submits a versioned Explorer Package from a selected source state. |
+| **Exporting** | Validates a selected source state and creates a deterministic local Explorer Package candidate. It does not submit anything. |
+| **Publishing** | Submits an exact exported candidate through a future trusted workflow. It does not imply approval. |
 | **Approving** | Confirms that a specific package version passed automated policy and teacher review for a particular shared use. |
 | **Assembling** | Resolves approved pinned inputs and generates a class-world artifact. Repositories are not merged. |
 | **Releasing** | Makes a particular assembled artifact available to its intended class environment. |
 
-A Git commit does not automatically publish content to the shared world.
-Publishing does not imply approval, and approval does not silently update an
-already released class world.
+A Git commit does not export or publish content to the shared world. Export is
+local artifact creation and does not imply publication. Publishing does not
+imply approval, and approval does not silently update an already released class
+world.
 
 ## 7. Explorer Package Contract
 
@@ -720,7 +724,7 @@ These phases are future work and are not implemented by this decision.
 
 - Create or formalize the student project template.
 - Add local tests and a package-export command.
-- Document commit and publish workflows.
+- Document commit, local export, and future publish as distinct operations.
 
 The first local Phase D slice is implemented by the asset-free student
 repository template and

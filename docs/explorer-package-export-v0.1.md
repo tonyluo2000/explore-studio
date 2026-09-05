@@ -17,6 +17,16 @@ Relative CLI paths are resolved before calling the platform API. The public
 and destination. The destination parent must exist, the destination must be
 absent, and the filename is derived from the validated package ID and version.
 
+## Supported platforms
+
+Export v0.1 requires POSIX descriptor-relative filesystem operations, including
+`O_DIRECTORY`, `O_NOFOLLOW`, and `dir_fd` support for open, stat, link, and
+unlink. The supported boundary is macOS and Linux environments that provide
+those operations. Native Windows does not provide this confinement contract;
+export therefore fails closed with `descriptor_confinement_unavailable` rather
+than weakening its filesystem guarantees. Validation remains a separate
+operation, but a student repository must use a supported environment to export.
+
 ## Artifact contract
 
 The ZIP contains only `manifest.yaml`, declared contributions in manifest order,
