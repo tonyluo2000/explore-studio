@@ -16,6 +16,8 @@ from urllib.parse import urlsplit
 from explore.online.transport_models import StaffOIDCProvider, StaffTransportConfig
 
 _ENVIRONMENT_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*", re.ASCII)
+_SEED_ID = re.compile(r"[a-z0-9]+(?:[._/-][a-z0-9]+)*", re.ASCII)
+_SHA256 = re.compile(r"[0-9a-f]{64}", re.ASCII)
 _SECRET_REFERENCE = re.compile(r"env:(EXPLORE_STAFF_SECRET_[A-Z0-9_]{1,96})", re.ASCII)
 _CONTROL_CHARACTER = re.compile(r"[\x00-\x1f\x7f]", re.ASCII)
 
@@ -176,11 +178,29 @@ class PilotTransportTrustConfig:
 
 
 @dataclass(frozen=True)
+class PilotSeedAttestation:
+    """Reviewed identity of the only seed artifact allowed for one pilot datastore."""
+
+    provenance: str
+    version: str
+    sha256: str
+
+    def __post_init__(self) -> None:
+        for name in ("provenance", "version"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or _SEED_ID.fullmatch(value) is None:
+                raise ValueError(f"seed {name} must be a canonical lowercase identifier")
+        if not isinstance(self.sha256, str) or _SHA256.fullmatch(self.sha256) is None:
+            raise ValueError("seed sha256 must be a lowercase SHA-256 digest")
+
+
+@dataclass(frozen=True)
 class PilotDatastoreConfig:
     """One isolated, locally locked SQLite datastore for synthetic pilot records."""
 
     path: Path
     environment_id: str
+    seed_attestation: PilotSeedAttestation
     synthetic_only: bool = True
     worker_count: int = 1
 
@@ -194,6 +214,8 @@ class PilotDatastoreConfig:
             or _ENVIRONMENT_ID.fullmatch(self.environment_id) is None
         ):
             raise ValueError("environment_id must be lower-kebab-case")
+        if not isinstance(self.seed_attestation, PilotSeedAttestation):
+            raise TypeError("seed_attestation must be a PilotSeedAttestation")
         if self.synthetic_only is not True:
             raise ValueError("staff pilot datastore must be explicitly synthetic-only")
         if self.worker_count != 1:
@@ -338,6 +360,7 @@ __all__ = [
     "PilotJWKSCacheConfig",
     "PilotMaintenanceConfig",
     "PilotOIDCProviderConfig",
+    "PilotSeedAttestation",
     "PilotTLSMode",
     "PilotTransportTrustConfig",
     "SecretLoader",

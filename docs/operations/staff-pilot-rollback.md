@@ -10,7 +10,9 @@
 5. Keep the same database only when the restored code supports every recorded
    Phase E schema version. Otherwise provision a fresh classified synthetic
    database and follow the reset runbook.
-6. Restart exactly one worker, then verify liveness, readiness, login/session,
+6. Restart exactly one non-preloaded, non-reloading worker with ASGI lifespan
+   enabled and construct the runtime inside that final process. Then verify
+   liveness, readiness, login/session,
    CSRF rejection, one control-plane transition, exact registry read, sealed
    configuration load/pin, logout, and issuer revocation.
 7. Reopen ingress only after those checks and the redacted operational log have

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import ipaddress
 import threading
 import time
@@ -34,6 +35,7 @@ from explore.online.pilot_operations import (
     StaffPilotMaintenance,
 )
 from explore.online.staff_transport import create_staff_transport_app
+from explore.online.transport_persistence import SQLiteStaffTransportStore
 
 
 def _headers(scope: Scope, name: bytes) -> list[str]:
@@ -167,15 +169,22 @@ class StaffPilotApplication:
         elif scope.get("path") == "/health/live":
             response = self._secure(JSONResponse({"status": "ok"}))
         else:
-            with self._operation_lock:
-                providers_ready = all(
-                    self._datastore.store.identity_provider_assurance(provider.issuer)
-                    is AssuranceLevel.AAL2
-                    for provider in self._config.providers
-                )
-                ready = (
-                    self._datastore.is_ready() and providers_ready and self._maintenance.is_fresh()
-                )
+            ready = False
+            try:
+                with self._operation_lock:
+                    self._datastore.assert_process_owner()
+                    ready = self._datastore.is_ready()
+                    if ready:
+                        ready = all(
+                            self._datastore.store.identity_provider_assurance(provider.issuer)
+                            is AssuranceLevel.AAL2
+                            for provider in self._config.providers
+                        )
+                    if ready:
+                        ready = self._maintenance.is_fresh()
+            except Exception:
+                # Health responses own dependency failures and never expose their detail.
+                ready = False
             self._observer.record_operation("readiness", "success" if ready else "failure")
             response = self._secure(
                 JSONResponse(
@@ -190,6 +199,7 @@ class StaffPilotApplication:
             message = await receive()
             if message["type"] == "lifespan.startup":
                 try:
+                    self._datastore.assert_process_owner()
                     await asyncio.to_thread(self._maintenance.run_cleanup)
                     self._stop = asyncio.Event()
                     self._maintenance_task = asyncio.create_task(
@@ -243,7 +253,17 @@ class StaffPilotApplication:
                     message = {**message, "headers": headers}
             await send(message)  # type: ignore[arg-type]
 
-        if trusted_scope is None:
+        try:
+            self._datastore.assert_process_owner()
+            process_owned = True
+        except Exception:
+            process_owned = False
+        if not process_owned:
+            self._observer.record_operation("readiness", "failure")
+            response = self._secure(JSONResponse({"status": "unavailable"}, status_code=503))
+            await response(scope, receive, observed_send)
+            route = "unmatched"
+        elif trusted_scope is None:
             response = self._secure(
                 JSONResponse({"error": {"code": "INVALID_REQUEST"}}, status_code=400)
             )
@@ -298,13 +318,32 @@ def create_staff_pilot_runtime(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     monotonic: Callable[[], float] = time.monotonic,
     token_factory=None,
+    seed_initializer: Callable[[SQLiteStaffTransportStore, bytes], None] | None = None,
+    seed_artifact: bytes | None = None,
 ) -> StaffPilotRuntime:
     """Resolve secrets and compose the existing staff boundary for a synthetic pilot."""
     if not isinstance(config, StaffPilotConfig):
         raise TypeError("config must be StaffPilotConfig")
+    if (seed_initializer is None) != (seed_artifact is None):
+        raise ValueError("seed_initializer and seed_artifact must be supplied together")
+    if seed_artifact is not None:
+        if not isinstance(seed_artifact, bytes) or not 1 <= len(seed_artifact) <= 1_048_576:
+            raise ValueError("seed_artifact must contain 1 byte to 1 MiB")
+        if hashlib.sha256(seed_artifact).hexdigest() != config.datastore.seed_attestation.sha256:
+            raise ValueError("seed_artifact does not match its configured SHA-256 attestation")
     transport = config.resolve_transport(secrets)
     pilot_datastore = bootstrap_synthetic_pilot_datastore(config.datastore, clock=clock)
     try:
+        if seed_initializer is not None:
+            if not callable(seed_initializer):
+                raise TypeError("seed_initializer must be callable")
+            if pilot_datastore.seed_is_attested():
+                raise ValueError("an attested pilot datastore cannot be reseeded")
+            seed_initializer(pilot_datastore.store, seed_artifact)
+            pilot_datastore.attest_seed(
+                approved_issuers=tuple(provider.issuer for provider in config.providers),
+                clock=clock,
+            )
         operation_lock = threading.RLock()
         active_observer = observer or PilotObserver()
         remote = oidc_remote or UrllibOIDCRemote(
