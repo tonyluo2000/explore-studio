@@ -125,14 +125,18 @@ After the Phase D extraction, this repository contains:
   bundle contracts from Phase C;
 - a pinned integration contract for the standalone student project template;
 - immutable identity, cohort, namespace, package-version, authorization, audit,
-  and persistence primitives for the Phase E online foundation; and
+  and persistence primitives for the Phase E online foundation;
+- bounded authenticated publication of one deterministic export into an
+  immutable reviewable submission; and
 - local lesson examples, tests, and architecture documentation.
 
-The repository does not yet provide an OIDC login/session service, package
-submission or publication, approval services, an online registry, deployment,
-or executable student-code isolation. The implemented
-[Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) supplies trusted
-models, policy, and reference persistence for those later online services.
+The repository does not yet provide an OIDC login/session or upload endpoint,
+approval services, an online registry, deployment, or executable student-code
+isolation. The implemented
+[Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) and bounded
+[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md) supply trusted
+models, policy, verification, and reference persistence for the implemented
+foundation and submission slices.
 Independent student repositories are still created from the standalone
 template.
 
@@ -756,7 +760,11 @@ The first bullet is implemented by
 [Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) under the owner
 decisions recorded in
 [GitHub issue #31](https://github.com/tonyluo2000/explore-studio/issues/31).
-The remaining bullets are separate later tranches.
+The bounded ingest/application-service portion of the third bullet is
+implemented by
+[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md); transport
+endpoints and repository integration remain deferred. The remaining bullets are
+separate later tranches.
 
 ### Phase F — Educational progression
 

@@ -45,6 +45,7 @@ class AuthorizationDecisionCode(StrEnum):
     VERSION_REVOKED = "VERSION_REVOKED"
     EXACT_SERVICE_GRANT_REQUIRED = "EXACT_SERVICE_GRANT_REQUIRED"
     EXACT_VERSION_REQUIRED = "EXACT_VERSION_REQUIRED"
+    RESOURCE_INACTIVE = "RESOURCE_INACTIVE"
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,7 @@ class AuthorizationResource:
     package_version: PackageVersionIdentity | None = None
     owner_actor_id: str | None = None
     submitted_by_actor_id: str | None = None
+    active: bool = True
     approved: bool = False
     revoked: bool = False
 
@@ -83,8 +85,8 @@ class AuthorizationResource:
                     raise ValueError(f"{field} must be a canonical UUID") from error
                 if str(parsed) != value:
                     raise ValueError(f"{field} must be a canonical lowercase UUID")
-        if not isinstance(self.approved, bool) or not isinstance(self.revoked, bool):
-            raise ValueError("approved and revoked must be bool values")
+        if not all(isinstance(value, bool) for value in (self.active, self.approved, self.revoked)):
+            raise ValueError("active, approved, and revoked must be bool values")
         if self.revoked and not self.approved:
             raise ValueError("a revoked version must retain its historical approval state")
 
@@ -175,6 +177,8 @@ def authorize(
         return _deny(AuthorizationDecisionCode.PRIVILEGED_ASSURANCE_REQUIRED)
 
     if action is AuthorizationAction.SUBMIT:
+        if not resource.active:
+            return _deny(AuthorizationDecisionCode.RESOURCE_INACTIVE)
         if not _has_submit_grant(principal, resource):
             return _deny(AuthorizationDecisionCode.NAMESPACE_GRANT_REQUIRED)
         return _ALLOW
