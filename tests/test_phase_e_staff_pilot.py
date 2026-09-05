@@ -610,3 +610,23 @@ def test_health_and_observability_do_not_expose_sensitive_state(
     assert "operator-correlation" not in rendered
     assert csrf not in rendered
     assert pilot_harness.runtime.observer.metrics_snapshot()
+
+
+def test_staff_observability_uses_canonical_starlette_route_templates(
+    pilot_harness: PilotHarness,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="explore-studio.staff-pilot")
+
+    login = pilot_harness.client.get("/staff/oidc/login/example", follow_redirects=False)
+    unknown = pilot_harness.client.get("/staff/private-object-identifier")
+
+    assert login.status_code == 302
+    assert unknown.status_code == 404
+    metrics = pilot_harness.runtime.observer.metrics_snapshot()
+    assert metrics[("GET", "/staff/oidc/login/{provider_id}", "3xx")] == 1
+    assert metrics[("GET", "unmatched", "4xx")] == 1
+    rendered = "\n".join(record.getMessage() for record in caplog.records)
+    assert '"route":"/staff/oidc/login/{provider_id}"' in rendered
+    assert "/staff/oidc/login/example" not in rendered
+    assert "/staff/private-object-identifier" not in rendered

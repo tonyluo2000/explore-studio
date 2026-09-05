@@ -12,8 +12,10 @@ from datetime import UTC, datetime
 from types import TracebackType
 from urllib.parse import urlsplit
 
+from starlette.applications import Starlette
 from starlette.responses import JSONResponse
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.routing import Match
+from starlette.types import Receive, Scope, Send
 
 from explore.online.models import AssuranceLevel
 from explore.online.oidc import OIDCRemote, UrllibOIDCRemote
@@ -49,7 +51,7 @@ class StaffPilotApplication:
 
     def __init__(
         self,
-        inner: ASGIApp,
+        inner: Starlette,
         config: StaffPilotConfig,
         datastore: SyntheticPilotDatastore,
         maintenance: StaffPilotMaintenance,
@@ -70,6 +72,19 @@ class StaffPilotApplication:
         )
         self._stop: asyncio.Event | None = None
         self._maintenance_task: asyncio.Task[None] | None = None
+
+    def _route_template(self, scope: Scope) -> str:
+        partial: str | None = None
+        for route in self._inner.routes:
+            match, _ = route.matches(scope)
+            template = getattr(route, "path", None)
+            if not isinstance(template, str):
+                continue
+            if match is Match.FULL:
+                return template
+            if match is Match.PARTIAL and partial is None:
+                partial = template
+        return partial or "unmatched"
 
     def _trusted_http_scope(self, scope: Scope) -> Scope | None:
         expected_host = urlsplit(self._config.trust.public_origin).netloc
@@ -238,9 +253,8 @@ class StaffPilotApplication:
             await self._health(trusted_scope, receive, observed_send)
             route = str(trusted_scope["path"])
         else:
+            route = self._route_template(trusted_scope)
             await self._inner(trusted_scope, receive, observed_send)
-            route_object = trusted_scope.get("route")
-            route = getattr(route_object, "path", "unmatched")
         elapsed_ms = int(max(0.0, self._monotonic() - started) * 1000)
         self._observer.record_http(
             method=str(scope.get("method", "OTHER")),
