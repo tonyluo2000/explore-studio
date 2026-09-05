@@ -33,6 +33,18 @@ from explore.online.persistence import (
     PersistenceConflictError,
     SQLiteFoundationStore,
 )
+from explore.online.registry import ApprovedRegistryService
+from explore.online.registry_models import (
+    ApprovedRegistryEntry,
+    RegistryAccessDeniedError,
+    RegistryAuthenticationError,
+    RegistryCompatibility,
+    RegistryConflictError,
+    RegistryExactLookup,
+    RegistryReadReceipt,
+    RegistryScope,
+)
+from explore.online.registry_persistence import SQLiteRegistryStore
 from explore.online.review import PackageReviewService
 from explore.online.review_models import (
     REVIEW_REASON_MAX_LENGTH,
@@ -92,6 +104,8 @@ from explore.online.submission_verification import (
 __all__ = [
     "FOUNDATION_SCHEMA_VERSION",
     "Actor",
+    "ApprovedRegistryEntry",
+    "ApprovedRegistryService",
     "AssuranceLevel",
     "AuditEvent",
     "AuthorizationAction",
@@ -128,8 +142,16 @@ __all__ = [
     "ReviewerMembershipSnapshot",
     "ReviewState",
     "ReviewTransitionConflictError",
+    "RegistryAccessDeniedError",
+    "RegistryAuthenticationError",
+    "RegistryCompatibility",
+    "RegistryConflictError",
+    "RegistryExactLookup",
+    "RegistryReadReceipt",
+    "RegistryScope",
     "SQLiteFoundationStore",
     "SQLiteReviewStore",
+    "SQLiteRegistryStore",
     "SQLiteSubmissionStore",
     "ServicePrincipal",
     "StoredPackageVersion",

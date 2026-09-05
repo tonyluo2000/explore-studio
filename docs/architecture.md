@@ -66,6 +66,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Phase E Online Foundation v0.1](phase-e-foundation-v0.1.md)
 - [Phase E Package Submission v0.1](phase-e-submission-v0.1.md)
 - [Phase E Package Review Decisions v0.1](phase-e-review-v0.1.md)
+- [Phase E Approved Registry Projection v0.1](phase-e-registry-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
