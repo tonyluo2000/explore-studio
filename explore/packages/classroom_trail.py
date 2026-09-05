@@ -1,8 +1,8 @@
-"""Planning and local execution for Classroom Trail contract v0.2.
+"""Planning and local execution for Classroom Trail contract v0.3.
 
 Each input package is first checked through the unchanged v0.1 package-set
-contract. The additive trail contract then permits multiple world objects only
-across that validated package boundary while retaining exactly one player.
+contract. The additive trail contract permits multiple characters and world
+objects across that validated boundary, with one explicitly selected player.
 """
 
 from __future__ import annotations
@@ -45,8 +45,10 @@ def _issue(
 
 def build_classroom_trail_plan(
     selections: Iterable[PackageSelection],
+    *,
+    player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.2 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.3 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -69,7 +71,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.2 supports",
+        cardinality_contract="Classroom Trail v0.3 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -89,7 +91,12 @@ def build_classroom_trail_plan(
     packages = package_set.plan.packages
     entries = package_set.plan.entries
 
-    players = tuple(entry for entry in entries if type(entry) is CharacterRegistration)
+    characters = tuple(
+        sorted(
+            (entry for entry in entries if type(entry) is CharacterRegistration),
+            key=lambda entry: entry.qualified_id,
+        )
+    )
     world_objects = tuple(
         sorted(
             (entry for entry in entries if type(entry) is WorldObjectRegistration),
@@ -97,22 +104,44 @@ def build_classroom_trail_plan(
         )
     )
     issues: list[ClassroomTrailPlanIssue] = []
-    if not players:
+    player: CharacterRegistration | None = None
+    if not characters:
         issues.append(
             _issue(
                 ClassroomTrailPlanIssueCode.PLAYER_REQUIRED,
-                "A Classroom Trail requires exactly one character as its player.",
+                "A Classroom Trail requires at least one loaded character.",
                 "selections",
             )
         )
-    elif len(players) > 1:
+    elif not isinstance(player_qualified_id, str) or not player_qualified_id.strip():
         issues.append(
             _issue(
-                ClassroomTrailPlanIssueCode.PLAYER_CARDINALITY_EXCEEDED,
-                f"A Classroom Trail requires one player; this set contains {len(players)}.",
-                "selections",
+                ClassroomTrailPlanIssueCode.PLAYER_SELECTION_REQUIRED,
+                "player_qualified_id must explicitly select one loaded character.",
+                "player_qualified_id",
             )
         )
+    else:
+        player = next(
+            (
+                character
+                for character in characters
+                if character.qualified_id == player_qualified_id
+            ),
+            None,
+        )
+        if player is None:
+            issues.append(
+                _issue(
+                    ClassroomTrailPlanIssueCode.PLAYER_SELECTION_NOT_FOUND,
+                    (
+                        f'player_qualified_id "{player_qualified_id}" does not identify '
+                        "a loaded character in this trail."
+                    ),
+                    "player_qualified_id",
+                    qualified_id=player_qualified_id,
+                )
+            )
     if not world_objects:
         issues.append(
             _issue(
@@ -124,11 +153,13 @@ def build_classroom_trail_plan(
     if issues:
         return ClassroomTrailPlanResult(None, tuple(issues))
 
+    assert player is not None
     return ClassroomTrailPlanResult(
         ClassroomTrailPlan(
             contract_version=SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION,
             packages=tuple(sorted(packages, key=lambda package: package.package_id)),
-            player=players[0],
+            player=player,
+            npcs=tuple(character for character in characters if character != player),
             world_objects=world_objects,
         ),
         (),
@@ -137,6 +168,8 @@ def build_classroom_trail_plan(
 
 def plan_local_classroom_trail(
     package_roots: Iterable[str | Path],
+    *,
+    player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
     """Load independent local package roots and plan them as one trail."""
     selections: list[PackageSelection] = []
@@ -162,19 +195,22 @@ def plan_local_classroom_trail(
                 registration_plan=registration.plan,
             )
         )
-    return build_classroom_trail_plan(selections)
+    return build_classroom_trail_plan(
+        selections,
+        player_qualified_id=player_qualified_id,
+    )
 
 
 def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> ClassroomTrailScene:
     """Translate one immutable trail plan into engine-owned runtime objects."""
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
-    from engine.scenes import ClassroomTrailObject, ClassroomTrailScene
+    from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.2"')
+        raise ValueError('plan.contract_version must be "0.3"')
     if (
         not isinstance(plan.packages, tuple)
         or not plan.packages
@@ -188,8 +224,11 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
     canonical_entries = tuple(
         entry for package in plan.packages for entry in package.registration_plan.entries
     )
-    canonical_players = tuple(
-        entry for entry in canonical_entries if type(entry) is CharacterRegistration
+    canonical_characters = tuple(
+        sorted(
+            (entry for entry in canonical_entries if type(entry) is CharacterRegistration),
+            key=lambda entry: entry.qualified_id,
+        )
     )
     canonical_objects = tuple(
         sorted(
@@ -197,7 +236,15 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
             key=lambda entry: entry.qualified_id,
         )
     )
-    if canonical_players != (plan.player,) or canonical_objects != plan.world_objects:
+    canonical_player = tuple(
+        entry for entry in canonical_characters if entry.qualified_id == plan.player.qualified_id
+    )
+    canonical_npcs = tuple(entry for entry in canonical_characters if entry != plan.player)
+    if (
+        canonical_player != (plan.player,)
+        or canonical_npcs != plan.npcs
+        or canonical_objects != plan.world_objects
+    ):
         raise ValueError("plan must retain its canonical package contribution projection")
     player = plan.player.character
     engine_player = EngineCharacter(
@@ -224,7 +271,27 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
         )
         for entry in plan.world_objects
     )
-    return ClassroomTrailScene(renderer, engine_player, engine_objects)  # type: ignore[arg-type]
+    engine_npcs = tuple(
+        ClassroomTrailNPC(
+            qualified_id=entry.qualified_id,
+            character=EngineCharacter(
+                name=entry.character.name,
+                x=entry.character.x,
+                y=entry.character.y,
+                width=100,
+                height=100,
+                color=resolve_color(entry.character.color),
+            ),
+            greeting=entry.character.greeting,
+        )
+        for entry in plan.npcs
+    )
+    return ClassroomTrailScene(  # type: ignore[arg-type]
+        renderer,
+        engine_player,
+        engine_objects,
+        engine_npcs,
+    )
 
 
 def run_classroom_trail(plan: ClassroomTrailPlan, *, name: str = "Classroom Trail") -> None:

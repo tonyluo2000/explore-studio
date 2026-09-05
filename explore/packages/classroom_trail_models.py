@@ -11,7 +11,7 @@ from explore.packages.registration_models import (
     WorldObjectRegistration,
 )
 
-SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.2"
+SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.3"
 
 
 class ClassroomTrailPlanIssueCode(StrEnum):
@@ -20,6 +20,8 @@ class ClassroomTrailPlanIssueCode(StrEnum):
     PACKAGE_SET_REQUIRED = "PACKAGE_SET_REQUIRED"
     PACKAGE_INVALID = "PACKAGE_INVALID"
     PLAYER_REQUIRED = "PLAYER_REQUIRED"
+    PLAYER_SELECTION_REQUIRED = "PLAYER_SELECTION_REQUIRED"
+    PLAYER_SELECTION_NOT_FOUND = "PLAYER_SELECTION_NOT_FOUND"
     PLAYER_CARDINALITY_EXCEEDED = "PLAYER_CARDINALITY_EXCEEDED"
     WORLD_OBJECT_REQUIRED = "WORLD_OBJECT_REQUIRED"
 
@@ -37,11 +39,12 @@ class ClassroomTrailPlanIssue:
 
 @dataclass(frozen=True)
 class ClassroomTrailPlan:
-    """Canonical local runtime projection for one player and many objects."""
+    """Canonical local runtime projection for one player, NPCs, and objects."""
 
     contract_version: str
     packages: tuple[SelectedPackagePlan, ...]
     player: CharacterRegistration
+    npcs: tuple[CharacterRegistration, ...]
     world_objects: tuple[WorldObjectRegistration, ...]
 
 

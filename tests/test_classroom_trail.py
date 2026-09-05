@@ -9,7 +9,7 @@ import pytest
 
 from engine.entities import Character, WorldObject
 from engine.input import DirectionalInput, InteractionInput
-from engine.scenes import ClassroomTrailObject, ClassroomTrailScene
+from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
@@ -62,7 +62,32 @@ def _trail_object(
     )
 
 
-def _scene(*objects: ClassroomTrailObject, interaction_range: int = 120) -> ClassroomTrailScene:
+def _trail_npc(
+    qualified_id: str,
+    x: int,
+    *,
+    name: str | None = None,
+    greeting: str | None = None,
+) -> ClassroomTrailNPC:
+    return ClassroomTrailNPC(
+        qualified_id,
+        Character(
+            name=name or qualified_id,
+            x=x,
+            y=0,
+            width=20,
+            height=20,
+            color=(100, 150, 255),
+        ),
+        greeting,
+    )
+
+
+def _scene(
+    *objects: ClassroomTrailObject,
+    npcs: tuple[ClassroomTrailNPC, ...] = (),
+    interaction_range: int = 120,
+) -> ClassroomTrailScene:
     renderer = _RecordingRenderer()
     scene = ClassroomTrailScene(
         renderer,  # type: ignore[arg-type]
@@ -75,6 +100,7 @@ def _scene(*objects: ClassroomTrailObject, interaction_range: int = 120) -> Clas
             color=(255, 200, 50),
         ),
         tuple(objects),
+        npcs,
         interaction_range=interaction_range,
     )
     scene.enter()
@@ -145,6 +171,70 @@ def test_equal_distance_tie_uses_qualified_id() -> None:
     assert scene.target_qualified_id == "alpha:object"
 
 
+def test_npcs_are_canonical_and_nearest_greeting_is_displayed() -> None:
+    renderer = _RecordingRenderer()
+    far = _trail_npc("zebra:npc", 70, name="Zara", greeting="Welcome!")
+    near = _trail_npc("alpha:npc", 30, name="Ari", greeting="Hello there!")
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 250),),
+        (far, near),
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert [npc.qualified_id for npc in scene.npcs] == ["alpha:npc", "zebra:npc"]
+    assert scene.target_qualified_id == "alpha:npc"
+    assert "Ari: Hello there!" in renderer.text
+    assert scene.visited_qualified_ids == frozenset()
+    assert scene.is_complete is False
+
+    npc_positions = tuple((npc.character.x, npc.character.y) for npc in scene.npcs)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 0.25)
+    assert tuple((npc.character.x, npc.character.y) for npc in scene.npcs) == npc_positions
+
+
+def test_equal_distance_npc_object_tie_uses_qualified_id() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("zebra:object", 40),),
+        (_trail_npc("alpha:npc", 40, name="Ari", greeting="Hi!"),),
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.target_qualified_id == "alpha:npc"
+    assert "Ari: Hi!" in renderer.text
+    assert scene.visited_count == 0
+
+
+def test_npc_without_greeting_renders_but_does_not_mask_object_interaction() -> None:
+    renderer = _RecordingRenderer()
+    silent = _trail_npc("alpha:silent", 10, name="Silent")
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("beta:object", 40, interacted="Object found"),),
+        (silent,),
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.target_qualified_id == "beta:object"
+    assert scene.visited_qualified_ids == frozenset({"beta:object"})
+    assert "Object found" in renderer.text
+    assert any(rectangle[0] == silent.character.x for rectangle in renderer.rectangles)
+
+
 def test_only_in_range_interactions_change_session_state() -> None:
     scene = _scene(_trail_object("far:object", 300), interaction_range=50)
 
@@ -209,7 +299,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
     assert "A crystal spark appears!" in renderer.text
 
 
-def test_v01_rejects_but_v02_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
+def test_v01_rejects_but_v03_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -242,18 +332,21 @@ def test_v01_rejects_but_v02_trail_accepts_multiple_package_objects(tmp_path: Pa
     selections = tuple(_selection(root) for root in (player_root, alpha_root, beta_root))
 
     assert build_package_set_plan(selections).is_planned is False
-    trail = build_classroom_trail_plan(selections)
+    trail = build_classroom_trail_plan(
+        selections,
+        player_qualified_id="player-package:player",
+    )
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.2"
+    assert trail.plan.contract_version == "0.3"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
 
 
-def test_v02_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
+def test_v03_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -285,7 +378,10 @@ def test_v02_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     selections = (_selection(player_root), _selection(object_root))
 
     assert build_package_set_plan(selections).is_planned is False
-    result = build_classroom_trail_plan(selections)
+    result = build_classroom_trail_plan(
+        selections,
+        player_qualified_id="player-package:player",
+    )
 
     assert result.plan is not None
     assert [item.qualified_id for item in result.plan.world_objects] == [
@@ -326,7 +422,10 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
         destination = export_root / (f"{loaded.package.metadata.id}-1.0.0.explorer-package.zip")
         assert export_explorer_package(root, destination).is_exported
 
-    planned = plan_local_classroom_trail(reversed(roots))
+    planned = plan_local_classroom_trail(
+        reversed(roots),
+        player_qualified_id="player-package:player",
+    )
     assert planned.is_planned
     assert planned.plan is not None
     assert [package.package_id for package in planned.plan.packages] == [
@@ -343,13 +442,13 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
     ]
 
 
-def test_trail_requires_exactly_one_player(tmp_path: Path) -> None:
+def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     first = _write_package(
         tmp_path / "first",
         "first-player",
         "player",
         "character",
-        'name: "First"\n',
+        'name: "First"\ngreeting: "  Welcome, explorer!  "\n',
     )
     second = _write_package(
         tmp_path / "second",
@@ -357,6 +456,13 @@ def test_trail_requires_exactly_one_player(tmp_path: Path) -> None:
         "player",
         "character",
         'name: "Second"\n',
+    )
+    third = _write_package(
+        tmp_path / "third",
+        "alpha-player",
+        "player",
+        "character",
+        'name: "Third"\ngreeting: "Hello!"\n',
     )
     object_root = _write_package(
         tmp_path / "object",
@@ -366,14 +472,48 @@ def test_trail_requires_exactly_one_player(tmp_path: Path) -> None:
         'name: "Object"\nx: 10\ny: 10\n',
     )
 
-    result = build_classroom_trail_plan(
-        (_selection(first), _selection(second), _selection(object_root))
+    selections = (
+        _selection(first),
+        _selection(second),
+        _selection(third),
+        _selection(object_root),
+    )
+    missing = build_classroom_trail_plan(selections)
+    unknown = build_classroom_trail_plan(
+        selections,
+        player_qualified_id="missing:player",
+    )
+    object_selected = build_classroom_trail_plan(
+        selections,
+        player_qualified_id="object-package:object",
+    )
+    selected = build_classroom_trail_plan(
+        selections,
+        player_qualified_id="second-player:player",
     )
 
-    assert result.plan is None
-    assert [issue.code for issue in result.issues] == [
-        ClassroomTrailPlanIssueCode.PLAYER_CARDINALITY_EXCEEDED
+    assert missing.plan is None
+    assert [issue.code for issue in missing.issues] == [
+        ClassroomTrailPlanIssueCode.PLAYER_SELECTION_REQUIRED
     ]
+    assert unknown.plan is None
+    assert unknown.issues[0].code is ClassroomTrailPlanIssueCode.PLAYER_SELECTION_NOT_FOUND
+    assert object_selected.plan is None
+    assert object_selected.issues[0].code is ClassroomTrailPlanIssueCode.PLAYER_SELECTION_NOT_FOUND
+    assert selected.plan is not None
+    assert selected.plan.player.qualified_id == "second-player:player"
+    assert [npc.qualified_id for npc in selected.plan.npcs] == [
+        "alpha-player:player",
+        "first-player:player",
+    ]
+    assert [npc.character.greeting for npc in selected.plan.npcs] == [
+        "Hello!",
+        "Welcome, explorer!",
+    ]
+    scene = create_classroom_trail_scene(_RecordingRenderer(), selected.plan)
+    assert scene.player.name == "Second"
+    assert [npc.character.name for npc in scene.npcs] == ["Third", "First"]
+    assert [npc.greeting for npc in scene.npcs] == ["Hello!", "Welcome, explorer!"]
 
 
 def test_cli_runs_planned_local_trail(
@@ -409,6 +549,8 @@ def test_cli_runs_planned_local_trail(
                 "trail",
                 str(object_root),
                 str(player_root),
+                "--player",
+                "player-package:player",
                 "--name",
                 "Room 12 Trail",
             ]
@@ -433,7 +575,10 @@ def test_runtime_rejects_changed_contract_version(tmp_path: Path) -> None:
         "world_object",
         'name: "Object"\nx: 10\ny: 10\n',
     )
-    result = plan_local_classroom_trail((player_root, object_root))
+    result = plan_local_classroom_trail(
+        (player_root, object_root),
+        player_qualified_id="player-package:player",
+    )
     assert result.plan is not None
 
     changed = replace(result.plan, contract_version="9.9")

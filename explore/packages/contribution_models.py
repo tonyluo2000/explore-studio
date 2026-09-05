@@ -57,7 +57,7 @@ class PackageAssetReference:
 
 @dataclass(frozen=True)
 class LoadedCharacter:
-    """One declarative character mapped to Student API v0.1 configuration."""
+    """One declarative character plus optional inert trail greeting."""
 
     contribution_id: str
     qualified_id: str
@@ -68,6 +68,7 @@ class LoadedCharacter:
     y: int
     color: str
     image: PackageAssetReference | None = None
+    greeting: str | None = None
 
 
 @dataclass(frozen=True)

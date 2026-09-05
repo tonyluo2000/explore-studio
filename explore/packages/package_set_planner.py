@@ -188,6 +188,19 @@ def _validate_entry_value(
             entry=entry,
             issues=issues,
         )
+        if specification.greeting is not None and not _is_nonblank_text(specification.greeting):
+            field_location = f"{location}.character.greeting"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must be non-whitespace text when present.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
     else:
         specification = entry.world_object
         if not isinstance(specification, WorldObjectRegistrationSpec):

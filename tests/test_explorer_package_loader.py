@@ -394,6 +394,7 @@ def test_minimal_character_uses_student_api_defaults(tmp_path: Path) -> None:
         "gold",
     )
     assert character.image is None
+    assert character.greeting is None
 
 
 @pytest.mark.parametrize(
@@ -411,6 +412,14 @@ def test_minimal_character_uses_student_api_defaults(tmp_path: Path) -> None:
             b'name: "Guide"\nspeed: 4\n',
             PackageLoadIssueCode.CONTRIBUTION_FIELD_UNKNOWN,
         ),
+        (
+            b'name: "Guide"\ngreeting: 42\n',
+            PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+        ),
+        (
+            b'name: "Guide"\ngreeting: "   "\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+        ),
     ],
 )
 def test_invalid_character_configuration(
@@ -418,7 +427,7 @@ def test_invalid_character_configuration(
     content: bytes,
     expected_code: PackageLoadIssueCode,
 ) -> None:
-    """Invalid position, colour, and deferred speed configuration are rejected."""
+    """Invalid position, colour, greeting, and deferred fields are rejected."""
     package = _write_package(
         tmp_path / "package",
         files={"character/guide.yaml": content},
@@ -433,7 +442,11 @@ def test_character_maps_exactly_to_typed_model(tmp_path: Path) -> None:
         tmp_path / "package",
         files={
             "character/guide.yaml": (
-                b'name: "  River Guide  "\n' b"x: 12\n" b"y: 34\n" b'color: "blue"\n'
+                b'name: "  River Guide  "\n'
+                b"x: 12\n"
+                b"y: 34\n"
+                b'color: "blue"\n'
+                b'greeting: "  Welcome, explorer!  "\n'
             )
         },
     )
@@ -446,6 +459,7 @@ def test_character_maps_exactly_to_typed_model(tmp_path: Path) -> None:
     assert character.x == 12
     assert character.y == 34
     assert character.color == "blue"
+    assert character.greeting == "Welcome, explorer!"
 
 
 def test_minimal_world_object(tmp_path: Path) -> None:

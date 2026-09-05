@@ -100,11 +100,14 @@ collections are tuples.
 | `x` | `character.x` |
 | `y` | `character.y` |
 | `color` | `character.color` |
+| optional `greeting` | `character.greeting` |
 | optional `image` | `CharacterRegistration.asset_reference` |
 
-The detached specification matches the Student API v0.1 character
-configuration. Engine-owned size, movement speed, health, inventory, dialogue,
-animation, AI, and callbacks are not invented.
+The detached specification retains Student API v0.1 character configuration
+plus the optional inert greeting used by Classroom Trail v0.3. The adapter does
+not apply that greeting as Student API behavior. Engine-owned size, movement
+speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
+invented.
 
 ## World-object mapping
 

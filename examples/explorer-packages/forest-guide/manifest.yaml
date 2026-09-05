@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "forest-guide"
+  display_name: "Forest Guide"
+  version: "1.0.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "guide"
+    type: "character"
+    path: "character/guide.yaml"
