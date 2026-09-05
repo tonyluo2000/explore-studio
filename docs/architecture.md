@@ -64,6 +64,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Explorer World Design Specification](explorer-world-spec.md)
 - [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
 - [Phase E Online Foundation v0.1](phase-e-foundation-v0.1.md)
+- [Phase E Package Submission v0.1](phase-e-submission-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
