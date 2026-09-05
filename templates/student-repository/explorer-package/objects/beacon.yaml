@@ -1,0 +1,5 @@
+name: "Student Beacon"
+x: 120
+y: 160
+color: "yellow"
+when_near: "Your beacon is shining."

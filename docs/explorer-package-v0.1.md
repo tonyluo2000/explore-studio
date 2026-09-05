@@ -164,6 +164,8 @@ immutable value objects. Each issue has a stable `code`, actionable `message`,
 and manifest-relative `location`. Identical package contents produce issues in
 the same order, without machine-specific absolute paths in normal diagnostics.
 
-The validator operates only on local, already-unpacked directories. Archive
-formats, publishing, authentication, approval, registries, and class-world
-assembly are outside this prototype.
+The validator operates only on local, already-unpacked directories. The
+downstream [deterministic export contract](explorer-package-export-v0.1.md)
+packages validator-approved files without changing this validation boundary.
+Archive import, publishing, authentication, approval, registries, and
+class-world assembly are outside this prototype.
