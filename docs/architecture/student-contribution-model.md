@@ -127,16 +127,19 @@ After the Phase D extraction, this repository contains:
 - immutable identity, cohort, namespace, package-version, authorization, audit,
   and persistence primitives for the Phase E online foundation;
 - bounded authenticated publication of one deterministic export into an
-  immutable reviewable submission; and
+  immutable reviewable submission;
+- append-only teacher approval/rejection and course-admin revocation decisions
+  over exact submissions; and
 - local lesson examples, tests, and architecture documentation.
 
 The repository does not yet provide an OIDC login/session or upload endpoint,
-approval services, an online registry, deployment, or executable student-code
-isolation. The implemented
+an online registry, deployment, or executable student-code isolation. The
+implemented
 [Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) and bounded
-[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md) supply trusted
-models, policy, verification, and reference persistence for the implemented
-foundation and submission slices.
+[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md), and
+[Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md) supply trusted
+models, policy, verification, state transitions, and reference persistence for
+the implemented foundation, submission, and review slices.
 Independent student repositories are still created from the standalone
 template.
 
@@ -763,8 +766,11 @@ decisions recorded in
 The bounded ingest/application-service portion of the third bullet is
 implemented by
 [Phase E Package Submission v0.1](../phase-e-submission-v0.1.md); transport
-endpoints and repository integration remain deferred. The remaining bullets are
-separate later tranches.
+endpoints and repository integration remain deferred. The fourth bullet's
+bounded decision-state portion is implemented by
+[Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md); dashboard and
+transport workflows remain deferred. Federated login/session transport and the
+approved registry remain separate later tranches.
 
 ### Phase F — Educational progression
 

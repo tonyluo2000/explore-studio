@@ -65,6 +65,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
 - [Phase E Online Foundation v0.1](phase-e-foundation-v0.1.md)
 - [Phase E Package Submission v0.1](phase-e-submission-v0.1.md)
+- [Phase E Package Review Decisions v0.1](phase-e-review-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
