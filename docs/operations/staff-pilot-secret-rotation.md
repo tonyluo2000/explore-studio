@@ -8,8 +8,9 @@
 3. Update only the secret-manager/process injection addressed by the existing
    `env:EXPLORE_STAFF_SECRET_*` reference. The issuer, client ID, redirect URI,
    JWKS URI, and AAL mapping remain reviewed configuration.
-4. Restart the one pilot worker so the secret is resolved once into the new
-   runtime. Remove the old process before enabling the replacement.
+4. Restart the one non-preloaded pilot worker so the secret is resolved once
+   into a runtime constructed in that final process. Enable ASGI lifespan and
+   remove the old process before enabling the replacement.
 5. Complete authorization-code/PKCE login, AAL2 privileged denial/allowance,
    logout, and revocation checks with a synthetic staff identity.
 6. Disable the prior credential at the provider and verify that it can no longer

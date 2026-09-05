@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sqlite3
+import subprocess
+import sys
+import textwrap
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -34,6 +38,7 @@ from explore.online.pilot_config import (
     PilotJWKSCacheConfig,
     PilotMaintenanceConfig,
     PilotOIDCProviderConfig,
+    PilotSeedAttestation,
     PilotTLSMode,
     PilotTransportTrustConfig,
     StaffPilotConfig,
@@ -67,6 +72,12 @@ from tests.test_phase_e_staff_transport import (
 
 SECRET_NAME = "EXPLORE_STAFF_SECRET_EXAMPLE_OIDC"
 SECRET_VALUE = "synthetic-pilot-client-secret"
+SEED_ARTIFACT = b'{"kind":"explore-staff-pilot-seed","version":"staff-pilot-v1"}\n'
+SEED_ATTESTATION = PilotSeedAttestation(
+    provenance="github.com/tonyluo2000/explore-studio",
+    version="staff-pilot-v1",
+    sha256="548b58a4357344d5c9e3f3d9676daa0d1997469e1148258d8eef2c1336af5326",
+)
 
 
 def _pilot_config(
@@ -97,6 +108,7 @@ def _pilot_config(
         datastore=PilotDatastoreConfig(
             path=path,
             environment_id="staff-pilot-staging",
+            seed_attestation=SEED_ATTESTATION,
         ),
         maintenance=PilotMaintenanceConfig(
             cleanup_interval=timedelta(seconds=10),
@@ -112,8 +124,8 @@ def _pilot_config(
     )
 
 
-def _seed_synthetic_store(runtime: StaffPilotRuntime) -> None:
-    store = runtime.datastore.store
+def _seed_synthetic_store(store, artifact: bytes) -> None:
+    assert artifact == SEED_ARTIFACT
     store.approve_identity_provider(IdentityProvider(ISSUER))
     for name, actor_id in ACTOR_IDS.items():
         store.bind_federated_actor(
@@ -202,8 +214,9 @@ def pilot_harness(tmp_path: Path) -> PilotHarness:
         oidc_remote=remote,
         clock=lambda: current_time[0],
         monotonic=lambda: monotonic[0],
+        seed_initializer=_seed_synthetic_store,
+        seed_artifact=SEED_ARTIFACT,
     )
-    _seed_synthetic_store(runtime)
     with TestClient(runtime.app, base_url=ORIGIN) as client:
         yield PilotHarness(runtime, client, remote, current_time, monotonic)
     runtime.close()
@@ -346,12 +359,14 @@ def test_pilot_configuration_rejects_unsafe_origin_proxy_and_datastore_modes(
         PilotDatastoreConfig(
             tmp_path / "pilot.sqlite3",
             "pilot",
+            SEED_ATTESTATION,
             worker_count=2,
         )
     with pytest.raises(ValueError, match="synthetic-only"):
         PilotDatastoreConfig(
             tmp_path / "pilot.sqlite3",
             "pilot",
+            SEED_ATTESTATION,
             synthetic_only=False,
         )
 
@@ -372,7 +387,7 @@ def test_direct_tls_rejects_forwarded_metadata_and_wrong_host(
     assert forwarded.json() == wrong_host.json() == {"error": {"code": "INVALID_REQUEST"}}
 
 
-def test_readiness_fails_closed_until_configured_issuer_is_approved(tmp_path: Path) -> None:
+def test_readiness_requires_both_seed_attestation_and_approved_issuer(tmp_path: Path) -> None:
     runtime = create_staff_pilot_runtime(
         _pilot_config(tmp_path / "unseeded-pilot.sqlite3"),
         EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE}),
@@ -384,8 +399,66 @@ def test_readiness_fails_closed_until_configured_issuer_is_approved(tmp_path: Pa
             response = client.get("/health/ready")
             assert response.status_code == 503
             assert response.json() == {"status": "unavailable"}
+            runtime.datastore.store.approve_identity_provider(IdentityProvider(ISSUER))
+            assert client.get("/health/ready").status_code == 503
+            runtime.datastore.attest_seed(approved_issuers=(ISSUER,), clock=lambda: NOW)
+            assert client.get("/health/ready").status_code == 200
     finally:
         runtime.close()
+
+
+@pytest.mark.parametrize("dependency", ["provider", "clock"])
+def test_readiness_owns_dependency_failures_and_records_redacted_telemetry(
+    pilot_harness: PilotHarness,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    dependency: str,
+) -> None:
+    caplog.set_level(logging.INFO, logger="explore-studio.staff-pilot")
+
+    def fail_dependency(*_args, **_kwargs):
+        raise RuntimeError("sensitive-readiness-detail")
+
+    if dependency == "provider":
+        monkeypatch.setattr(
+            pilot_harness.runtime.datastore.store,
+            "identity_provider_assurance",
+            fail_dependency,
+        )
+    else:
+        monkeypatch.setattr(pilot_harness.runtime.maintenance, "_clock", fail_dependency)
+
+    response = pilot_harness.client.get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "unavailable"}
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["strict-transport-security"].startswith("max-age=")
+    assert "sensitive-readiness-detail" not in response.text
+    rendered = "\n".join(record.getMessage() for record in caplog.records)
+    assert '"operation":"readiness","outcome":"failure"' in rendered
+    assert "sensitive-readiness-detail" not in rendered
+
+
+def test_readiness_owns_a_closed_datastore_failure(
+    pilot_harness: PilotHarness,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="explore-studio.staff-pilot")
+    pilot_harness.runtime.datastore.store.close()
+
+    response = pilot_harness.client.get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "unavailable"}
+    assert response.headers["cache-control"] == "no-store"
+    assert (
+        response.headers["content-security-policy"] == "default-src 'none'; frame-ancestors 'none'"
+    )
+    assert response.headers["strict-transport-security"].startswith("max-age=")
+    assert '"operation":"readiness","outcome":"failure"' in "\n".join(
+        record.getMessage() for record in caplog.records
+    )
 
 
 def test_trusted_proxy_metadata_requires_exact_source_scheme_and_host(tmp_path: Path) -> None:
@@ -432,9 +505,12 @@ def test_trusted_proxy_metadata_requires_exact_source_scheme_and_host(tmp_path: 
 
 
 def test_datastore_is_classified_private_and_process_exclusive(tmp_path: Path) -> None:
-    config = PilotDatastoreConfig(tmp_path / "pilot.sqlite3", "pilot-test")
+    config = PilotDatastoreConfig(tmp_path / "pilot.sqlite3", "pilot-test", SEED_ATTESTATION)
     datastore = bootstrap_synthetic_pilot_datastore(config, clock=lambda: NOW)
     try:
+        assert not datastore.is_ready()
+        datastore.store.approve_identity_provider(IdentityProvider(ISSUER))
+        datastore.attest_seed(approved_issuers=(ISSUER,), clock=lambda: NOW)
         assert datastore.is_ready()
         assert config.path.stat().st_mode & 0o777 == 0o600
         assert datastore.store._connection.execute("""
@@ -450,6 +526,192 @@ def test_datastore_is_classified_private_and_process_exclusive(tmp_path: Path) -
     reopened.close()
 
 
+def test_seed_attestation_is_required_immutable_and_configuration_bound(tmp_path: Path) -> None:
+    config = PilotDatastoreConfig(tmp_path / "pilot.sqlite3", "pilot-test", SEED_ATTESTATION)
+    datastore = bootstrap_synthetic_pilot_datastore(config, clock=lambda: NOW)
+    try:
+        datastore.store.approve_identity_provider(IdentityProvider(ISSUER))
+        assert not datastore.is_ready()
+        datastore.attest_seed(approved_issuers=(ISSUER,), clock=lambda: NOW)
+        assert datastore.is_ready()
+        assert (
+            datastore.store._connection.execute("""
+            SELECT provenance, seed_version, seed_sha256
+            FROM staff_pilot_seed_attestation WHERE singleton = 1
+            """).fetchone()
+            == (
+                SEED_ATTESTATION.provenance,
+                SEED_ATTESTATION.version,
+                SEED_ATTESTATION.sha256,
+            )
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="seed attestation is immutable"):
+            datastore.store._connection.execute(
+                "UPDATE staff_pilot_seed_attestation SET seed_version = 'changed'"
+            )
+    finally:
+        datastore.close()
+
+    mismatched = PilotDatastoreConfig(
+        config.path,
+        config.environment_id,
+        PilotSeedAttestation(
+            provenance=SEED_ATTESTATION.provenance,
+            version="staff-pilot-v2",
+            sha256="0" * 64,
+        ),
+    )
+    with pytest.raises(PilotDatastoreUnavailableError, match="does not match configuration"):
+        bootstrap_synthetic_pilot_datastore(mismatched, clock=lambda: NOW)
+
+
+def test_runtime_seed_initializer_is_one_time_and_attested(tmp_path: Path) -> None:
+    config = _pilot_config(tmp_path / "pilot.sqlite3")
+    runtime = create_staff_pilot_runtime(
+        config,
+        EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE}),
+        oidc_remote=FakeOIDCRemote(),
+        clock=lambda: NOW,
+        seed_initializer=_seed_synthetic_store,
+        seed_artifact=SEED_ARTIFACT,
+    )
+    assert runtime.datastore.seed_is_attested()
+    runtime.close()
+
+    with pytest.raises(ValueError, match="cannot be reseeded"):
+        create_staff_pilot_runtime(
+            config,
+            EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE}),
+            oidc_remote=FakeOIDCRemote(),
+            clock=lambda: NOW,
+            seed_initializer=_seed_synthetic_store,
+            seed_artifact=SEED_ARTIFACT,
+        )
+
+
+def test_runtime_rejects_missing_or_unrecognized_seed_artifact_before_bootstrap(
+    tmp_path: Path,
+) -> None:
+    config = _pilot_config(tmp_path / "pilot.sqlite3")
+    loader = EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE})
+    with pytest.raises(ValueError, match="supplied together"):
+        create_staff_pilot_runtime(
+            config,
+            loader,
+            oidc_remote=FakeOIDCRemote(),
+            clock=lambda: NOW,
+            seed_initializer=_seed_synthetic_store,
+        )
+    with pytest.raises(ValueError, match="configured SHA-256"):
+        create_staff_pilot_runtime(
+            config,
+            loader,
+            oidc_remote=FakeOIDCRemote(),
+            clock=lambda: NOW,
+            seed_initializer=_seed_synthetic_store,
+            seed_artifact=b"unrecognized-seed",
+        )
+    assert not config.datastore.path.exists()
+
+
+def test_inherited_worker_is_rejected_without_releasing_parent_lock(tmp_path: Path) -> None:
+    script = textwrap.dedent("""
+        import os
+        import sys
+        from pathlib import Path
+
+        from explore.online.pilot_config import PilotDatastoreConfig, PilotSeedAttestation
+        from explore.online.pilot_datastore import (
+            PilotDatastoreUnavailableError,
+            PilotWorkerTopologyError,
+            bootstrap_synthetic_pilot_datastore,
+        )
+
+        seed = PilotSeedAttestation(
+            "github.com/tonyluo2000/explore-studio",
+            "staff-pilot-v1",
+            "548b58a4357344d5c9e3f3d9676daa0d1997469e1148258d8eef2c1336af5326",
+        )
+        config = PilotDatastoreConfig(Path(sys.argv[1]), "pilot-test", seed)
+        datastore = bootstrap_synthetic_pilot_datastore(config)
+        child_pid = os.fork()
+        if child_pid == 0:
+            try:
+                datastore.assert_process_owner()
+            except PilotWorkerTopologyError:
+                exit_code = 0
+            else:
+                exit_code = 7
+            datastore.close()
+            os._exit(exit_code)
+
+        _, status = os.waitpid(child_pid, 0)
+        print(f"child={os.waitstatus_to_exitcode(status)}")
+        try:
+            bootstrap_synthetic_pilot_datastore(config)
+        except PilotDatastoreUnavailableError:
+            print("parent-lock=held")
+        else:
+            print("parent-lock=released")
+        datastore.close()
+        """)
+
+    completed = subprocess.run(
+        [sys.executable, "-c", script, str(tmp_path / "pilot.sqlite3")],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+
+    assert completed.stdout.splitlines() == ["child=0", "parent-lock=held"]
+
+
+def test_preloaded_runtime_fails_lifespan_startup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime = create_staff_pilot_runtime(
+        _pilot_config(tmp_path / "pilot.sqlite3"),
+        EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE}),
+        oidc_remote=FakeOIDCRemote(),
+        clock=lambda: NOW,
+        seed_initializer=_seed_synthetic_store,
+        seed_artifact=SEED_ARTIFACT,
+    )
+    try:
+        with monkeypatch.context() as context:
+            context.setattr(
+                runtime.datastore,
+                "_owner_pid",
+                runtime.datastore._owner_pid + 1,
+            )
+            response = TestClient(runtime.app, base_url=ORIGIN).get("/health/live")
+            assert response.status_code == 503
+            assert response.json() == {"status": "unavailable"}
+            assert response.headers["cache-control"] == "no-store"
+            assert response.headers["strict-transport-security"].startswith("max-age=")
+
+            messages = iter([{"type": "lifespan.startup"}])
+            sent = []
+
+            async def receive():
+                return next(messages)
+
+            async def send(message):
+                sent.append(message)
+
+            asyncio.run(runtime.app({"type": "lifespan"}, receive, send))
+            assert sent == [
+                {
+                    "type": "lifespan.startup.failed",
+                    "message": "staff pilot startup checks failed",
+                }
+            ]
+    finally:
+        runtime.close()
+
+
 def test_datastore_refuses_to_adopt_an_unclassified_existing_database(tmp_path: Path) -> None:
     path = tmp_path / "existing.sqlite3"
     connection = sqlite3.connect(path)
@@ -458,7 +720,7 @@ def test_datastore_refuses_to_adopt_an_unclassified_existing_database(tmp_path: 
 
     with pytest.raises(PilotDatastoreUnavailableError, match="not an isolated synthetic"):
         bootstrap_synthetic_pilot_datastore(
-            PilotDatastoreConfig(path, "pilot-test"),
+            PilotDatastoreConfig(path, "pilot-test", SEED_ATTESTATION),
             clock=lambda: NOW,
         )
 
@@ -539,8 +801,9 @@ def test_unknown_signed_key_forces_one_jwks_rotation_refresh(tmp_path: Path) -> 
         EnvironmentSecretLoader({SECRET_NAME: SECRET_VALUE}),
         oidc_remote=remote,
         clock=lambda: NOW,
+        seed_initializer=_seed_synthetic_store,
+        seed_artifact=SEED_ARTIFACT,
     )
-    _seed_synthetic_store(runtime)
     try:
         with TestClient(runtime.app, base_url=ORIGIN) as client:
             started = client.get("/staff/oidc/login/example", follow_redirects=False)

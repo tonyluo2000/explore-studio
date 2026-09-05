@@ -7,7 +7,8 @@
 
 `StaffPilotConfig` is the complete non-secret configuration model. It fixes the
 public HTTPS origin, TLS termination mode, narrow trusted-proxy CIDRs, one
-absolute SQLite path, one synthetic environment identity, exactly one worker,
+absolute SQLite path, one synthetic environment identity, one reviewed seed
+attestation, exactly one worker,
 session/OIDC bounds, maintenance cadence, JWKS freshness/outage grace, and each
 approved OIDC issuer/client/AAL mapping. Every redirect URI must equal the
 provider-specific callback at the public origin.
@@ -37,11 +38,40 @@ database and adjacent process lock are mode `0600`; a non-blocking filesystem
 lock rejects a second process. Configuration also rejects any worker count
 other than one.
 
+The supported launch model is one non-reloading ASGI worker that constructs the
+runtime inside that final worker process and enables ASGI lifespan. Preloaded or
+preforked application runtimes, multiple workers, worker reloaders, and a
+runtime constructed in a supervisor before forking are unsupported. The
+datastore records its creating PID; lifespan startup and requests reject an
+inherited runtime. An inherited child closes only its copy of the descriptors
+and cannot explicitly unlock the parent's process lease.
+
 The cumulative Phase E migrations run before the pilot marker is inserted.
 HTTP operations, cleanup, and emergency revocation share one re-entrant lock,
 preserving the existing reference-store transaction guarantees. A later
 multi-worker/database adapter must re-establish the same atomicity before the
 single-worker constraint can be removed.
+
+## Synthetic seed attestation
+
+`PilotSeedAttestation` names the reviewed synthetic seed provenance, version,
+and SHA-256 digest. The runtime verifies the exact bounded immutable
+`seed_artifact` bytes against that digest before datastore creation and passes
+those same bytes to the one trusted startup `seed_initializer`. A new datastore
+is structurally initialized but remains unready until that initializer
+completes. The initializer is an internal bootstrap callback, never an HTTP or
+product ingestion surface. The runtime verifies that every configured staff
+issuer is approved at AAL2 and that no OIDC transaction or staff session exists
+before it inserts the immutable attestation.
+
+Missing or mismatched attestation fails readiness; an existing mismatched
+attestation is refused at bootstrap, and an attested datastore cannot be
+reseeded. A failed or interrupted initializer leaves the datastore unattested
+and requires the synthetic reset procedure; it is never resumed in place. The
+attestation identifies a reviewed seed artifact and does not make
+arbitrary data synthetic: operators must independently verify its provenance
+and review the initializer that interprets it. Pilot datastore schema v1 is not
+adopted by v2 and must follow the synthetic reset procedure.
 
 ## OIDC availability and maintenance
 
@@ -60,9 +90,12 @@ issuer. Readiness fails if cleanup becomes stale.
 
 `GET /health/live` reports only `{"status":"ok"}`. `GET /health/ready` reports
 only `ready` or `unavailable`, based on the immutable synthetic marker, schema,
-database quick check, current AAL2 approval of every configured issuer, and
-cleanup freshness. Neither endpoint emits provider, path, actor, object, or
-datastore details.
+immutable seed attestation, database quick check, current AAL2 approval of every
+configured issuer, and cleanup freshness. Datastore, provider, topology, and
+trusted-clock exceptions are owned by the health boundary and become the same
+secured, non-cacheable `503` response plus bounded readiness-failure telemetry.
+Neither endpoint emits provider, path, actor, object, datastore, exception, or
+traceback details.
 
 Operational logs contain method, route template, status class, bounded elapsed
 time, and an optional one-way correlation tag. Metrics expose the same bounded

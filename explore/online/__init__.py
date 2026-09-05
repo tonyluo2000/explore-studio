@@ -100,6 +100,7 @@ from explore.online.pilot_config import (
     PilotJWKSCacheConfig,
     PilotMaintenanceConfig,
     PilotOIDCProviderConfig,
+    PilotSeedAttestation,
     PilotTLSMode,
     PilotTransportTrustConfig,
     SecretLoader,
@@ -108,6 +109,7 @@ from explore.online.pilot_config import (
 from explore.online.pilot_datastore import (
     PILOT_DATASTORE_SCHEMA_VERSION,
     PilotDatastoreUnavailableError,
+    PilotWorkerTopologyError,
     SyntheticPilotDatastore,
     bootstrap_synthetic_pilot_datastore,
 )
@@ -387,6 +389,8 @@ __all__ = [
     "CachingOIDCRemote",
     "EnvironmentSecretLoader",
     "LoadedSecret",
+    "PilotSeedAttestation",
+    "PilotWorkerTopologyError",
     "SyntheticPilotDatastore",
     "VerifiedSubmittedArchive",
     "verify_submitted_archive",
