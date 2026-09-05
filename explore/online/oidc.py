@@ -35,6 +35,10 @@ class OIDCAuthenticationError(PermissionError):
     """OIDC exchange or validation failed without exposing sensitive detail."""
 
 
+class OIDCJWKSKeyError(OIDCAuthenticationError):
+    """A verified token header has no unique usable key in the current JWKS."""
+
+
 class _RejectRedirects(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -183,7 +187,8 @@ def _b64url_sha256(value: str) -> str:
 
 
 def _token_response_id_token(document: dict[str, object]) -> str:
-    if document.get("token_type") != "Bearer":
+    token_type = document.get("token_type")
+    if not isinstance(token_type, str) or token_type.casefold() != "bearer":
         raise OIDCAuthenticationError("identity provider response was rejected")
     id_token = document.get("id_token")
     if not isinstance(id_token, str) or not id_token or len(id_token) > 16_384:
@@ -286,13 +291,26 @@ class OIDCProtocol:
         )
         id_token = _token_response_id_token(token_response)
         jwks = self._remote.fetch_jwks(provider)
-        return self._validate_id_token(
-            provider,
-            id_token=id_token,
-            nonce=transaction.nonce,
-            jwks=jwks,
-            now=now,
-        )
+        try:
+            return self._validate_id_token(
+                provider,
+                id_token=id_token,
+                nonce=transaction.nonce,
+                jwks=jwks,
+                now=now,
+            )
+        except OIDCJWKSKeyError:
+            refresh = getattr(self._remote, "refresh_jwks", None)
+            if not callable(refresh):
+                raise
+            refreshed = refresh(provider)
+            return self._validate_id_token(
+                provider,
+                id_token=id_token,
+                nonce=transaction.nonce,
+                jwks=refreshed,
+                now=now,
+            )
 
     def _validate_id_token(
         self,
@@ -348,7 +366,7 @@ class OIDCProtocol:
             )
         ]
         if len(candidates) != 1:
-            raise OIDCAuthenticationError("JWKS was rejected")
+            raise OIDCJWKSKeyError("JWKS was rejected")
         key_ops = candidates[0].get("key_ops")
         if key_ops is not None and (
             not isinstance(key_ops, list)
@@ -468,6 +486,7 @@ class OIDCProtocol:
 __all__ = [
     "OIDCAuthenticationError",
     "OIDCAuthorizationStart",
+    "OIDCJWKSKeyError",
     "OIDCProtocol",
     "OIDCRemote",
     "UrllibOIDCRemote",
