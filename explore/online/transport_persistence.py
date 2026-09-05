@@ -376,9 +376,11 @@ class SQLiteStaffTransportStore(SQLiteClassWorldConfigurationStore):
             return self._connection.execute(
                 """
                 DELETE FROM staff_sessions
-                WHERE absolute_expires_at <= ? OR (revoked_at IS NOT NULL AND revoked_at <= ?)
+                WHERE idle_expires_at <= ?
+                   OR absolute_expires_at <= ?
+                   OR (revoked_at IS NOT NULL AND revoked_at <= ?)
                 """,
-                (_serialize(before), _serialize(before)),
+                (_serialize(before), _serialize(before), _serialize(before)),
             ).rowcount
 
     def actor_is_current_staff(self, actor_id: str, *, now: datetime) -> bool:

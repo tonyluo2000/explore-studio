@@ -1,0 +1,58 @@
+name: Staff pilot transport
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/staff-pilot-transport.yml"
+      - "explore/online/**"
+      - "tests/test_phase_e_*.py"
+      - "pyproject.toml"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/staff-pilot-transport.yml"
+      - "explore/online/**"
+      - "tests/test_phase_e_*.py"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staff-pilot-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  transport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install reviewed project dependencies
+        run: python -m pip install --disable-pip-version-check --no-input -e ".[dev]"
+      - name: Format gate
+        run: python -m black --check explore engine tests
+      - name: Lint gate
+        run: python -m ruff check explore engine tests
+      - name: Staff pilot and Phase E gate
+        run: >-
+          python -m pytest -q
+          tests/test_phase_e_foundation.py
+          tests/test_phase_e_control_plane.py
+          tests/test_phase_e_submission.py
+          tests/test_phase_e_review.py
+          tests/test_phase_e_registry.py
+          tests/test_phase_e_configuration.py
+          tests/test_phase_e_pinning.py
+          tests/test_phase_e_staff_transport.py
+          tests/test_phase_e_staff_pilot.py
+      - name: Wheel gate
+        run: python -m build --wheel

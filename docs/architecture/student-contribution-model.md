@@ -159,6 +159,9 @@ supply trusted models, policy, verification, state transitions, projection,
 pinning, authoritative configuration loading, administrative evidence,
 reference persistence, and a bounded external staff transport for the
 implemented Phase E slices.
+The external staff boundary is composed for a single-worker, synthetic-only
+pilot by
+[Phase E Synthetic Staff Pilot Hardening v0.1](../phase-e-staff-pilot-v0.1.md).
 Independent student repositories are still created from the standalone
 template.
 

@@ -337,6 +337,7 @@ def create_staff_transport_app(
     *,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     token_factory=None,
+    operation_lock=None,
 ) -> Starlette:
     """Create the bounded ASGI app; deployment and server selection remain external."""
     if not isinstance(store, SQLiteStaffTransportStore):
@@ -344,6 +345,11 @@ def create_staff_transport_app(
     if not isinstance(config, StaffTransportConfig):
         raise TypeError("config must be a StaffTransportConfig")
     token_options = {} if token_factory is None else {"token_factory": token_factory}
+    shared_operation_lock = operation_lock or threading.RLock()
+    if not callable(getattr(shared_operation_lock, "acquire", None)) or not callable(
+        getattr(shared_operation_lock, "release", None)
+    ):
+        raise TypeError("operation_lock must provide acquire and release")
     remote = oidc_remote or UrllibOIDCRemote(max_response_bytes=config.oidc_response_max_bytes)
     oidc = OIDCProtocol(
         store,
@@ -364,7 +370,7 @@ def create_staff_transport_app(
         registry=ApprovedRegistryService(store, clock=clock),
         configurations=AuthoritativeClassWorldConfigurationService(store, clock=clock),
         pinning=ClassWorldPinningService(store, clock=clock),
-        operation_lock=threading.RLock(),
+        operation_lock=shared_operation_lock,
     )
 
     async def oidc_login(request: Request) -> Response:

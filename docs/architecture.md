@@ -71,6 +71,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Phase E Authenticated Control Plane v0.1](phase-e-control-plane-v0.1.md)
 - [Phase E Authoritative Class-World Configuration Store v0.1](phase-e-configuration-store-v0.1.md)
 - [Phase E Staff Transport Foundation v0.1](phase-e-staff-transport-v0.1.md)
+- [Phase E Synthetic Staff Pilot Hardening v0.1](phase-e-staff-pilot-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)

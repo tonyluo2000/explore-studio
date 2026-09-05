@@ -108,6 +108,7 @@ class FakeOIDCRemote(OIDCRemote):
         self.key_id = KEY_ID
         self.jwks: dict[str, object] = {"keys": [_jwk()]}
         self.id_token_override: str | None = None
+        self.token_type = "Bearer"
         self.expected_challenge = ""
         self.exchanges = 0
 
@@ -146,7 +147,7 @@ class FakeOIDCRemote(OIDCRemote):
             algorithm="RS256",
             headers={"kid": self.key_id, "typ": "JWT"},
         )
-        return {"access_token": "unused", "id_token": encoded, "token_type": "Bearer"}
+        return {"access_token": "unused", "id_token": encoded, "token_type": self.token_type}
 
     def fetch_jwks(self, provider: StaffOIDCProvider) -> dict[str, object]:
         return self.jwks
@@ -335,6 +336,14 @@ def test_oidc_provider_configuration_is_static_https_and_rs256_only() -> None:
         StaffOIDCProvider(**{**values, "issuer": "http://identity.example.edu"})
     with pytest.raises(ValueError, match="RS256"):
         StaffOIDCProvider(**values, signing_algorithms=("HS256",))
+
+
+def test_oidc_token_type_is_case_insensitive_for_bearer_interoperability(
+    harness: Harness,
+) -> None:
+    harness.remote.token_type = "bearer"
+    _, response = harness.login()
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize(
