@@ -34,10 +34,11 @@ import `explore.online`, open its database, or require authentication.
 - append-only canonical audit events without mutable profile fields; and
 - immutable completed-operation idempotency records.
 
-It does **not** implement OIDC protocol exchange, sessions, account recovery,
-submission/upload, terms acknowledgment, review or approval transitions,
-registry projection, revocation commands, retention jobs, or Class-World
-configuration mutations.
+The foundation module alone does **not** implement OIDC protocol exchange,
+sessions, account recovery, submission/upload, terms acknowledgment, review or
+approval transitions, retention jobs, or Class-World configuration mutations.
+Bounded submission, review, registry, pinning, and authenticated control-plane
+services are defined by their separate additive Phase E contracts.
 
 ## Identity and privacy
 
@@ -67,9 +68,11 @@ assignment must name an active course-admin grantor.
 A package ID is global. Its namespace has one owning cohort and one owner who
 must be a member of that cohort. Explicit `submit` grants can target only a
 member of the same cohort and can be issued only by an active course-admin.
-Namespace transfer is intentionally not implemented. Its future command must
-authorize the course-admin, compare the expected revision, increment the
-revision once, and append an audit event in the same transaction.
+Namespace transfer is supplied by the additive
+[Phase E Authenticated Control Plane v0.1](phase-e-control-plane-v0.1.md). It
+authorizes the current course-admin at AAL2, compares the expected revision,
+increments the revision once, and appends audit and idempotency evidence in the
+same transaction.
 
 ## Authorization
 

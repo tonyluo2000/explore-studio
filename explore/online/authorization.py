@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from uuid import UUID
 
+from explore.online.control_plane_models import ControlPlaneAction
 from explore.online.models import (
     AssuranceLevel,
     CohortMembership,
@@ -234,3 +235,23 @@ def authorize(
         return _ALLOW
 
     return _deny(AuthorizationDecisionCode.DENY_BY_DEFAULT)
+
+
+def authorize_control_plane(
+    principal: HumanPrincipal | ServicePrincipal,
+    action: ControlPlaneAction,
+    cohort_id: str,
+) -> AuthorizationDecision:
+    """Authorize only current AAL2 course-admin control-plane operations."""
+    if not isinstance(action, ControlPlaneAction) or not is_valid_identifier(cohort_id):
+        return _deny(AuthorizationDecisionCode.RESOURCE_INVALID)
+    if not isinstance(principal, HumanPrincipal):
+        return _deny(AuthorizationDecisionCode.ROLE_FORBIDDEN)
+    membership = _active_membership(principal, cohort_id)
+    if membership is None:
+        return _deny(AuthorizationDecisionCode.MEMBERSHIP_REQUIRED)
+    if membership.role is not CohortRole.COURSE_ADMIN:
+        return _deny(AuthorizationDecisionCode.ROLE_FORBIDDEN)
+    if principal.assurance is not AssuranceLevel.AAL2:
+        return _deny(AuthorizationDecisionCode.PRIVILEGED_ASSURANCE_REQUIRED)
+    return _ALLOW

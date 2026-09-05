@@ -133,7 +133,9 @@ After the Phase D extraction, this repository contains:
 - an approved-only, exact-version registry projection with authorized audited
   reads;
 - a course-admin-only adapter binding existing immutable Class-World
-  configuration pins to exact currently approved registry entries; and
+  configuration pins to exact currently approved registry entries;
+- authenticated, audited, idempotent course-admin transitions for cohort
+  membership and global namespace authority; and
 - local lesson examples, tests, and architecture documentation.
 
 The repository does not yet provide an OIDC login/session or upload endpoint,
@@ -142,10 +144,12 @@ student-code isolation. The implemented
 [Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) and bounded
 [Phase E Package Submission v0.1](../phase-e-submission-v0.1.md),
 [Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md),
-[Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md), and
+[Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md),
 [Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md),
+and [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md)
 supply trusted models, policy, verification, state transitions, projection,
-pinning evidence, and reference persistence for the implemented Phase E slices.
+pinning and administrative evidence, and reference persistence for the
+implemented Phase E slices.
 Independent student repositories are still created from the standalone
 template.
 
@@ -784,6 +788,9 @@ configuration is implemented by
 [Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md);
 registry and pinning endpoints, configuration creation/mutation, and release
 integration remain deferred.
+Authenticated membership and namespace authority transitions are implemented
+by [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md);
+their HTTP/OIDC/session transport remains deferred.
 
 ### Phase F — Educational progression
 
