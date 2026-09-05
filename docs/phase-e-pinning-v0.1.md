@@ -9,9 +9,11 @@
 ## Boundary
 
 `ClassWorldPinningService` binds one exact package pin already present in an
-existing valid immutable `ClassWorldConfiguration` to one currently approved
-registry entry. It does not create, edit, rebuild, serialize to disk, or release
-that configuration.
+`AuthoritativeClassWorldConfiguration` returned by the server-side
+[configuration loader](phase-e-configuration-store-v0.1.md) to one currently
+approved registry entry. It rejects raw or caller-constructed configuration
+objects. It does not create, edit, rebuild, serialize to disk, or release that
+configuration.
 
 The request contains only exact `package_id`, exact Semantic Version,
 correlation ID, and idempotency key. `latest`, ranges, prefix matching,
@@ -19,11 +21,12 @@ fallback, listing, and replacement are unsupported. Owner, cohort, digest,
 compatibility, artifact reference, approval state, and approval identity are
 never accepted as request claims.
 
-Before authorization, the adapter invokes the existing canonical configuration
-serializer as a defensive validation boundary and hashes its exact canonical
-UTF-8 bytes. The requested package ID/version must already be one of the
-configuration's exact pins. No package-set or configuration build function is
-called.
+Before authorization, the adapter requires the loaded record to match immutable
+state in the same store, invokes the existing canonical configuration serializer
+as a defensive validation boundary, and compares its SHA-256 with the stored
+server-derived digest. The requested package ID/version must already be one of
+the configuration's exact pins. No package-set or configuration build function
+is called by pinning.
 
 ## Registry binding and authorization
 
@@ -56,10 +59,10 @@ A successful operation creates an opaque UUIDv4 pin record containing:
 - course-admin actor, role/AAL2 membership snapshot and revision;
 - pin timestamp, correlation ID, and idempotency key.
 
-The first pin creates an immutable configuration binding for the Class-World
-ID/version, canonical configuration digest, cohort, and Student API version.
-Every later package pin under that configuration identity must reference the
-same binding. Only one pin may exist for a
+The authoritative configuration create operation establishes the immutable
+binding for the Class-World ID/version, canonical configuration digest, cohort,
+and Student API version before pinning. Every package pin under that
+configuration identity must reference the same binding. Only one pin may exist for a
 `(class_world_id, class_world_version, package_id)` identity. Both binding and
 pin rows reject update and delete. A matching duplicate returns the original
 pin; a changed configuration digest, version, registry binding, approval
@@ -89,7 +92,7 @@ rechecks current course-admin authority and current approval first.
 
 This slice adds no:
 
-- Class-World configuration creation or mutation;
+- Class-World configuration authoring or mutation;
 - package-set planning, build, assembly, or release behavior;
 - endpoint, list/search operation, or `latest` resolution;
 - signing or attestations;

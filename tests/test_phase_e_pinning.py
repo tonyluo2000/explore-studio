@@ -20,11 +20,15 @@ from explore.online import (
     AssuranceLevel,
     AuditEvent,
     AuthenticatedOIDCIdentity,
+    AuthoritativeClassWorldConfigurationService,
     ClassWorldPinningService,
     ClassWorldPinRequest,
     Cohort,
     CohortMembership,
     CohortRole,
+    ConfigurationConflictError,
+    ConfigurationCreateRequest,
+    ConfigurationLoadRequest,
     IdentityProvider,
     PackageNamespace,
     PackageReviewService,
@@ -38,7 +42,8 @@ from explore.online import (
     PublicationPolicy,
     ReviewAction,
     ReviewDecisionRequest,
-    SQLitePinningStore,
+    SQLiteClassWorldConfigurationStore,
+    prepare_class_world_configuration,
 )
 from explore.packages import (
     CharacterRegistration,
@@ -105,8 +110,8 @@ def _membership(
     )
 
 
-def _open_seeded_store(path: Path) -> SQLitePinningStore:
-    store = SQLitePinningStore.open(path)
+def _open_seeded_store(path: Path) -> SQLiteClassWorldConfigurationStore:
+    store = SQLiteClassWorldConfigurationStore.open(path)
     store.initialize_schema()
     store.approve_identity_provider(IdentityProvider(ISSUER))
     for name, actor_id in ACTOR_IDS.items():
@@ -143,7 +148,7 @@ def archive(tmp_path: Path) -> bytes:
 
 
 @pytest.fixture
-def store(tmp_path: Path) -> SQLitePinningStore:
+def store(tmp_path: Path) -> SQLiteClassWorldConfigurationStore:
     value = _open_seeded_store(tmp_path / "pinning.sqlite3")
     yield value
     value.close()
@@ -181,7 +186,7 @@ def _configuration(
     return result.configuration
 
 
-def _publish(store: SQLitePinningStore, archive: bytes):
+def _publish(store: SQLiteClassWorldConfigurationStore, archive: bytes):
     return (
         PackageSubmissionService(
             store,
@@ -200,7 +205,7 @@ def _publish(store: SQLitePinningStore, archive: bytes):
 
 
 def _decide(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     submission_id: str,
     action: ReviewAction,
     *,
@@ -230,27 +235,58 @@ def _request(
 
 
 def _pin(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     configuration: ClassWorldConfiguration,
     *,
     actor: str = "course-admin",
     request: ClassWorldPinRequest | None = None,
 ):
+    loaded = _loaded_configuration(store, configuration)
     return ClassWorldPinningService(store, clock=lambda: NOW).pin_exact(
         identity=_identity(actor),
-        configuration=configuration,
+        configuration=loaded,
         request=request or _request(),
     )
 
 
-def _approved_submission(store: SQLitePinningStore, archive: bytes):
+def _loaded_configuration(
+    store: SQLiteClassWorldConfigurationStore,
+    configuration: ClassWorldConfiguration,
+):
+    configuration_service = AuthoritativeClassWorldConfigurationService(
+        store,
+        clock=lambda: NOW,
+    )
+    prepared = prepare_class_world_configuration(configuration)
+    key_suffix = prepared.configuration_sha256[:16]
+    created = configuration_service.create(
+        identity=_identity("course-admin"),
+        prepared=prepared,
+        request=ConfigurationCreateRequest(
+            0,
+            f"authoritative-configuration-create-{key_suffix}",
+            f"authoritative-configuration-create-{key_suffix}",
+        ),
+    )
+    loaded = configuration_service.load_for_pinning(
+        identity=_identity("course-admin"),
+        request=ConfigurationLoadRequest(
+            created.record.locator,
+            "authoritative-configuration-load",
+            "authoritative-configuration-load",
+        ),
+    ).loaded
+    return loaded
+
+
+def _approved_submission(store: SQLiteClassWorldConfigurationStore, archive: bytes):
     submission = _publish(store, archive)
     approval = _decide(store, submission.submission_id, ReviewAction.APPROVE).decision
     return submission, approval
 
 
 def test_course_admin_pins_exact_registry_identity_to_unchanged_configuration(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     submission, approval = _approved_submission(store, archive)
@@ -277,7 +313,7 @@ def test_course_admin_pins_exact_registry_identity_to_unchanged_configuration(
 
 @pytest.mark.parametrize("actor", ["student", "teacher"])
 def test_only_course_admin_can_pin(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
     actor: str,
 ) -> None:
@@ -288,7 +324,7 @@ def test_only_course_admin_can_pin(
 
 
 def test_course_admin_requires_current_same_cohort_aal2_authority(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -297,40 +333,31 @@ def test_course_admin_requires_current_same_cohort_aal2_authority(
     with pytest.raises(PinAccessDeniedError):
         service.pin_exact(
             identity=_identity("course-admin", assurance=AssuranceLevel.AAL1),
-            configuration=_configuration(),
+            configuration=_loaded_configuration(store, _configuration()),
             request=_request(key="non-mfa-pin"),
         )
     with pytest.raises(PinAccessDeniedError):
         _pin(store, _configuration(), actor="other-admin", request=_request(key="cross-pin"))
 
 
-def test_cross_cohort_and_unknown_registry_objects_have_same_bola_denial(
-    store: SQLitePinningStore,
+def test_cross_cohort_actor_cannot_consume_authoritative_configuration(
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
+    loaded = _loaded_configuration(store, _configuration())
 
-    with pytest.raises(PinAccessDeniedError) as cross_cohort:
-        _pin(
-            store,
-            _configuration(cohort_id=OTHER_COHORT_ID),
-            actor="other-admin",
+    with pytest.raises(PinAccessDeniedError, match="class-world pin is not authorized"):
+        ClassWorldPinningService(store, clock=lambda: NOW).pin_exact(
+            identity=_identity("other-admin"),
+            configuration=loaded,
             request=_request(key="cross-cohort-pin"),
         )
-    with pytest.raises(PinAccessDeniedError) as unknown:
-        _pin(
-            store,
-            _configuration(package_version="9.9.9", cohort_id=OTHER_COHORT_ID),
-            actor="other-admin",
-            request=_request(package_version="9.9.9", key="unknown-pin"),
-        )
-
-    assert str(cross_cohort.value) == str(unknown.value) == "class-world pin is not authorized"
 
 
 @pytest.mark.parametrize("decision", [None, ReviewAction.REJECT])
 def test_reviewable_and_rejected_versions_cannot_be_pinned(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
     decision: ReviewAction | None,
 ) -> None:
@@ -345,11 +372,11 @@ def test_reviewable_and_rejected_versions_cannot_be_pinned(
     ).fetchone() == (0,)
     assert store._connection.execute(
         "SELECT count(*) FROM class_world_configuration_bindings"
-    ).fetchone() == (0,)
+    ).fetchone() == (1,)
 
 
 def test_revocation_blocks_future_pin_but_preserves_historical_pin_and_configuration(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     submission, approval = _approved_submission(store, archive)
@@ -370,7 +397,7 @@ def test_revocation_blocks_future_pin_but_preserves_historical_pin_and_configura
 
 
 def test_stale_registry_read_cannot_authorize_a_pin_after_revocation(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     submission, _ = _approved_submission(store, archive)
@@ -389,7 +416,7 @@ def test_pin_request_rejects_latest_ranges_and_fallback_values(value: str) -> No
 
 
 def test_configuration_must_already_contain_the_requested_exact_pin(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -397,8 +424,8 @@ def test_configuration_must_already_contain_the_requested_exact_pin(
     with pytest.raises(PinConfigurationError, match="does not contain"):
         _pin(
             store,
-            _configuration(package_version="2.0.0"),
-            request=_request(package_version="1.0.0"),
+            _configuration(),
+            request=_request(package_version="2.0.0"),
         )
 
 
@@ -418,7 +445,7 @@ def test_pin_api_accepts_no_client_owner_cohort_digest_or_approval_claims() -> N
 
 
 def test_identical_replay_returns_one_pin_and_one_audit(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -442,7 +469,7 @@ def test_identical_replay_returns_one_pin_and_one_audit(
 
 
 def test_duplicate_identical_pin_with_new_key_reuses_immutable_pin_identity(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -465,7 +492,7 @@ def test_duplicate_identical_pin_with_new_key_reuses_immutable_pin_identity(
 
 
 def test_configuration_identity_cannot_be_rebound_to_changed_configuration_bytes(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -473,12 +500,12 @@ def test_configuration_identity_cannot_be_rebound_to_changed_configuration_bytes
     _pin(store, configuration)
     changed = replace(configuration, display_name="Changed configuration declaration")
 
-    with pytest.raises(PinConflictError, match="different canonical bytes"):
+    with pytest.raises(ConfigurationConflictError, match="different canonical bytes"):
         _pin(store, changed, request=_request(key="changed-configuration-pin"))
 
 
 def test_changed_replay_under_same_key_fails_closed(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -494,13 +521,19 @@ def test_changed_replay_under_same_key_fails_closed(
 
 
 def test_replay_rechecks_current_course_admin_authority(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
     configuration = _configuration()
     request = _request(key="authority-recheck-pin")
-    _pin(store, configuration, request=request)
+    loaded = _loaded_configuration(store, configuration)
+    service = ClassWorldPinningService(store, clock=lambda: NOW)
+    service.pin_exact(
+        identity=_identity("course-admin"),
+        configuration=loaded,
+        request=request,
+    )
     store._connection.execute(
         """
         UPDATE cohort_memberships SET active = 0, revision = 2
@@ -510,7 +543,11 @@ def test_replay_rechecks_current_course_admin_authority(
     )
 
     with pytest.raises(PinAccessDeniedError):
-        _pin(store, configuration, request=request)
+        service.pin_exact(
+            identity=_identity("course-admin"),
+            configuration=loaded,
+            request=request,
+        )
 
 
 def test_concurrent_identical_pins_converge_to_one_record_and_audit(
@@ -526,7 +563,7 @@ def test_concurrent_identical_pins_converge_to_one_record_and_audit(
     request = _request(key="concurrent-pin")
 
     def pin() -> tuple[str, bool]:
-        local = SQLitePinningStore.open(database)
+        local = SQLiteClassWorldConfigurationStore.open(database)
         try:
             barrier.wait()
             receipt = _pin(local, configuration, request=request)
@@ -537,7 +574,7 @@ def test_concurrent_identical_pins_converge_to_one_record_and_audit(
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = tuple(executor.map(lambda _: pin(), range(2)))
 
-    check = SQLitePinningStore.open(database)
+    check = SQLiteClassWorldConfigurationStore.open(database)
     try:
         assert len({item[0] for item in results}) == 1
         assert sorted(item[1] for item in results) == [False, True]
@@ -563,7 +600,7 @@ def test_concurrent_revocation_and_pin_are_serialized_without_post_revocation_pi
     configuration = _configuration()
 
     def revoke() -> str:
-        local = SQLitePinningStore.open(database)
+        local = SQLiteClassWorldConfigurationStore.open(database)
         try:
             barrier.wait()
             _decide(local, submission.submission_id, ReviewAction.REVOKE)
@@ -572,7 +609,7 @@ def test_concurrent_revocation_and_pin_are_serialized_without_post_revocation_pi
             local.close()
 
     def pin() -> str:
-        local = SQLitePinningStore.open(database)
+        local = SQLiteClassWorldConfigurationStore.open(database)
         try:
             barrier.wait()
             try:
@@ -588,7 +625,7 @@ def test_concurrent_revocation_and_pin_are_serialized_without_post_revocation_pi
         pin_future = executor.submit(pin)
         results = (revoke_future.result(), pin_future.result())
 
-    check = SQLitePinningStore.open(database)
+    check = SQLiteClassWorldConfigurationStore.open(database)
     try:
         assert results[0] == "revoked"
         assert results[1] in ("denied-after-revocation", "pinned-before-revocation")
@@ -602,7 +639,7 @@ def test_concurrent_revocation_and_pin_are_serialized_without_post_revocation_pi
 
 
 def test_audit_failure_rolls_back_pin_and_idempotency_atomically(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -631,7 +668,7 @@ def test_audit_failure_rolls_back_pin_and_idempotency_atomically(
     with pytest.raises(sqlite3.IntegrityError):
         service.pin_exact(
             identity=_identity("course-admin"),
-            configuration=_configuration(),
+            configuration=_loaded_configuration(store, _configuration()),
             request=_request(key="failed-pin"),
         )
 
@@ -644,7 +681,7 @@ def test_audit_failure_rolls_back_pin_and_idempotency_atomically(
 
 
 def test_pin_and_audit_records_are_append_only(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     _approved_submission(store, archive)
@@ -688,7 +725,7 @@ def test_pin_and_audit_records_are_append_only(
 
 
 def test_pin_audit_contains_exact_configuration_registry_and_approval_binding(
-    store: SQLitePinningStore,
+    store: SQLiteClassWorldConfigurationStore,
     archive: bytes,
 ) -> None:
     submission, approval = _approved_submission(store, archive)

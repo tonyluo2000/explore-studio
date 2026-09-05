@@ -9,6 +9,8 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from explore.online.authorization import AuthorizationAction, AuthorizationResource, authorize
+from explore.online.configuration_models import AuthoritativeClassWorldConfiguration
+from explore.online.configuration_persistence import SQLiteClassWorldConfigurationStore
 from explore.online.models import (
     AuditEvent,
     CohortMembership,
@@ -18,7 +20,6 @@ from explore.online.models import (
 )
 from explore.online.persistence import PersistenceConflictError
 from explore.online.pinning_models import (
-    ClassWorldConfigurationBinding,
     ClassWorldPackagePinRecord,
     ClassWorldPinReceipt,
     ClassWorldPinRequest,
@@ -28,7 +29,6 @@ from explore.online.pinning_models import (
     PinConfigurationError,
     PinConflictError,
 )
-from explore.online.pinning_persistence import SQLitePinningStore
 from explore.online.registry_models import ApprovedRegistryEntry
 from explore.online.submission_models import AuthenticatedOIDCIdentity
 from explore.packages import ClassWorldConfiguration, serialize_class_world_manifest
@@ -96,13 +96,13 @@ class ClassWorldPinningService:
 
     def __init__(
         self,
-        store: SQLitePinningStore,
+        store: SQLiteClassWorldConfigurationStore,
         *,
         clock: Callable[[], datetime] = _utc_now,
         uuid_factory: Callable[[], UUID] = uuid4,
     ) -> None:
-        if not isinstance(store, SQLitePinningStore):
-            raise TypeError("store must be a SQLitePinningStore")
+        if not isinstance(store, SQLiteClassWorldConfigurationStore):
+            raise TypeError("store must be a SQLiteClassWorldConfigurationStore")
         if not callable(clock) or not callable(uuid_factory):
             raise TypeError("clock and uuid_factory must be callable")
         self._store = store
@@ -223,22 +223,36 @@ class ClassWorldPinningService:
         self,
         *,
         identity: AuthenticatedOIDCIdentity,
-        configuration: ClassWorldConfiguration,
+        configuration: AuthoritativeClassWorldConfiguration,
         request: ClassWorldPinRequest,
     ) -> ClassWorldPinReceipt:
         """Bind one existing configuration pin to a currently approved exact version."""
         if not isinstance(request, ClassWorldPinRequest):
             raise TypeError("request must be a ClassWorldPinRequest")
-        configuration_sha256 = _configuration_digest(configuration)
+        if not isinstance(configuration, AuthoritativeClassWorldConfiguration):
+            raise TypeError(
+                "configuration must be an AuthoritativeClassWorldConfiguration loaded by the server"
+            )
+        authoritative_record = self._store.load_configuration_record(configuration.record.locator)
+        if authoritative_record != configuration.record:
+            raise PinConfigurationError("configuration is not authoritative server state")
+        validated_configuration = configuration.configuration
+        configuration_sha256 = _configuration_digest(validated_configuration)
+        if configuration_sha256 != authoritative_record.configuration_sha256:
+            raise PinConfigurationError("configuration digest does not match authoritative state")
         if not any(
             pin.package_id == request.package_id and pin.package_version == request.semantic_version
-            for pin in configuration.packages
+            for pin in validated_configuration.packages
         ):
             raise PinConfigurationError(
                 "configuration does not contain the requested exact package pin"
             )
         actor_id = self._actor_id(identity)
-        request_sha256 = _request_sha256(configuration, configuration_sha256, request)
+        request_sha256 = _request_sha256(
+            validated_configuration,
+            configuration_sha256,
+            request,
+        )
         now = self._clock()
         if (
             not isinstance(now, datetime)
@@ -264,27 +278,30 @@ class ClassWorldPinningService:
                 entry, membership = self._authorize(
                     actor_id=actor_id,
                     identity=identity,
-                    configuration=configuration,
+                    configuration=validated_configuration,
                     request=request,
                 )
-                self._store.bind_class_world_configuration(
-                    ClassWorldConfigurationBinding(
-                        class_world_id=configuration.class_world_id,
-                        class_world_version=configuration.class_world_version,
-                        configuration_sha256=configuration_sha256,
-                        cohort_id=entry.cohort_id,
-                        student_api_version=entry.compatibility.student_api_version,
-                    )
+                binding = self._store.load_class_world_configuration_binding(
+                    validated_configuration.class_world_id,
+                    validated_configuration.class_world_version,
                 )
+                if binding is None or (
+                    binding.configuration_sha256 != configuration_sha256
+                    or binding.cohort_id != entry.cohort_id
+                    or binding.student_api_version != entry.compatibility.student_api_version
+                ):
+                    raise PinConfigurationError(
+                        "configuration is not bound to authoritative server state"
+                    )
                 existing = self._store.load_class_world_pin(
-                    configuration.class_world_id,
-                    configuration.class_world_version,
+                    validated_configuration.class_world_id,
+                    validated_configuration.class_world_version,
                     request.package_id,
                 )
                 if existing is not None:
                     if not _binding_matches(
                         existing,
-                        configuration,
+                        validated_configuration,
                         configuration_sha256,
                         entry,
                     ):
@@ -336,8 +353,8 @@ class ClassWorldPinningService:
                 )
                 pin = ClassWorldPackagePinRecord(
                     pin_id=str(self._uuid_factory()),
-                    class_world_id=configuration.class_world_id,
-                    class_world_version=configuration.class_world_version,
+                    class_world_id=validated_configuration.class_world_id,
+                    class_world_version=validated_configuration.class_world_version,
                     configuration_sha256=configuration_sha256,
                     package_version=entry.package_version,
                     cohort_id=entry.cohort_id,
