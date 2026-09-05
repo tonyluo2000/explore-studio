@@ -1,0 +1,37 @@
+name: Student template integration
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/student-template-integration.yml"
+      - "docs/student-adventure-template-v0.1.md"
+      - "tests/test_student_adventure_template_integration.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/student-template-integration.yml"
+      - "docs/student-adventure-template-v0.1.md"
+      - "tests/test_student_adventure_template_integration.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-standalone-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Explore Studio
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install integration test dependency
+        run: python -m pip install pytest
+      - name: Verify pinned standalone template
+        env:
+          EXPLORE_STUDIO_RUN_TEMPLATE_INTEGRATION: "1"
+        run: python -m pytest tests/test_student_adventure_template_integration.py

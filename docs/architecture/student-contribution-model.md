@@ -88,7 +88,7 @@ enforce authorization and package approval.
 | Logical boundary | Responsibility |
 |------------------|----------------|
 | **`explore-studio`** | Official engine, core world, Student API, package contract and validation tooling, and class-world builder. |
-| **`student-adventure-template`** | Supported starting structure used to create each student repository. |
+| **[`student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template)** | Standalone supported starting structure used to create each student repository. |
 | **Student repository** | One independent repository per student, containing that student's source, assets, tests, and package metadata. |
 | **Class-world release** | Reproducible, versioned artifact generated from pinned approved inputs. It is not a source repository. |
 
@@ -107,29 +107,29 @@ flowchart LR
     B --> R["Versioned class-world release"]
 ```
 
-These are logical boundaries, not a requirement to create four physical
-repositories immediately. The template and builder may initially live inside
-`explore-studio`. A class-world release may be stored in an artifact registry
-rather than Git. Physical extraction is an implementation and operations
-decision as long as the logical ownership boundaries remain intact.
+The student template is now physically separate from `explore-studio` at
+[`tonyluo2000/student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template).
+Each student repository is created from that template and owns its subsequent
+history. The class-world builder remains platform tooling. A class-world release
+may be stored in an artifact registry rather than Git.
 
 ### 4.2 Current repository state
 
-At the Phase D stabilization checkpoint, the repository contains:
+After the Phase D extraction, this repository contains:
 
 - a local Python engine and Student API v0.1;
 - the implemented Explorer Package v0.1 validator, declarative loader, and
   deterministic local export command;
 - deterministic local class-world planning, assembly, verification, and release
   bundle contracts from Phase C;
-- an in-repository student project template pending a separate extraction
-  decision; and
+- a pinned integration contract for the standalone student project template;
+  and
 - local lesson examples, tests, and architecture documentation.
 
 The repository does not provide authentication, package submission or
 publication, approval services, an online registry, deployment, or executable
-student-code isolation. Independent student repositories and online services
-remain physical or operational work beyond this in-repository template slice.
+student-code isolation. Independent student repositories are created from the
+standalone template; online services remain later operational work.
 
 ## 5. Ownership Boundaries
 
@@ -137,6 +137,8 @@ remain physical or operational work beyond this in-repository template slice.
 |------|-------|
 | Engine | Explore Studio maintainers |
 | Core world | Explore Studio maintainers |
+| Student template contract and platform tooling | Explore Studio maintainers |
+| Standalone template repository | Explore Studio maintainers |
 | Student repository | Individual student |
 | Student source and assets | Individual student |
 | Explorer Package | Student contribution |
@@ -726,9 +728,10 @@ These phases are future work and are not implemented by this decision.
 - Add local tests and a package-export command.
 - Document commit, local export, and future publish as distinct operations.
 
-The first local Phase D slice is implemented by the asset-free student
-repository template and
-[Deterministic Explorer Package Export v0.1](../explorer-package-export-v0.1.md).
+Phase D is implemented by the standalone
+[`student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template),
+the pinned [template integration contract](../student-adventure-template-v0.1.md),
+and [Deterministic Explorer Package Export v0.1](../explorer-package-export-v0.1.md).
 It deliberately stops at a validated, reproducible local export; publishing and
 approval remain later trusted workflows.
 
