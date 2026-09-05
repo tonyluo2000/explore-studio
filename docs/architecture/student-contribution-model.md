@@ -137,12 +137,14 @@ After the Phase D extraction, this repository contains:
 - authenticated, audited, idempotent course-admin transitions for cohort
   membership and global namespace authority;
 - immutable server-side Class-World configuration bytes, exact identity,
-  authoritative reconstruction, and audited opaque loading for pinning; and
+  authoritative reconstruction, and audited opaque loading for pinning;
+- staff-only OIDC/PKCE, server-side session, CSRF, strict HTTP control-plane,
+  exact registry-read, and authoritative locator-to-pin transport; and
 - local lesson examples, tests, and architecture documentation.
 
-The repository does not yet provide an OIDC login/session or upload endpoint,
-an online Class-World configuration workflow, deployment, or executable
-student-code isolation. The implemented
+The repository does not yet provide a package upload endpoint, student
+onboarding, an online Class-World configuration-authoring workflow, deployment,
+or executable student-code isolation. The implemented
 [Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) and bounded
 [Phase E Package Submission v0.1](../phase-e-submission-v0.1.md),
 [Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md),
@@ -151,9 +153,11 @@ student-code isolation. The implemented
 and [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md),
 plus the
 [Phase E Authoritative Class-World Configuration Store v0.1](../phase-e-configuration-store-v0.1.md),
+and the staff-only
+[Phase E Staff Transport Foundation v0.1](../phase-e-staff-transport-v0.1.md)
 supply trusted models, policy, verification, state transitions, projection,
-pinning, authoritative configuration loading, administrative evidence, and
-reference persistence for the
+pinning, authoritative configuration loading, administrative evidence,
+reference persistence, and a bounded external staff transport for the
 implemented Phase E slices.
 Independent student repositories are still created from the standalone
 template.
@@ -784,21 +788,28 @@ implemented by
 endpoints and repository integration remain deferred. The fourth bullet's
 bounded decision-state portion is implemented by
 [Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md); dashboard and
-transport workflows remain deferred. Federated login/session transport remains
-deferred. The fifth bullet's exact-version approved registry projection is
+transport workflows remain deferred. Federated staff login/session transport
+is implemented by the bounded
+[Phase E Staff Transport Foundation v0.1](../phase-e-staff-transport-v0.1.md);
+student identity, onboarding, and real-minor-data handling remain deferred. The
+fifth bullet's exact-version approved registry projection is
 implemented by
 [Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md).
 The bounded adapter for an exact pin already present in an existing immutable
 configuration is implemented by
 [Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md);
-registry and pinning endpoints, configuration authoring/mutation, and release
-integration remain deferred. Immutable server-side persistence and authoritative
-opaque loading for existing trusted configurations are implemented by
+exact registry-read and pinning transport are now staff-only, while registry
+listing/search, configuration authoring/mutation, and release integration remain
+deferred. Immutable server-side persistence and authoritative opaque loading
+for existing trusted configurations are implemented by
 [Phase E Authoritative Class-World Configuration Store v0.1](../phase-e-configuration-store-v0.1.md);
-configuration authoring and mutation remain deferred.
+configuration authoring and mutation remain deferred. Staff pin transport
+accepts only an opaque locator and exact package intent, server-loads the sealed
+authoritative configuration, and delegates to the existing pinning adapter.
 Authenticated membership and namespace authority transitions are implemented
 by [Phase E Authenticated Control Plane v0.1](../phase-e-control-plane-v0.1.md);
-their HTTP/OIDC/session transport remains deferred.
+their course-admin-only HTTP transport is supplied by the staff transport
+foundation.
 
 ### Phase F — Educational progression
 

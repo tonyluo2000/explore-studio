@@ -73,6 +73,13 @@ from explore.online.models import (
     ServicePrincipal,
     StoredPackageVersion,
 )
+from explore.online.oidc import (
+    OIDCAuthenticationError,
+    OIDCAuthorizationStart,
+    OIDCProtocol,
+    OIDCRemote,
+    UrllibOIDCRemote,
+)
 from explore.online.persistence import (
     FOUNDATION_SCHEMA_VERSION,
     IdempotencyConflictError,
@@ -130,6 +137,14 @@ from explore.online.review_persistence import (
     ReviewPersistenceConflictError,
     SQLiteReviewStore,
 )
+from explore.online.session import (
+    AuthenticatedStaffSession,
+    CreatedStaffSession,
+    CSRFValidationError,
+    SessionAuthenticationError,
+    StaffSessionManager,
+)
+from explore.online.staff_transport import TransportRequestError, create_staff_transport_app
 from explore.online.submission import PackageSubmissionService
 from explore.online.submission_models import (
     AuthenticatedOIDCIdentity,
@@ -164,11 +179,22 @@ from explore.online.submission_verification import (
     MAX_SUBMISSION_YAML_TOKENS,
     verify_submitted_archive,
 )
+from explore.online.transport_models import (
+    OIDCAuthorizationTransaction,
+    StaffOIDCProvider,
+    StaffSession,
+    StaffTransportConfig,
+)
+from explore.online.transport_persistence import (
+    TRANSPORT_SCHEMA_VERSION,
+    SQLiteStaffTransportStore,
+)
 
 __all__ = [
     "CONFIGURATION_SCHEMA_VERSION",
     "CONTROL_PLANE_SCHEMA_VERSION",
     "FOUNDATION_SCHEMA_VERSION",
+    "TRANSPORT_SCHEMA_VERSION",
     "Actor",
     "ApprovedRegistryEntry",
     "ApprovedRegistryService",
@@ -263,6 +289,7 @@ __all__ = [
     "SQLitePinningStore",
     "SQLiteReviewStore",
     "SQLiteRegistryStore",
+    "SQLiteStaffTransportStore",
     "SQLiteSubmissionStore",
     "ServicePrincipal",
     "StoredPackageVersion",
@@ -272,6 +299,9 @@ __all__ = [
     "review_transition",
     "prepare_class_world_configuration",
     "AuthenticatedOIDCIdentity",
+    "AuthenticatedStaffSession",
+    "CSRFValidationError",
+    "CreatedStaffSession",
     "MAX_SUBMISSION_ARCHIVE_MEMBERS",
     "MAX_SUBMISSION_MANIFEST_BYTES",
     "MAX_SUBMISSION_YAML_BYTES",
@@ -279,6 +309,11 @@ __all__ = [
     "MAX_SUBMISSION_YAML_TOKENS",
     "PackageSubmission",
     "PackageSubmissionService",
+    "OIDCAuthenticationError",
+    "OIDCAuthorizationStart",
+    "OIDCAuthorizationTransaction",
+    "OIDCProtocol",
+    "OIDCRemote",
     "PublicationAcknowledgment",
     "PublicationAuthority",
     "PublicationPolicy",
@@ -296,6 +331,14 @@ __all__ = [
     "SubmissionValidationOutcome",
     "SubmissionVerificationIssue",
     "SubmissionVerificationIssueCode",
+    "SessionAuthenticationError",
+    "StaffOIDCProvider",
+    "StaffSession",
+    "StaffSessionManager",
+    "StaffTransportConfig",
+    "TransportRequestError",
+    "UrllibOIDCRemote",
     "VerifiedSubmittedArchive",
     "verify_submitted_archive",
+    "create_staff_transport_app",
 ]
