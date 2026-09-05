@@ -71,4 +71,4 @@ markers = [
 ]
 
 [tool.setuptools]
-packages = ["explore", "explore.packages", "engine"]
+packages = ["explore", "explore.online", "explore.packages", "engine"]

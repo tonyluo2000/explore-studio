@@ -100,7 +100,8 @@ flowchart LR
     T -->|creates| S2["Student repository B"]
     S1 -->|publishes| X1["Explorer Package A"]
     S2 -->|publishes| X2["Explorer Package B"]
-    Q["Teacher / course team"] -->|approves and configures| B["Class-world build"]
+    Q["Assigned teacher"] -->|approves exact package version| B["Class-world build"]
+    A["Course-admin"] -->|creates class configuration| B
     P --> B
     X1 --> B
     X2 --> B
@@ -123,13 +124,17 @@ After the Phase D extraction, this repository contains:
 - deterministic local class-world planning, assembly, verification, and release
   bundle contracts from Phase C;
 - a pinned integration contract for the standalone student project template;
-  and
+- immutable identity, cohort, namespace, package-version, authorization, audit,
+  and persistence primitives for the Phase E online foundation; and
 - local lesson examples, tests, and architecture documentation.
 
-The repository does not provide authentication, package submission or
-publication, approval services, an online registry, deployment, or executable
-student-code isolation. Independent student repositories are created from the
-standalone template; online services remain later operational work.
+The repository does not yet provide an OIDC login/session service, package
+submission or publication, approval services, an online registry, deployment,
+or executable student-code isolation. The implemented
+[Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) supplies trusted
+models, policy, and reference persistence for those later online services.
+Independent student repositories are still created from the standalone
+template.
 
 ## 5. Ownership Boundaries
 
@@ -143,8 +148,8 @@ standalone template; online services remain later operational work.
 | Student source and assets | Individual student |
 | Explorer Package | Student contribution |
 | Package contract and validator | Explore Studio maintainers |
-| Package approval | Teacher and automated policy |
-| Class-world configuration | Teacher/course team |
+| Package approval | One assigned teacher or course-admin; never the submitter/owner |
+| Class-world configuration | Course-admin |
 | Class-world release | Explore Studio/course team |
 
 Students can collaborate and accept help, but changes to a student repository
@@ -660,17 +665,20 @@ Explore Studio is intended for minors. At the architecture level:
 
 - public or class-facing interfaces use Explorer names instead of exposing real
   names unnecessarily;
-- student repositories are not made public by default without an approved
-  access and consent model;
-- teachers control publication into shared environments;
+- student repositories and unpublished package versions are private by default
+  and limited to authorized course/cohort scope;
+- assigned teachers approve exact versions, while course-admins control
+  class-world configuration;
 - shared dialogue, images, sound, and other assets are moderated;
 - unrestricted public chat is not part of the core package model; and
 - account and progress services collect only data needed for the educational
   experience and its operation.
 
 These are product boundaries, not a complete legal, privacy, safety, or
-compliance policy. Repository visibility, parental consent, retention, and
-regional requirements remain subject to dedicated review.
+compliance policy. Institution-managed minor accounts/recovery and bounded
+least-privilege retention are approved defaults; exact consent text, retention
+durations, and regional requirements still require dedicated legal/operational
+review before service launch.
 
 ## 16. Alternatives Considered
 
@@ -737,10 +745,18 @@ approval remain later trusted workflows.
 
 ### Phase E — Online registry and approval
 
-- Add authentication.
+- Add the approved online identity, cohort, namespace, authorization, immutable
+  package-version, audit, and concurrency/idempotency foundation.
+- Add federated authentication and sessions.
 - Add package upload or repository integration.
 - Add teacher review.
 - Add an approved package registry.
+
+The first bullet is implemented by
+[Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) under the owner
+decisions recorded in
+[GitHub issue #31](https://github.com/tonyluo2000/explore-studio/issues/31).
+The remaining bullets are separate later tranches.
 
 ### Phase F — Educational progression
 
@@ -763,8 +779,6 @@ two intentionally different example packages.
 
 ## 18. Open Questions and Deferred Decisions
 
-- Are student repositories private by default, and what access can classmates
-  receive?
 - Will repository provisioning use GitHub Classroom or another system?
 - What exact archive, manifest, and contribution file formats are used?
 - Is student Python ever accepted into a shared release?
@@ -772,7 +786,6 @@ two intentionally different example packages.
 - What teacher-dashboard workflow supports review, approval, revocation, and
   release?
 - Which cloud hosting and artifact registry are used?
-- What account, parental-consent, retention, and deletion model is approved?
 - What moderation policy and appeals workflow apply to shared content?
 - Can approved work enter a long-term community world after a class ends?
 - How are package dependencies constrained for age-appropriate debugging and

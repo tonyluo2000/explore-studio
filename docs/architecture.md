@@ -63,6 +63,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Student API v0.1 Specification](student-api-v0.1-spec.md)
 - [Explorer World Design Specification](explorer-world-spec.md)
 - [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
+- [Phase E Online Foundation v0.1](phase-e-foundation-v0.1.md)
 - [Architecture Decision Records](architecture/decisions/)
 
 ## Technology Stack (Planned)
