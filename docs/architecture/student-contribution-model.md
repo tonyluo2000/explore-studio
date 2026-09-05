@@ -131,18 +131,21 @@ After the Phase D extraction, this repository contains:
 - append-only teacher approval/rejection and course-admin revocation decisions
   over exact submissions;
 - an approved-only, exact-version registry projection with authorized audited
-  reads; and
+  reads;
+- a course-admin-only adapter binding existing immutable Class-World
+  configuration pins to exact currently approved registry entries; and
 - local lesson examples, tests, and architecture documentation.
 
 The repository does not yet provide an OIDC login/session or upload endpoint,
-Class-World configuration pinning, deployment, or executable student-code
-isolation. The implemented
+an online Class-World configuration workflow, deployment, or executable
+student-code isolation. The implemented
 [Phase E Online Foundation v0.1](../phase-e-foundation-v0.1.md) and bounded
-[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md), and
-[Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md), together with
-the [Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md),
-supply trusted models, policy, verification, state transitions, projection, and
-reference persistence for the implemented Phase E slices.
+[Phase E Package Submission v0.1](../phase-e-submission-v0.1.md),
+[Phase E Package Review Decisions v0.1](../phase-e-review-v0.1.md),
+[Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md), and
+[Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md),
+supply trusted models, policy, verification, state transitions, projection,
+pinning evidence, and reference persistence for the implemented Phase E slices.
 Independent student repositories are still created from the standalone
 template.
 
@@ -776,8 +779,11 @@ transport workflows remain deferred. Federated login/session transport remains
 deferred. The fifth bullet's exact-version approved registry projection is
 implemented by
 [Phase E Approved Registry Projection v0.1](../phase-e-registry-v0.1.md).
-Registry endpoints, Class-World pinning, and configuration remain separate later
-tranches.
+The bounded adapter for an exact pin already present in an existing immutable
+configuration is implemented by
+[Phase E Exact Approved-Version Class-World Pinning v0.1](../phase-e-pinning-v0.1.md);
+registry and pinning endpoints, configuration creation/mutation, and release
+integration remain deferred.
 
 ### Phase F — Educational progression
 

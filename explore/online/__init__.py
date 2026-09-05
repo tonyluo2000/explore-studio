@@ -33,6 +33,23 @@ from explore.online.persistence import (
     PersistenceConflictError,
     SQLiteFoundationStore,
 )
+from explore.online.pinning import ClassWorldPinningService
+from explore.online.pinning_models import (
+    ClassWorldConfigurationBinding,
+    ClassWorldPackagePinRecord,
+    ClassWorldPinReceipt,
+    ClassWorldPinRequest,
+    PinAccessDeniedError,
+    PinAuthenticationError,
+    PinAuthoritySnapshot,
+    PinConfigurationError,
+    PinConflictError,
+)
+from explore.online.pinning_persistence import (
+    PINNING_SCHEMA_VERSION,
+    PinPersistenceConflictError,
+    SQLitePinningStore,
+)
 from explore.online.registry import ApprovedRegistryService
 from explore.online.registry_models import (
     ApprovedRegistryEntry,
@@ -115,6 +132,11 @@ __all__ = [
     "Cohort",
     "CohortMembership",
     "CohortRole",
+    "ClassWorldPackagePinRecord",
+    "ClassWorldConfigurationBinding",
+    "ClassWorldPinReceipt",
+    "ClassWorldPinRequest",
+    "ClassWorldPinningService",
     "FederatedIdentity",
     "HumanPrincipal",
     "IdempotencyConflictError",
@@ -126,9 +148,16 @@ __all__ = [
     "PackageReviewDecision",
     "PackageReviewService",
     "PackageVersionIdentity",
+    "PINNING_SCHEMA_VERSION",
     "PersistenceConflictError",
     "PersistenceAuthorizationError",
     "PrincipalKind",
+    "PinAccessDeniedError",
+    "PinAuthenticationError",
+    "PinAuthoritySnapshot",
+    "PinConfigurationError",
+    "PinConflictError",
+    "PinPersistenceConflictError",
     "REVIEW_REASON_MAX_LENGTH",
     "REVIEW_RESULT_METADATA_MAX_BYTES",
     "REVIEW_SCHEMA_VERSION",
@@ -150,6 +179,7 @@ __all__ = [
     "RegistryReadReceipt",
     "RegistryScope",
     "SQLiteFoundationStore",
+    "SQLitePinningStore",
     "SQLiteReviewStore",
     "SQLiteRegistryStore",
     "SQLiteSubmissionStore",
