@@ -510,6 +510,26 @@ def test_invalid_character_greeting_cannot_enter_configuration() -> None:
     assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
 
 
+def test_invalid_character_conversation_cannot_enter_configuration() -> None:
+    entry = _character(
+        "nova-character",
+        character=CharacterRegistrationSpec(
+            name="Nova",
+            x=1,
+            y=2,
+            color="gold",
+            conversation=("Only one",),
+        ),
+    )
+    package = _selected("nova-character", entry)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
+
+
 def test_valid_early_metadata_and_invalid_late_pin_returns_no_partial_configuration() -> None:
     plan = _valid_mixed_plan()
     invalid_pins = (*_spec(plan).packages[:-1], ClassWorldPackagePin("crystal-lantern", "bad"))

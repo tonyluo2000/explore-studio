@@ -66,6 +66,7 @@ class ClassroomTrailNPC:
     qualified_id: str
     character: Character
     greeting: str | None = None
+    conversation: tuple[str, ...] | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -76,6 +77,23 @@ class ClassroomTrailNPC:
             not isinstance(self.greeting, str) or not self.greeting.strip()
         ):
             raise ValueError("greeting must be non-whitespace text when present")
+        if self.conversation is not None and (
+            not isinstance(self.conversation, tuple)
+            or not 2 <= len(self.conversation) <= 3
+            or any(not isinstance(line, str) or not line.strip() for line in self.conversation)
+        ):
+            raise ValueError("conversation must contain exactly 2 or 3 nonblank lines")
+        if self.greeting is not None and self.conversation is not None:
+            raise ValueError("conversation cannot be combined with greeting")
+
+    @property
+    def conversation_lines(self) -> tuple[str, ...]:
+        """Return the authored conversation or backward-compatible greeting."""
+        if self.conversation is not None:
+            return self.conversation
+        if self.greeting is not None:
+            return (self.greeting,)
+        return ()
 
 
 ClassroomTrailTarget = ClassroomTrailObject | ClassroomTrailNPC
@@ -119,6 +137,7 @@ class ClassroomTrailScene(Scene):
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
+        self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
 
     @property
     def player(self) -> Character:
@@ -174,8 +193,13 @@ class ClassroomTrailScene(Scene):
                 }
                 self._feedback_message = self._target.when_interacted or _DEFAULT_INTERACTED_MESSAGE
             else:
-                assert self._target.greeting is not None
-                self._feedback_message = f"{self._target.character.name}: {self._target.greeting}"
+                lines = self._target.conversation_lines
+                assert lines
+                position = self._conversation_positions[self._target.qualified_id]
+                self._feedback_message = f"{self._target.character.name}: {lines[position]}"
+                self._conversation_positions[self._target.qualified_id] = (position + 1) % len(
+                    lines
+                )
             self._feedback_remaining = _FEEDBACK_DURATION
         elif self._feedback_remaining > 0:
             self._feedback_remaining = max(0.0, self._feedback_remaining - dt)
@@ -256,7 +280,7 @@ class ClassroomTrailScene(Scene):
         candidates: list[tuple[float, str, ClassroomTrailTarget]] = []
         interactables: tuple[ClassroomTrailTarget, ...] = (
             *self._objects,
-            *(npc for npc in self._npcs if npc.greeting is not None),
+            *(npc for npc in self._npcs if npc.conversation_lines),
         )
         for item in interactables:
             entity = item.world_object if isinstance(item, ClassroomTrailObject) else item.character

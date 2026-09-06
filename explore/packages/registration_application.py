@@ -301,6 +301,30 @@ def _validate_character_entry(
                 entry=entry,
             )
         )
+    if specification.conversation is not None and not (
+        isinstance(specification.conversation, tuple)
+        and 2 <= len(specification.conversation) <= 3
+        and all(_is_nonblank_text(line) for line in specification.conversation)
+    ):
+        field_location = f"{location}.character.conversation"
+        issues.append(
+            _issue(
+                RegistrationApplicationIssueCode.ENTRY_VALUE_INVALID,
+                f"{field_location} must contain exactly 2 or 3 nonblank lines.",
+                field_location,
+                entry=entry,
+            )
+        )
+    if specification.greeting is not None and specification.conversation is not None:
+        field_location = f"{location}.character.conversation"
+        issues.append(
+            _issue(
+                RegistrationApplicationIssueCode.ENTRY_VALUE_INVALID,
+                f"{field_location} cannot be combined with greeting.",
+                field_location,
+                entry=entry,
+            )
+        )
     _validate_asset(entry.asset_reference, f"{location}.asset_reference", entry, issues)
 
 

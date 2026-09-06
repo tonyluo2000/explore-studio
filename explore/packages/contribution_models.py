@@ -57,7 +57,7 @@ class PackageAssetReference:
 
 @dataclass(frozen=True)
 class LoadedCharacter:
-    """One declarative character plus optional inert trail greeting."""
+    """One declarative character plus optional inert trail conversation."""
 
     contribution_id: str
     qualified_id: str
@@ -69,6 +69,7 @@ class LoadedCharacter:
     color: str
     image: PackageAssetReference | None = None
     greeting: str | None = None
+    conversation: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)

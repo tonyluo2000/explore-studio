@@ -427,6 +427,15 @@ def test_unsupported_entry_type_is_rejected() -> None:
         _character(
             character=CharacterRegistrationSpec(name="Guide", x=1, y=2, color="blue", greeting=" ")
         ),
+        _character(
+            character=CharacterRegistrationSpec(
+                name="Guide",
+                x=1,
+                y=2,
+                color="blue",
+                conversation=("Only one",),
+            )
+        ),
         _world_object(
             world_object=WorldObjectRegistrationSpec(
                 name="Sign",

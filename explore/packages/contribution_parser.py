@@ -20,7 +20,7 @@ from explore.packages.contribution_models import (
 )
 from explore.packages.models import ContributionDeclaration
 
-_CHARACTER_FIELDS = frozenset({"name", "x", "y", "color", "asset_id", "greeting"})
+_CHARACTER_FIELDS = frozenset({"name", "x", "y", "color", "asset_id", "greeting", "conversation"})
 _WORLD_OBJECT_FIELDS = frozenset(
     {
         "name",
@@ -153,6 +153,57 @@ def _coordinate(
     return value
 
 
+def _conversation(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> tuple[str, ...] | None:
+    value = mapping.get("conversation", _MISSING)
+    location = _field_location(source_path, "conversation")
+    if value is _MISSING:
+        return None
+    if not isinstance(value, list):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be an ordered list of 2 or 3 strings.",
+                location,
+            )
+        )
+        return None
+    if not 2 <= len(value) <= 3:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} must contain exactly 2 or 3 lines.",
+                location,
+            )
+        )
+        return None
+    lines: list[str] = []
+    for index, line in enumerate(value):
+        line_location = f"{location}[{index}]"
+        if not isinstance(line, str):
+            issues.append(
+                _issue(
+                    PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                    f"{line_location} must be a string.",
+                    line_location,
+                )
+            )
+        elif not line.strip():
+            issues.append(
+                _issue(
+                    PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                    f"{line_location} must not be empty or whitespace-only.",
+                    line_location,
+                )
+            )
+        else:
+            lines.append(line.strip())
+    return tuple(lines) if len(lines) == len(value) else None
+
+
 def _color(
     mapping: Mapping[object, object],
     source_path: str,
@@ -250,6 +301,16 @@ def _parse_character(
         required=False,
         default=None,
     )
+    conversation = _conversation(mapping, source_path, issues)
+    if greeting is not None and conversation is not None:
+        location = _field_location(source_path, "conversation")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with greeting.",
+                location,
+            )
+        )
     _unknown_fields(mapping, _CHARACTER_FIELDS, source_path, issues)
 
     if issues:
@@ -259,6 +320,7 @@ def _parse_character(
     assert y is not None
     assert color is not None
     assert greeting is None or isinstance(greeting, str)
+    assert conversation is None or isinstance(conversation, tuple)
     return (
         LoadedCharacter(
             contribution_id=declaration.id,
@@ -271,6 +333,7 @@ def _parse_character(
             color=color,
             image=image,
             greeting=greeting,
+            conversation=conversation,
         ),
         (),
     )

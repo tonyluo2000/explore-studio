@@ -137,6 +137,26 @@ def test_character_greeting_is_validated_and_preserved() -> None:
     assert entry.character.greeting == greeting
 
 
+def test_character_conversation_is_validated_and_preserved() -> None:
+    conversation = ("First", "Second", "Third")
+
+    result = build_student_api_registration_plan(_package(_character(conversation=conversation)))
+
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert entry.character.conversation == conversation
+
+
+@pytest.mark.parametrize("conversation", [(), ("Only",), ("One", " "), ("1", "2", "3", "4")])
+def test_invalid_character_conversation_is_rejected(conversation: object) -> None:
+    result = build_student_api_registration_plan(_package(_character(conversation=conversation)))
+
+    assert result.plan is None
+    assert result.issues[0].code is RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].field == "conversation"
+
+
 @pytest.mark.parametrize("greeting", ["", "   ", 42])
 def test_invalid_character_greeting_is_rejected(greeting: object) -> None:
     result = build_student_api_registration_plan(_package(_character(greeting=greeting)))

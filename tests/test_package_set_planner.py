@@ -661,6 +661,27 @@ def test_invalid_character_greeting_is_rejected_during_package_preflight() -> No
     assert _codes(result) == [PackageSetIssueCode.ENTRY_VALUE_INVALID]
 
 
+@pytest.mark.parametrize("conversation", [("Only",), ("One", " "), ("1", "2", "3", "4")])
+def test_invalid_character_conversation_is_rejected_during_package_preflight(
+    conversation: tuple[str, ...],
+) -> None:
+    entry = _character(
+        "nova-character",
+        character=CharacterRegistrationSpec(
+            name="Nova",
+            x=1,
+            y=2,
+            color="gold",
+            conversation=conversation,
+        ),
+    )
+
+    result = build_package_set_plan((_selection("nova-character", entry),))
+
+    assert result.plan is None
+    assert _codes(result) == [PackageSetIssueCode.ENTRY_VALUE_INVALID]
+
+
 def test_diagnostics_do_not_expose_malformed_path_or_address_like_identities() -> None:
     leaked = "/private/tmp/entry-at-0x1234"
     selection = _selection(

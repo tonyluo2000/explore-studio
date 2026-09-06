@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.3.
+"""Planning and local execution for Classroom Trail contract v0.4.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -48,7 +48,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.3 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.4 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -71,7 +71,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.3 supports",
+        cardinality_contract="Classroom Trail v0.4 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -210,7 +210,7 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.3"')
+        raise ValueError('plan.contract_version must be "0.4"')
     if (
         not isinstance(plan.packages, tuple)
         or not plan.packages
@@ -283,6 +283,7 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
                 color=resolve_color(entry.character.color),
             ),
             greeting=entry.character.greeting,
+            conversation=entry.character.conversation,
         )
         for entry in plan.npcs
     )

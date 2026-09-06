@@ -201,6 +201,36 @@ def _validate_entry_value(
                     entry=entry,
                 )
             )
+        if specification.conversation is not None and not (
+            isinstance(specification.conversation, tuple)
+            and 2 <= len(specification.conversation) <= 3
+            and all(_is_nonblank_text(line) for line in specification.conversation)
+        ):
+            field_location = f"{location}.character.conversation"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must contain exactly 2 or 3 nonblank lines.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.greeting is not None and specification.conversation is not None:
+            field_location = f"{location}.character.conversation"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} cannot be combined with greeting.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
     else:
         specification = entry.world_object
         if not isinstance(specification, WorldObjectRegistrationSpec):

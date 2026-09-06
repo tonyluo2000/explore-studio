@@ -60,6 +60,14 @@ def _is_coordinate(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
+def _is_conversation(value: object) -> bool:
+    return (
+        isinstance(value, tuple)
+        and 2 <= len(value) <= 3
+        and all(_is_nonblank_text(line) for line in value)
+    )
+
+
 def _validate_text(
     value: object,
     *,
@@ -314,6 +322,26 @@ def _map_character(
         issues=issues,
         optional=True,
     )
+    if contribution.conversation is not None and not _is_conversation(contribution.conversation):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.conversation must contain exactly 2 or 3 nonblank lines.",
+                f"{location}.conversation",
+                contribution=contribution,
+                field="conversation",
+            )
+        )
+    if contribution.greeting is not None and contribution.conversation is not None:
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.conversation cannot be combined with greeting.",
+                f"{location}.conversation",
+                contribution=contribution,
+                field="conversation",
+            )
+        )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -324,6 +352,7 @@ def _map_character(
             y=contribution.y,
             color=contribution.color,
             greeting=contribution.greeting,
+            conversation=contribution.conversation,
         ),
         asset_reference=contribution.image,
     )

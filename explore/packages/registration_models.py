@@ -43,13 +43,14 @@ class RegistrationPlanIssue:
 
 @dataclass(frozen=True)
 class CharacterRegistrationSpec:
-    """Detached character configuration plus optional inert trail greeting."""
+    """Detached character configuration plus optional inert trail conversation."""
 
     name: str
     x: int
     y: int
     color: str
     greeting: str | None = None
+    conversation: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
