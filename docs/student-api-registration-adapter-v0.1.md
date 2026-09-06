@@ -101,11 +101,12 @@ collections are tuples.
 | `y` | `character.y` |
 | `color` | `character.color` |
 | optional `greeting` | `character.greeting` |
+| optional `conversation` | `character.conversation` |
 | optional `image` | `CharacterRegistration.asset_reference` |
 
 The detached specification retains Student API v0.1 character configuration
-plus the optional inert greeting used by Classroom Trail v0.3. The adapter does
-not apply that greeting as Student API behavior. Engine-owned size, movement
+plus the optional inert greeting or conversation used by Classroom Trail v0.4.
+The adapter does not apply that text as Student API behavior. Engine-owned size, movement
 speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
 invented.
 

@@ -395,6 +395,7 @@ def test_minimal_character_uses_student_api_defaults(tmp_path: Path) -> None:
     )
     assert character.image is None
     assert character.greeting is None
+    assert character.conversation is None
 
 
 @pytest.mark.parametrize(
@@ -460,6 +461,70 @@ def test_character_maps_exactly_to_typed_model(tmp_path: Path) -> None:
     assert character.y == 34
     assert character.color == "blue"
     assert character.greeting == "Welcome, explorer!"
+
+
+def test_character_conversation_preserves_authored_order_and_trims_lines(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nconversation:\n'
+                b'  - "  First line.  "\n'
+                b'  - "Second line."\n'
+                b'  - " Third line. "\n'
+            )
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is not None
+    assert result.package.characters[0].conversation == (
+        "First line.",
+        "Second line.",
+        "Third line.",
+    )
+
+
+@pytest.mark.parametrize(
+    "conversation",
+    [
+        "conversation: []\n",
+        'conversation: ["Only one"]\n',
+        'conversation: ["One", "Two", "Three", "Four"]\n',
+        'conversation: ["One", "   "]\n',
+        'conversation: ["One", 2]\n',
+    ],
+)
+def test_character_conversation_requires_two_or_three_nonblank_strings(
+    tmp_path: Path,
+    conversation: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        files={"character/guide.yaml": f'name: "Guide"\n{conversation}'.encode()},
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is None
+    assert result.issues
+
+
+def test_character_rejects_ambiguous_greeting_and_conversation(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\n' b'greeting: "Hello"\n' b'conversation: ["First", "Second"]\n'
+            )
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is None
+    assert result.issues[0].location == "character/guide.yaml.conversation"
 
 
 def test_minimal_world_object(tmp_path: Path) -> None:

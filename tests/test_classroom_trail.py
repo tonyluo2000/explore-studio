@@ -68,6 +68,7 @@ def _trail_npc(
     *,
     name: str | None = None,
     greeting: str | None = None,
+    conversation: tuple[str, ...] | None = None,
 ) -> ClassroomTrailNPC:
     return ClassroomTrailNPC(
         qualified_id,
@@ -80,6 +81,7 @@ def _trail_npc(
             color=(100, 150, 255),
         ),
         greeting,
+        conversation,
     )
 
 
@@ -197,6 +199,100 @@ def test_npcs_are_canonical_and_nearest_greeting_is_displayed() -> None:
     assert tuple((npc.character.x, npc.character.y) for npc in scene.npcs) == npc_positions
 
 
+def test_conversation_advances_in_authored_order_and_restarts() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 250),),
+        (
+            _trail_npc(
+                "guide:npc",
+                30,
+                name="Guide",
+                conversation=("First line.", "Second line.", "Third line."),
+            ),
+        ),
+    )
+    scene.enter()
+
+    messages: list[str] = []
+    for _ in range(4):
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+        scene.render()
+        messages.append(renderer.text[-1])
+
+    assert messages == [
+        "Guide: First line.",
+        "Guide: Second line.",
+        "Guide: Third line.",
+        "Guide: First line.",
+    ]
+    assert scene.visited_qualified_ids == frozenset()
+
+
+def test_conversation_position_is_independent_per_npc() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 500),),
+        (
+            _trail_npc("alpha:npc", 20, name="Alpha", conversation=("A1", "A2", "A3")),
+            _trail_npc("beta:npc", 220, name="Beta", conversation=("B1", "B2")),
+        ),
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.25)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Beta: B1"
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.25)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Alpha: A3"
+
+
+def test_greeting_remains_a_one_line_conversation() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 250),),
+        (_trail_npc("guide:npc", 30, name="Guide", greeting="Welcome!"),),
+    )
+    scene.enter()
+
+    for _ in range(2):
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+        scene.render()
+        assert renderer.text[-1] == "Guide: Welcome!"
+
+
+def test_conversation_npc_and_object_share_existing_targeting_and_state() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("zebra:object", 40, interacted="Object found"),),
+        (_trail_npc("alpha:npc", 40, name="Ari", conversation=("Hi", "Again")),),
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.target_qualified_id == "alpha:npc"
+    assert renderer.text[-1] == "Ari: Hi"
+    assert scene.visited_count == 0
+    assert scene.is_complete is False
+
+
 def test_equal_distance_npc_object_tie_uses_qualified_id() -> None:
     renderer = _RecordingRenderer()
     scene = ClassroomTrailScene(
@@ -299,7 +395,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
     assert "A crystal spark appears!" in renderer.text
 
 
-def test_v01_rejects_but_v03_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
+def test_v01_rejects_but_v04_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -339,14 +435,14 @@ def test_v01_rejects_but_v03_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.3"
+    assert trail.plan.contract_version == "0.4"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
 
 
-def test_v03_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
+def test_v04_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -462,7 +558,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         "alpha-player",
         "player",
         "character",
-        'name: "Third"\ngreeting: "Hello!"\n',
+        'name: "Third"\nconversation: ["Hello!", "Welcome back!"]\n',
     )
     object_root = _write_package(
         tmp_path / "object",
@@ -507,13 +603,20 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         "first-player:player",
     ]
     assert [npc.character.greeting for npc in selected.plan.npcs] == [
-        "Hello!",
+        None,
         "Welcome, explorer!",
+    ]
+    assert [npc.character.conversation for npc in selected.plan.npcs] == [
+        ("Hello!", "Welcome back!"),
+        None,
     ]
     scene = create_classroom_trail_scene(_RecordingRenderer(), selected.plan)
     assert scene.player.name == "Second"
     assert [npc.character.name for npc in scene.npcs] == ["Third", "First"]
-    assert [npc.greeting for npc in scene.npcs] == ["Hello!", "Welcome, explorer!"]
+    assert [npc.conversation_lines for npc in scene.npcs] == [
+        ("Hello!", "Welcome back!"),
+        ("Welcome, explorer!",),
+    ]
 
 
 def test_cli_runs_planned_local_trail(

@@ -456,15 +456,33 @@ def _entry_value_issues(
     if type(entry) is CharacterRegistration and isinstance(
         entry.character, CharacterRegistrationSpec
     ):
-        values_valid = _valid_common_registration_values(
-            name=entry.character.name,
-            x=entry.character.x,
-            y=entry.character.y,
-            color=entry.character.color,
-        ) and (
-            entry.character.greeting is None
-            or (
-                isinstance(entry.character.greeting, str) and bool(entry.character.greeting.strip())
+        values_valid = (
+            _valid_common_registration_values(
+                name=entry.character.name,
+                x=entry.character.x,
+                y=entry.character.y,
+                color=entry.character.color,
+            )
+            and (
+                entry.character.greeting is None
+                or (
+                    isinstance(entry.character.greeting, str)
+                    and bool(entry.character.greeting.strip())
+                )
+            )
+            and (
+                entry.character.conversation is None
+                or (
+                    isinstance(entry.character.conversation, tuple)
+                    and 2 <= len(entry.character.conversation) <= 3
+                    and all(
+                        isinstance(line, str) and bool(line.strip())
+                        for line in entry.character.conversation
+                    )
+                )
+            )
+            and not (
+                entry.character.greeting is not None and entry.character.conversation is not None
             )
         )
     elif type(entry) is WorldObjectRegistration and isinstance(

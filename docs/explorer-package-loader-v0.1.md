@@ -42,12 +42,14 @@ x: 430                # optional nonnegative integer; default 430
 y: 270                # optional nonnegative integer; default 270
 color: "gold"         # optional Student API colour name; default "gold"
 asset_id: "portrait"  # optional manifest-declared image asset ID
-greeting: "Hello!"    # optional nonblank declarative Classroom Trail greeting
+greeting: "Hello!"    # optional nonblank one-line Classroom Trail conversation
 ```
 
 The identity and appearance fields map directly to Student API v0.1 character
-configuration. The additive greeting is retained as inert registration metadata
-for Classroom Trail v0.3; it does not add dialogue behavior to the Student API.
+configuration. A character may instead declare an ordered `conversation` of
+exactly two or three nonblank strings. Greeting and conversation cannot both be
+present. This additive text is retained as inert registration metadata for
+Classroom Trail v0.4; it does not add dialogue behavior to the Student API.
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default
@@ -74,7 +76,8 @@ and arbitrary behavior hooks are not accepted.
 
 ## Values and strict fields
 
-Names, greetings, and interaction messages must be strings containing non-whitespace text;
+Names, greetings, conversation lines, and interaction messages must contain
+non-whitespace text; conversations must be ordered lists of exactly two or three strings;
 their outer whitespace is removed. Coordinates are integers of zero or greater.
 Booleans are not coordinates, and floats—including NaN and infinity—are
 rejected. Colors use the exact Student API v0.1 named-color vocabulary.
