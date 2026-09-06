@@ -9,6 +9,7 @@ from engine.scenes import ClassroomTrailMission
 
 MISSION_01_ID: Final = "visit-all-classroom-objects"
 MISSION_02_ID: Final = "create-a-classroom-object"
+MISSION_03_ID: Final = "make-your-object-respond"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -25,7 +26,16 @@ MISSION_02: Final = ClassroomTrailMission(
     ),
 )
 
-_MISSIONS = (MISSION_01, MISSION_02)
+MISSION_03: Final = ClassroomTrailMission(
+    mission_id=MISSION_03_ID,
+    title="Make It Respond",
+    instructions=(
+        "Author when_near and when_interacted text for your world object, "
+        "then interact with every classroom object."
+    ),
+)
+
+_MISSIONS = (MISSION_01, MISSION_02, MISSION_03)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )

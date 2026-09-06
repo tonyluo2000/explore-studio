@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
-catalog containing two entries:
+catalog containing three entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -17,8 +17,15 @@ Mission 02:
 - instructions teach students to create a named, positioned, colored world
   object and then interact with every classroom object.
 
+Mission 03:
+
+- mission ID: `make-your-object-respond`;
+- title: `Make It Respond`;
+- instructions require students to author `when_near` and `when_interacted`
+  text for their world object and then interact with every classroom object.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
-fields. Both use the sole supported completion rule, `ALL_OBJECTS_VISITED`.
+fields. All three use the sole supported completion rule, `ALL_OBJECTS_VISITED`.
 Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
