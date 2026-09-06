@@ -16,6 +16,7 @@ MISSION_06_ID: Final = "build-an-object-collection"
 MISSION_07_ID: Final = "toggle-an-object-state"
 MISSION_08_ID: Final = "respond-to-object-state"
 MISSION_09_ID: Final = "count-object-interactions"
+MISSION_10_ID: Final = "require-all-switches-on"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -97,6 +98,16 @@ MISSION_09: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED,
 )
 
+MISSION_10: Final = ClassroomTrailMission(
+    mission_id=MISSION_10_ID,
+    title="Unlock the Secret",
+    instructions=(
+        "Connect one NPC to two toggle objects, write a fallback and success response, then "
+        "talk to the NPC both before and after both switches are on."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -107,6 +118,7 @@ _MISSIONS = (
     MISSION_07,
     MISSION_08,
     MISSION_09,
+    MISSION_10,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

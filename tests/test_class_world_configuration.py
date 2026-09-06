@@ -20,6 +20,7 @@ from explore.packages import (
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
+    CharacterTwoToggleResponseRegistrationSpec,
     ClassWorldCohort,
     ClassWorldConfigurationIssueCode,
     ClassWorldConfigurationResult,
@@ -658,6 +659,29 @@ def test_invalid_conditional_reference_cannot_enter_class_world_configuration() 
             2,
             "gold",
             respond_to_toggle=CharacterToggleResponseRegistrationSpec("missing", "Off", "On"),
+        ),
+    )
+    package = _selected("magic-package", character)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
+
+
+def test_invalid_two_toggle_reference_cannot_enter_class_world_configuration() -> None:
+    character = _character(
+        "magic-package",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            "Guide",
+            1,
+            2,
+            "gold",
+            respond_to_two_toggles=CharacterTwoToggleResponseRegistrationSpec(
+                ("first", "missing"), "Locked", "Unlocked"
+            ),
         ),
     )
     package = _selected("magic-package", character)

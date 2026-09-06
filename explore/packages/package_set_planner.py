@@ -27,6 +27,7 @@ from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
+    CharacterTwoToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
     WorldObjectCounterRegistrationSpec,
@@ -187,6 +188,18 @@ def _valid_conditional(value: object) -> bool:
     )
 
 
+def _valid_two_toggle_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterTwoToggleResponseRegistrationSpec)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 2
+        and value.object_ids[0] != value.object_ids[1]
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and _is_nonblank_text(value.when_not_all_on)
+        and _is_nonblank_text(value.when_all_on)
+    )
+
+
 def _validate_entry_value(
     entry: CharacterRegistration | WorldObjectRegistration,
     *,
@@ -287,6 +300,42 @@ def _validate_entry_value(
                 _issue(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} cannot be combined with greeting or conversation.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_two_toggle_conditional(specification.respond_to_two_toggles):
+            field_location = f"{location}.character.respond_to_two_toggles"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    (
+                        f"{field_location} must retain exactly two distinct package-local "
+                        "toggle IDs and two valid responses."
+                    ),
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.respond_to_two_toggles is not None and (
+            specification.greeting is not None
+            or specification.conversation is not None
+            or specification.respond_to_toggle is not None
+        ):
+            field_location = f"{location}.character.respond_to_two_toggles"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    (
+                        f"{field_location} cannot be combined with greeting, conversation, "
+                        "or respond_to_toggle."
+                    ),
                     field_location,
                     package_index=package_index,
                     package_id=package_id,
@@ -563,6 +612,46 @@ def _validate_conditional_references(
                 entry=entry,
             )
         )
+
+    for entry_index, entry in enumerate(entries):
+        if type(entry) is not CharacterRegistration or not isinstance(
+            entry.character, CharacterRegistrationSpec
+        ):
+            continue
+        conditional = entry.character.respond_to_two_toggles
+        if not isinstance(
+            conditional, CharacterTwoToggleResponseRegistrationSpec
+        ) or not _valid_two_toggle_conditional(conditional):
+            continue
+        for object_id in conditional.object_ids:
+            matches = by_id.get(object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            if (
+                len(matches) == 1
+                and type(target) is WorldObjectRegistration
+                and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                and _valid_toggle(target.world_object.toggle, off_color=target.world_object.color)
+                and target.world_object.toggle is not None
+            ):
+                continue
+            location = (
+                f"selections[{package_index}].registration_plan.entries[{entry_index}]"
+                ".character.respond_to_two_toggles.object_ids"
+            )
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    (
+                        f"{location} must each resolve exactly to one toggle world object "
+                        "in this package."
+                    ),
+                    location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
 
 
 def _build_package_set_plan(

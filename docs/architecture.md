@@ -61,7 +61,7 @@ provider boundaries rather than treating a local directory as online identity.
 - [Repository Architecture Specification](repository-architecture.md)
 - [Student API Specification](student-api-spec.md)
 - [Student API v0.1 Specification](student-api-v0.1-spec.md)
-- [Local Classroom Trail v0.7](classroom-trail-v0.7.md)
+- [Local Classroom Trail v0.8](classroom-trail-v0.8.md)
 - [Local Mission v0.1](local-mission-v0.1.md)
 - [Explorer World Design Specification](explorer-world-spec.md)
 - [Student Contribution and Class-World Model](architecture/student-contribution-model.md)

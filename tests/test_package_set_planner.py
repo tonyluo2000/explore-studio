@@ -15,6 +15,7 @@ from explore.packages import (
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
+    CharacterTwoToggleResponseRegistrationSpec,
     PackageAssetReference,
     PackageProvenance,
     PackageSelection,
@@ -27,6 +28,7 @@ from explore.packages import (
     WorldObjectToggleRegistrationSpec,
     build_package_set_plan,
 )
+from explore.packages.package_set_planner import _build_package_set_plan
 
 
 def _provenance(
@@ -714,6 +716,68 @@ def test_package_set_rejects_invalid_conditional_reference(object_id: str) -> No
             y=20,
             color="gold",
             respond_to_toggle=CharacterToggleResponseRegistrationSpec(object_id, "Off", "On"),
+        ),
+    )
+    world_object = _world_object("magic", contribution_id="switch")
+
+    result = build_package_set_plan((_selection("magic", character, world_object),))
+
+    assert result.plan is None
+    assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in result.issues]
+
+
+def test_valid_two_toggle_conditional_survives_package_set_preflight() -> None:
+    conditional = CharacterTwoToggleResponseRegistrationSpec(
+        ("first", "second"), "Locked", "Unlocked"
+    )
+    character = _character(
+        "magic",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            "Guide", 10, 20, "gold", respond_to_two_toggles=conditional
+        ),
+    )
+    objects = tuple(
+        _world_object(
+            "magic",
+            contribution_id=object_id,
+            world_object=WorldObjectRegistrationSpec(
+                object_id.title(),
+                30,
+                40,
+                "red",
+                toggle=WorldObjectToggleRegistrationSpec("red", "green"),
+            ),
+        )
+        for object_id in conditional.object_ids
+    )
+
+    result = _build_package_set_plan(
+        (_selection("magic", character, *objects),),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.8 supports",
+    )
+
+    assert result.is_planned
+    assert result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, CharacterRegistration)
+    assert planned.character.respond_to_two_toggles is conditional
+
+
+def test_package_set_rejects_invalid_two_toggle_reference() -> None:
+    character = _character(
+        "magic",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            "Guide",
+            10,
+            20,
+            "gold",
+            respond_to_two_toggles=CharacterTwoToggleResponseRegistrationSpec(
+                ("switch", "missing"), "Locked", "Unlocked"
+            ),
         ),
     )
     world_object = _world_object("magic", contribution_id="switch")

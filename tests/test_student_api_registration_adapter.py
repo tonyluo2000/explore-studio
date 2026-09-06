@@ -13,10 +13,12 @@ from explore.packages import (
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
+    CharacterTwoToggleResponseRegistrationSpec,
     Compatibility,
     IssueCode,
     LoadedCharacter,
     LoadedCharacterToggleResponse,
+    LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
@@ -200,6 +202,89 @@ def test_character_conditional_cannot_coexist_with_existing_dialogue() -> None:
                 respond_to_toggle=LoadedCharacterToggleResponse("sign", "Off", "On"),
             ),
             _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+        )
+    )
+
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID in [
+        issue.code for issue in result.issues
+    ]
+
+
+def test_character_two_toggle_conditional_is_resolved_and_preserved_immutably() -> None:
+    conditional = LoadedCharacterTwoToggleResponse(("sign", "other"), "Locked", "Unlocked")
+    toggle = LoadedWorldObjectToggle("red", "green")
+    character = _character(respond_to_two_toggles=conditional)
+    first = _world_object(color="red", toggle=toggle)
+    second = _world_object(
+        contribution_id="other",
+        qualified_id="river-rescue:other",
+        color="blue",
+        toggle=LoadedWorldObjectToggle("blue", "yellow"),
+    )
+
+    result = build_student_api_registration_plan(_package(character, first, second))
+
+    assert result.is_planned
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert entry.character.respond_to_two_toggles == CharacterTwoToggleResponseRegistrationSpec(
+        ("sign", "other"), "Locked", "Unlocked"
+    )
+    with pytest.raises(FrozenInstanceError):
+        entry.character.respond_to_two_toggles.when_all_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "contributions",
+    [
+        (
+            _character(
+                respond_to_two_toggles=LoadedCharacterTwoToggleResponse(
+                    ("sign", "missing"), "Locked", "Unlocked"
+                )
+            ),
+            _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+        ),
+        (
+            _character(
+                respond_to_two_toggles=LoadedCharacterTwoToggleResponse(
+                    ("sign", "other"), "Locked", "Unlocked"
+                )
+            ),
+            _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+            _world_object(contribution_id="other", qualified_id="river-rescue:other"),
+        ),
+    ],
+)
+def test_character_two_toggle_references_are_defensively_revalidated(
+    contributions: tuple[LoadedCharacter | LoadedWorldObject, ...],
+) -> None:
+    result = build_student_api_registration_plan(_package(*contributions))
+
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID in [
+        issue.code for issue in result.issues
+    ]
+
+
+def test_character_two_toggle_conditional_cannot_coexist_with_other_dialogue() -> None:
+    result = build_student_api_registration_plan(
+        _package(
+            _character(
+                greeting="Hello",
+                respond_to_two_toggles=LoadedCharacterTwoToggleResponse(
+                    ("sign", "other"), "Locked", "Unlocked"
+                ),
+            ),
+            _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+            _world_object(
+                contribution_id="other",
+                qualified_id="river-rescue:other",
+                color="blue",
+                toggle=LoadedWorldObjectToggle("blue", "yellow"),
+            ),
         )
     )
 

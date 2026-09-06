@@ -14,6 +14,7 @@ from engine.scenes import (
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailNPCConditionalResponse,
+    ClassroomTrailNPCTwoToggleResponse,
     ClassroomTrailObject,
     ClassroomTrailObjectCounter,
     ClassroomTrailObjectToggle,
@@ -37,6 +38,8 @@ from explore.curriculum import (
     MISSION_08_ID,
     MISSION_09,
     MISSION_09_ID,
+    MISSION_10,
+    MISSION_10_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -104,6 +107,7 @@ def _trail_npc(
     greeting: str | None = None,
     conversation: tuple[str, ...] | None = None,
     respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None,
+    respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None,
 ) -> ClassroomTrailNPC:
     return ClassroomTrailNPC(
         qualified_id,
@@ -118,6 +122,7 @@ def _trail_npc(
         greeting,
         conversation,
         respond_to_toggle,
+        respond_to_two_toggles,
     )
 
 
@@ -202,7 +207,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_six_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_seven_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -216,6 +221,7 @@ def test_local_mission_is_immutable_and_supports_exactly_six_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
         ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
         ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED,
+        ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -567,6 +573,132 @@ def test_conditional_completion_excludes_ordinary_npcs_and_zero_is_incomplete() 
     assert ordinary_scene.spoken_npc_ids == frozenset({"magic:greeter"})
     assert ordinary_scene.displayed_conditional_branches == frozenset()
     assert ordinary_scene.mission_is_complete is False
+
+
+def test_two_toggle_runtime_model_is_strict_and_immutable() -> None:
+    conditional = ClassroomTrailNPCTwoToggleResponse(
+        ("magic:first", "magic:second"), "Still locked.", "Unlocked!"
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        conditional.when_all_on = "Changed"  # type: ignore[misc]
+    with pytest.raises(ValueError, match="exactly two distinct"):
+        ClassroomTrailNPCTwoToggleResponse(
+            ("magic:first", "magic:first"), "Still locked.", "Unlocked!"
+        )
+    with pytest.raises(ValueError, match="respond_to_two_toggles cannot be combined"):
+        _trail_npc(
+            "magic:guide",
+            30,
+            greeting="Hello",
+            respond_to_two_toggles=conditional,
+        )
+
+
+def test_two_toggle_reference_must_resolve_to_same_package_toggles() -> None:
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    conditional = ClassroomTrailNPCTwoToggleResponse(
+        ("magic:first", "other:second"), "Still locked.", "Unlocked!"
+    )
+
+    with pytest.raises(ValueError, match="exactly two same-package toggle objects"):
+        ClassroomTrailScene(
+            _RecordingRenderer(),  # type: ignore[arg-type]
+            Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+            (
+                _trail_object("magic:first", 190, color=toggle.off_color, toggle=toggle),
+                _trail_object("magic:second", 350, color=toggle.off_color, toggle=toggle),
+            ),
+            (_trail_npc("magic:guide", 30, respond_to_two_toggles=conditional),),
+            mission=MISSION_10,
+        )
+
+
+def test_two_toggle_npc_uses_boolean_and_and_records_separate_monotonic_evidence() -> None:
+    renderer = _RecordingRenderer()
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    conditional = ClassroomTrailNPCTwoToggleResponse(
+        ("magic:first", "magic:second"), "Still locked.", "Unlocked!"
+    )
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object(
+                "magic:first",
+                190,
+                color=toggle.off_color,
+                toggle=toggle,
+                counter=ClassroomTrailObjectCounter(2, "Powered!"),
+            ),
+            _trail_object("magic:second", 350, color=toggle.off_color, toggle=toggle),
+        ),
+        (
+            _trail_npc(
+                "magic:guide",
+                30,
+                name="Guide",
+                respond_to_two_toggles=conditional,
+            ),
+        ),
+        mission=MISSION_10,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: Still locked." in renderer.text
+    assert scene.spoken_npc_ids == frozenset({"magic:guide"})
+    assert scene.displayed_two_toggle_branches == frozenset({("magic:guide", False)})
+    assert scene.displayed_conditional_branches == frozenset()
+    assert scene.mission_is_complete is False
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.displayed_two_toggle_branches == frozenset({("magic:guide", False)})
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.toggle_on_qualified_ids == frozenset({"magic:first"})
+    assert scene.displayed_two_toggle_branches == frozenset({("magic:guide", False)})
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.toggle_on_qualified_ids == frozenset({"magic:first", "magic:second"})
+    visits_before_npc = scene.visited_qualified_ids
+    counts_before_npc = dict(scene.counter_counts)
+    assert counts_before_npc == {"magic:first": 1}
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: Unlocked!" in renderer.text
+    assert scene.displayed_two_toggle_branches == frozenset(
+        {("magic:guide", False), ("magic:guide", True)}
+    )
+    assert scene.displayed_conditional_branches == frozenset()
+    assert scene.toggle_on_qualified_ids == frozenset({"magic:first", "magic:second"})
+    assert scene.visited_qualified_ids == visits_before_npc
+    assert dict(scene.counter_counts) == counts_before_npc
+    assert scene.mission_is_complete is True
+
+
+def test_two_toggle_completion_excludes_ordinary_npcs_and_zero_is_incomplete() -> None:
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (_trail_object("magic:object", 200),),
+        (_trail_npc("magic:greeter", 30, greeting="Hello"),),
+        mission=MISSION_10,
+    )
+    scene.enter()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+
+    assert scene.spoken_npc_ids == frozenset({"magic:greeter"})
+    assert scene.displayed_two_toggle_branches == frozenset()
+    assert scene.mission_is_complete is False
 
 
 def test_counter_runtime_model_is_bounded_and_immutable() -> None:
@@ -1180,7 +1312,7 @@ def test_v01_rejects_but_v07_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.7"
+    assert trail.plan.contract_version == "0.8"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
@@ -1261,7 +1393,7 @@ def test_v07_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.7"
+    assert planned.plan.contract_version == "0.8"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.toggle is not None
     assert registration.world_object.toggle.off_color == "red"
@@ -1338,7 +1470,7 @@ def test_v07_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.7"
+    assert planned.plan.contract_version == "0.8"
     conditional = planned.plan.npcs[0].character.respond_to_toggle
     assert conditional is not None
     assert conditional.object_id == "magic-switch"
@@ -1398,7 +1530,7 @@ def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.7"
+    assert planned.plan.contract_version == "0.8"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.counter is not None
     assert registration.world_object.counter.goal == 2
@@ -1422,6 +1554,94 @@ def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -
     assert scene.changed_toggle_qualified_ids == frozenset({"power-package:core"})
     assert scene.toggle_on_qualified_ids == frozenset()
     assert "Pressed. Count: 2 / 2. Fully powered!" in renderer.text
+    assert scene.mission_is_complete is True
+
+
+def test_v08_projects_two_toggle_metadata_into_mission_10_runtime(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+    )
+    conditional_root = _write_package(
+        tmp_path / "conditional",
+        "secret-package",
+        "guide",
+        "character",
+        (
+            'name: "Guide"\nx: 30\ny: 0\n'
+            "respond_to_two_toggles:\n"
+            '  object_ids: ["first", "second"]\n'
+            '  when_not_all_on: "The secret is locked."\n'
+            '  when_all_on: "The secret is revealed!"\n'
+        ),
+    )
+    manifest = conditional_root / "manifest.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + (
+            '  - id: "first"\n'
+            '    type: "world_object"\n'
+            '    path: "objects/first.yaml"\n'
+            '  - id: "second"\n'
+            '    type: "world_object"\n'
+            '    path: "objects/second.yaml"\n'
+        ),
+        encoding="utf-8",
+    )
+    (conditional_root / "objects").mkdir()
+    for object_id, x, off_color, on_color in (
+        ("first", 190, "red", "green"),
+        ("second", 350, "blue", "yellow"),
+    ):
+        (conditional_root / "objects" / f"{object_id}.yaml").write_text(
+            (
+                f'name: "{object_id.title()}"\nx: {x}\ny: 0\n'
+                "toggle:\n"
+                f'  off_color: "{off_color}"\n'
+                f'  on_color: "{on_color}"\n'
+            ),
+            encoding="utf-8",
+        )
+
+    planned = plan_local_classroom_trail(
+        (player_root, conditional_root),
+        player_qualified_id="player-package:player",
+    )
+
+    assert planned.is_planned
+    assert planned.plan is not None
+    assert planned.plan.contract_version == "0.8"
+    conditional = planned.plan.npcs[0].character.respond_to_two_toggles
+    assert conditional is not None
+    assert conditional.object_ids == ("first", "second")
+    assert conditional.when_not_all_on == "The secret is locked."
+    assert conditional.when_all_on == "The secret is revealed!"
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_10_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_10
+    assert "Mission: Unlock the Secret" in renderer.text
+    assert MISSION_10.instructions in renderer.text
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert "Guide: The secret is revealed!" in renderer.text
+    assert scene.displayed_two_toggle_branches == frozenset(
+        {("secret-package:guide", False), ("secret-package:guide", True)}
+    )
+    assert scene.displayed_conditional_branches == frozenset()
     assert scene.mission_is_complete is True
 
 
@@ -1684,6 +1904,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_07_ID,
         MISSION_08_ID,
         MISSION_09_ID,
+        MISSION_10_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
