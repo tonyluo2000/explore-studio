@@ -17,6 +17,7 @@ from explore.packages import (
     LoadedCharacter,
     LoadedExplorerPackage,
     LoadedWorldObject,
+    LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadIssue,
     PackageLoadIssueCode,
@@ -28,6 +29,7 @@ from explore.packages import (
     ValidationReport,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
     build_student_api_registration_plan,
     load_explorer_package,
     plan_loaded_explorer_package,
@@ -190,6 +192,73 @@ def test_crystal_lantern_produces_exact_world_object_registration() -> None:
             ),
         ),
     )
+
+
+def test_toggle_metadata_is_validated_and_preserved_losslessly() -> None:
+    toggle = LoadedWorldObjectToggle(off_color="red", on_color="green")
+
+    result = build_student_api_registration_plan(
+        _package(_world_object(color="red", toggle=toggle))
+    )
+
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, WorldObjectRegistration)
+    assert entry.world_object.toggle == WorldObjectToggleRegistrationSpec(
+        off_color="red",
+        on_color="green",
+    )
+    assert entry.world_object.color == "red"
+
+
+@pytest.mark.parametrize(
+    "toggle",
+    [
+        object(),
+        LoadedWorldObjectToggle(off_color="red", on_color="red"),
+        LoadedWorldObjectToggle(off_color="cyan", on_color="green"),
+        LoadedWorldObjectToggle(off_color="red", on_color="cyan"),
+    ],
+)
+def test_forged_invalid_toggle_metadata_is_rejected(toggle: object) -> None:
+    result = build_student_api_registration_plan(
+        _package(_world_object(color="red", toggle=toggle))
+    )
+
+    assert result.plan is None
+    assert result.issues[0].code is RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].field == "toggle"
+
+
+def test_toggle_off_color_must_match_projected_object_color() -> None:
+    result = build_student_api_registration_plan(
+        _package(
+            _world_object(
+                color="blue",
+                toggle=LoadedWorldObjectToggle(off_color="red", on_color="green"),
+            )
+        )
+    )
+
+    assert result.plan is None
+    assert result.issues[0].field == "toggle"
+
+
+def test_toggle_cannot_retain_image_metadata() -> None:
+    image = PackageAssetReference(id="switch", type="image", path="assets/switch.png")
+    result = build_student_api_registration_plan(
+        _package(
+            _world_object(
+                color="red",
+                image=image,
+                toggle=LoadedWorldObjectToggle(off_color="red", on_color="green"),
+            ),
+            assets=(image,),
+        )
+    )
+
+    assert result.plan is None
+    assert any(issue.field == "toggle" for issue in result.issues)
 
 
 def test_entry_order_follows_loaded_contribution_order() -> None:

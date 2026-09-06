@@ -14,6 +14,7 @@ from engine.scenes import (
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailObject,
+    ClassroomTrailObjectToggle,
     ClassroomTrailScene,
 )
 from explore.curriculum import (
@@ -28,6 +29,8 @@ from explore.curriculum import (
     MISSION_05_ID,
     MISSION_06,
     MISSION_06_ID,
+    MISSION_07,
+    MISSION_07_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -67,6 +70,7 @@ def _trail_object(
     color: tuple[int, int, int] = (0, 255, 0),
     near: str | None = None,
     interacted: str | None = None,
+    toggle: ClassroomTrailObjectToggle | None = None,
 ) -> ClassroomTrailObject:
     return ClassroomTrailObject(
         qualified_id,
@@ -80,6 +84,7 @@ def _trail_object(
         ),
         near,
         interacted,
+        toggle,
     )
 
 
@@ -187,7 +192,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_three_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_four_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -198,6 +203,7 @@ def test_local_mission_is_immutable_and_supports_exactly_three_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED,
         ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
         ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
+        ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -209,6 +215,19 @@ def test_local_mission_is_immutable_and_supports_exactly_three_rules() -> None:
             "Invalid",
             "SOMETHING_ELSE",  # type: ignore[arg-type]
         )
+
+
+def test_toggle_runtime_model_is_strict_and_immutable() -> None:
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+
+    with pytest.raises(FrozenInstanceError):
+        toggle.on_color = (50, 80, 220)  # type: ignore[misc]
+    with pytest.raises(ValueError, match="distinct"):
+        ClassroomTrailObjectToggle((220, 50, 50), (220, 50, 50))
+    with pytest.raises(ValueError, match="RGB"):
+        ClassroomTrailObjectToggle((220, 50), (50, 180, 50))  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="must equal"):
+        _trail_object("switch:bad", 30, color=(50, 80, 220), toggle=toggle)
 
 
 def test_mission_ui_starts_incomplete_from_existing_trail_state() -> None:
@@ -313,6 +332,135 @@ def test_mission_06_ui_and_completion_reuse_existing_three_object_trail_behavior
     assert scene.mission_is_complete is True
     assert scene.mission_is_complete == scene.is_complete
     assert "Mission state: Complete" in renderer.text
+
+
+def test_toggle_starts_off_and_each_successful_interaction_flips_once() -> None:
+    renderer = _RecordingRenderer()
+    toggle = ClassroomTrailObjectToggle(
+        off_color=(220, 50, 50),
+        on_color=(50, 180, 50),
+    )
+    world_object = _trail_object(
+        "switch:magic",
+        30,
+        color=toggle.off_color,
+        interacted="Click!",
+        toggle=toggle,
+    )
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (world_object,),
+        mission=MISSION_07,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.render()
+    immutable_color = world_object.world_object.color
+    assert renderer.rectangles[0][-1] == toggle.off_color
+    assert scene.toggle_on_qualified_ids == frozenset()
+    assert scene.changed_toggle_qualified_ids == frozenset()
+    assert scene.mission_is_complete is False
+
+    renderer.rectangles.clear()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.rectangles[0][-1] == toggle.on_color
+    assert scene.toggle_on_qualified_ids == frozenset({"switch:magic"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"switch:magic"})
+    assert scene.visited_qualified_ids == frozenset({"switch:magic"})
+    assert scene.mission_is_complete is True
+
+    renderer.rectangles.clear()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.rectangles[0][-1] == toggle.off_color
+    assert scene.toggle_on_qualified_ids == frozenset()
+    assert scene.changed_toggle_qualified_ids == frozenset({"switch:magic"})
+    assert scene.visited_qualified_ids == frozenset({"switch:magic"})
+    assert world_object.world_object.color == immutable_color
+    assert scene.mission_is_complete is True
+
+
+def test_toggle_completion_excludes_ordinary_objects_and_visit_progress_is_independent() -> None:
+    toggle = ClassroomTrailObjectToggle(
+        off_color=(220, 50, 50),
+        on_color=(50, 180, 50),
+    )
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object("alpha:ordinary", 30),
+            _trail_object("beta:toggle", 190, color=toggle.off_color, toggle=toggle),
+            _trail_object("gamma:ordinary", 350),
+        ),
+        mission=MISSION_07,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.mission_is_complete is False
+    assert scene.is_complete is False
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.changed_toggle_qualified_ids == frozenset({"beta:toggle"})
+    assert scene.mission_is_complete is True
+    assert scene.is_complete is False
+    assert scene.visited_qualified_ids == frozenset({"alpha:ordinary", "beta:toggle"})
+
+
+def test_all_toggle_objects_must_change_and_evidence_survives_return_to_off() -> None:
+    toggle = ClassroomTrailObjectToggle(
+        off_color=(220, 50, 50),
+        on_color=(50, 180, 50),
+    )
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object("alpha:toggle", 30, color=toggle.off_color, toggle=toggle),
+            _trail_object("beta:toggle", 190, color=toggle.off_color, toggle=toggle),
+        ),
+        mission=MISSION_07,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.changed_toggle_qualified_ids == frozenset({"alpha:toggle"})
+    assert scene.mission_is_complete is False
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.changed_toggle_qualified_ids == frozenset({"alpha:toggle", "beta:toggle"})
+    assert scene.toggle_on_qualified_ids == frozenset({"alpha:toggle", "beta:toggle"})
+    assert scene.mission_is_complete is True
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.toggle_on_qualified_ids == frozenset({"beta:toggle"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"alpha:toggle", "beta:toggle"})
+    assert scene.mission_is_complete is True
+
+
+def test_toggle_completion_is_incomplete_when_trail_has_no_toggle_objects() -> None:
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("ordinary:object", 30),),
+        mission=MISSION_07,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+
+    assert scene.is_complete is True
+    assert scene.mission_is_complete is False
+    assert scene.changed_toggle_qualified_ids == frozenset()
 
 
 def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
@@ -521,6 +669,18 @@ def test_equal_distance_tie_uses_qualified_id() -> None:
     scene.update(_NO_MOVEMENT, _NO_INTERACTION, 0.0)
 
     assert scene.target_qualified_id == "alpha:object"
+
+
+def test_toggle_metadata_does_not_change_target_tie_order() -> None:
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    scene = _scene(
+        _trail_object("zebra:toggle", 40, color=toggle.off_color, toggle=toggle),
+        _trail_object("alpha:ordinary", 40),
+    )
+
+    scene.update(_NO_MOVEMENT, _NO_INTERACTION, 0.0)
+
+    assert scene.target_qualified_id == "alpha:ordinary"
 
 
 def test_npcs_are_canonical_and_nearest_greeting_is_displayed() -> None:
@@ -753,7 +913,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
     assert "A crystal spark appears!" in renderer.text
 
 
-def test_v01_rejects_but_v04_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
+def test_v01_rejects_but_v05_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -793,14 +953,14 @@ def test_v01_rejects_but_v04_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.4"
+    assert trail.plan.contract_version == "0.5"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
 
 
-def test_v04_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
+def test_v05_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -842,6 +1002,64 @@ def test_v04_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
         "shared-package:fountain",
         "shared-package:lantern",
     ]
+
+
+def test_v05_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+    )
+    switch_root = _write_package(
+        tmp_path / "switch",
+        "switch-package",
+        "magic-switch",
+        "world_object",
+        (
+            'name: "Magic Switch"\nx: 30\ny: 0\n'
+            'when_near: "The switch is quiet."\n'
+            'when_interacted: "Click!"\n'
+            "toggle:\n"
+            '  off_color: "red"\n'
+            '  on_color: "green"\n'
+        ),
+    )
+
+    planned = plan_local_classroom_trail(
+        (player_root, switch_root),
+        player_qualified_id="player-package:player",
+    )
+
+    assert planned.is_planned
+    assert planned.plan is not None
+    assert planned.plan.contract_version == "0.5"
+    registration = planned.plan.world_objects[0]
+    assert registration.world_object.toggle is not None
+    assert registration.world_object.toggle.off_color == "red"
+    assert registration.world_object.toggle.on_color == "green"
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_07_ID)
+    scene.enter()
+    scene.render()
+    assert scene.objects[0].toggle == ClassroomTrailObjectToggle(
+        off_color=(220, 50, 50),
+        on_color=(50, 180, 50),
+    )
+    assert renderer.rectangles[0][-1] == (220, 50, 50)
+    assert "Mission: Flip a Magic Switch" in renderer.text
+    assert MISSION_07.instructions in renderer.text
+
+    renderer.rectangles.clear()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.rectangles[0][-1] == (50, 180, 50)
+    assert "Click!" in renderer.text
+    assert scene.visited_qualified_ids == frozenset({"switch-package:magic-switch"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"switch-package:magic-switch"})
+    assert scene.mission_is_complete is True
 
 
 def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> None:
@@ -988,6 +1206,21 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
         "beta-package:fountain",
     ]
 
+    mission_07_renderer = _RecordingRenderer()
+    mission_07_scene = create_classroom_trail_scene(
+        mission_07_renderer,
+        planned.plan,
+        mission_id=MISSION_07_ID,
+    )
+    mission_07_scene.enter()
+    mission_07_scene.render()
+
+    assert mission_07_scene.mission is MISSION_07
+    assert "Mission: Flip a Magic Switch" in mission_07_renderer.text
+    assert MISSION_07.instructions in mission_07_renderer.text
+    assert mission_07_scene.mission_is_complete is False
+    assert mission_07_scene.changed_toggle_qualified_ids == frozenset()
+
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         create_classroom_trail_scene(
             _RecordingRenderer(),
@@ -1079,7 +1312,14 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "mission_id",
-    [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID, MISSION_05_ID, MISSION_06_ID],
+    [
+        MISSION_02_ID,
+        MISSION_03_ID,
+        MISSION_04_ID,
+        MISSION_05_ID,
+        MISSION_06_ID,
+        MISSION_07_ID,
+    ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
     tmp_path: Path,

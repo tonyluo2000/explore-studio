@@ -22,6 +22,7 @@ from explore.packages import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
     build_package_set_plan,
 )
 
@@ -593,6 +594,46 @@ def test_valid_character_plus_world_object_package_set_succeeds() -> None:
     assert result.is_planned
     assert result.plan is not None
     assert len(result.plan.entries) == 2
+
+
+def test_valid_toggle_metadata_survives_package_set_preflight() -> None:
+    toggle = WorldObjectToggleRegistrationSpec(off_color="red", on_color="green")
+    entry = _world_object(
+        "switch-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Switch",
+            x=30,
+            y=40,
+            color="red",
+            toggle=toggle,
+        ),
+    )
+
+    result = build_package_set_plan((_selection("switch-package", entry),))
+
+    assert result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, WorldObjectRegistration)
+    assert planned.world_object.toggle is toggle
+
+
+def test_package_set_rejects_forged_toggle_metadata() -> None:
+    entry = _world_object(
+        "switch-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Switch",
+            x=30,
+            y=40,
+            color="blue",
+            toggle=WorldObjectToggleRegistrationSpec(off_color="red", on_color="green"),
+        ),
+    )
+
+    result = build_package_set_plan((_selection("switch-package", entry),))
+
+    assert result.plan is None
+    assert result.issues[0].code is PackageSetIssueCode.ENTRY_VALUE_INVALID
+    assert result.issues[0].location.endswith("world_object.toggle")
 
 
 def test_invalid_later_selection_returns_no_partial_package_set_plan() -> None:

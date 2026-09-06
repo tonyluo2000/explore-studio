@@ -105,7 +105,7 @@ collections are tuples.
 | optional `image` | `CharacterRegistration.asset_reference` |
 
 The detached specification retains Student API v0.1 character configuration
-plus the optional inert greeting or conversation used by Classroom Trail v0.4.
+plus the optional inert greeting or conversation used by Classroom Trail v0.5.
 The adapter does not apply that text as Student API behavior. Engine-owned size, movement
 speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
 invented.
@@ -124,6 +124,7 @@ invented.
 | optional `image` | `WorldObjectRegistration.asset_reference` |
 | optional `when_near` | `world_object.when_near` |
 | optional `when_interacted` | `world_object.when_interacted` |
+| optional strict `toggle` colors | `world_object.toggle` |
 
 Interaction messages remain inert strings. Python-looking text is not evaluated,
 imported, converted to a callable, or installed as a callback.

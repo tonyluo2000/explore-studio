@@ -7,6 +7,7 @@ from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedExplorerPackage,
     LoadedWorldObject,
+    LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadResult,
     PackageProvenance,
@@ -27,6 +28,7 @@ from explore.packages.registration_models import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
 )
 
 _VALID_COLORS = frozenset(valid_color_names())
@@ -159,6 +161,45 @@ def _validate_image(
                 location,
                 contribution=contribution,
                 field="image",
+            )
+        )
+
+
+def _validate_toggle(
+    value: object,
+    *,
+    contribution: LoadedWorldObject,
+    location: str,
+    issues: list[RegistrationPlanIssue],
+) -> None:
+    if value is None:
+        return
+    if (
+        not isinstance(value, LoadedWorldObjectToggle)
+        or not isinstance(value.off_color, str)
+        or value.off_color not in _VALID_COLORS
+        or not isinstance(value.on_color, str)
+        or value.on_color not in _VALID_COLORS
+        or value.off_color == value.on_color
+        or contribution.color != value.off_color
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} must retain distinct supported off and on colors.",
+                location,
+                contribution=contribution,
+                field="toggle",
+            )
+        )
+    if contribution.image is not None:
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with image metadata.",
+                location,
+                contribution=contribution,
+                field="toggle",
             )
         )
 
@@ -363,6 +404,14 @@ def _map_world_object(
     location: str,
     issues: list[RegistrationPlanIssue],
 ) -> WorldObjectRegistration:
+    toggle = (
+        None
+        if not isinstance(contribution.toggle, LoadedWorldObjectToggle)
+        else WorldObjectToggleRegistrationSpec(
+            off_color=contribution.toggle.off_color,
+            on_color=contribution.toggle.on_color,
+        )
+    )
     _validate_text(
         contribution.name,
         contribution=contribution,
@@ -396,6 +445,12 @@ def _map_world_object(
         location=f"{location}.image",
         issues=issues,
     )
+    _validate_toggle(
+        contribution.toggle,
+        contribution=contribution,
+        location=f"{location}.toggle",
+        issues=issues,
+    )
     _validate_text(
         contribution.when_near,
         contribution=contribution,
@@ -423,6 +478,7 @@ def _map_world_object(
             color=contribution.color,
             when_near=contribution.when_near,
             when_interacted=contribution.when_interacted,
+            toggle=toggle,
         ),
         asset_reference=contribution.image,
     )

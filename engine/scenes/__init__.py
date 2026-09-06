@@ -15,6 +15,7 @@ from engine.scenes._classroom_trail_scene import (
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailObject,
+    ClassroomTrailObjectToggle,
     ClassroomTrailScene,
 )
 from engine.scenes._default_scene import DefaultScene
@@ -25,6 +26,7 @@ __all__ = [
     "ClassroomTrailMissionCompletionRule",
     "ClassroomTrailNPC",
     "ClassroomTrailObject",
+    "ClassroomTrailObjectToggle",
     "ClassroomTrailScene",
     "DefaultScene",
     "Scene",

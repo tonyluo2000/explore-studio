@@ -30,6 +30,7 @@ from explore.packages import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
     build_class_world_configuration,
 )
 
@@ -522,6 +523,49 @@ def test_invalid_character_conversation_cannot_enter_configuration() -> None:
         ),
     )
     package = _selected("nova-character", entry)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
+
+
+def test_valid_toggle_metadata_is_retained_by_class_world_configuration() -> None:
+    toggle = WorldObjectToggleRegistrationSpec(off_color="red", on_color="green")
+    entry = _world_object(
+        "switch-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Switch",
+            x=1,
+            y=2,
+            color="red",
+            toggle=toggle,
+        ),
+    )
+    package = _selected("switch-package", entry)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is not None
+    configured = result.configuration.package_set_plan.entries[0]
+    assert isinstance(configured, WorldObjectRegistration)
+    assert configured.world_object.toggle is toggle
+
+
+def test_invalid_toggle_metadata_cannot_enter_class_world_configuration() -> None:
+    entry = _world_object(
+        "switch-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Switch",
+            x=1,
+            y=2,
+            color="blue",
+            toggle=WorldObjectToggleRegistrationSpec(off_color="red", on_color="green"),
+        ),
+    )
+    package = _selected("switch-package", entry)
     plan = _plan(package)
 
     result = build_class_world_configuration(_spec(plan), plan)

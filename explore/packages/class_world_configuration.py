@@ -34,6 +34,7 @@ from explore.packages.registration_models import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
 )
 
 _VALID_COLORS = frozenset(valid_color_names())
@@ -445,6 +446,18 @@ def _valid_asset_reference(asset: object) -> bool:
     return not path.is_absolute() and ".." not in path.parts and path.suffix.lower() == ".png"
 
 
+def _valid_toggle(value: object, *, off_color: object) -> bool:
+    return value is None or (
+        isinstance(value, WorldObjectToggleRegistrationSpec)
+        and isinstance(value.off_color, str)
+        and value.off_color in _VALID_COLORS
+        and isinstance(value.on_color, str)
+        and value.on_color in _VALID_COLORS
+        and value.off_color != value.on_color
+        and off_color == value.off_color
+    )
+
+
 def _entry_value_issues(
     entry: StudentAPIRegistrationEntry,
     *,
@@ -488,18 +501,24 @@ def _entry_value_issues(
     elif type(entry) is WorldObjectRegistration and isinstance(
         entry.world_object, WorldObjectRegistrationSpec
     ):
-        values_valid = _valid_common_registration_values(
-            name=entry.world_object.name,
-            x=entry.world_object.x,
-            y=entry.world_object.y,
-            color=entry.world_object.color,
-        ) and all(
-            value is None or (isinstance(value, str) and bool(value.strip()))
-            for value in (
-                entry.world_object.when_near,
-                entry.world_object.when_interacted,
+        values_valid = (
+            _valid_common_registration_values(
+                name=entry.world_object.name,
+                x=entry.world_object.x,
+                y=entry.world_object.y,
+                color=entry.world_object.color,
             )
+            and all(
+                value is None or (isinstance(value, str) and bool(value.strip()))
+                for value in (
+                    entry.world_object.when_near,
+                    entry.world_object.when_interacted,
+                )
+            )
+            and _valid_toggle(entry.world_object.toggle, off_color=entry.world_object.color)
         )
+        if entry.world_object.toggle is not None and entry.asset_reference is not None:
+            values_valid = False
     if values_valid and _valid_asset_reference(entry.asset_reference):
         return []
     return [

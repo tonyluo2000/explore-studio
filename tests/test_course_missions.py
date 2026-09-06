@@ -22,22 +22,26 @@ from explore.curriculum import (
     MISSION_05_ID,
     MISSION_06,
     MISSION_06_ID,
+    MISSION_07,
+    MISSION_07_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_06_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_07_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
     assert MISSION_04_ID == "introduce-your-character"
     assert MISSION_05_ID == "write-a-short-conversation"
     assert MISSION_06_ID == "build-an-object-collection"
+    assert MISSION_07_ID == "toggle-an-object-state"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
         MISSION_02_ID,
         MISSION_04_ID,
         MISSION_03_ID,
+        MISSION_07_ID,
         MISSION_01_ID,
         MISSION_05_ID,
     )
@@ -47,6 +51,7 @@ def test_catalog_contains_exactly_missions_01_through_06_by_deterministic_identi
         MISSION_02,
         MISSION_04,
         MISSION_03,
+        MISSION_07,
         MISSION_01,
         MISSION_05,
     )
@@ -148,7 +153,21 @@ def test_mission_06_requires_three_distinct_related_objects_and_existing_complet
         mission.instructions = "Changed"  # type: ignore[misc]
 
 
-@pytest.mark.parametrize("mission_id", ["mission-07", "write-conversation", "", None, 1])
+def test_mission_07_requires_toggling_every_toggle_object() -> None:
+    mission = get_course_mission(MISSION_07_ID)
+
+    assert mission is MISSION_07
+    assert mission.title == "Flip a Magic Switch"
+    assert mission.instructions == (
+        "Give one object distinct off and on colors, then interact with every toggle object "
+        "at least once."
+    )
+    assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED
+    with pytest.raises(FrozenInstanceError):
+        mission.instructions = "Changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("mission_id", ["mission-08", "write-conversation", "", None, 1])
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         get_course_mission(mission_id)  # type: ignore[arg-type]

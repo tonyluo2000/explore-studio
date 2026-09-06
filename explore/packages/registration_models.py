@@ -54,6 +54,14 @@ class CharacterRegistrationSpec:
 
 
 @dataclass(frozen=True)
+class WorldObjectToggleRegistrationSpec:
+    """Detached strict two-color toggle presentation."""
+
+    off_color: str
+    on_color: str
+
+
+@dataclass(frozen=True)
 class WorldObjectRegistrationSpec:
     """Detached Student API v0.1 configuration for one world object."""
 
@@ -63,6 +71,7 @@ class WorldObjectRegistrationSpec:
     color: str
     when_near: str | None = None
     when_interacted: str | None = None
+    toggle: WorldObjectToggleRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)
