@@ -8,6 +8,7 @@ entities and inert interaction text.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from engine.entities import Bounds, Character, WorldObject
@@ -35,6 +36,46 @@ _COMPLETE_Y = 520
 _TEXT_COLOR = (240, 240, 240)
 _FEEDBACK_FONT_SIZE = 28
 _PROGRESS_FONT_SIZE = 24
+_MISSION_X = 20
+_MISSION_TITLE_Y = 55
+_MISSION_INSTRUCTIONS_Y = 85
+_MISSION_STATE_Y = 115
+
+
+class ClassroomTrailMissionCompletionRule(StrEnum):
+    """The single completion rule supported by Local Mission v0.1."""
+
+    ALL_OBJECTS_VISITED = "ALL_OBJECTS_VISITED"
+
+
+@dataclass(frozen=True)
+class ClassroomTrailMission:
+    """One immutable local mission displayed by a Classroom Trail."""
+
+    mission_id: str
+    title: str
+    instructions: str
+    completion_rule: ClassroomTrailMissionCompletionRule = (
+        ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
+    )
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("mission_id", self.mission_id),
+            ("title", self.title),
+            ("instructions", self.instructions),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-whitespace text")
+        if self.completion_rule is not ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED:
+            raise ValueError('completion_rule must be "ALL_OBJECTS_VISITED"')
+
+
+DEFAULT_CLASSROOM_TRAIL_MISSION = ClassroomTrailMission(
+    mission_id="visit-all-classroom-objects",
+    title="Explore Every Object",
+    instructions="Interact with every classroom object.",
+)
 
 
 @dataclass(frozen=True)
@@ -110,6 +151,7 @@ class ClassroomTrailScene(Scene):
         npcs: tuple[ClassroomTrailNPC, ...] = (),
         *,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
+        mission: ClassroomTrailMission = DEFAULT_CLASSROOM_TRAIL_MISSION,
     ) -> None:
         super().__init__()
         if not isinstance(player, Character):
@@ -122,6 +164,8 @@ class ClassroomTrailScene(Scene):
             raise TypeError("npcs must be a tuple")
         if any(not isinstance(item, ClassroomTrailNPC) for item in npcs):
             raise TypeError("npcs must contain only ClassroomTrailNPC values")
+        if not isinstance(mission, ClassroomTrailMission):
+            raise TypeError("mission must be a ClassroomTrailMission")
         qualified_ids = tuple(item.qualified_id for item in (*objects, *npcs))
         if len(qualified_ids) != len(set(qualified_ids)):
             raise ValueError("objects and npcs must have unique qualified IDs")
@@ -130,6 +174,7 @@ class ClassroomTrailScene(Scene):
         self._player = player
         self._objects = tuple(sorted(objects, key=lambda item: item.qualified_id))
         self._npcs = tuple(sorted(npcs, key=lambda item: item.qualified_id))
+        self._mission = mission
         self._interaction_range = _validate_interaction_range(interaction_range)
         self._range_sq = self._interaction_range * self._interaction_range
         self._target: ClassroomTrailTarget | None = None
@@ -150,6 +195,15 @@ class ClassroomTrailScene(Scene):
     @property
     def npcs(self) -> tuple[ClassroomTrailNPC, ...]:
         return self._npcs
+
+    @property
+    def mission(self) -> ClassroomTrailMission:
+        return self._mission
+
+    @property
+    def mission_is_complete(self) -> bool:
+        """Derive mission completion solely from existing Trail state."""
+        return self.is_complete
 
     @property
     def target_qualified_id(self) -> str | None:
@@ -235,6 +289,28 @@ class ClassroomTrailScene(Scene):
             f"Visited {self.visited_count} / {self.total_objects}",
             _PROGRESS_X,
             _PROGRESS_Y,
+            _TEXT_COLOR,
+            _PROGRESS_FONT_SIZE,
+        )
+        self._renderer.draw_text(
+            f"Mission: {self._mission.title}",
+            _MISSION_X,
+            _MISSION_TITLE_Y,
+            _TEXT_COLOR,
+            _PROGRESS_FONT_SIZE,
+        )
+        self._renderer.draw_text(
+            self._mission.instructions,
+            _MISSION_X,
+            _MISSION_INSTRUCTIONS_Y,
+            _TEXT_COLOR,
+            _PROGRESS_FONT_SIZE,
+        )
+        mission_state = "Complete" if self.mission_is_complete else "Incomplete"
+        self._renderer.draw_text(
+            f"Mission state: {mission_state}",
+            _MISSION_X,
+            _MISSION_STATE_Y,
             _TEXT_COLOR,
             _PROGRESS_FONT_SIZE,
         )

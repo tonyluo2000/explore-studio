@@ -11,6 +11,9 @@ Ownership: Engine team.
 """
 
 from engine.scenes._classroom_trail_scene import (
+    DEFAULT_CLASSROOM_TRAIL_MISSION,
+    ClassroomTrailMission,
+    ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailObject,
     ClassroomTrailScene,
@@ -19,6 +22,9 @@ from engine.scenes._default_scene import DefaultScene
 from engine.scenes._scene import Scene, SceneLifecycleError, SceneState
 
 __all__ = [
+    "DEFAULT_CLASSROOM_TRAIL_MISSION",
+    "ClassroomTrailMission",
+    "ClassroomTrailMissionCompletionRule",
     "ClassroomTrailNPC",
     "ClassroomTrailObject",
     "ClassroomTrailScene",
