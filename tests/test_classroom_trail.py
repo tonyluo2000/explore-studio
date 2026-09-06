@@ -24,6 +24,8 @@ from explore.curriculum import (
     MISSION_03_ID,
     MISSION_04,
     MISSION_04_ID,
+    MISSION_05,
+    MISSION_05_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -181,7 +183,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_two_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_three_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -191,6 +193,7 @@ def test_local_mission_is_immutable_and_supports_exactly_two_rules() -> None:
     assert tuple(ClassroomTrailMissionCompletionRule) == (
         ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED,
         ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
+        ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -310,6 +313,7 @@ def test_npc_rule_tracks_greeting_and_first_conversation_response_idempotently()
     assert scene.target_qualified_id == "beta:npc"
     assert renderer.text[-1] == "Beta: First"
     assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+    assert scene.completed_conversation_npc_ids == frozenset()
     assert scene.mission_is_complete is True
     assert scene.visited_qualified_ids == frozenset()
     assert scene.is_complete is False
@@ -320,11 +324,13 @@ def test_npc_rule_tracks_greeting_and_first_conversation_response_idempotently()
     scene.render()
     assert renderer.text[-1] == "Beta: Second"
     assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+    assert scene.completed_conversation_npc_ids == frozenset({"beta:npc"})
 
     scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
     scene.render()
     assert renderer.text[-1] == "Beta: First"
     assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+    assert scene.completed_conversation_npc_ids == frozenset({"beta:npc"})
 
 
 def test_npc_rule_is_incomplete_without_interactable_npcs_and_isolated_from_objects() -> None:
@@ -348,6 +354,86 @@ def test_npc_rule_is_incomplete_without_interactable_npcs_and_isolated_from_obje
     assert scene.mission_is_complete is False
     assert "Trail complete!" in renderer.text
     assert "Mission state: Incomplete" in renderer.text
+
+
+@pytest.mark.parametrize(
+    "conversation",
+    [("First", "Final"), ("First", "Second", "Final")],
+)
+def test_conversation_rule_completes_on_final_line_and_survives_wrap(
+    conversation: tuple[str, ...],
+) -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 500),),
+        (
+            _trail_npc("silent:npc", 10, name="Silent"),
+            _trail_npc("conversation:npc", 30, name="Guide", conversation=conversation),
+            _trail_npc("greeting:npc", 500, name="Greeter", greeting="Hello!"),
+        ),
+        mission=MISSION_05,
+        interaction_range=80,
+    )
+    scene.enter()
+
+    for index, line in enumerate(conversation):
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+        scene.render()
+        assert renderer.text[-1] == f"Guide: {line}"
+        if index < len(conversation) - 1:
+            assert scene.completed_conversation_npc_ids == frozenset()
+            assert scene.mission_is_complete is False
+
+    completed = frozenset({"conversation:npc"})
+    assert scene.completed_conversation_npc_ids == completed
+    assert scene.spoken_npc_ids == completed
+    assert scene.mission_is_complete is True
+    assert scene.visited_qualified_ids == frozenset()
+    assert scene.is_complete is False
+    assert "Mission state: Complete" in renderer.text
+    assert "Trail complete!" not in renderer.text
+
+    restarted_lines: list[str] = []
+    for _ in conversation:
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+        scene.render()
+        restarted_lines.append(renderer.text[-1])
+        assert scene.completed_conversation_npc_ids == completed
+        assert scene.mission_is_complete is True
+
+    assert restarted_lines == [f"Guide: {line}" for line in conversation]
+
+
+def test_conversation_rule_excludes_greeting_and_silent_npcs_and_rejects_empty_set() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 220),),
+        (
+            _trail_npc("silent:npc", 10, name="Silent"),
+            _trail_npc("greeting:npc", 30, name="Greeter", greeting="Hello!"),
+        ),
+        mission=MISSION_05,
+        interaction_range=80,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert scene.target_qualified_id == "greeting:npc"
+    assert renderer.text[-1] == "Greeter: Hello!"
+    assert scene.spoken_npc_ids == frozenset({"greeting:npc"})
+    assert scene.completed_conversation_npc_ids == frozenset()
+    assert scene.mission_is_complete is False
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.1875)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.visited_qualified_ids == frozenset({"object:lantern"})
+    assert scene.is_complete is True
+    assert scene.mission_is_complete is False
 
 
 def test_nearest_in_range_object_is_targeted() -> None:
@@ -804,6 +890,21 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
     assert "Mission state: Incomplete" in mission_04_renderer.text
     assert mission_04_scene.spoken_npc_ids == frozenset()
 
+    mission_05_renderer = _RecordingRenderer()
+    mission_05_scene = create_classroom_trail_scene(
+        mission_05_renderer,
+        planned.plan,
+        mission_id=MISSION_05_ID,
+    )
+    mission_05_scene.enter()
+    mission_05_scene.render()
+
+    assert mission_05_scene.mission is MISSION_05
+    assert "Mission: Write a Conversation" in mission_05_renderer.text
+    assert MISSION_05.instructions in mission_05_renderer.text
+    assert "Mission state: Incomplete" in mission_05_renderer.text
+    assert mission_05_scene.completed_conversation_npc_ids == frozenset()
+
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         create_classroom_trail_scene(
             _RecordingRenderer(),
@@ -893,7 +994,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID])
+@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID, MISSION_05_ID])
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
