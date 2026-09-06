@@ -12,6 +12,7 @@ MISSION_02_ID: Final = "create-a-classroom-object"
 MISSION_03_ID: Final = "make-your-object-respond"
 MISSION_04_ID: Final = "introduce-your-character"
 MISSION_05_ID: Final = "write-a-short-conversation"
+MISSION_06_ID: Final = "build-an-object-collection"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -54,7 +55,16 @@ MISSION_05: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
 )
 
-_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04, MISSION_05)
+MISSION_06: Final = ClassroomTrailMission(
+    mission_id=MISSION_06_ID,
+    title="Build a Curious Collection",
+    instructions=(
+        "Create three related objects with distinct names, positions, colors, and responses, "
+        "then interact with every classroom object."
+    ),
+)
+
+_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04, MISSION_05, MISSION_06)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )
