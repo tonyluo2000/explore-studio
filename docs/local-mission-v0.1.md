@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.9. Canonical course content owns an immutable ID-keyed
-catalog containing eleven entries:
+catalog containing twelve entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
