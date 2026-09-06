@@ -16,7 +16,13 @@ from engine.scenes import (
     ClassroomTrailObject,
     ClassroomTrailScene,
 )
-from explore.curriculum import MISSION_01, MISSION_02, MISSION_02_ID
+from explore.curriculum import (
+    MISSION_01,
+    MISSION_02,
+    MISSION_02_ID,
+    MISSION_03,
+    MISSION_03_ID,
+)
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
@@ -623,7 +629,11 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
             "alpha-package",
             "lantern",
             "world_object",
-            'name: "Lantern"\nx: 30\ny: 0\ncolor: "yellow"\n',
+            (
+                'name: "Lantern"\nx: 30\ny: 0\ncolor: "yellow"\n'
+                'when_near: "The lantern glows."\n'
+                'when_interacted: "A spark appears!"\n'
+            ),
         ),
         _write_package(
             tmp_path / "beta",
@@ -677,6 +687,30 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
+
+    mission_03_renderer = _RecordingRenderer()
+    mission_03_scene = create_classroom_trail_scene(
+        mission_03_renderer,
+        planned.plan,
+        mission_id=MISSION_03_ID,
+    )
+    mission_03_scene.enter()
+    mission_03_scene.update(_NO_MOVEMENT, _NO_INTERACTION, 0.0)
+    mission_03_scene.render()
+
+    assert mission_03_scene.mission is MISSION_03
+    assert "Mission: Make It Respond" in mission_03_renderer.text
+    assert MISSION_03.instructions in mission_03_renderer.text
+    assert "The lantern glows." in mission_03_renderer.text
+
+    mission_03_renderer.text.clear()
+    mission_03_scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    mission_03_scene.render()
+
+    assert "A spark appears!" in mission_03_renderer.text
+    assert mission_03_scene.visited_qualified_ids == frozenset({"alpha-package:lantern"})
+    assert mission_03_scene.mission_is_complete is False
+
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         create_classroom_trail_scene(
             _RecordingRenderer(),
@@ -766,9 +800,11 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     ]
 
 
-def test_cli_runs_planned_local_trail(
+@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID])
+def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    mission_id: str,
 ) -> None:
     player_root = _write_package(
         tmp_path / "player",
@@ -804,12 +840,12 @@ def test_cli_runs_planned_local_trail(
                 "--name",
                 "Room 12 Trail",
                 "--mission-id",
-                MISSION_02_ID,
+                mission_id,
             ]
         )
         == 0
     )
-    assert calls == [("Room 12 Trail", MISSION_02_ID, 1)]
+    assert calls == [("Room 12 Trail", mission_id, 1)]
 
 
 def test_runtime_rejects_changed_contract_version(tmp_path: Path) -> None:
