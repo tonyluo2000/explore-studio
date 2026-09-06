@@ -11,6 +11,7 @@ import yaml
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedContribution,
@@ -36,6 +37,7 @@ _CHARACTER_FIELDS = frozenset(
         "conversation",
         "respond_to_toggle",
         "respond_to_two_toggles",
+        "respond_to_either_toggle",
     }
 )
 _WORLD_OBJECT_FIELDS = frozenset(
@@ -359,6 +361,98 @@ def _respond_to_two_toggles(
     return LoadedCharacterTwoToggleResponse(object_ids, when_not_all_on, when_all_on)
 
 
+def _respond_to_either_toggle(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> LoadedCharacterEitherToggleResponse | None:
+    value = mapping.get("respond_to_either_toggle", _MISSING)
+    if value is _MISSING:
+        return None
+    location = _field_location(source_path, "respond_to_either_toggle")
+    if not isinstance(value, Mapping):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be a mapping with object_ids, when_both_off, and when_either_on.",
+                location,
+            )
+        )
+        return None
+    object_ids_value = value.get("object_ids", _MISSING)
+    object_ids_location = _field_location(location, "object_ids")
+    object_ids: tuple[str, str] | None = None
+    if object_ids_value is _MISSING:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+                f"{object_ids_location} is required.",
+                object_ids_location,
+            )
+        )
+    elif not isinstance(object_ids_value, list):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{object_ids_location} must be an ordered list of exactly two IDs.",
+                object_ids_location,
+            )
+        )
+    elif len(object_ids_value) != 2:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{object_ids_location} must contain exactly two distinct IDs.",
+                object_ids_location,
+            )
+        )
+    else:
+        valid_ids: list[str] = []
+        for index, object_id in enumerate(object_ids_value):
+            item_location = f"{object_ids_location}[{index}]"
+            if not isinstance(object_id, str):
+                issues.append(
+                    _issue(
+                        PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                        f"{item_location} must be a string.",
+                        item_location,
+                    )
+                )
+            elif not is_valid_identifier(object_id):
+                issues.append(
+                    _issue(
+                        PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                        f"{item_location} must be one unqualified package-local contribution ID.",
+                        item_location,
+                    )
+                )
+            else:
+                valid_ids.append(object_id)
+        if len(valid_ids) == 2:
+            if valid_ids[0] == valid_ids[1]:
+                issues.append(
+                    _issue(
+                        PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                        f"{object_ids_location} must contain two distinct IDs.",
+                        object_ids_location,
+                    )
+                )
+            else:
+                object_ids = (valid_ids[0], valid_ids[1])
+    when_both_off = _text(value, "when_both_off", location, issues, required=True, default=None)
+    when_either_on = _text(value, "when_either_on", location, issues, required=True, default=None)
+    _unknown_fields(
+        value, frozenset({"object_ids", "when_both_off", "when_either_on"}), location, issues
+    )
+    if (
+        object_ids is None
+        or not isinstance(when_both_off, str)
+        or not isinstance(when_either_on, str)
+    ):
+        return None
+    return LoadedCharacterEitherToggleResponse(object_ids, when_both_off, when_either_on)
+
+
 def _color(
     mapping: Mapping[object, object],
     source_path: str,
@@ -572,6 +666,7 @@ def _parse_character(
     conversation = _conversation(mapping, source_path, issues)
     respond_to_toggle = _respond_to_toggle(mapping, source_path, issues)
     respond_to_two_toggles = _respond_to_two_toggles(mapping, source_path, issues)
+    respond_to_either_toggle = _respond_to_either_toggle(mapping, source_path, issues)
     if greeting is not None and conversation is not None:
         location = _field_location(source_path, "conversation")
         issues.append(
@@ -604,6 +699,21 @@ def _parse_character(
                 location,
             )
         )
+    if respond_to_either_toggle is not None and (
+        greeting is not None
+        or conversation is not None
+        or respond_to_toggle is not None
+        or respond_to_two_toggles is not None
+    ):
+        location = _field_location(source_path, "respond_to_either_toggle")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with greeting, conversation, "
+                "respond_to_toggle, or respond_to_two_toggles.",
+                location,
+            )
+        )
     _unknown_fields(mapping, _CHARACTER_FIELDS, source_path, issues)
 
     if issues:
@@ -629,6 +739,7 @@ def _parse_character(
             conversation=conversation,
             respond_to_toggle=respond_to_toggle,
             respond_to_two_toggles=respond_to_two_toggles,
+            respond_to_either_toggle=respond_to_either_toggle,
         ),
         (),
     )

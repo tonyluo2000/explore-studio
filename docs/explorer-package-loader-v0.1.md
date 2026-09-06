@@ -80,6 +80,19 @@ This mapping requires exactly those keys and is mutually exclusive with
 exactly two distinct unqualified IDs, each resolving exactly once in the same
 package to a valid toggle world object. Both responses must be nonblank.
 
+A character may instead declare one fixed Boolean `or` response:
+
+```yaml
+respond_to_either_toggle:
+  object_ids: ["first-switch", "second-switch"]
+  when_both_off: "The door is locked."
+  when_either_on: "The door is open!"
+```
+
+This mapping requires exactly those keys and is mutually exclusive with every
+other character dialogue mode. Its two distinct unqualified IDs each resolve
+exactly once in the same package to a valid toggle world object.
+
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default

@@ -17,6 +17,7 @@ MISSION_07_ID: Final = "toggle-an-object-state"
 MISSION_08_ID: Final = "respond-to-object-state"
 MISSION_09_ID: Final = "count-object-interactions"
 MISSION_10_ID: Final = "require-all-switches-on"
+MISSION_11_ID: Final = "open-with-either-switch"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -108,6 +109,16 @@ MISSION_10: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED,
 )
 
+MISSION_11: Final = ClassroomTrailMission(
+    mission_id=MISSION_11_ID,
+    title="Either Switch Opens It",
+    instructions=(
+        "Connect one NPC to two toggle objects, write locked and open responses, then talk "
+        "with both off, only the first on, and only the second on."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -119,6 +130,7 @@ _MISSIONS = (
     MISSION_08,
     MISSION_09,
     MISSION_10,
+    MISSION_11,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

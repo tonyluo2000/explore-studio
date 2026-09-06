@@ -49,6 +49,15 @@ class CharacterTwoToggleResponseRegistrationSpec:
 
 
 @dataclass(frozen=True)
+class CharacterEitherToggleResponseRegistrationSpec:
+    """Detached Boolean-or responses for exactly two package-local toggles."""
+
+    object_ids: tuple[str, str]
+    when_both_off: str
+    when_either_on: str
+
+
+@dataclass(frozen=True)
 class RegistrationPlanIssue:
     """One deterministic Student API registration-planning diagnostic."""
 
@@ -72,6 +81,7 @@ class CharacterRegistrationSpec:
     conversation: tuple[str, ...] | None = None
     respond_to_toggle: CharacterToggleResponseRegistrationSpec | None = None
     respond_to_two_toggles: CharacterTwoToggleResponseRegistrationSpec | None = None
+    respond_to_either_toggle: CharacterEitherToggleResponseRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)

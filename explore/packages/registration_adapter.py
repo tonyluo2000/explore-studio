@@ -5,6 +5,7 @@ from __future__ import annotations
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
@@ -22,6 +23,7 @@ from explore.packages.policy import (
     is_valid_semantic_version,
 )
 from explore.packages.registration_models import (
+    CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
@@ -95,6 +97,18 @@ def _valid_respond_to_two_toggles(value: object) -> bool:
         and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
         and _is_nonblank_text(value.when_not_all_on)
         and _is_nonblank_text(value.when_all_on)
+    )
+
+
+def _valid_respond_to_either_toggle(value: object) -> bool:
+    return value is None or (
+        isinstance(value, LoadedCharacterEitherToggleResponse)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 2
+        and value.object_ids[0] != value.object_ids[1]
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and _is_nonblank_text(value.when_both_off)
+        and _is_nonblank_text(value.when_either_on)
     )
 
 
@@ -490,6 +504,33 @@ def _map_character(
                 field="respond_to_two_toggles",
             )
         )
+    if not _valid_respond_to_either_toggle(contribution.respond_to_either_toggle):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_either_toggle must retain exactly two distinct "
+                "package-local toggle IDs and two valid responses.",
+                f"{location}.respond_to_either_toggle",
+                contribution=contribution,
+                field="respond_to_either_toggle",
+            )
+        )
+    if contribution.respond_to_either_toggle is not None and (
+        contribution.greeting is not None
+        or contribution.conversation is not None
+        or contribution.respond_to_toggle is not None
+        or contribution.respond_to_two_toggles is not None
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_either_toggle cannot be combined with greeting, "
+                "conversation, respond_to_toggle, or respond_to_two_toggles.",
+                f"{location}.respond_to_either_toggle",
+                contribution=contribution,
+                field="respond_to_either_toggle",
+            )
+        )
     conditional = (
         CharacterToggleResponseRegistrationSpec(
             object_id=contribution.respond_to_toggle.object_id,
@@ -508,6 +549,15 @@ def _map_character(
         if isinstance(contribution.respond_to_two_toggles, LoadedCharacterTwoToggleResponse)
         else None
     )
+    either_toggle = (
+        CharacterEitherToggleResponseRegistrationSpec(
+            object_ids=contribution.respond_to_either_toggle.object_ids,
+            when_both_off=contribution.respond_to_either_toggle.when_both_off,
+            when_either_on=contribution.respond_to_either_toggle.when_either_on,
+        )
+        if isinstance(contribution.respond_to_either_toggle, LoadedCharacterEitherToggleResponse)
+        else None
+    )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -521,6 +571,7 @@ def _map_character(
             conversation=contribution.conversation,
             respond_to_toggle=conditional,
             respond_to_two_toggles=two_toggle,
+            respond_to_either_toggle=either_toggle,
         ),
         asset_reference=contribution.image,
     )
@@ -751,6 +802,32 @@ def build_student_api_registration_plan(
                                 "containing package."
                             ),
                             f"{location}.respond_to_two_toggles.object_ids",
+                            contribution=contribution,
+                            field="object_ids",
+                        )
+                    )
+
+        if (
+            type(contribution) is LoadedCharacter
+            and isinstance(
+                contribution.respond_to_either_toggle, LoadedCharacterEitherToggleResponse
+            )
+            and _valid_respond_to_either_toggle(contribution.respond_to_either_toggle)
+        ):
+            for object_id in contribution.respond_to_either_toggle.object_ids:
+                matches = contributions_by_id.get(object_id, [])
+                target = matches[0] if len(matches) == 1 else None
+                if (
+                    len(matches) != 1
+                    or not isinstance(target, LoadedWorldObject)
+                    or target.toggle is None
+                ):
+                    issues.append(
+                        _issue(
+                            RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID,
+                            f"{location}.respond_to_either_toggle.object_ids must each resolve "
+                            "exactly to one toggle world object in the containing package.",
+                            f"{location}.respond_to_either_toggle.object_ids",
                             contribution=contribution,
                             field="object_ids",
                         )

@@ -14,6 +14,7 @@ from explore.packages import (
     ContributionDeclaration,
     ExplorerPackageManifest,
     LoadedCharacter,
+    LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedWorldObject,
@@ -93,6 +94,105 @@ def test_example_packages_load(
     assert len(result.package.contributions) == 1
     assert isinstance(result.package.contributions[0], loaded_type)
     assert result.package.contributions[0].contribution_id == contribution_id
+
+
+def test_character_either_toggle_metadata_loads_immutably_and_resolves(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_either_toggle:\n'
+                b'  object_ids: ["first", "second"]\n'
+                b'  when_both_off: "Locked."\n  when_either_on: "Open!"\n'
+            ),
+            "objects/first.yaml": (
+                b'name: "First"\nx: 1\ny: 2\ntoggle: {off_color: red, on_color: green}\n'
+            ),
+            "objects/second.yaml": (
+                b'name: "Second"\nx: 3\ny: 4\ntoggle: {off_color: blue, on_color: yellow}\n'
+            ),
+        },
+    )
+    result = load_explorer_package(package)
+    assert result.is_loaded and result.package is not None
+    conditional = result.package.characters[0].respond_to_either_toggle
+    assert conditional == LoadedCharacterEitherToggleResponse(
+        ("first", "second"), "Locked.", "Open!"
+    )
+    with pytest.raises(FrozenInstanceError):
+        conditional.when_either_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        "respond_to_either_toggle: {object_ids: [first, second], when_both_off: Locked}\n",
+        "respond_to_either_toggle: {object_ids: [first], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+        "respond_to_either_toggle: {object_ids: [first, first], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+        "respond_to_either_toggle: {object_ids: [other:first, second], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+        "respond_to_either_toggle: {object_ids: [first, second], "
+        "when_both_off: ' ', when_either_on: Open}\n",
+        "respond_to_either_toggle: {object_ids: [first, second], "
+        "when_both_off: Locked, when_either_on: Open, extra: nope}\n",
+        "greeting: Hello\nrespond_to_either_toggle: {object_ids: [first, second], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+        "conversation: [Hello, Again]\nrespond_to_either_toggle: "
+        "{object_ids: [first, second], when_both_off: Locked, when_either_on: Open}\n",
+        "respond_to_toggle: {object_id: first, when_off: Off, when_on: On}\n"
+        "respond_to_either_toggle: {object_ids: [first, second], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+        "respond_to_two_toggles: {object_ids: [first, second], "
+        "when_not_all_on: Locked, when_all_on: Open}\n"
+        "respond_to_either_toggle: {object_ids: [first, second], "
+        "when_both_off: Locked, when_either_on: Open}\n",
+    ],
+)
+def test_character_either_toggle_metadata_fails_closed(metadata: str, tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package", files={"character/guide.yaml": f'name: "Guide"\n{metadata}'.encode()}
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert result.issues
+
+
+@pytest.mark.parametrize(
+    ("target_type", "target_body"),
+    [
+        ("character", 'name: "Not an object"\n'),
+        ("world_object", 'name: "Ordinary"\nx: 1\ny: 2\n'),
+    ],
+)
+def test_character_either_toggle_reference_rejects_non_toggle_targets(
+    target_type: str, target_body: str, tmp_path: Path
+) -> None:
+    target_dir = "character" if target_type == "character" else "objects"
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": target_type, "path": f"{target_dir}/first.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_either_toggle: '
+                b"{object_ids: [first, missing], when_both_off: Locked, "
+                b"when_either_on: Open}\n"
+            ),
+            f"{target_dir}/first.yaml": target_body.encode(),
+        },
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert any("respond_to_either_toggle.object_ids" in issue.location for issue in result.issues)
 
 
 def test_loaded_metadata_and_provenance_match_manifest() -> None:

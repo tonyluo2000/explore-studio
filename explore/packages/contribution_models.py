@@ -90,6 +90,15 @@ class LoadedCharacterTwoToggleResponse:
 
 
 @dataclass(frozen=True)
+class LoadedCharacterEitherToggleResponse:
+    """Fixed Boolean-or response to exactly two package-local toggles."""
+
+    object_ids: tuple[str, str]
+    when_both_off: str
+    when_either_on: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacter:
     """One declarative character plus optional inert trail conversation."""
 
@@ -106,6 +115,7 @@ class LoadedCharacter:
     conversation: tuple[str, ...] | None = None
     respond_to_toggle: LoadedCharacterToggleResponse | None = None
     respond_to_two_toggles: LoadedCharacterTwoToggleResponse | None = None
+    respond_to_either_toggle: LoadedCharacterEitherToggleResponse | None = None
 
 
 @dataclass(frozen=True)

@@ -28,6 +28,7 @@ from explore.packages.policy import (
     is_valid_semantic_version,
 )
 from explore.packages.registration_models import (
+    CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
@@ -498,6 +499,20 @@ def _valid_two_toggle_conditional(value: object) -> bool:
     )
 
 
+def _valid_either_toggle_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterEitherToggleResponseRegistrationSpec)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 2
+        and value.object_ids[0] != value.object_ids[1]
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and isinstance(value.when_both_off, str)
+        and bool(value.when_both_off.strip())
+        and isinstance(value.when_either_on, str)
+        and bool(value.when_either_on.strip())
+    )
+
+
 def _entry_value_issues(
     entry: StudentAPIRegistrationEntry,
     *,
@@ -551,6 +566,16 @@ def _entry_value_issues(
                     entry.character.greeting is not None
                     or entry.character.conversation is not None
                     or entry.character.respond_to_toggle is not None
+                )
+            )
+            and _valid_either_toggle_conditional(entry.character.respond_to_either_toggle)
+            and not (
+                entry.character.respond_to_either_toggle is not None
+                and (
+                    entry.character.greeting is not None
+                    or entry.character.conversation is not None
+                    or entry.character.respond_to_toggle is not None
+                    or entry.character.respond_to_two_toggles is not None
                 )
             )
         )
@@ -795,11 +820,46 @@ def _validate_package_set_plan(
                     )
 
             two_toggle = entry.character.respond_to_two_toggles
-            if not isinstance(
+            if isinstance(
                 two_toggle, CharacterTwoToggleResponseRegistrationSpec
-            ) or not _valid_two_toggle_conditional(two_toggle):
+            ) and _valid_two_toggle_conditional(two_toggle):
+                for object_id in two_toggle.object_ids:
+                    matches = entries_by_id.get(object_id, [])
+                    target = matches[0] if len(matches) == 1 else None
+                    reference_valid = (
+                        len(matches) == 1
+                        and type(target) is WorldObjectRegistration
+                        and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                        and target.world_object.toggle is not None
+                        and _valid_toggle(
+                            target.world_object.toggle, off_color=target.world_object.color
+                        )
+                    )
+                    if not reference_valid:
+                        issues.append(
+                            _issue(
+                                ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                                (
+                                    f"{location}.registration_plan.entries[{entry_index}]"
+                                    ".character.respond_to_two_toggles.object_ids must each "
+                                    "resolve exactly to one toggle world object in this package."
+                                ),
+                                (
+                                    f"{location}.registration_plan.entries[{entry_index}]"
+                                    ".character.respond_to_two_toggles.object_ids"
+                                ),
+                                package_id=package.package_id,
+                                package_index=package_index,
+                                field="object_ids",
+                            )
+                        )
+
+            either_toggle = entry.character.respond_to_either_toggle
+            if not isinstance(
+                either_toggle, CharacterEitherToggleResponseRegistrationSpec
+            ) or not _valid_either_toggle_conditional(either_toggle):
                 continue
-            for object_id in two_toggle.object_ids:
+            for object_id in either_toggle.object_ids:
                 matches = entries_by_id.get(object_id, [])
                 target = matches[0] if len(matches) == 1 else None
                 reference_valid = (
@@ -812,18 +872,16 @@ def _validate_package_set_plan(
                     )
                 )
                 if not reference_valid:
+                    field_location = (
+                        f"{location}.registration_plan.entries[{entry_index}]"
+                        ".character.respond_to_either_toggle.object_ids"
+                    )
                     issues.append(
                         _issue(
                             ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
-                            (
-                                f"{location}.registration_plan.entries[{entry_index}]"
-                                ".character.respond_to_two_toggles.object_ids must each "
-                                "resolve exactly to one toggle world object in this package."
-                            ),
-                            (
-                                f"{location}.registration_plan.entries[{entry_index}]"
-                                ".character.respond_to_two_toggles.object_ids"
-                            ),
+                            f"{field_location} must each resolve exactly to one toggle world "
+                            "object in this package.",
+                            field_location,
                             package_id=package.package_id,
                             package_index=package_index,
                             field="object_ids",

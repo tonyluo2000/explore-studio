@@ -54,6 +54,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_CONDITIONAL_BRANCHES_DISPLAYED = "ALL_CONDITIONAL_BRANCHES_DISPLAYED"
     ALL_COUNTER_GOALS_REACHED = "ALL_COUNTER_GOALS_REACHED"
     ALL_TWO_TOGGLE_BRANCHES_DISPLAYED = "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"
+    ALL_EITHER_TOGGLE_CASES_DISPLAYED = "ALL_EITHER_TOGGLE_CASES_DISPLAYED"
 
 
 @dataclass(frozen=True)
@@ -89,6 +90,8 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
@@ -98,6 +101,7 @@ class ClassroomTrailMission:
                 ' or "ALL_CONDITIONAL_BRANCHES_DISPLAYED"'
                 ' or "ALL_COUNTER_GOALS_REACHED"'
                 ' or "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"'
+                ' or "ALL_EITHER_TOGGLE_CASES_DISPLAYED"'
             )
 
 
@@ -215,6 +219,33 @@ class ClassroomTrailNPCTwoToggleResponse:
 
 
 @dataclass(frozen=True)
+class ClassroomTrailNPCEitherToggleResponse:
+    """Fixed Boolean-or response bound to exactly two package-local toggles."""
+
+    toggle_qualified_ids: tuple[str, str]
+    when_both_off: str
+    when_either_on: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.toggle_qualified_ids, tuple)
+            or len(self.toggle_qualified_ids) != 2
+            or self.toggle_qualified_ids[0] == self.toggle_qualified_ids[1]
+            or any(
+                not isinstance(value, str) or not value.strip()
+                for value in self.toggle_qualified_ids
+            )
+        ):
+            raise ValueError("toggle_qualified_ids must contain exactly two distinct IDs")
+        for field_name, value in (
+            ("when_both_off", self.when_both_off),
+            ("when_either_on", self.when_either_on),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-whitespace text")
+
+
+@dataclass(frozen=True)
 class ClassroomTrailNPC:
     """One stationary character whose NPC role exists only in this trail."""
 
@@ -224,6 +255,7 @@ class ClassroomTrailNPC:
     conversation: tuple[str, ...] | None = None
     respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None
     respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None
+    respond_to_either_toggle: ClassroomTrailNPCEitherToggleResponse | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -266,6 +298,23 @@ class ClassroomTrailNPC:
             raise ValueError(
                 "respond_to_two_toggles cannot be combined with greeting, conversation, "
                 "or respond_to_toggle"
+            )
+        if self.respond_to_either_toggle is not None and not isinstance(
+            self.respond_to_either_toggle, ClassroomTrailNPCEitherToggleResponse
+        ):
+            raise TypeError(
+                "respond_to_either_toggle must be a "
+                "ClassroomTrailNPCEitherToggleResponse when present"
+            )
+        if self.respond_to_either_toggle is not None and (
+            self.greeting is not None
+            or self.conversation is not None
+            or self.respond_to_toggle is not None
+            or self.respond_to_two_toggles is not None
+        ):
+            raise ValueError(
+                "respond_to_either_toggle cannot be combined with greeting, conversation, "
+                "respond_to_toggle, or respond_to_two_toggles"
             )
 
     @property
@@ -326,6 +375,7 @@ class ClassroomTrailScene(Scene):
         self._changed_toggle_qualified_ids: frozenset[str] = frozenset()
         self._displayed_conditional_branches: frozenset[tuple[str, bool]] = frozenset()
         self._displayed_two_toggle_branches: frozenset[tuple[str, bool]] = frozenset()
+        self._displayed_either_toggle_cases: frozenset[tuple[str, bool, bool]] = frozenset()
         self._counter_counts: Mapping[str, int] = MappingProxyType(
             {item.qualified_id: 0 for item in self._objects if item.counter is not None}
         )
@@ -365,6 +415,25 @@ class ClassroomTrailScene(Scene):
                 ):
                     raise ValueError(
                         "respond_to_two_toggles must reference exactly two same-package "
+                        "toggle objects"
+                    )
+
+        for npc in self._npcs:
+            conditional = npc.respond_to_either_toggle
+            if conditional is None:
+                continue
+            npc_package, _, _ = npc.qualified_id.partition(":")
+            for toggle_qualified_id in conditional.toggle_qualified_ids:
+                target = objects_by_id.get(toggle_qualified_id)
+                target_package, separator, _ = toggle_qualified_id.partition(":")
+                if (
+                    target is None
+                    or target.toggle is None
+                    or not separator
+                    or target_package != npc_package
+                ):
+                    raise ValueError(
+                        "respond_to_either_toggle must reference exactly two same-package "
                         "toggle objects"
                     )
 
@@ -436,6 +505,16 @@ class ClassroomTrailScene(Scene):
                 for all_on in (False, True)
             )
             return bool(conditional_npc_ids) and required <= self._displayed_two_toggle_branches
+        if rule is ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED:
+            conditional_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.respond_to_either_toggle is not None
+            )
+            required = frozenset(
+                (qualified_id, first_on, second_on)
+                for qualified_id in conditional_npc_ids
+                for first_on, second_on in ((False, False), (True, False), (False, True))
+            )
+            return bool(conditional_npc_ids) and required <= self._displayed_either_toggle_cases
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -473,6 +552,10 @@ class ClassroomTrailScene(Scene):
     @property
     def displayed_two_toggle_branches(self) -> frozenset[tuple[str, bool]]:
         return self._displayed_two_toggle_branches
+
+    @property
+    def displayed_either_toggle_cases(self) -> frozenset[tuple[str, bool, bool]]:
+        return self._displayed_either_toggle_cases
 
     @property
     def counter_counts(self) -> Mapping[str, int]:
@@ -555,6 +638,19 @@ class ClassroomTrailScene(Scene):
                     self._feedback_message = f"{self._target.character.name}: {response}"
                     self._displayed_two_toggle_branches = self._displayed_two_toggle_branches | {
                         (self._target.qualified_id, all_on)
+                    }
+                elif self._target.respond_to_either_toggle is not None:
+                    either_toggle = self._target.respond_to_either_toggle
+                    first_toggle, second_toggle = either_toggle.toggle_qualified_ids
+                    first_on = first_toggle in self._toggle_on_qualified_ids
+                    second_on = second_toggle in self._toggle_on_qualified_ids
+                    either_on = first_on or second_on
+                    response = (
+                        either_toggle.when_either_on if either_on else either_toggle.when_both_off
+                    )
+                    self._feedback_message = f"{self._target.character.name}: {response}"
+                    self._displayed_either_toggle_cases = self._displayed_either_toggle_cases | {
+                        (self._target.qualified_id, first_on, second_on)
                     }
                 else:
                     lines = self._target.conversation_lines
@@ -685,6 +781,7 @@ class ClassroomTrailScene(Scene):
                     npc.conversation_lines
                     or npc.respond_to_toggle is not None
                     or npc.respond_to_two_toggles is not None
+                    or npc.respond_to_either_toggle is not None
                 )
             ),
         )

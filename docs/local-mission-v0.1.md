@@ -3,8 +3,8 @@
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
 Local Mission v0.1 provides the reusable immutable mission model used by
-Classroom Trail v0.8. Canonical course content owns an immutable ID-keyed
-catalog containing ten entries:
+Classroom Trail v0.9. Canonical course content owns an immutable ID-keyed
+catalog containing eleven entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -75,6 +75,14 @@ Mission 10:
 - instructions require one NPC linked to exactly two toggle objects, authored
   fallback and success responses, and displaying both branches.
 
+Mission 11:
+
+- mission ID: `open-with-either-switch`;
+- title: `Either Switch Opens It`;
+- instructions require one NPC linked to exactly two toggle objects, authored
+  locked and open responses, and displaying both-off, first-only, and
+  second-only cases.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -82,7 +90,8 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_TOGGLE_OBJECTS_CHANGED`; Mission 08 uses
 `ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 09 uses
 `ALL_COUNTER_GOALS_REACHED`; Mission 10 uses
-`ALL_TWO_TOGGLE_BRANCHES_DISPLAYED`. Other rule values are rejected.
+`ALL_TWO_TOGGLE_BRANCHES_DISPLAYED`; Mission 11 uses
+`ALL_EITHER_TOGGLE_CASES_DISPLAYED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -131,6 +140,12 @@ or both referenced toggles are off; success evidence is recorded only when both
 are on. Both are required for every two-toggle NPC. Ordinary characters are
 excluded, and a Trail with no two-toggle NPC remains incomplete.
 
+`ALL_EITHER_TOGGLE_CASES_DISPLAYED` uses a separate, session-only immutable set
+of `(npc_qualified_id, first_on, second_on)` cases. Completion requires both
+off, first only, and second only for every either-toggle NPC. Both on selects
+the open response and may be retained as evidence but is not required. Zero
+either-toggle NPCs remains incomplete.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -139,8 +154,8 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 11+, additional completion rules, mission sequencing, decrement/reset,
-arithmetic expressions, `or`, `not`, nested or arbitrary conditions, choices,
+Mission 12+, additional completion rules, mission sequencing, decrement/reset,
+arithmetic expressions, `not`, nested or arbitrary conditions, choices,
 memory, quests, generic actions or state machines, rewards, persistence,
 teacher controls, deployment, authentication, and Phase E integration remain
 out of scope.

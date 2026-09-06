@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.8.
+"""Planning and local execution for Classroom Trail contract v0.9.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -50,7 +50,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.8 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.9 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -73,7 +73,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.8 supports",
+        cardinality_contract="Classroom Trail v0.9 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -215,6 +215,7 @@ def create_classroom_trail_scene(
     from engine.scenes import (
         ClassroomTrailNPC,
         ClassroomTrailNPCConditionalResponse,
+        ClassroomTrailNPCEitherToggleResponse,
         ClassroomTrailNPCTwoToggleResponse,
         ClassroomTrailObject,
         ClassroomTrailObjectCounter,
@@ -226,7 +227,7 @@ def create_classroom_trail_scene(
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.8"')
+        raise ValueError('plan.contract_version must be "0.9"')
     mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
@@ -345,6 +346,18 @@ def create_classroom_trail_scene(
                     ),
                     when_not_all_on=(entry.character.respond_to_two_toggles.when_not_all_on),
                     when_all_on=entry.character.respond_to_two_toggles.when_all_on,
+                )
+            ),
+            respond_to_either_toggle=(
+                None
+                if entry.character.respond_to_either_toggle is None
+                else ClassroomTrailNPCEitherToggleResponse(
+                    toggle_qualified_ids=(
+                        f"{entry.provenance.package_id}:{entry.character.respond_to_either_toggle.object_ids[0]}",
+                        f"{entry.provenance.package_id}:{entry.character.respond_to_either_toggle.object_ids[1]}",
+                    ),
+                    when_both_off=entry.character.respond_to_either_toggle.when_both_off,
+                    when_either_on=entry.character.respond_to_either_toggle.when_either_on,
                 )
             ),
         )
