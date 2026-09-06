@@ -3,8 +3,8 @@
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
 Local Mission v0.1 provides the reusable immutable mission model used by
-Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
-catalog containing six entries:
+Classroom Trail v0.5. Canonical course content owns an immutable ID-keyed
+catalog containing seven entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -47,10 +47,18 @@ Mission 06:
 - exactly three authored objects is curriculum and static-validation evidence;
   local runtime completion does not enforce that artifact count.
 
+Mission 07:
+
+- mission ID: `toggle-an-object-state`;
+- title: `Flip a Magic Switch`;
+- instructions require one object with distinct off and on colors, followed by
+  at least one interaction with every toggle object.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
-`ALL_CONVERSATION_NPCS_COMPLETED`. Other rule values are rejected.
+`ALL_CONVERSATION_NPCS_COMPLETED`; Mission 07 uses
+`ALL_TOGGLE_OBJECTS_CHANGED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -73,6 +81,13 @@ of package-qualified NPC IDs. An NPC enters that set when its final authored
 conversation line is displayed. Greeting-only and silent NPCs are excluded,
 and a Trail with no conversation NPCs does not complete this rule. Repeated
 completion and later conversation wrap leave the evidence intact.
+
+`ALL_TOGGLE_OBJECTS_CHANGED` uses a separate, session-only immutable set of
+package-qualified toggle-object IDs. An object enters that set on its first
+successful toggle interaction and remains there after later toggles. Ordinary
+objects are excluded, and a Trail with no toggle objects does not complete
+this rule. Current on/off state remains separate from monotonic changed
+evidence and ordinary visited-object progress.
 
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing

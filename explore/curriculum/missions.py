@@ -13,6 +13,7 @@ MISSION_03_ID: Final = "make-your-object-respond"
 MISSION_04_ID: Final = "introduce-your-character"
 MISSION_05_ID: Final = "write-a-short-conversation"
 MISSION_06_ID: Final = "build-an-object-collection"
+MISSION_07_ID: Final = "toggle-an-object-state"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -64,7 +65,25 @@ MISSION_06: Final = ClassroomTrailMission(
     ),
 )
 
-_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04, MISSION_05, MISSION_06)
+MISSION_07: Final = ClassroomTrailMission(
+    mission_id=MISSION_07_ID,
+    title="Flip a Magic Switch",
+    instructions=(
+        "Give one object distinct off and on colors, then interact with every toggle object "
+        "at least once."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
+)
+
+_MISSIONS = (
+    MISSION_01,
+    MISSION_02,
+    MISSION_03,
+    MISSION_04,
+    MISSION_05,
+    MISSION_06,
+    MISSION_07,
+)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )

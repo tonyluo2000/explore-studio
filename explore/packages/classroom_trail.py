@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.4.
+"""Planning and local execution for Classroom Trail contract v0.5.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -50,7 +50,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.4 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.5 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -73,7 +73,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.4 supports",
+        cardinality_contract="Classroom Trail v0.5 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -212,13 +212,18 @@ def create_classroom_trail_scene(
     """Translate one immutable trail plan into engine-owned runtime objects."""
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
-    from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
+    from engine.scenes import (
+        ClassroomTrailNPC,
+        ClassroomTrailObject,
+        ClassroomTrailObjectToggle,
+        ClassroomTrailScene,
+    )
     from explore.curriculum import get_course_mission
 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.4"')
+        raise ValueError('plan.contract_version must be "0.5"')
     mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
@@ -277,6 +282,14 @@ def create_classroom_trail_scene(
             ),
             when_near=entry.world_object.when_near,
             when_interacted=entry.world_object.when_interacted,
+            toggle=(
+                None
+                if entry.world_object.toggle is None
+                else ClassroomTrailObjectToggle(
+                    off_color=resolve_color(entry.world_object.toggle.off_color),
+                    on_color=resolve_color(entry.world_object.toggle.on_color),
+                )
+            ),
         )
         for entry in plan.world_objects
     )

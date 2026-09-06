@@ -15,6 +15,7 @@ from explore.packages import (
     ExplorerPackageManifest,
     LoadedCharacter,
     LoadedWorldObject,
+    LoadedWorldObjectToggle,
     PackageLoadIssueCode,
     PackageMetadata,
     ValidationReport,
@@ -547,6 +548,122 @@ def test_minimal_world_object(tmp_path: Path) -> None:
     )
     assert world_object.when_near is None
     assert world_object.when_interacted is None
+    assert world_object.toggle is None
+
+
+def test_world_object_toggle_loads_as_strict_two_color_metadata(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[{"id": "switch", "type": "world_object", "path": "objects/switch.yaml"}],
+        files={
+            "objects/switch.yaml": (
+                b'name: "Magic Switch"\n'
+                b"x: 10\n"
+                b"y: 20\n"
+                b'when_near: "The switch is quiet."\n'
+                b'when_interacted: "Click!"\n'
+                b"toggle:\n"
+                b'  off_color: "red"\n'
+                b'  on_color: "green"\n'
+            )
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded
+    assert result.package is not None
+    world_object = result.package.world_objects[0]
+    assert world_object.color == "red"
+    assert world_object.toggle == LoadedWorldObjectToggle(off_color="red", on_color="green")
+    assert world_object.when_near == "The switch is quiet."
+    assert world_object.when_interacted == "Click!"
+
+
+@pytest.mark.parametrize(
+    ("toggle_yaml", "code", "location"),
+    [
+        (
+            'toggle: "red"\n',
+            PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+            "objects/switch.yaml.toggle",
+        ),
+        (
+            'toggle:\n  on_color: "green"\n',
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+            "objects/switch.yaml.toggle.off_color",
+        ),
+        (
+            'toggle:\n  off_color: "red"\n',
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+            "objects/switch.yaml.toggle.on_color",
+        ),
+        (
+            'toggle:\n  off_color: "red"\n  on_color: "red"\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+            "objects/switch.yaml.toggle",
+        ),
+        (
+            'toggle:\n  off_color: "red"\n  on_color: "cyan"\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+            "objects/switch.yaml.toggle.on_color",
+        ),
+        (
+            'toggle:\n  off_color: "red"\n  on_color: "green"\n  third_color: "blue"\n',
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_UNKNOWN,
+            "objects/switch.yaml.toggle.third_color",
+        ),
+    ],
+)
+def test_world_object_toggle_fails_closed_for_invalid_shape(
+    tmp_path: Path,
+    toggle_yaml: str,
+    code: PackageLoadIssueCode,
+    location: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[{"id": "switch", "type": "world_object", "path": "objects/switch.yaml"}],
+        files={
+            "objects/switch.yaml": (f'name: "Magic Switch"\nx: 10\ny: 20\n{toggle_yaml}'.encode())
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is None
+    assert result.issues[0].code is code
+    assert result.issues[0].location == location
+
+
+@pytest.mark.parametrize(
+    ("extra", "location"),
+    [
+        ('color: "blue"\n', "objects/switch.yaml.color"),
+        ('asset_id: "switch-image"\n', "objects/switch.yaml.asset_id"),
+    ],
+)
+def test_world_object_toggle_rejects_ambiguous_top_level_appearance(
+    tmp_path: Path,
+    extra: str,
+    location: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[{"id": "switch", "type": "world_object", "path": "objects/switch.yaml"}],
+        files={
+            "objects/switch.yaml": (
+                f'name: "Magic Switch"\nx: 10\ny: 20\n{extra}'
+                'toggle:\n  off_color: "red"\n  on_color: "green"\n'
+            ).encode()
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is None
+    assert result.issues[0].code is PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].location == location
 
 
 @pytest.mark.parametrize("field", ["width", "height", "solid"])

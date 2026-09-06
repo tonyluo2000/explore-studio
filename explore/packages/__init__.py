@@ -230,6 +230,7 @@ from explore.packages.contribution_models import (
     LoadedContribution,
     LoadedExplorerPackage,
     LoadedWorldObject,
+    LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadIssue,
     PackageLoadIssueCode,
@@ -315,6 +316,7 @@ from explore.packages.registration_models import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
 )
 from explore.packages.validator import validate_explorer_package
 
@@ -428,6 +430,7 @@ __all__ = [
     "LoadedContribution",
     "LoadedExplorerPackage",
     "LoadedWorldObject",
+    "LoadedWorldObjectToggle",
     "MAX_ASSET_SIZE_BYTES",
     "MAX_EXPLORER_PACKAGE_EXPORT_ARCHIVE_BYTES",
     "MAX_EXPLORER_PACKAGE_EXPORT_CONTENT_BYTES",
@@ -497,6 +500,7 @@ __all__ = [
     "ValidationReport",
     "WorldObjectRegistration",
     "WorldObjectRegistrationSpec",
+    "WorldObjectToggleRegistrationSpec",
     "apply_student_api_registration_plan",
     "apply_package_set_plan",
     "build_class_world_artifact_inventory",

@@ -13,6 +13,7 @@ from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
     LoadedWorldObject,
+    LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadIssue,
     PackageLoadIssueCode,
@@ -30,6 +31,7 @@ _WORLD_OBJECT_FIELDS = frozenset(
         "asset_id",
         "when_near",
         "when_interacted",
+        "toggle",
     }
 )
 _VALID_COLORS = frozenset(valid_color_names())
@@ -235,6 +237,57 @@ def _color(
     return color
 
 
+def _toggle(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> LoadedWorldObjectToggle | None:
+    value = mapping.get("toggle", _MISSING)
+    if value is _MISSING:
+        return None
+    location = _field_location(source_path, "toggle")
+    if not isinstance(value, Mapping):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be a mapping with off_color and on_color.",
+                location,
+            )
+        )
+        return None
+
+    off_color = _text(value, "off_color", location, issues, required=True, default=None)
+    on_color = _text(value, "on_color", location, issues, required=True, default=None)
+    _unknown_fields(value, frozenset({"off_color", "on_color"}), location, issues)
+    valid_colors: list[str] = []
+    for field, color in (("off_color", off_color), ("on_color", on_color)):
+        if not isinstance(color, str):
+            continue
+        if color not in _VALID_COLORS:
+            field_location = _field_location(location, field)
+            options = ", ".join(sorted(_VALID_COLORS))
+            issues.append(
+                _issue(
+                    PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                    f'{field_location} "{color}" is not a valid colour; choose from: {options}.',
+                    field_location,
+                )
+            )
+        else:
+            valid_colors.append(color)
+    if len(valid_colors) == 2 and off_color == on_color:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.off_color and {location}.on_color must be distinct.",
+                location,
+            )
+        )
+    if len(valid_colors) != 2 or off_color == on_color:
+        return None
+    return LoadedWorldObjectToggle(off_color=off_color, on_color=on_color)
+
+
 def _asset_reference(
     mapping: Mapping[object, object],
     source_path: str,
@@ -350,8 +403,32 @@ def _parse_world_object(
     name = _text(mapping, "name", source_path, issues, required=True, default=None)
     x = _coordinate(mapping, "x", source_path, issues, required=True, default=0)
     y = _coordinate(mapping, "y", source_path, issues, required=True, default=0)
-    color = _color(mapping, source_path, issues, default="brown")
-    image = _asset_reference(mapping, source_path, assets_by_id, issues)
+    toggle = _toggle(mapping, source_path, issues)
+    has_toggle = "toggle" in mapping
+    if has_toggle and "color" in mapping:
+        location = _field_location(source_path, "color")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with toggle.",
+                location,
+            )
+        )
+    if has_toggle and "asset_id" in mapping:
+        location = _field_location(source_path, "asset_id")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with toggle.",
+                location,
+            )
+        )
+    color = (
+        toggle.off_color
+        if toggle is not None
+        else _color(mapping, source_path, issues, default="brown")
+    )
+    image = None if has_toggle else _asset_reference(mapping, source_path, assets_by_id, issues)
     when_near = _text(
         mapping,
         "when_near",
@@ -391,6 +468,7 @@ def _parse_world_object(
             image=image,
             when_near=when_near,
             when_interacted=when_interacted,
+            toggle=toggle,
         ),
         (),
     )

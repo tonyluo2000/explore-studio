@@ -56,6 +56,14 @@ class PackageAssetReference:
 
 
 @dataclass(frozen=True)
+class LoadedWorldObjectToggle:
+    """Strict two-color toggle presentation loaded from inert package data."""
+
+    off_color: str
+    on_color: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacter:
     """One declarative character plus optional inert trail conversation."""
 
@@ -87,6 +95,7 @@ class LoadedWorldObject:
     image: PackageAssetReference | None = None
     when_near: str | None = None
     when_interacted: str | None = None
+    toggle: LoadedWorldObjectToggle | None = None
 
 
 LoadedContribution = LoadedCharacter | LoadedWorldObject

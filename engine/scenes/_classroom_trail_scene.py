@@ -48,6 +48,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_OBJECTS_VISITED = "ALL_OBJECTS_VISITED"
     ALL_INTERACTABLE_NPCS_SPOKEN_TO = "ALL_INTERACTABLE_NPCS_SPOKEN_TO"
     ALL_CONVERSATION_NPCS_COMPLETED = "ALL_CONVERSATION_NPCS_COMPLETED"
+    ALL_TOGGLE_OBJECTS_CHANGED = "ALL_TOGGLE_OBJECTS_CHANGED"
 
 
 @dataclass(frozen=True)
@@ -75,12 +76,39 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
                 '"ALL_INTERACTABLE_NPCS_SPOKEN_TO" or '
-                '"ALL_CONVERSATION_NPCS_COMPLETED"'
+                '"ALL_CONVERSATION_NPCS_COMPLETED" or '
+                '"ALL_TOGGLE_OBJECTS_CHANGED"'
             )
+
+
+@dataclass(frozen=True)
+class ClassroomTrailObjectToggle:
+    """Strict immutable two-color presentation for one toggle object."""
+
+    off_color: tuple[int, int, int]
+    on_color: tuple[int, int, int]
+
+    def __post_init__(self) -> None:
+        for field_name, color in (("off_color", self.off_color), ("on_color", self.on_color)):
+            if (
+                not isinstance(color, tuple)
+                or len(color) != 3
+                or any(
+                    isinstance(channel, bool)
+                    or not isinstance(channel, int)
+                    or not 0 <= channel <= 255
+                    for channel in color
+                )
+            ):
+                raise ValueError(f"{field_name} must be a three-channel RGB color")
+        if self.off_color == self.on_color:
+            raise ValueError("off_color and on_color must be distinct")
 
 
 @dataclass(frozen=True)
@@ -91,12 +119,17 @@ class ClassroomTrailObject:
     world_object: WorldObject
     when_near: str | None = None
     when_interacted: str | None = None
+    toggle: ClassroomTrailObjectToggle | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
             raise ValueError("qualified_id must be non-whitespace text")
         if not isinstance(self.world_object, WorldObject):
             raise TypeError("world_object must be a WorldObject")
+        if self.toggle is not None and not isinstance(self.toggle, ClassroomTrailObjectToggle):
+            raise TypeError("toggle must be a ClassroomTrailObjectToggle when present")
+        if self.toggle is not None and self.world_object.color != self.toggle.off_color:
+            raise ValueError("world_object.color must equal toggle.off_color")
         for field_name, message in (
             ("when_near", self.when_near),
             ("when_interacted", self.when_interacted),
@@ -186,6 +219,8 @@ class ClassroomTrailScene(Scene):
         self._visited_qualified_ids: frozenset[str] = frozenset()
         self._spoken_npc_ids: frozenset[str] = frozenset()
         self._completed_conversation_npc_ids: frozenset[str] = frozenset()
+        self._toggle_on_qualified_ids: frozenset[str] = frozenset()
+        self._changed_toggle_qualified_ids: frozenset[str] = frozenset()
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
@@ -226,6 +261,13 @@ class ClassroomTrailScene(Scene):
                 bool(conversation_npc_ids)
                 and conversation_npc_ids <= self._completed_conversation_npc_ids
             )
+        if rule is ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED:
+            toggle_object_ids = frozenset(
+                item.qualified_id for item in self._objects if item.toggle is not None
+            )
+            return bool(toggle_object_ids) and (
+                toggle_object_ids <= self._changed_toggle_qualified_ids
+            )
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -247,6 +289,14 @@ class ClassroomTrailScene(Scene):
     @property
     def completed_conversation_npc_ids(self) -> frozenset[str]:
         return self._completed_conversation_npc_ids
+
+    @property
+    def toggle_on_qualified_ids(self) -> frozenset[str]:
+        return self._toggle_on_qualified_ids
+
+    @property
+    def changed_toggle_qualified_ids(self) -> frozenset[str]:
+        return self._changed_toggle_qualified_ids
 
     @property
     def visited_count(self) -> int:
@@ -277,6 +327,19 @@ class ClassroomTrailScene(Scene):
                     self._target.qualified_id
                 }
                 self._feedback_message = self._target.when_interacted or _DEFAULT_INTERACTED_MESSAGE
+                if self._target.toggle is not None:
+                    qualified_id = self._target.qualified_id
+                    if qualified_id in self._toggle_on_qualified_ids:
+                        self._toggle_on_qualified_ids = self._toggle_on_qualified_ids - {
+                            qualified_id
+                        }
+                    else:
+                        self._toggle_on_qualified_ids = self._toggle_on_qualified_ids | {
+                            qualified_id
+                        }
+                    self._changed_toggle_qualified_ids = self._changed_toggle_qualified_ids | {
+                        qualified_id
+                    }
             else:
                 lines = self._target.conversation_lines
                 assert lines
@@ -301,12 +364,17 @@ class ClassroomTrailScene(Scene):
         super().render()
         for item in self._objects:
             world_object = item.world_object
+            color = (
+                item.toggle.on_color
+                if item.toggle is not None and item.qualified_id in self._toggle_on_qualified_ids
+                else world_object.color
+            )
             self._renderer.draw_rect(
                 world_object.x,
                 world_object.y,
                 world_object.width,
                 world_object.height,
-                world_object.color,
+                color,
             )
         for item in self._npcs:
             character = item.character

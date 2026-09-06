@@ -30,6 +30,7 @@ from explore.packages.registration_models import (
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
+    WorldObjectToggleRegistrationSpec,
 )
 
 _VALID_COLORS = frozenset(valid_color_names())
@@ -152,6 +153,18 @@ def _validate_common_spec(
         )
 
 
+def _valid_toggle(value: object, *, off_color: object) -> bool:
+    return value is None or (
+        isinstance(value, WorldObjectToggleRegistrationSpec)
+        and isinstance(value.off_color, str)
+        and value.off_color in _VALID_COLORS
+        and isinstance(value.on_color, str)
+        and value.on_color in _VALID_COLORS
+        and value.off_color != value.on_color
+        and off_color == value.off_color
+    )
+
+
 def _validate_entry_value(
     entry: CharacterRegistration | WorldObjectRegistration,
     *,
@@ -269,6 +282,32 @@ def _validate_entry_value(
                 _issue(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} must be non-whitespace text when present.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_toggle(specification.toggle, off_color=specification.color):
+            field_location = f"{location}.world_object.toggle"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must retain distinct supported off and on colors.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.toggle is not None and entry.asset_reference is not None:
+            field_location = f"{location}.asset_reference"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} cannot be combined with toggle metadata.",
                     field_location,
                     package_index=package_index,
                     package_id=package_id,
