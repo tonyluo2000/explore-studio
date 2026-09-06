@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from explore.packages.classroom_trail import (
+    DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
     plan_local_classroom_trail,
     run_classroom_trail,
 )
@@ -66,6 +67,11 @@ def _parser() -> argparse.ArgumentParser:
         help="package-qualified character ID to control (for example student:hero)",
     )
     trail.add_argument("--name", default="Classroom Trail", help="local window title")
+    trail.add_argument(
+        "--mission-id",
+        default=DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+        help="exact canonical course mission ID",
+    )
     return parser
 
 
@@ -95,7 +101,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"{issue.code.value}: {issue.location}: {issue.message}")
             return 1
         assert result.plan is not None
-        run_classroom_trail(result.plan, name=args.name)
+        run_classroom_trail(result.plan, name=args.name, mission_id=args.mission_id)
         return 0
 
     package_root = args.package_root.resolve()

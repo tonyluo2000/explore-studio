@@ -16,7 +16,7 @@ from engine.scenes import (
     ClassroomTrailObject,
     ClassroomTrailScene,
 )
-from explore.curriculum import MISSION_01
+from explore.curriculum import MISSION_01, MISSION_02, MISSION_02_ID
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
@@ -661,6 +661,29 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
         "beta-package:fountain",
     ]
 
+    mission_02_renderer = _RecordingRenderer()
+    mission_02_scene = create_classroom_trail_scene(
+        mission_02_renderer,
+        planned.plan,
+        mission_id=MISSION_02_ID,
+    )
+    mission_02_scene.enter()
+    mission_02_scene.render()
+
+    assert mission_02_scene.mission is MISSION_02
+    assert "Mission: Create Your First Object" in mission_02_renderer.text
+    assert MISSION_02.instructions in mission_02_renderer.text
+    assert [item.qualified_id for item in mission_02_scene.objects] == [
+        "alpha-package:lantern",
+        "beta-package:fountain",
+    ]
+    with pytest.raises(KeyError, match="unknown canonical course mission ID"):
+        create_classroom_trail_scene(
+            _RecordingRenderer(),
+            planned.plan,
+            mission_id="unknown-mission",
+        )
+
 
 def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     first = _write_package(
@@ -761,12 +784,12 @@ def test_cli_runs_planned_local_trail(
         "world_object",
         'name: "Object"\nx: 10\ny: 10\n',
     )
-    calls: list[tuple[str, int]] = []
+    calls: list[tuple[str, str, int]] = []
 
     from explore.packages import cli
 
-    def record_run(plan: ClassroomTrailPlan, *, name: str) -> None:
-        calls.append((name, len(plan.world_objects)))
+    def record_run(plan: ClassroomTrailPlan, *, name: str, mission_id: str) -> None:
+        calls.append((name, mission_id, len(plan.world_objects)))
 
     monkeypatch.setattr(cli, "run_classroom_trail", record_run)
 
@@ -780,11 +803,13 @@ def test_cli_runs_planned_local_trail(
                 "player-package:player",
                 "--name",
                 "Room 12 Trail",
+                "--mission-id",
+                MISSION_02_ID,
             ]
         )
         == 0
     )
-    assert calls == [("Room 12 Trail", 1)]
+    assert calls == [("Room 12 Trail", MISSION_02_ID, 1)]
 
 
 def test_runtime_rejects_changed_contract_version(tmp_path: Path) -> None:

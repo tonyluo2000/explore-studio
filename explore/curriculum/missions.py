@@ -8,6 +8,7 @@ from typing import Final
 from engine.scenes import ClassroomTrailMission
 
 MISSION_01_ID: Final = "visit-all-classroom-objects"
+MISSION_02_ID: Final = "create-a-classroom-object"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -15,7 +16,16 @@ MISSION_01: Final = ClassroomTrailMission(
     instructions="Interact with every classroom object.",
 )
 
-_MISSIONS = (MISSION_01,)
+MISSION_02: Final = ClassroomTrailMission(
+    mission_id=MISSION_02_ID,
+    title="Create Your First Object",
+    instructions=(
+        "Create a named world object, choose its x and y position and color, "
+        "then interact with every classroom object."
+    ),
+)
+
+_MISSIONS = (MISSION_01, MISSION_02)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )
