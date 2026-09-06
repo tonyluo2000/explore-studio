@@ -2,8 +2,9 @@
 
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
-Local Mission v0.1 adds one immutable mission definition to Classroom Trail
-v0.4:
+Local Mission v0.1 provides the reusable immutable mission model used by
+Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
+catalog containing exactly one initial entry, Mission 01:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -12,6 +13,12 @@ v0.4:
 The definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Its completion rule is the sole supported rule,
 `ALL_OBJECTS_VISITED`. Other rule values are rejected.
+
+Catalog keys are emitted in deterministic mission-ID order. Exact Mission 01
+lookup returns the canonical immutable definition; unknown or malformed IDs
+raise an error and never select a fallback mission. Classroom Trail scene
+construction resolves Mission 01 from this catalog. The engine owns the model
+and evaluation mechanics, but no authored mission title or instructions.
 
 ## Derived completion
 

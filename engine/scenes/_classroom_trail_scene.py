@@ -71,13 +71,6 @@ class ClassroomTrailMission:
             raise ValueError('completion_rule must be "ALL_OBJECTS_VISITED"')
 
 
-DEFAULT_CLASSROOM_TRAIL_MISSION = ClassroomTrailMission(
-    mission_id="visit-all-classroom-objects",
-    title="Explore Every Object",
-    instructions="Interact with every classroom object.",
-)
-
-
 @dataclass(frozen=True)
 class ClassroomTrailObject:
     """One inert, package-qualified object participating in a trail."""
@@ -150,8 +143,8 @@ class ClassroomTrailScene(Scene):
         objects: tuple[ClassroomTrailObject, ...],
         npcs: tuple[ClassroomTrailNPC, ...] = (),
         *,
+        mission: ClassroomTrailMission,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
-        mission: ClassroomTrailMission = DEFAULT_CLASSROOM_TRAIL_MISSION,
     ) -> None:
         super().__init__()
         if not isinstance(player, Character):

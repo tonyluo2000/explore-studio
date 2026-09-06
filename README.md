@@ -50,8 +50,8 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   implemented Student API contract.
 - [`docs/classroom-trail-v0.4.md`](docs/classroom-trail-v0.4.md) — additive local
   multi-package Classroom Trail contract.
-- [`docs/local-mission-v0.1.md`](docs/local-mission-v0.1.md) — first session-only
-  Classroom Trail mission contract.
+- [`docs/local-mission-v0.1.md`](docs/local-mission-v0.1.md) — curriculum-owned
+  canonical Mission 01 and its session-only Classroom Trail contract.
 
 ## Repository Organization
 
