@@ -5,11 +5,12 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Final
 
-from engine.scenes import ClassroomTrailMission
+from engine.scenes import ClassroomTrailMission, ClassroomTrailMissionCompletionRule
 
 MISSION_01_ID: Final = "visit-all-classroom-objects"
 MISSION_02_ID: Final = "create-a-classroom-object"
 MISSION_03_ID: Final = "make-your-object-respond"
+MISSION_04_ID: Final = "introduce-your-character"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -35,7 +36,14 @@ MISSION_03: Final = ClassroomTrailMission(
     ),
 )
 
-_MISSIONS = (MISSION_01, MISSION_02, MISSION_03)
+MISSION_04: Final = ClassroomTrailMission(
+    mission_id=MISSION_04_ID,
+    title="Give Your Character a Voice",
+    instructions=("Author a greeting for one character, then speak to every interactable NPC."),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
+)
+
+_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )

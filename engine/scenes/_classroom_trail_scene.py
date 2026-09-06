@@ -43,9 +43,10 @@ _MISSION_STATE_Y = 115
 
 
 class ClassroomTrailMissionCompletionRule(StrEnum):
-    """The single completion rule supported by Local Mission v0.1."""
+    """The fixed completion rules supported by Local Mission v0.1."""
 
     ALL_OBJECTS_VISITED = "ALL_OBJECTS_VISITED"
+    ALL_INTERACTABLE_NPCS_SPOKEN_TO = "ALL_INTERACTABLE_NPCS_SPOKEN_TO"
 
 
 @dataclass(frozen=True)
@@ -67,8 +68,15 @@ class ClassroomTrailMission:
         ):
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be non-whitespace text")
-        if self.completion_rule is not ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED:
-            raise ValueError('completion_rule must be "ALL_OBJECTS_VISITED"')
+        if (
+            self.completion_rule is not ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO
+        ):
+            raise ValueError(
+                'completion_rule must be "ALL_OBJECTS_VISITED" or '
+                '"ALL_INTERACTABLE_NPCS_SPOKEN_TO"'
+            )
 
 
 @dataclass(frozen=True)
@@ -172,6 +180,7 @@ class ClassroomTrailScene(Scene):
         self._range_sq = self._interaction_range * self._interaction_range
         self._target: ClassroomTrailTarget | None = None
         self._visited_qualified_ids: frozenset[str] = frozenset()
+        self._spoken_npc_ids: frozenset[str] = frozenset()
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
@@ -195,8 +204,16 @@ class ClassroomTrailScene(Scene):
 
     @property
     def mission_is_complete(self) -> bool:
-        """Derive mission completion solely from existing Trail state."""
-        return self.is_complete
+        """Derive mission completion from the selected fixed rule."""
+        rule = self._mission.completion_rule
+        if rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED:
+            return self.is_complete
+        if rule is ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO:
+            interactable_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.conversation_lines
+            )
+            return bool(interactable_npc_ids) and interactable_npc_ids <= self._spoken_npc_ids
+        raise AssertionError("unsupported mission completion rule")
 
     @property
     def target_qualified_id(self) -> str | None:
@@ -209,6 +226,10 @@ class ClassroomTrailScene(Scene):
     @property
     def visited_qualified_ids(self) -> frozenset[str]:
         return self._visited_qualified_ids
+
+    @property
+    def spoken_npc_ids(self) -> frozenset[str]:
+        return self._spoken_npc_ids
 
     @property
     def visited_count(self) -> int:
@@ -242,6 +263,7 @@ class ClassroomTrailScene(Scene):
             else:
                 lines = self._target.conversation_lines
                 assert lines
+                self._spoken_npc_ids = self._spoken_npc_ids | {self._target.qualified_id}
                 position = self._conversation_positions[self._target.qualified_id]
                 self._feedback_message = f"{self._target.character.name}: {lines[position]}"
                 self._conversation_positions[self._target.qualified_id] = (position + 1) % len(

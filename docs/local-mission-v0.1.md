@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
-catalog containing three entries:
+catalog containing four entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -24,9 +24,16 @@ Mission 03:
 - instructions require students to author `when_near` and `when_interacted`
   text for their world object and then interact with every classroom object.
 
+Mission 04:
+
+- mission ID: `introduce-your-character`;
+- title: `Give Your Character a Voice`;
+- instructions require students to author one character greeting and speak to
+  every interactable NPC.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
-fields. All three use the sole supported completion rule, `ALL_OBJECTS_VISITED`.
-Other rule values are rejected.
+fields. Missions 01–03 use `ALL_OBJECTS_VISITED`; Mission 04 uses
+`ALL_INTERACTABLE_NPCS_SPOKEN_TO`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -36,18 +43,21 @@ model and evaluation mechanics, but no authored mission title or instructions.
 
 ## Derived completion
 
-Mission completion is exactly the existing `ClassroomTrailScene.is_complete`
-value. The scene does not store, mutate, serialize, or persist a separate
-mission-completion flag. Existing visited-object state is additive and
-idempotent, so the derived mission status is session-only and monotonic.
+Mission completion is derived from the selected fixed rule. Existing
+`ClassroomTrailScene.is_complete` and visited-object state remain the source for
+`ALL_OBJECTS_VISITED`. `ALL_INTERACTABLE_NPCS_SPOKEN_TO` uses a separate,
+session-only immutable set of package-qualified NPC IDs. A successful greeting
+display or first conversation response marks that NPC spoken; repeated
+interactions are idempotent. Silent NPCs are excluded, and a Trail with no
+interactable NPCs does not complete this rule.
 
 The Trail UI displays the mission title, instructions, and either `Incomplete`
-or `Complete`. NPC greetings and conversations do not affect mission status.
-Object interaction, visited-object progress, Trail completion, NPC targeting,
-and conversation advancement remain unchanged.
+or `Complete`. NPC responses provide Mission 04 evidence without changing
+object state. Object interaction, visited-object progress, Trail completion,
+NPC targeting, and conversation advancement and wrap remain unchanged.
 
 ## Deferred
 
-NPC objectives, additional completion rules, mission sequencing, rewards,
-persistence, teacher controls, deployment, authentication, and Phase E
-integration remain out of scope.
+Additional completion rules, full-conversation objectives, mission sequencing,
+branching, choices, memory, quests, rewards, persistence, teacher controls,
+deployment, authentication, and Phase E integration remain out of scope.
