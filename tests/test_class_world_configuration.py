@@ -17,6 +17,7 @@ from explore.packages import (
     CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH,
     COHORT_DISPLAY_NAME_MAX_LENGTH,
     SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION,
+    CharacterCounterResponseRegistrationSpec,
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -736,6 +737,42 @@ def test_either_toggle_metadata_is_validated_without_changing_v01_cardinality() 
         ),
     )
     invalid_plan = _plan(_selected("magic-package", invalid_character, first, second))
+    invalid = build_class_world_configuration(_spec(invalid_plan), invalid_plan)
+    assert invalid.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(invalid)
+
+
+def test_counter_comparison_metadata_is_retained_and_reference_validated() -> None:
+    response = CharacterCounterResponseRegistrationSpec("core", "More", "Ready")
+    character = _character(
+        "power-package",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec("Guide", 1, 2, "gold", respond_to_counter=response),
+    )
+    counter = _world_object(
+        "power-package",
+        contribution_id="core",
+        world_object=WorldObjectRegistrationSpec(
+            "Core", 10, 20, "red", counter=WorldObjectCounterRegistrationSpec(2, "Done")
+        ),
+    )
+    plan = _plan(_selected("power-package", character, counter))
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is not None
+    retained = result.configuration.package_set_plan.entries[0]
+    assert isinstance(retained, CharacterRegistration)
+    assert retained.character.respond_to_counter is response
+
+    invalid_character = replace(
+        character,
+        character=replace(
+            character.character,
+            respond_to_counter=CharacterCounterResponseRegistrationSpec("missing", "More", "Ready"),
+        ),
+    )
+    invalid_plan = _plan(_selected("power-package", invalid_character, counter))
     invalid = build_class_world_configuration(_spec(invalid_plan), invalid_plan)
     assert invalid.configuration is None
     assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(invalid)

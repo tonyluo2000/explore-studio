@@ -3,8 +3,8 @@
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
 Local Mission v0.1 provides the reusable immutable mission model used by
-Classroom Trail v0.9. Canonical course content owns an immutable ID-keyed
-catalog containing twelve entries:
+Classroom Trail v0.10. Canonical course content owns an immutable ID-keyed
+catalog containing thirteen entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -90,6 +90,14 @@ Mission 12:
 - instructions teach the idea of `not` with an NPC whose special response is
   shown while one linked switch is OFF, then require both switch states.
 
+Mission 13:
+
+- mission ID: `compare-a-counter-to-its-goal`;
+- title: `Check the Power Level`;
+- instructions require one NPC linked to a same-package counter object,
+  authored responses for below the goal and at or above the goal, and display
+  of both comparison branches.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -99,7 +107,8 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_COUNTER_GOALS_REACHED`; Mission 10 uses
 `ALL_TWO_TOGGLE_BRANCHES_DISPLAYED`; Mission 11 uses
 `ALL_EITHER_TOGGLE_CASES_DISPLAYED`; Mission 12 reuses
-`ALL_CONDITIONAL_BRANCHES_DISPLAYED`. Other rule values are rejected.
+`ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 13 uses
+`ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -158,6 +167,14 @@ Mission 12 reuses the existing one-toggle conditional evidence and completion
 rule from Mission 08. It introduces no new negation syntax, metadata, runtime
 state, or completion rule.
 
+`ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED` uses a separate, session-only
+immutable set of `(npc_qualified_id, at_or_above_goal)` pairs. Interaction with
+a qualifying NPC evaluates exactly `count >= goal`, using the current session
+count and the referenced counter object's authored goal. Both False and True
+must be displayed for every qualifying NPC; zero qualifying NPCs remains
+incomplete. Repeated displays are idempotent, evidence is monotonic, and the
+comparison does not mutate counters or existing runtime evidence.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -166,7 +183,7 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 13+, additional completion rules, mission sequencing, decrement/reset,
+Mission 14+, additional completion rules, mission sequencing, decrement/reset,
 arithmetic expressions, general `not` syntax, nested or arbitrary conditions,
 choices, memory, quests, generic actions or state machines, rewards,
 persistence, teacher controls, deployment, authentication, and Phase E

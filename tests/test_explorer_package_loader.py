@@ -14,6 +14,7 @@ from explore.packages import (
     ContributionDeclaration,
     ExplorerPackageManifest,
     LoadedCharacter,
+    LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
@@ -126,6 +127,95 @@ def test_character_either_toggle_metadata_loads_immutably_and_resolves(tmp_path:
     )
     with pytest.raises(FrozenInstanceError):
         conditional.when_either_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+def test_character_counter_response_loads_immutably_and_resolves(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "power", "type": "world_object", "path": "objects/power.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_counter:\n  object_id: power\n'
+                b'  when_below_goal: "More power."\n'
+                b'  when_at_or_above_goal: "Ready!"\n'
+            ),
+            "objects/power.yaml": (
+                b'name: "Power"\nx: 1\ny: 2\ncounter:\n  goal: 2\n'
+                b'  when_goal_reached: "Charged!"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded and result.package is not None
+    response = result.package.characters[0].respond_to_counter
+    assert response == LoadedCharacterCounterResponse("power", "More power.", "Ready!")
+    with pytest.raises(FrozenInstanceError):
+        response.when_below_goal = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        "respond_to_counter: {object_id: power, when_below_goal: More}\n",
+        "respond_to_counter: {object_id: other:power, when_below_goal: More, "
+        "when_at_or_above_goal: Ready}\n",
+        "respond_to_counter: {object_id: power, when_below_goal: ' ', "
+        "when_at_or_above_goal: Ready}\n",
+        "respond_to_counter: {object_id: power, when_below_goal: More, "
+        "when_at_or_above_goal: Ready, threshold: 2}\n",
+        "greeting: Hello\nrespond_to_counter: {object_id: power, when_below_goal: More, "
+        "when_at_or_above_goal: Ready}\n",
+        "respond_to_toggle: {object_id: power, when_off: Off, when_on: On}\n"
+        "respond_to_counter: {object_id: power, when_below_goal: More, "
+        "when_at_or_above_goal: Ready}\n",
+    ],
+)
+def test_character_counter_response_metadata_fails_closed(metadata: str, tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package", files={"character/guide.yaml": f'name: "Guide"\n{metadata}'.encode()}
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert result.issues
+
+
+@pytest.mark.parametrize(
+    ("target_type", "target_body"),
+    [
+        ("character", 'name: "Not an object"\n'),
+        ("world_object", 'name: "Ordinary"\nx: 1\ny: 2\n'),
+        (
+            "world_object",
+            'name: "Toggle"\nx: 1\ny: 2\ntoggle: {off_color: red, on_color: green}\n',
+        ),
+    ],
+)
+def test_character_counter_reference_rejects_missing_non_object_and_non_counter_targets(
+    target_type: str, target_body: str, tmp_path: Path
+) -> None:
+    target_dir = "character" if target_type == "character" else "objects"
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "power", "type": target_type, "path": f"{target_dir}/power.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_counter: {object_id: power, '
+                b"when_below_goal: More, when_at_or_above_goal: Ready}\n"
+            ),
+            f"{target_dir}/power.yaml": target_body.encode(),
+        },
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert any("respond_to_counter.object_id" in issue.location for issue in result.issues)
 
 
 @pytest.mark.parametrize(
