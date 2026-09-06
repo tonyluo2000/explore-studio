@@ -10,6 +10,7 @@ import pytest
 import yaml
 
 from explore.packages import (
+    CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
@@ -17,6 +18,7 @@ from explore.packages import (
     Compatibility,
     IssueCode,
     LoadedCharacter,
+    LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
@@ -143,6 +145,51 @@ def test_character_greeting_is_validated_and_preserved() -> None:
     entry = result.plan.entries[0]
     assert isinstance(entry, CharacterRegistration)
     assert entry.character.greeting == greeting
+
+
+def test_character_either_toggle_is_preserved_and_references_two_toggles() -> None:
+    conditional = LoadedCharacterEitherToggleResponse(("first", "second"), "Locked.", "Open!")
+    first = _world_object(
+        contribution_id="first",
+        qualified_id="river-rescue:first",
+        color="red",
+        toggle=LoadedWorldObjectToggle("red", "green"),
+    )
+    second = _world_object(
+        contribution_id="second",
+        qualified_id="river-rescue:second",
+        color="blue",
+        toggle=LoadedWorldObjectToggle("blue", "yellow"),
+    )
+    result = build_student_api_registration_plan(
+        _package(_character(respond_to_either_toggle=conditional), first, second)
+    )
+
+    assert result.is_planned and result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert (
+        entry.character.respond_to_either_toggle
+        == CharacterEitherToggleResponseRegistrationSpec(("first", "second"), "Locked.", "Open!")
+    )
+
+
+def test_character_either_toggle_reference_and_mutual_exclusion_fail_closed() -> None:
+    conditional = LoadedCharacterEitherToggleResponse(("missing", "ordinary"), "Locked.", "Open!")
+    result = build_student_api_registration_plan(
+        _package(
+            _character(greeting="Hello", respond_to_either_toggle=conditional),
+            _world_object(contribution_id="ordinary", qualified_id="river-rescue:ordinary"),
+        )
+    )
+
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID in [
+        issue.code for issue in result.issues
+    ]
+    assert RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID in [
+        issue.code for issue in result.issues
+    ]
 
 
 def test_character_conditional_is_resolved_and_preserved_immutably() -> None:

@@ -14,6 +14,7 @@ from engine.scenes import (
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailNPCConditionalResponse,
+    ClassroomTrailNPCEitherToggleResponse,
     ClassroomTrailNPCTwoToggleResponse,
     ClassroomTrailObject,
     ClassroomTrailObjectCounter,
@@ -40,6 +41,8 @@ from explore.curriculum import (
     MISSION_09_ID,
     MISSION_10,
     MISSION_10_ID,
+    MISSION_11,
+    MISSION_11_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -108,6 +111,7 @@ def _trail_npc(
     conversation: tuple[str, ...] | None = None,
     respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None,
     respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None,
+    respond_to_either_toggle: ClassroomTrailNPCEitherToggleResponse | None = None,
 ) -> ClassroomTrailNPC:
     return ClassroomTrailNPC(
         qualified_id,
@@ -123,6 +127,7 @@ def _trail_npc(
         conversation,
         respond_to_toggle,
         respond_to_two_toggles,
+        respond_to_either_toggle,
     )
 
 
@@ -207,7 +212,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_seven_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_eight_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -222,6 +227,7 @@ def test_local_mission_is_immutable_and_supports_exactly_seven_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
         ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED,
         ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED,
+        ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -699,6 +705,123 @@ def test_two_toggle_completion_excludes_ordinary_npcs_and_zero_is_incomplete() -
     assert scene.spoken_npc_ids == frozenset({"magic:greeter"})
     assert scene.displayed_two_toggle_branches == frozenset()
     assert scene.mission_is_complete is False
+
+
+def test_either_toggle_model_is_strict_mutually_exclusive_and_same_package() -> None:
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    conditional = ClassroomTrailNPCEitherToggleResponse(
+        ("magic:first", "magic:second"), "Locked.", "Open!"
+    )
+    with pytest.raises(FrozenInstanceError):
+        conditional.when_either_on = "Changed"  # type: ignore[misc]
+    with pytest.raises(ValueError, match="exactly two distinct"):
+        ClassroomTrailNPCEitherToggleResponse(("magic:first", "magic:first"), "Locked.", "Open!")
+    with pytest.raises(ValueError, match="respond_to_either_toggle cannot be combined"):
+        _trail_npc("magic:guide", 30, greeting="Hello", respond_to_either_toggle=conditional)
+    with pytest.raises(ValueError, match="exactly two same-package toggle objects"):
+        ClassroomTrailScene(
+            _RecordingRenderer(),  # type: ignore[arg-type]
+            Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+            (
+                _trail_object("magic:first", 190, color=toggle.off_color, toggle=toggle),
+                _trail_object("magic:second", 350, color=toggle.off_color, toggle=toggle),
+            ),
+            (
+                _trail_npc(
+                    "magic:guide",
+                    30,
+                    respond_to_either_toggle=ClassroomTrailNPCEitherToggleResponse(
+                        ("magic:first", "other:second"), "Locked.", "Open!"
+                    ),
+                ),
+            ),
+            mission=MISSION_11,
+        )
+
+
+def test_either_toggle_or_truth_cases_are_monotonic_and_complete_mission_11() -> None:
+    renderer = _RecordingRenderer()
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object(
+                "magic:first",
+                190,
+                color=toggle.off_color,
+                toggle=toggle,
+                counter=ClassroomTrailObjectCounter(2, "Powered!"),
+            ),
+            _trail_object("magic:second", 350, color=toggle.off_color, toggle=toggle),
+        ),
+        (
+            _trail_npc(
+                "magic:guide",
+                30,
+                name="Guide",
+                respond_to_either_toggle=ClassroomTrailNPCEitherToggleResponse(
+                    ("magic:first", "magic:second"), "Locked.", "Open!"
+                ),
+            ),
+        ),
+        mission=MISSION_11,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # both off
+    scene.render()
+    assert "Guide: Locked." in renderer.text
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # idempotent
+    assert scene.displayed_either_toggle_cases == frozenset({("magic:guide", False, False)})
+    assert not scene.mission_is_complete
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first on
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first only
+    assert ("magic:guide", True, False) in scene.displayed_either_toggle_cases
+    assert not scene.mission_is_complete
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first off
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # second on
+    visits_before = scene.visited_qualified_ids
+    counts_before = dict(scene.counter_counts)
+    prior_evidence = scene.displayed_two_toggle_branches
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # second only
+    scene.render()
+    assert "Guide: Open!" in renderer.text
+    assert ("magic:guide", False, True) in scene.displayed_either_toggle_cases
+    assert scene.mission_is_complete
+    assert scene.visited_qualified_ids == visits_before
+    assert dict(scene.counter_counts) == counts_before
+    assert scene.displayed_two_toggle_branches == prior_evidence
+    assert scene.displayed_conditional_branches == frozenset()
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # both on
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert ("magic:guide", True, True) in scene.displayed_either_toggle_cases
+    assert scene.mission_is_complete
+
+
+def test_either_toggle_completion_with_zero_qualifying_npcs_is_incomplete() -> None:
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (_trail_object("magic:object", 200),),
+        (_trail_npc("magic:greeter", 30, greeting="Hello"),),
+        mission=MISSION_11,
+    )
+    scene.enter()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.displayed_either_toggle_cases == frozenset()
+    assert not scene.mission_is_complete
 
 
 def test_counter_runtime_model_is_bounded_and_immutable() -> None:
@@ -1312,7 +1435,7 @@ def test_v01_rejects_but_v07_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.8"
+    assert trail.plan.contract_version == "0.9"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
@@ -1393,7 +1516,7 @@ def test_v07_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.8"
+    assert planned.plan.contract_version == "0.9"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.toggle is not None
     assert registration.world_object.toggle.off_color == "red"
@@ -1470,7 +1593,7 @@ def test_v07_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.8"
+    assert planned.plan.contract_version == "0.9"
     conditional = planned.plan.npcs[0].character.respond_to_toggle
     assert conditional is not None
     assert conditional.object_id == "magic-switch"
@@ -1530,7 +1653,7 @@ def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.8"
+    assert planned.plan.contract_version == "0.9"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.counter is not None
     assert registration.world_object.counter.goal == 2
@@ -1613,7 +1736,7 @@ def test_v08_projects_two_toggle_metadata_into_mission_10_runtime(tmp_path: Path
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.8"
+    assert planned.plan.contract_version == "0.9"
     conditional = planned.plan.npcs[0].character.respond_to_two_toggles
     assert conditional is not None
     assert conditional.object_ids == ("first", "second")
@@ -1643,6 +1766,66 @@ def test_v08_projects_two_toggle_metadata_into_mission_10_runtime(tmp_path: Path
     )
     assert scene.displayed_conditional_branches == frozenset()
     assert scene.mission_is_complete is True
+
+
+def test_v09_projects_either_toggle_metadata_into_mission_11_ui(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+    )
+    root = _write_package(
+        tmp_path / "either",
+        "either-package",
+        "guide",
+        "character",
+        (
+            'name: "Guide"\nx: 30\ny: 0\nrespond_to_either_toggle:\n'
+            '  object_ids: ["first", "second"]\n'
+            '  when_both_off: "Locked."\n  when_either_on: "Open!"\n'
+        ),
+    )
+    manifest = root / "manifest.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + '  - id: "first"\n    type: "world_object"\n'
+        + '    path: "objects/first.yaml"\n  - id: "second"\n'
+        + '    type: "world_object"\n    path: "objects/second.yaml"\n',
+        encoding="utf-8",
+    )
+    (root / "objects").mkdir()
+    (root / "objects/first.yaml").write_text(
+        'name: "First"\nx: 190\ny: 0\ntoggle: {off_color: red, on_color: green}\n', encoding="utf-8"
+    )
+    (root / "objects/second.yaml").write_text(
+        'name: "Second"\nx: 350\ny: 0\ntoggle: {off_color: blue, on_color: yellow}\n',
+        encoding="utf-8",
+    )
+
+    planned = plan_local_classroom_trail(
+        (player_root, root), player_qualified_id="player-package:player"
+    )
+    assert planned.is_planned and planned.plan is not None
+    assert planned.plan.contract_version == "0.9"
+    retained = planned.plan.npcs[0].character.respond_to_either_toggle
+    assert retained is not None and retained.object_ids == ("first", "second")
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_11_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_11
+    assert "Mission: Either Switch Opens It" in renderer.text
+    assert MISSION_11.instructions in renderer.text
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: Locked." in renderer.text
+    assert scene.displayed_either_toggle_cases == frozenset(
+        {("either-package:guide", False, False)}
+    )
+    assert scene.mission_is_complete is False
 
 
 def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> None:
@@ -1905,6 +2088,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_08_ID,
         MISSION_09_ID,
         MISSION_10_ID,
+        MISSION_11_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

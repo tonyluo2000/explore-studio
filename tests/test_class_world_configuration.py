@@ -17,6 +17,7 @@ from explore.packages import (
     CLASS_WORLD_DISPLAY_NAME_MAX_LENGTH,
     COHORT_DISPLAY_NAME_MAX_LENGTH,
     SUPPORTED_CLASS_WORLD_CONFIGURATION_SCHEMA_VERSION,
+    CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
@@ -691,6 +692,53 @@ def test_invalid_two_toggle_reference_cannot_enter_class_world_configuration() -
 
     assert result.configuration is None
     assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
+
+
+def test_either_toggle_metadata_is_validated_without_changing_v01_cardinality() -> None:
+    conditional = CharacterEitherToggleResponseRegistrationSpec(
+        ("first", "second"), "Locked", "Open"
+    )
+    character = _character(
+        "magic-package",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            "Guide", 1, 2, "gold", respond_to_either_toggle=conditional
+        ),
+    )
+    first = _world_object(
+        "magic-package",
+        contribution_id="first",
+        world_object=WorldObjectRegistrationSpec(
+            "First", 10, 20, "red", toggle=WorldObjectToggleRegistrationSpec("red", "green")
+        ),
+    )
+    second = _world_object(
+        "magic-package",
+        contribution_id="second",
+        world_object=WorldObjectRegistrationSpec(
+            "Second", 30, 40, "blue", toggle=WorldObjectToggleRegistrationSpec("blue", "yellow")
+        ),
+    )
+    plan = _plan(_selected("magic-package", character, first, second))
+
+    result = build_class_world_configuration(_spec(plan), plan)
+    assert result.configuration is None
+    assert len(result.issues) == 1
+    assert "at most one world object" in result.issues[0].message
+
+    invalid_character = replace(
+        character,
+        character=replace(
+            character.character,
+            respond_to_either_toggle=CharacterEitherToggleResponseRegistrationSpec(
+                ("first", "missing"), "Locked", "Open"
+            ),
+        ),
+    )
+    invalid_plan = _plan(_selected("magic-package", invalid_character, first, second))
+    invalid = build_class_world_configuration(_spec(invalid_plan), invalid_plan)
+    assert invalid.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(invalid)
 
 
 def test_valid_early_metadata_and_invalid_late_pin_returns_no_partial_configuration() -> None:

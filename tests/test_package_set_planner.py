@@ -12,6 +12,7 @@ import pytest
 import yaml
 
 from explore.packages import (
+    CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
@@ -786,6 +787,61 @@ def test_package_set_rejects_invalid_two_toggle_reference() -> None:
 
     assert result.plan is None
     assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in result.issues]
+
+
+def test_either_toggle_conditional_survives_preflight_and_invalid_reference_fails() -> None:
+    conditional = CharacterEitherToggleResponseRegistrationSpec(
+        ("first", "second"), "Locked", "Open"
+    )
+    character = _character(
+        "magic",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            "Guide", 10, 20, "gold", respond_to_either_toggle=conditional
+        ),
+    )
+    objects = tuple(
+        _world_object(
+            "magic",
+            contribution_id=object_id,
+            world_object=WorldObjectRegistrationSpec(
+                object_id.title(),
+                30,
+                40,
+                "red",
+                toggle=WorldObjectToggleRegistrationSpec("red", "green"),
+            ),
+        )
+        for object_id in conditional.object_ids
+    )
+    result = _build_package_set_plan(
+        (_selection("magic", character, *objects),),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.9 supports",
+    )
+    assert result.is_planned and result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, CharacterRegistration)
+    assert planned.character.respond_to_either_toggle is conditional
+
+    invalid = replace(
+        character,
+        character=replace(
+            character.character,
+            respond_to_either_toggle=CharacterEitherToggleResponseRegistrationSpec(
+                ("first", "missing"), "Locked", "Open"
+            ),
+        ),
+    )
+    failed = _build_package_set_plan(
+        (_selection("magic", invalid, *objects),),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.9 supports",
+    )
+    assert failed.plan is None
+    assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]
 
 
 def test_package_set_rejects_forged_toggle_metadata() -> None:

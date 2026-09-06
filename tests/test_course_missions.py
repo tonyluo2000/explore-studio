@@ -30,11 +30,13 @@ from explore.curriculum import (
     MISSION_09_ID,
     MISSION_10,
     MISSION_10_ID,
+    MISSION_11,
+    MISSION_11_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_10_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_11_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -45,12 +47,14 @@ def test_catalog_contains_exactly_missions_01_through_10_by_deterministic_identi
     assert MISSION_08_ID == "respond-to-object-state"
     assert MISSION_09_ID == "count-object-interactions"
     assert MISSION_10_ID == "require-all-switches-on"
+    assert MISSION_11_ID == "open-with-either-switch"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
         MISSION_09_ID,
         MISSION_02_ID,
         MISSION_04_ID,
         MISSION_03_ID,
+        MISSION_11_ID,
         MISSION_10_ID,
         MISSION_08_ID,
         MISSION_07_ID,
@@ -64,6 +68,7 @@ def test_catalog_contains_exactly_missions_01_through_10_by_deterministic_identi
         MISSION_02,
         MISSION_04,
         MISSION_03,
+        MISSION_11,
         MISSION_10,
         MISSION_08,
         MISSION_07,
@@ -228,6 +233,20 @@ def test_mission_10_requires_displaying_both_two_toggle_branches() -> None:
     )
     with pytest.raises(FrozenInstanceError):
         mission.instructions = "Changed"  # type: ignore[misc]
+
+
+def test_mission_11_requires_all_three_pedagogical_or_cases() -> None:
+    mission = get_course_mission(MISSION_11_ID)
+
+    assert mission is MISSION_11
+    assert mission.title == "Either Switch Opens It"
+    assert "both off" in mission.instructions
+    assert "only the first on" in mission.instructions
+    assert "only the second on" in mission.instructions
+    assert (
+        mission.completion_rule
+        is ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED
+    )
 
 
 @pytest.mark.parametrize("mission_id", ["mission-11", "write-conversation", "", None, 1])

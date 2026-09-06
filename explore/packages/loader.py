@@ -55,6 +55,14 @@ def _conditional_reference_issues(
                 )
                 for index, object_id in enumerate(contribution.respond_to_two_toggles.object_ids)
             )
+        if contribution.respond_to_either_toggle is not None:
+            references += tuple(
+                (
+                    object_id,
+                    f"{contribution.source_path}.respond_to_either_toggle.object_ids[{index}]",
+                )
+                for index, object_id in enumerate(contribution.respond_to_either_toggle.object_ids)
+            )
         for object_id, location in references:
             matches = by_id.get(object_id, [])
             target = matches[0] if len(matches) == 1 else None
