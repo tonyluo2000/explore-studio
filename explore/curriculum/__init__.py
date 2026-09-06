@@ -21,6 +21,8 @@ from explore.curriculum.missions import (
     MISSION_08_ID,
     MISSION_09,
     MISSION_09_ID,
+    MISSION_10,
+    MISSION_10_ID,
     get_course_mission,
 )
 
@@ -45,5 +47,7 @@ __all__ = [
     "MISSION_08_ID",
     "MISSION_09",
     "MISSION_09_ID",
+    "MISSION_10",
+    "MISSION_10_ID",
     "get_course_mission",
 ]

@@ -37,27 +37,42 @@ def _conditional_reference_issues(
         by_id.setdefault(contribution.contribution_id, []).append(contribution)
     issues: list[PackageLoadIssue] = []
     for contribution in contributions:
-        if not isinstance(contribution, LoadedCharacter) or contribution.respond_to_toggle is None:
+        if not isinstance(contribution, LoadedCharacter):
             continue
-        reference = contribution.respond_to_toggle
-        location = f"{contribution.source_path}.respond_to_toggle.object_id"
-        matches = by_id.get(reference.object_id, [])
-        target = matches[0] if len(matches) == 1 else None
-        if len(matches) != 1:
-            message = f"{location} must resolve exactly once within this package."
-        elif not isinstance(target, LoadedWorldObject):
-            message = f"{location} must reference a world object in this package."
-        elif target.toggle is None:
-            message = f"{location} must reference a world object with toggle metadata."
-        else:
-            continue
-        issues.append(
-            PackageLoadIssue(
-                code=PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
-                message=message,
-                location=location,
+        references: tuple[tuple[str, str], ...] = ()
+        if contribution.respond_to_toggle is not None:
+            references += (
+                (
+                    contribution.respond_to_toggle.object_id,
+                    f"{contribution.source_path}.respond_to_toggle.object_id",
+                ),
             )
-        )
+        if contribution.respond_to_two_toggles is not None:
+            references += tuple(
+                (
+                    object_id,
+                    f"{contribution.source_path}.respond_to_two_toggles.object_ids[{index}]",
+                )
+                for index, object_id in enumerate(contribution.respond_to_two_toggles.object_ids)
+            )
+        for object_id, location in references:
+            matches = by_id.get(object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            if len(matches) != 1:
+                message = f"{location} must resolve exactly once within this package."
+            elif not isinstance(target, LoadedWorldObject):
+                message = f"{location} must reference a world object in this package."
+            elif target.toggle is None:
+                message = f"{location} must reference a world object with toggle metadata."
+            else:
+                continue
+            issues.append(
+                PackageLoadIssue(
+                    code=PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                    message=message,
+                    location=location,
+                )
+            )
     return tuple(issues)
 
 

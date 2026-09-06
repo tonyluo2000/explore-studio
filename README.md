@@ -48,10 +48,10 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   architecture decision records.
 - [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
   implemented Student API contract.
-- [`docs/classroom-trail-v0.7.md`](docs/classroom-trail-v0.7.md) — additive local
+- [`docs/classroom-trail-v0.8.md`](docs/classroom-trail-v0.8.md) — additive local
   multi-package Classroom Trail contract.
 - [`docs/local-mission-v0.1.md`](docs/local-mission-v0.1.md) — curriculum-owned
-  canonical Missions 01–09 and their session-only Classroom Trail contract.
+  canonical Missions 01–10 and their session-only Classroom Trail contract.
 
 ## Repository Organization
 

@@ -65,6 +65,21 @@ The mapping requires exactly those three keys and cannot coexist with
 ID resolving exactly once within the same package to a world object with valid
 `toggle` metadata. Both responses must be nonblank. Invalid or cross-package
 references fail closed.
+
+A character may instead declare one fixed Boolean `and` response:
+
+```yaml
+respond_to_two_toggles:
+  object_ids: ["first-switch", "second-switch"]
+  when_not_all_on: "The secret is still locked."
+  when_all_on: "The secret is revealed!"
+```
+
+This mapping requires exactly those keys and is mutually exclusive with
+`greeting`, `conversation`, and `respond_to_toggle`. The ordered list contains
+exactly two distinct unqualified IDs, each resolving exactly once in the same
+package to a valid toggle world object. Both responses must be nonblank.
+
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default

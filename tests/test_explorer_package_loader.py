@@ -15,6 +15,7 @@ from explore.packages import (
     ExplorerPackageManifest,
     LoadedCharacter,
     LoadedCharacterToggleResponse,
+    LoadedCharacterTwoToggleResponse,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
@@ -1061,6 +1062,149 @@ def test_character_conditional_reference_fails_closed(
     assert PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID in [
         issue.code for issue in result.issues
     ]
+
+
+def test_character_two_toggle_conditional_is_strict_and_resolves_same_package(
+    tmp_path: Path,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_two_toggles:\n  object_ids: ["first", "second"]\n'
+                b'  when_not_all_on: "Locked"\n  when_all_on: "Unlocked"\n'
+            ),
+            "objects/first.yaml": (
+                b'name: "First"\nx: 1\ny: 2\ntoggle:\n' b'  off_color: "red"\n  on_color: "green"\n'
+            ),
+            "objects/second.yaml": (
+                b'name: "Second"\nx: 3\ny: 4\ntoggle:\n'
+                b'  off_color: "blue"\n  on_color: "yellow"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded
+    assert result.package is not None
+    assert result.package.characters[0].respond_to_two_toggles == (
+        LoadedCharacterTwoToggleResponse(
+            object_ids=("first", "second"),
+            when_not_all_on="Locked",
+            when_all_on="Unlocked",
+        )
+    )
+    with pytest.raises(FrozenInstanceError):
+        result.package.characters[0].respond_to_two_toggles.when_all_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "conditional_yaml",
+    [
+        "respond_to_two_toggles: {object_ids: [first, second], when_all_on: On}\n",
+        (
+            "respond_to_two_toggles: {object_ids: [first], when_not_all_on: Off, "
+            "when_all_on: On}\n"
+        ),
+        (
+            "respond_to_two_toggles: {object_ids: [first, first], when_not_all_on: Off, "
+            "when_all_on: On}\n"
+        ),
+        (
+            "respond_to_two_toggles: {object_ids: [other:first, second], "
+            "when_not_all_on: Off, when_all_on: On}\n"
+        ),
+        (
+            'respond_to_two_toggles: {object_ids: [first, second], when_not_all_on: " ", '
+            "when_all_on: On}\n"
+        ),
+        (
+            "respond_to_two_toggles: {object_ids: [first, second], when_not_all_on: Off, "
+            "when_all_on: On, extra: no}\n"
+        ),
+        (
+            'greeting: "Hello"\nrespond_to_two_toggles: {object_ids: [first, second], '
+            "when_not_all_on: Off, when_all_on: On}\n"
+        ),
+        (
+            "respond_to_toggle: {object_id: first, when_off: Off, when_on: On}\n"
+            "respond_to_two_toggles: {object_ids: [first, second], when_not_all_on: Off, "
+            "when_all_on: On}\n"
+        ),
+    ],
+)
+def test_character_two_toggle_conditional_shape_fails_closed(
+    tmp_path: Path,
+    conditional_yaml: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+        ],
+        files={
+            "character/guide.yaml": f'name: "Guide"\n{conditional_yaml}'.encode(),
+            "objects/first.yaml": (
+                b'name: "First"\nx: 1\ny: 2\ntoggle:\n' b'  off_color: "red"\n  on_color: "green"\n'
+            ),
+            "objects/second.yaml": (
+                b'name: "Second"\nx: 3\ny: 4\ntoggle:\n'
+                b'  off_color: "blue"\n  on_color: "yellow"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert not result.is_loaded
+    assert result.package is None
+
+
+@pytest.mark.parametrize(
+    ("second_id", "second_type", "second_yaml"),
+    [
+        ("missing", "world_object", 'name: "Unused"\nx: 3\ny: 4\n'),
+        ("second", "character", 'name: "Not an object"\n'),
+        ("second", "world_object", 'name: "Ordinary"\nx: 3\ny: 4\n'),
+    ],
+)
+def test_character_two_toggle_reference_fails_closed(
+    tmp_path: Path,
+    second_id: str,
+    second_type: str,
+    second_yaml: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": second_type, "path": "objects/second.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                f'name: "Guide"\nrespond_to_two_toggles:\n  object_ids: ["first", "{second_id}"]\n'
+                '  when_not_all_on: "Locked"\n  when_all_on: "Unlocked"\n'
+            ).encode(),
+            "objects/first.yaml": (
+                b'name: "First"\nx: 1\ny: 2\ntoggle:\n' b'  off_color: "red"\n  on_color: "green"\n'
+            ),
+            "objects/second.yaml": second_yaml.encode(),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert not result.is_loaded
+    assert result.package is None
 
 
 def test_public_loader_exports() -> None:
