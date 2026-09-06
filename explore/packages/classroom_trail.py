@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from explore._colors import resolve_color
 from explore.packages.classroom_trail_models import (
@@ -30,6 +30,8 @@ from explore.packages.registration_models import (
 
 if TYPE_CHECKING:
     from engine.scenes import ClassroomTrailScene
+
+DEFAULT_CLASSROOM_TRAIL_MISSION_ID: Final = "visit-all-classroom-objects"
 
 
 def _issue(
@@ -201,17 +203,23 @@ def plan_local_classroom_trail(
     )
 
 
-def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> ClassroomTrailScene:
+def create_classroom_trail_scene(
+    renderer: object,
+    plan: ClassroomTrailPlan,
+    *,
+    mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+) -> ClassroomTrailScene:
     """Translate one immutable trail plan into engine-owned runtime objects."""
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
     from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
-    from explore.curriculum import MISSION_01_ID, get_course_mission
+    from explore.curriculum import get_course_mission
 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
         raise ValueError('plan.contract_version must be "0.4"')
+    mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
         or not plan.packages
@@ -293,24 +301,31 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
         engine_player,
         engine_objects,
         engine_npcs,
-        mission=get_course_mission(MISSION_01_ID),
+        mission=mission,
     )
 
 
-def run_classroom_trail(plan: ClassroomTrailPlan, *, name: str = "Classroom Trail") -> None:
+def run_classroom_trail(
+    plan: ClassroomTrailPlan,
+    *,
+    name: str = "Classroom Trail",
+    mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+) -> None:
     """Run one planned trail locally until the window is closed."""
     from engine._config import Config
     from engine._platform import Platform
     from engine.input import InteractionInput
     from engine.rendering import Renderer
+    from explore.curriculum import get_course_mission
 
+    get_course_mission(mission_id)
     config = Config(app_name=name)
     platform = Platform(config)
     platform.initialize()
     scene: ClassroomTrailScene | None = None
     try:
         renderer = Renderer(platform)
-        scene = create_classroom_trail_scene(renderer, plan)
+        scene = create_classroom_trail_scene(renderer, plan, mission_id=mission_id)
         scene.enter()
         while True:
             events = platform.poll_frame_events()
