@@ -22,6 +22,8 @@ from explore.curriculum import (
     MISSION_02_ID,
     MISSION_03,
     MISSION_03_ID,
+    MISSION_04,
+    MISSION_04_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -179,7 +181,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_one_rule() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_two_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -188,6 +190,7 @@ def test_local_mission_is_immutable_and_supports_exactly_one_rule() -> None:
 
     assert tuple(ClassroomTrailMissionCompletionRule) == (
         ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED,
+        ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -259,6 +262,7 @@ def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
     scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
     scene.render()
     assert renderer.text[-1] == "Guide: First"
+    assert scene.spoken_npc_ids == frozenset({"guide:npc"})
     assert scene.mission_is_complete is False
 
     scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.25)
@@ -270,6 +274,80 @@ def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
     scene.render()
     assert renderer.text[-1] == "Guide: Second"
     assert scene.mission_is_complete is True
+
+
+def test_npc_rule_tracks_greeting_and_first_conversation_response_idempotently() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 500),),
+        (
+            _trail_npc("silent:npc", 10, name="Silent"),
+            _trail_npc("alpha:npc", 30, name="Alpha", greeting="Hello!"),
+            _trail_npc("beta:npc", 220, name="Beta", conversation=("First", "Second")),
+        ),
+        mission=MISSION_04,
+        interaction_range=80,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert scene.target_qualified_id == "alpha:npc"
+    assert renderer.text[-1] == "Alpha: Hello!"
+    assert scene.spoken_npc_ids == frozenset({"alpha:npc"})
+    assert scene.mission_is_complete is False
+    assert scene.visited_qualified_ids == frozenset()
+    assert scene.is_complete is False
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.spoken_npc_ids == frozenset({"alpha:npc"})
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.1875)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert scene.target_qualified_id == "beta:npc"
+    assert renderer.text[-1] == "Beta: First"
+    assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+    assert scene.mission_is_complete is True
+    assert scene.visited_qualified_ids == frozenset()
+    assert scene.is_complete is False
+    assert "Mission state: Complete" in renderer.text
+    assert "Trail complete!" not in renderer.text
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Beta: Second"
+    assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Beta: First"
+    assert scene.spoken_npc_ids == frozenset({"alpha:npc", "beta:npc"})
+
+
+def test_npc_rule_is_incomplete_without_interactable_npcs_and_isolated_from_objects() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 30),),
+        (_trail_npc("silent:npc", 10, name="Silent"),),
+        mission=MISSION_04,
+    )
+    scene.enter()
+
+    assert scene.mission_is_complete is False
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.spoken_npc_ids == frozenset()
+    assert scene.visited_qualified_ids == frozenset({"object:lantern"})
+    assert scene.is_complete is True
+    assert scene.mission_is_complete is False
+    assert "Trail complete!" in renderer.text
+    assert "Mission state: Incomplete" in renderer.text
 
 
 def test_nearest_in_range_object_is_targeted() -> None:
@@ -711,6 +789,21 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
     assert mission_03_scene.visited_qualified_ids == frozenset({"alpha-package:lantern"})
     assert mission_03_scene.mission_is_complete is False
 
+    mission_04_renderer = _RecordingRenderer()
+    mission_04_scene = create_classroom_trail_scene(
+        mission_04_renderer,
+        planned.plan,
+        mission_id=MISSION_04_ID,
+    )
+    mission_04_scene.enter()
+    mission_04_scene.render()
+
+    assert mission_04_scene.mission is MISSION_04
+    assert "Mission: Give Your Character a Voice" in mission_04_renderer.text
+    assert MISSION_04.instructions in mission_04_renderer.text
+    assert "Mission state: Incomplete" in mission_04_renderer.text
+    assert mission_04_scene.spoken_npc_ids == frozenset()
+
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         create_classroom_trail_scene(
             _RecordingRenderer(),
@@ -800,7 +893,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID])
+@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID])
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
