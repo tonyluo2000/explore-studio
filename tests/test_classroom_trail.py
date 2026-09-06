@@ -43,6 +43,8 @@ from explore.curriculum import (
     MISSION_10_ID,
     MISSION_11,
     MISSION_11_ID,
+    MISSION_12,
+    MISSION_12_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -1621,6 +1623,30 @@ def test_v07_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
     assert scene.toggle_on_qualified_ids == frozenset({"magic-package:magic-switch"})
     assert scene.mission_is_complete is True
 
+    mission_12_renderer = _RecordingRenderer()
+    mission_12_scene = create_classroom_trail_scene(
+        mission_12_renderer, planned.plan, mission_id=MISSION_12_ID
+    )
+    mission_12_scene.enter()
+    mission_12_scene.render()
+    assert mission_12_scene.mission is MISSION_12
+    assert "Mission: Turn the Rule Around" in mission_12_renderer.text
+    assert MISSION_12.instructions in mission_12_renderer.text
+
+    mission_12_scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    mission_12_scene.render()
+    assert "Guide: The portal is sleeping." in mission_12_renderer.text
+    mission_12_scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    mission_12_scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    mission_12_scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    mission_12_scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    mission_12_scene.render()
+    assert "Guide: The portal is glowing!" in mission_12_renderer.text
+    assert mission_12_scene.displayed_conditional_branches == frozenset(
+        {("magic-package:guide", False), ("magic-package:guide", True)}
+    )
+    assert mission_12_scene.mission_is_complete is True
+
 
 def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -> None:
     player_root = _write_package(
@@ -2089,6 +2115,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_09_ID,
         MISSION_10_ID,
         MISSION_11_ID,
+        MISSION_12_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

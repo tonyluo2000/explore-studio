@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.9. Canonical course content owns an immutable ID-keyed
-catalog containing eleven entries:
+catalog containing twelve entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -83,6 +83,13 @@ Mission 11:
   locked and open responses, and displaying both-off, first-only, and
   second-only cases.
 
+Mission 12:
+
+- mission ID: `invert-a-switch-condition`;
+- title: `Turn the Rule Around`;
+- instructions teach the idea of `not` with an NPC whose special response is
+  shown while one linked switch is OFF, then require both switch states.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -91,7 +98,8 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 09 uses
 `ALL_COUNTER_GOALS_REACHED`; Mission 10 uses
 `ALL_TWO_TOGGLE_BRANCHES_DISPLAYED`; Mission 11 uses
-`ALL_EITHER_TOGGLE_CASES_DISPLAYED`. Other rule values are rejected.
+`ALL_EITHER_TOGGLE_CASES_DISPLAYED`; Mission 12 reuses
+`ALL_CONDITIONAL_BRANCHES_DISPLAYED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -146,6 +154,10 @@ off, first only, and second only for every either-toggle NPC. Both on selects
 the open response and may be retained as evidence but is not required. Zero
 either-toggle NPCs remains incomplete.
 
+Mission 12 reuses the existing one-toggle conditional evidence and completion
+rule from Mission 08. It introduces no new negation syntax, metadata, runtime
+state, or completion rule.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -154,8 +166,8 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 12+, additional completion rules, mission sequencing, decrement/reset,
-arithmetic expressions, `not`, nested or arbitrary conditions, choices,
-memory, quests, generic actions or state machines, rewards, persistence,
-teacher controls, deployment, authentication, and Phase E integration remain
-out of scope.
+Mission 13+, additional completion rules, mission sequencing, decrement/reset,
+arithmetic expressions, general `not` syntax, nested or arbitrary conditions,
+choices, memory, quests, generic actions or state machines, rewards,
+persistence, teacher controls, deployment, authentication, and Phase E
+integration remain out of scope.

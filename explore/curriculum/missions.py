@@ -18,6 +18,7 @@ MISSION_08_ID: Final = "respond-to-object-state"
 MISSION_09_ID: Final = "count-object-interactions"
 MISSION_10_ID: Final = "require-all-switches-on"
 MISSION_11_ID: Final = "open-with-either-switch"
+MISSION_12_ID: Final = "invert-a-switch-condition"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -119,6 +120,17 @@ MISSION_11: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED,
 )
 
+MISSION_12: Final = ClassroomTrailMission(
+    mission_id=MISSION_12_ID,
+    title="Turn the Rule Around",
+    instructions=(
+        "Explore the idea of `not`: link one NPC to a toggle object, make its special response "
+        "happen while the switch is OFF, write the ON response too, then talk to the NPC in "
+        "both states."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -131,6 +143,7 @@ _MISSIONS = (
     MISSION_09,
     MISSION_10,
     MISSION_11,
+    MISSION_12,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
