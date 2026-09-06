@@ -13,6 +13,7 @@ from engine.scenes import (
     ClassroomTrailMission,
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
+    ClassroomTrailNPCConditionalResponse,
     ClassroomTrailObject,
     ClassroomTrailObjectToggle,
     ClassroomTrailScene,
@@ -31,6 +32,8 @@ from explore.curriculum import (
     MISSION_06_ID,
     MISSION_07,
     MISSION_07_ID,
+    MISSION_08,
+    MISSION_08_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -95,6 +98,7 @@ def _trail_npc(
     name: str | None = None,
     greeting: str | None = None,
     conversation: tuple[str, ...] | None = None,
+    respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None,
 ) -> ClassroomTrailNPC:
     return ClassroomTrailNPC(
         qualified_id,
@@ -108,6 +112,7 @@ def _trail_npc(
         ),
         greeting,
         conversation,
+        respond_to_toggle,
     )
 
 
@@ -192,7 +197,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_four_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_five_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -204,6 +209,7 @@ def test_local_mission_is_immutable_and_supports_exactly_four_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
         ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
         ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
+        ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -461,6 +467,100 @@ def test_toggle_completion_is_incomplete_when_trail_has_no_toggle_objects() -> N
     assert scene.is_complete is True
     assert scene.mission_is_complete is False
     assert scene.changed_toggle_qualified_ids == frozenset()
+
+
+def test_conditional_runtime_model_is_strict_and_immutable() -> None:
+    conditional = ClassroomTrailNPCConditionalResponse(
+        "magic:switch", "The lamp is dark.", "The lamp is glowing!"
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        conditional.when_on = "Changed"  # type: ignore[misc]
+    with pytest.raises(ValueError, match="when_off"):
+        ClassroomTrailNPCConditionalResponse("magic:switch", " ", "On")
+    with pytest.raises(ValueError, match="respond_to_toggle cannot be combined"):
+        _trail_npc(
+            "magic:guide",
+            30,
+            greeting="Hello",
+            respond_to_toggle=conditional,
+        )
+
+
+def test_conditional_reference_must_resolve_to_same_package_toggle() -> None:
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    conditional = ClassroomTrailNPCConditionalResponse(
+        "other:switch", "The lamp is dark.", "The lamp is glowing!"
+    )
+
+    with pytest.raises(ValueError, match="same-package toggle object"):
+        ClassroomTrailScene(
+            _RecordingRenderer(),  # type: ignore[arg-type]
+            Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+            (_trail_object("magic:switch", 190, color=toggle.off_color, toggle=toggle),),
+            (_trail_npc("magic:guide", 30, respond_to_toggle=conditional),),
+            mission=MISSION_08,
+        )
+
+
+def test_conditional_npc_displays_current_branch_and_records_monotonic_evidence() -> None:
+    renderer = _RecordingRenderer()
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    conditional = ClassroomTrailNPCConditionalResponse(
+        "magic:switch", "The lamp is dark.", "The lamp is glowing!"
+    )
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("magic:switch", 190, color=toggle.off_color, toggle=toggle),),
+        (_trail_npc("magic:guide", 30, name="Guide", respond_to_toggle=conditional),),
+        mission=MISSION_08,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: The lamp is dark." in renderer.text
+    assert scene.displayed_conditional_branches == frozenset({("magic:guide", False)})
+    assert scene.toggle_on_qualified_ids == frozenset()
+    assert scene.visited_qualified_ids == frozenset()
+    assert scene.mission_is_complete is False
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.displayed_conditional_branches == frozenset({("magic:guide", False)})
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.toggle_on_qualified_ids == frozenset({"magic:switch"})
+    assert scene.visited_qualified_ids == frozenset({"magic:switch"})
+    assert scene.displayed_conditional_branches == frozenset({("magic:guide", False)})
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: The lamp is glowing!" in renderer.text
+    assert scene.displayed_conditional_branches == frozenset(
+        {("magic:guide", False), ("magic:guide", True)}
+    )
+    assert scene.toggle_on_qualified_ids == frozenset({"magic:switch"})
+    assert scene.mission_is_complete is True
+
+
+def test_conditional_completion_excludes_ordinary_npcs_and_zero_is_incomplete() -> None:
+    ordinary_scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (_trail_object("magic:object", 200),),
+        (_trail_npc("magic:greeter", 30, greeting="Hello"),),
+        mission=MISSION_08,
+    )
+    ordinary_scene.enter()
+    ordinary_scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+
+    assert ordinary_scene.spoken_npc_ids == frozenset({"magic:greeter"})
+    assert ordinary_scene.displayed_conditional_branches == frozenset()
+    assert ordinary_scene.mission_is_complete is False
 
 
 def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
@@ -913,7 +1013,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
     assert "A crystal spark appears!" in renderer.text
 
 
-def test_v01_rejects_but_v05_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
+def test_v01_rejects_but_v06_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -953,14 +1053,14 @@ def test_v01_rejects_but_v05_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.5"
+    assert trail.plan.contract_version == "0.6"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
 
 
-def test_v05_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
+def test_v06_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1004,7 +1104,7 @@ def test_v05_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     ]
 
 
-def test_v05_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: Path) -> None:
+def test_v06_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1034,7 +1134,7 @@ def test_v05_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.5"
+    assert planned.plan.contract_version == "0.6"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.toggle is not None
     assert registration.world_object.toggle.off_color == "red"
@@ -1059,6 +1159,84 @@ def test_v05_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
     assert "Click!" in renderer.text
     assert scene.visited_qualified_ids == frozenset({"switch-package:magic-switch"})
     assert scene.changed_toggle_qualified_ids == frozenset({"switch-package:magic-switch"})
+    assert scene.mission_is_complete is True
+
+
+def test_v06_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+    )
+    conditional_root = _write_package(
+        tmp_path / "conditional",
+        "magic-package",
+        "guide",
+        "character",
+        (
+            'name: "Guide"\nx: 30\ny: 0\n'
+            "respond_to_toggle:\n"
+            '  object_id: "magic-switch"\n'
+            '  when_off: "The portal is sleeping."\n'
+            '  when_on: "The portal is glowing!"\n'
+        ),
+    )
+    manifest = conditional_root / "manifest.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + (
+            '  - id: "magic-switch"\n'
+            '    type: "world_object"\n'
+            '    path: "objects/switch.yaml"\n'
+        ),
+        encoding="utf-8",
+    )
+    (conditional_root / "objects").mkdir()
+    (conditional_root / "objects" / "switch.yaml").write_text(
+        (
+            'name: "Magic Switch"\nx: 190\ny: 0\n'
+            "toggle:\n"
+            '  off_color: "red"\n'
+            '  on_color: "green"\n'
+        ),
+        encoding="utf-8",
+    )
+
+    planned = plan_local_classroom_trail(
+        (player_root, conditional_root),
+        player_qualified_id="player-package:player",
+    )
+
+    assert planned.is_planned
+    assert planned.plan is not None
+    assert planned.plan.contract_version == "0.6"
+    conditional = planned.plan.npcs[0].character.respond_to_toggle
+    assert conditional is not None
+    assert conditional.object_id == "magic-switch"
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_08_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_08
+    assert "Mission: Make an If/Else Character" in renderer.text
+    assert MISSION_08.instructions in renderer.text
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: The portal is sleeping." in renderer.text
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+
+    scene.render()
+    assert "Guide: The portal is glowing!" in renderer.text
+    assert scene.displayed_conditional_branches == frozenset(
+        {("magic-package:guide", False), ("magic-package:guide", True)}
+    )
+    assert scene.toggle_on_qualified_ids == frozenset({"magic-package:magic-switch"})
     assert scene.mission_is_complete is True
 
 
@@ -1319,6 +1497,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_05_ID,
         MISSION_06_ID,
         MISSION_07_ID,
+        MISSION_08_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

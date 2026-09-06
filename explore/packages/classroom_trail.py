@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.5.
+"""Planning and local execution for Classroom Trail contract v0.6.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -50,7 +50,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.5 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.6 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -73,7 +73,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.5 supports",
+        cardinality_contract="Classroom Trail v0.6 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -214,6 +214,7 @@ def create_classroom_trail_scene(
     from engine.entities import WorldObject as EngineWorldObject
     from engine.scenes import (
         ClassroomTrailNPC,
+        ClassroomTrailNPCConditionalResponse,
         ClassroomTrailObject,
         ClassroomTrailObjectToggle,
         ClassroomTrailScene,
@@ -223,7 +224,7 @@ def create_classroom_trail_scene(
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.5"')
+        raise ValueError('plan.contract_version must be "0.6"')
     mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
@@ -306,6 +307,18 @@ def create_classroom_trail_scene(
             ),
             greeting=entry.character.greeting,
             conversation=entry.character.conversation,
+            respond_to_toggle=(
+                None
+                if entry.character.respond_to_toggle is None
+                else ClassroomTrailNPCConditionalResponse(
+                    toggle_qualified_id=(
+                        f"{entry.provenance.package_id}:"
+                        f"{entry.character.respond_to_toggle.object_id}"
+                    ),
+                    when_off=entry.character.respond_to_toggle.when_off,
+                    when_on=entry.character.respond_to_toggle.when_on,
+                )
+            ),
         )
         for entry in plan.npcs
     )

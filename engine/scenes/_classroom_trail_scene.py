@@ -49,6 +49,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_INTERACTABLE_NPCS_SPOKEN_TO = "ALL_INTERACTABLE_NPCS_SPOKEN_TO"
     ALL_CONVERSATION_NPCS_COMPLETED = "ALL_CONVERSATION_NPCS_COMPLETED"
     ALL_TOGGLE_OBJECTS_CHANGED = "ALL_TOGGLE_OBJECTS_CHANGED"
+    ALL_CONDITIONAL_BRANCHES_DISPLAYED = "ALL_CONDITIONAL_BRANCHES_DISPLAYED"
 
 
 @dataclass(frozen=True)
@@ -78,12 +79,15 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
                 '"ALL_INTERACTABLE_NPCS_SPOKEN_TO" or '
                 '"ALL_CONVERSATION_NPCS_COMPLETED" or '
                 '"ALL_TOGGLE_OBJECTS_CHANGED"'
+                ' or "ALL_CONDITIONAL_BRANCHES_DISPLAYED"'
             )
 
 
@@ -139,6 +143,24 @@ class ClassroomTrailObject:
 
 
 @dataclass(frozen=True)
+class ClassroomTrailNPCConditionalResponse:
+    """Fixed if/else response bound to one package-local toggle object."""
+
+    toggle_qualified_id: str
+    when_off: str
+    when_on: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("toggle_qualified_id", self.toggle_qualified_id),
+            ("when_off", self.when_off),
+            ("when_on", self.when_on),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-whitespace text")
+
+
+@dataclass(frozen=True)
 class ClassroomTrailNPC:
     """One stationary character whose NPC role exists only in this trail."""
 
@@ -146,6 +168,7 @@ class ClassroomTrailNPC:
     character: Character
     greeting: str | None = None
     conversation: tuple[str, ...] | None = None
+    respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -164,6 +187,16 @@ class ClassroomTrailNPC:
             raise ValueError("conversation must contain exactly 2 or 3 nonblank lines")
         if self.greeting is not None and self.conversation is not None:
             raise ValueError("conversation cannot be combined with greeting")
+        if self.respond_to_toggle is not None and not isinstance(
+            self.respond_to_toggle, ClassroomTrailNPCConditionalResponse
+        ):
+            raise TypeError(
+                "respond_to_toggle must be a ClassroomTrailNPCConditionalResponse when present"
+            )
+        if self.respond_to_toggle is not None and (
+            self.greeting is not None or self.conversation is not None
+        ):
+            raise ValueError("respond_to_toggle cannot be combined with greeting or conversation")
 
     @property
     def conversation_lines(self) -> tuple[str, ...]:
@@ -221,10 +254,26 @@ class ClassroomTrailScene(Scene):
         self._completed_conversation_npc_ids: frozenset[str] = frozenset()
         self._toggle_on_qualified_ids: frozenset[str] = frozenset()
         self._changed_toggle_qualified_ids: frozenset[str] = frozenset()
+        self._displayed_conditional_branches: frozenset[tuple[str, bool]] = frozenset()
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
+        objects_by_id = {item.qualified_id: item for item in self._objects}
+        for npc in self._npcs:
+            conditional = npc.respond_to_toggle
+            if conditional is None:
+                continue
+            target = objects_by_id.get(conditional.toggle_qualified_id)
+            npc_package, _, _ = npc.qualified_id.partition(":")
+            target_package, separator, _ = conditional.toggle_qualified_id.partition(":")
+            if (
+                target is None
+                or target.toggle is None
+                or not separator
+                or target_package != npc_package
+            ):
+                raise ValueError("respond_to_toggle must reference one same-package toggle object")
 
     @property
     def player(self) -> Character:
@@ -268,6 +317,16 @@ class ClassroomTrailScene(Scene):
             return bool(toggle_object_ids) and (
                 toggle_object_ids <= self._changed_toggle_qualified_ids
             )
+        if rule is ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED:
+            conditional_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.respond_to_toggle is not None
+            )
+            required = frozenset(
+                (qualified_id, is_on)
+                for qualified_id in conditional_npc_ids
+                for is_on in (False, True)
+            )
+            return bool(conditional_npc_ids) and required <= self._displayed_conditional_branches
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -297,6 +356,10 @@ class ClassroomTrailScene(Scene):
     @property
     def changed_toggle_qualified_ids(self) -> frozenset[str]:
         return self._changed_toggle_qualified_ids
+
+    @property
+    def displayed_conditional_branches(self) -> frozenset[tuple[str, bool]]:
+        return self._displayed_conditional_branches
 
     @property
     def visited_count(self) -> int:
@@ -341,21 +404,30 @@ class ClassroomTrailScene(Scene):
                         qualified_id
                     }
             else:
-                lines = self._target.conversation_lines
-                assert lines
                 self._spoken_npc_ids = self._spoken_npc_ids | {self._target.qualified_id}
-                position = self._conversation_positions[self._target.qualified_id]
-                self._feedback_message = f"{self._target.character.name}: {lines[position]}"
-                if (
-                    self._target.conversation is not None
-                    and position == len(self._target.conversation) - 1
-                ):
-                    self._completed_conversation_npc_ids = self._completed_conversation_npc_ids | {
-                        self._target.qualified_id
+                conditional = self._target.respond_to_toggle
+                if conditional is not None:
+                    is_on = conditional.toggle_qualified_id in self._toggle_on_qualified_ids
+                    response = conditional.when_on if is_on else conditional.when_off
+                    self._feedback_message = f"{self._target.character.name}: {response}"
+                    self._displayed_conditional_branches = self._displayed_conditional_branches | {
+                        (self._target.qualified_id, is_on)
                     }
-                self._conversation_positions[self._target.qualified_id] = (position + 1) % len(
-                    lines
-                )
+                else:
+                    lines = self._target.conversation_lines
+                    assert lines
+                    position = self._conversation_positions[self._target.qualified_id]
+                    self._feedback_message = f"{self._target.character.name}: {lines[position]}"
+                    if (
+                        self._target.conversation is not None
+                        and position == len(self._target.conversation) - 1
+                    ):
+                        self._completed_conversation_npc_ids = (
+                            self._completed_conversation_npc_ids | {self._target.qualified_id}
+                        )
+                    self._conversation_positions[self._target.qualified_id] = (position + 1) % len(
+                        lines
+                    )
             self._feedback_remaining = _FEEDBACK_DURATION
         elif self._feedback_remaining > 0:
             self._feedback_remaining = max(0.0, self._feedback_remaining - dt)
@@ -463,7 +535,11 @@ class ClassroomTrailScene(Scene):
         candidates: list[tuple[float, str, ClassroomTrailTarget]] = []
         interactables: tuple[ClassroomTrailTarget, ...] = (
             *self._objects,
-            *(npc for npc in self._npcs if npc.conversation_lines),
+            *(
+                npc
+                for npc in self._npcs
+                if npc.conversation_lines or npc.respond_to_toggle is not None
+            ),
         )
         for item in interactables:
             entity = item.world_object if isinstance(item, ClassroomTrailObject) else item.character

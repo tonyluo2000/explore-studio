@@ -49,7 +49,22 @@ The identity and appearance fields map directly to Student API v0.1 character
 configuration. A character may instead declare an ordered `conversation` of
 exactly two or three nonblank strings. Greeting and conversation cannot both be
 present. This additive text is retained as inert registration metadata for
-Classroom Trail v0.5; it does not add dialogue behavior to the Student API.
+Classroom Trail v0.6; it does not add dialogue behavior to the Student API.
+
+A character may alternatively declare this fixed conditional response:
+
+```yaml
+respond_to_toggle:
+  object_id: "magic-switch"
+  when_off: "The portal is sleeping."
+  when_on: "The portal is glowing!"
+```
+
+The mapping requires exactly those three keys and cannot coexist with
+`greeting` or `conversation`. `object_id` must be an unqualified contribution
+ID resolving exactly once within the same package to a world object with valid
+`toggle` metadata. Both responses must be nonblank. Invalid or cross-package
+references fail closed.
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default
@@ -67,7 +82,7 @@ color: "yellow"                          # optional; default "brown"
 asset_id: "lantern-image"                # optional declared image asset ID
 when_near: "The lantern glows warmly."   # optional nonblank text
 when_interacted: "A crystal spark!"      # optional nonblank text
-toggle:                                  # optional strict Trail v0.5 metadata
+toggle:                                  # optional strict Trail v0.5+ metadata
   off_color: "red"                       # required when toggle is present
   on_color: "green"                      # required and distinct from off_color
 ```
@@ -81,7 +96,7 @@ When `toggle` is present, it must contain exactly the required `off_color` and
 `on_color` Student API color names, and those colors must differ. Top-level
 `color` and `asset_id` cannot coexist with `toggle`. The loader uses
 `off_color` as the immutable base object color and retains both colors as inert
-metadata for Classroom Trail v0.5. It does not create mutable object state.
+metadata for Classroom Trail v0.5+. It does not create mutable object state.
 
 ## Values and strict fields
 

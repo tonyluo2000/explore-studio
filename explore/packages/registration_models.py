@@ -27,6 +27,16 @@ class RegistrationPlanIssueCode(StrEnum):
     CONTRIBUTION_VALUE_INVALID = "CONTRIBUTION_VALUE_INVALID"
     CONTRIBUTION_COLOR_UNSUPPORTED = "CONTRIBUTION_COLOR_UNSUPPORTED"
     CONTRIBUTION_ASSET_TYPE_MISMATCH = "CONTRIBUTION_ASSET_TYPE_MISMATCH"
+    CONDITIONAL_REFERENCE_INVALID = "CONDITIONAL_REFERENCE_INVALID"
+
+
+@dataclass(frozen=True)
+class CharacterToggleResponseRegistrationSpec:
+    """Detached fixed response branches for one package-local toggle."""
+
+    object_id: str
+    when_off: str
+    when_on: str
 
 
 @dataclass(frozen=True)
@@ -51,6 +61,7 @@ class CharacterRegistrationSpec:
     color: str
     greeting: str | None = None
     conversation: tuple[str, ...] | None = None
+    respond_to_toggle: CharacterToggleResponseRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)

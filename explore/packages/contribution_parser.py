@@ -11,6 +11,7 @@ import yaml
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterToggleResponse,
     LoadedContribution,
     LoadedWorldObject,
     LoadedWorldObjectToggle,
@@ -20,8 +21,11 @@ from explore.packages.contribution_models import (
     PackageProvenance,
 )
 from explore.packages.models import ContributionDeclaration
+from explore.packages.policy import is_valid_identifier
 
-_CHARACTER_FIELDS = frozenset({"name", "x", "y", "color", "asset_id", "greeting", "conversation"})
+_CHARACTER_FIELDS = frozenset(
+    {"name", "x", "y", "color", "asset_id", "greeting", "conversation", "respond_to_toggle"}
+)
 _WORLD_OBJECT_FIELDS = frozenset(
     {
         "name",
@@ -206,6 +210,44 @@ def _conversation(
     return tuple(lines) if len(lines) == len(value) else None
 
 
+def _respond_to_toggle(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> LoadedCharacterToggleResponse | None:
+    value = mapping.get("respond_to_toggle", _MISSING)
+    if value is _MISSING:
+        return None
+    location = _field_location(source_path, "respond_to_toggle")
+    if not isinstance(value, Mapping):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be a mapping with object_id, when_off, and when_on.",
+                location,
+            )
+        )
+        return None
+    object_id = _text(value, "object_id", location, issues, required=True, default=None)
+    when_off = _text(value, "when_off", location, issues, required=True, default=None)
+    when_on = _text(value, "when_on", location, issues, required=True, default=None)
+    _unknown_fields(value, frozenset({"object_id", "when_off", "when_on"}), location, issues)
+    if isinstance(object_id, str) and not is_valid_identifier(object_id):
+        field_location = _field_location(location, "object_id")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{field_location} must be one unqualified package-local contribution ID.",
+                field_location,
+            )
+        )
+    if not all(isinstance(value, str) for value in (object_id, when_off, when_on)):
+        return None
+    if not is_valid_identifier(object_id):
+        return None
+    return LoadedCharacterToggleResponse(object_id, when_off, when_on)
+
+
 def _color(
     mapping: Mapping[object, object],
     source_path: str,
@@ -355,12 +397,22 @@ def _parse_character(
         default=None,
     )
     conversation = _conversation(mapping, source_path, issues)
+    respond_to_toggle = _respond_to_toggle(mapping, source_path, issues)
     if greeting is not None and conversation is not None:
         location = _field_location(source_path, "conversation")
         issues.append(
             _issue(
                 PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
                 f"{location} cannot be combined with greeting.",
+                location,
+            )
+        )
+    if respond_to_toggle is not None and (greeting is not None or conversation is not None):
+        location = _field_location(source_path, "respond_to_toggle")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with greeting or conversation.",
                 location,
             )
         )
@@ -387,6 +439,7 @@ def _parse_character(
             image=image,
             greeting=greeting,
             conversation=conversation,
+            respond_to_toggle=respond_to_toggle,
         ),
         (),
     )

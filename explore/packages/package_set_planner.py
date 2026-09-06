@@ -26,6 +26,7 @@ from explore.packages.policy import (
 from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
@@ -165,6 +166,16 @@ def _valid_toggle(value: object, *, off_color: object) -> bool:
     )
 
 
+def _valid_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterToggleResponseRegistrationSpec)
+        and isinstance(value.object_id, str)
+        and is_valid_identifier(value.object_id)
+        and _is_nonblank_text(value.when_off)
+        and _is_nonblank_text(value.when_on)
+    )
+
+
 def _validate_entry_value(
     entry: CharacterRegistration | WorldObjectRegistration,
     *,
@@ -237,6 +248,34 @@ def _validate_entry_value(
                 _issue(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} cannot be combined with greeting.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_conditional(specification.respond_to_toggle):
+            field_location = f"{location}.character.respond_to_toggle"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must retain one valid package-local conditional.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.respond_to_toggle is not None and (
+            specification.greeting is not None or specification.conversation is not None
+        ):
+            field_location = f"{location}.character.respond_to_toggle"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} cannot be combined with greeting or conversation.",
                     field_location,
                     package_index=package_index,
                     package_id=package_id,
@@ -455,6 +494,53 @@ def _validate_entry(
     return entry
 
 
+def _validate_conditional_references(
+    entries: tuple[object, ...],
+    *,
+    package_index: int,
+    package_id: object,
+    issues: list[PackageSetIssue],
+) -> None:
+    by_id: dict[str, list[object]] = {}
+    for entry in entries:
+        contribution_id = getattr(entry, "contribution_id", None)
+        if isinstance(contribution_id, str):
+            by_id.setdefault(contribution_id, []).append(entry)
+    for entry_index, entry in enumerate(entries):
+        if type(entry) is not CharacterRegistration or not isinstance(
+            entry.character, CharacterRegistrationSpec
+        ):
+            continue
+        conditional = entry.character.respond_to_toggle
+        if not isinstance(conditional, CharacterToggleResponseRegistrationSpec):
+            continue
+        matches = by_id.get(conditional.object_id, [])
+        target = matches[0] if len(matches) == 1 else None
+        if (
+            len(matches) == 1
+            and type(target) is WorldObjectRegistration
+            and isinstance(target.world_object, WorldObjectRegistrationSpec)
+            and _valid_toggle(target.world_object.toggle, off_color=target.world_object.color)
+            and target.world_object.toggle is not None
+        ):
+            continue
+        location = (
+            f"selections[{package_index}].registration_plan.entries[{entry_index}]"
+            ".character.respond_to_toggle.object_id"
+        )
+        issues.append(
+            _issue(
+                PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                f"{location} must resolve exactly to one toggle world object in this package.",
+                location,
+                package_index=package_index,
+                package_id=package_id,
+                entry_index=entry_index,
+                entry=entry,
+            )
+        )
+
+
 def _build_package_set_plan(
     selections: Iterable[PackageSelection],
     *,
@@ -601,6 +687,12 @@ def _build_package_set_plan(
             )
             if entry is not None:
                 flattened.append((package_index, entry_index, package_id, entry))
+        _validate_conditional_references(
+            entries,
+            package_index=package_index,
+            package_id=package_id,
+            issues=selection_issues,
+        )
 
     seen_packages: dict[str, tuple[int, object]] = {}
     for package_index, package_id, package_version in package_identity:

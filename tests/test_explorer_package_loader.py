@@ -14,6 +14,7 @@ from explore.packages import (
     ContributionDeclaration,
     ExplorerPackageManifest,
     LoadedCharacter,
+    LoadedCharacterToggleResponse,
     LoadedWorldObject,
     LoadedWorldObjectToggle,
     PackageLoadIssueCode,
@@ -860,6 +861,117 @@ def test_public_loader_models_are_immutable(tmp_path: Path) -> None:
         result.package.characters[0].name = "Changed"  # type: ignore[misc]
     with pytest.raises((FrozenInstanceError, AttributeError)):
         result.package.provenance.package_id = "changed"  # type: ignore[misc]
+
+
+def test_character_conditional_is_strict_and_resolves_to_same_package_toggle(
+    tmp_path: Path,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "switch", "type": "world_object", "path": "objects/switch.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_toggle:\n  object_id: "switch"\n'
+                b'  when_off: "Sleeping"\n  when_on: "Glowing"\n'
+            ),
+            "objects/switch.yaml": (
+                b'name: "Switch"\nx: 1\ny: 2\ntoggle:\n'
+                b'  off_color: "red"\n  on_color: "green"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded
+    assert result.package is not None
+    assert result.package.characters[0].respond_to_toggle == LoadedCharacterToggleResponse(
+        object_id="switch",
+        when_off="Sleeping",
+        when_on="Glowing",
+    )
+    with pytest.raises(FrozenInstanceError):
+        result.package.characters[0].respond_to_toggle.when_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "conditional_yaml",
+    [
+        "respond_to_toggle: {object_id: switch, when_off: Off}\n",
+        'respond_to_toggle: {object_id: switch, when_off: " ", when_on: On}\n',
+        "respond_to_toggle: {object_id: switch, when_off: Off, when_on: On, extra: no}\n",
+        "respond_to_toggle: {object_id: other:switch, when_off: Off, when_on: On}\n",
+        'greeting: "Hello"\nrespond_to_toggle: {object_id: switch, when_off: Off, when_on: On}\n',
+        (
+            'conversation: ["One", "Two"]\n'
+            "respond_to_toggle: {object_id: switch, when_off: Off, when_on: On}\n"
+        ),
+    ],
+)
+def test_character_conditional_shape_fails_closed(
+    tmp_path: Path,
+    conditional_yaml: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "switch", "type": "world_object", "path": "objects/switch.yaml"},
+        ],
+        files={
+            "character/guide.yaml": f'name: "Guide"\n{conditional_yaml}'.encode(),
+            "objects/switch.yaml": (
+                b'name: "Switch"\nx: 1\ny: 2\ntoggle:\n'
+                b'  off_color: "red"\n  on_color: "green"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert not result.is_loaded
+    assert result.package is None
+
+
+@pytest.mark.parametrize(
+    ("target_id", "target_type", "target_yaml"),
+    [
+        ("missing", "world_object", 'name: "Unused"\nx: 1\ny: 2\n'),
+        ("switch", "character", 'name: "Not an object"\n'),
+        ("switch", "world_object", 'name: "Ordinary"\nx: 1\ny: 2\n'),
+    ],
+)
+def test_character_conditional_reference_fails_closed(
+    tmp_path: Path,
+    target_id: str,
+    target_type: str,
+    target_yaml: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "switch", "type": target_type, "path": "objects/target.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                f'name: "Guide"\nrespond_to_toggle:\n  object_id: "{target_id}"\n'
+                '  when_off: "Off"\n  when_on: "On"\n'
+            ).encode(),
+            "objects/target.yaml": target_yaml.encode(),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert not result.is_loaded
+    assert result.package is None
+    assert PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID in [
+        issue.code for issue in result.issues
+    ]
 
 
 def test_public_loader_exports() -> None:

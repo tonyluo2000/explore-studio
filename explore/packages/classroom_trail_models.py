@@ -11,7 +11,7 @@ from explore.packages.registration_models import (
     WorldObjectRegistration,
 )
 
-SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.5"
+SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.6"
 
 
 class ClassroomTrailPlanIssueCode(StrEnum):

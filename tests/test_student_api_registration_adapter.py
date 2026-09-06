@@ -12,9 +12,11 @@ import yaml
 from explore.packages import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     Compatibility,
     IssueCode,
     LoadedCharacter,
+    LoadedCharacterToggleResponse,
     LoadedExplorerPackage,
     LoadedWorldObject,
     LoadedWorldObjectToggle,
@@ -137,6 +139,72 @@ def test_character_greeting_is_validated_and_preserved() -> None:
     entry = result.plan.entries[0]
     assert isinstance(entry, CharacterRegistration)
     assert entry.character.greeting == greeting
+
+
+def test_character_conditional_is_resolved_and_preserved_immutably() -> None:
+    conditional = LoadedCharacterToggleResponse("sign", "Sleeping", "Glowing")
+    toggle = LoadedWorldObjectToggle("red", "green")
+    character = _character(respond_to_toggle=conditional)
+    world_object = _world_object(color="red", toggle=toggle)
+
+    result = build_student_api_registration_plan(_package(character, world_object))
+
+    assert result.is_planned
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert entry.character.respond_to_toggle == CharacterToggleResponseRegistrationSpec(
+        "sign", "Sleeping", "Glowing"
+    )
+    with pytest.raises(FrozenInstanceError):
+        entry.character.respond_to_toggle.when_on = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "contributions",
+    [
+        (_character(respond_to_toggle=LoadedCharacterToggleResponse("missing", "Off", "On")),),
+        (
+            _character(respond_to_toggle=LoadedCharacterToggleResponse("sign", "Off", "On")),
+            _world_object(),
+        ),
+        (
+            _character(respond_to_toggle=LoadedCharacterToggleResponse("other", "Off", "On")),
+            _character(contribution_id="other", qualified_id="river-rescue:other"),
+        ),
+        (
+            _character(respond_to_toggle=LoadedCharacterToggleResponse("sign", "Off", "On")),
+            _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+            _world_object(),
+        ),
+    ],
+)
+def test_character_conditional_reference_is_defensively_revalidated(
+    contributions: tuple[LoadedCharacter | LoadedWorldObject, ...],
+) -> None:
+    result = build_student_api_registration_plan(_package(*contributions))
+
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID in [
+        issue.code for issue in result.issues
+    ]
+
+
+def test_character_conditional_cannot_coexist_with_existing_dialogue() -> None:
+    result = build_student_api_registration_plan(
+        _package(
+            _character(
+                greeting="Hello",
+                respond_to_toggle=LoadedCharacterToggleResponse("sign", "Off", "On"),
+            ),
+            _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green")),
+        )
+    )
+
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID in [
+        issue.code for issue in result.issues
+    ]
 
 
 def test_character_conversation_is_validated_and_preserved() -> None:
