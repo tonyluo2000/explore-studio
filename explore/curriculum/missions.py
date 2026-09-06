@@ -11,6 +11,7 @@ MISSION_01_ID: Final = "visit-all-classroom-objects"
 MISSION_02_ID: Final = "create-a-classroom-object"
 MISSION_03_ID: Final = "make-your-object-respond"
 MISSION_04_ID: Final = "introduce-your-character"
+MISSION_05_ID: Final = "write-a-short-conversation"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -43,7 +44,17 @@ MISSION_04: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO,
 )
 
-_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04)
+MISSION_05: Final = ClassroomTrailMission(
+    mission_id=MISSION_05_ID,
+    title="Write a Conversation",
+    instructions=(
+        "Author a 2–3-line conversation for one character, then speak through every "
+        "conversation NPC's final line."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
+)
+
+_MISSIONS = (MISSION_01, MISSION_02, MISSION_03, MISSION_04, MISSION_05)
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
 )

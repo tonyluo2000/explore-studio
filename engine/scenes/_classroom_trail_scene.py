@@ -47,6 +47,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
 
     ALL_OBJECTS_VISITED = "ALL_OBJECTS_VISITED"
     ALL_INTERACTABLE_NPCS_SPOKEN_TO = "ALL_INTERACTABLE_NPCS_SPOKEN_TO"
+    ALL_CONVERSATION_NPCS_COMPLETED = "ALL_CONVERSATION_NPCS_COMPLETED"
 
 
 @dataclass(frozen=True)
@@ -72,10 +73,13 @@ class ClassroomTrailMission:
             self.completion_rule is not ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
-                '"ALL_INTERACTABLE_NPCS_SPOKEN_TO"'
+                '"ALL_INTERACTABLE_NPCS_SPOKEN_TO" or '
+                '"ALL_CONVERSATION_NPCS_COMPLETED"'
             )
 
 
@@ -181,6 +185,7 @@ class ClassroomTrailScene(Scene):
         self._target: ClassroomTrailTarget | None = None
         self._visited_qualified_ids: frozenset[str] = frozenset()
         self._spoken_npc_ids: frozenset[str] = frozenset()
+        self._completed_conversation_npc_ids: frozenset[str] = frozenset()
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
@@ -213,6 +218,14 @@ class ClassroomTrailScene(Scene):
                 npc.qualified_id for npc in self._npcs if npc.conversation_lines
             )
             return bool(interactable_npc_ids) and interactable_npc_ids <= self._spoken_npc_ids
+        if rule is ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED:
+            conversation_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.conversation is not None
+            )
+            return (
+                bool(conversation_npc_ids)
+                and conversation_npc_ids <= self._completed_conversation_npc_ids
+            )
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -230,6 +243,10 @@ class ClassroomTrailScene(Scene):
     @property
     def spoken_npc_ids(self) -> frozenset[str]:
         return self._spoken_npc_ids
+
+    @property
+    def completed_conversation_npc_ids(self) -> frozenset[str]:
+        return self._completed_conversation_npc_ids
 
     @property
     def visited_count(self) -> int:
@@ -266,6 +283,13 @@ class ClassroomTrailScene(Scene):
                 self._spoken_npc_ids = self._spoken_npc_ids | {self._target.qualified_id}
                 position = self._conversation_positions[self._target.qualified_id]
                 self._feedback_message = f"{self._target.character.name}: {lines[position]}"
+                if (
+                    self._target.conversation is not None
+                    and position == len(self._target.conversation) - 1
+                ):
+                    self._completed_conversation_npc_ids = self._completed_conversation_npc_ids | {
+                        self._target.qualified_id
+                    }
                 self._conversation_positions[self._target.qualified_id] = (position + 1) % len(
                     lines
                 )

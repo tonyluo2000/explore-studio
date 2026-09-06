@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
-catalog containing four entries:
+catalog containing five entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -31,9 +31,17 @@ Mission 04:
 - instructions require students to author one character greeting and speak to
   every interactable NPC.
 
+Mission 05:
+
+- mission ID: `write-a-short-conversation`;
+- title: `Write a Conversation`;
+- instructions require students to author one 2–3-line character conversation
+  and speak through every conversation NPC's final line.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 use `ALL_OBJECTS_VISITED`; Mission 04 uses
-`ALL_INTERACTABLE_NPCS_SPOKEN_TO`. Other rule values are rejected.
+`ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
+`ALL_CONVERSATION_NPCS_COMPLETED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -51,13 +59,19 @@ display or first conversation response marks that NPC spoken; repeated
 interactions are idempotent. Silent NPCs are excluded, and a Trail with no
 interactable NPCs does not complete this rule.
 
+`ALL_CONVERSATION_NPCS_COMPLETED` uses a separate, session-only immutable set
+of package-qualified NPC IDs. An NPC enters that set when its final authored
+conversation line is displayed. Greeting-only and silent NPCs are excluded,
+and a Trail with no conversation NPCs does not complete this rule. Repeated
+completion and later conversation wrap leave the evidence intact.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
-or `Complete`. NPC responses provide Mission 04 evidence without changing
+or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
 NPC targeting, and conversation advancement and wrap remain unchanged.
 
 ## Deferred
 
-Additional completion rules, full-conversation objectives, mission sequencing,
-branching, choices, memory, quests, rewards, persistence, teacher controls,
-deployment, authentication, and Phase E integration remain out of scope.
+Additional completion rules, mission sequencing, branching, choices,
+conditions, memory, quests, rewards, persistence, teacher controls, deployment,
+authentication, and Phase E integration remain out of scope.

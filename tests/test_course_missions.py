@@ -18,20 +18,24 @@ from explore.curriculum import (
     MISSION_03_ID,
     MISSION_04,
     MISSION_04_ID,
+    MISSION_05,
+    MISSION_05_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_04_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_05_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
     assert MISSION_04_ID == "introduce-your-character"
+    assert MISSION_05_ID == "write-a-short-conversation"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_02_ID,
         MISSION_04_ID,
         MISSION_03_ID,
         MISSION_01_ID,
+        MISSION_05_ID,
     )
     assert tuple(COURSE_MISSION_CATALOG) == CANONICAL_COURSE_MISSION_IDS
     assert tuple(COURSE_MISSION_CATALOG.values()) == (
@@ -39,6 +43,7 @@ def test_catalog_contains_exactly_missions_01_through_04_by_deterministic_identi
         MISSION_04,
         MISSION_03,
         MISSION_01,
+        MISSION_05,
     )
 
 
@@ -103,7 +108,26 @@ def test_mission_04_requires_an_authored_greeting_and_npc_interactions() -> None
         mission.instructions = "Changed"  # type: ignore[misc]
 
 
-@pytest.mark.parametrize("mission_id", ["mission-05", "introduce-character", "", None, 1])
+def test_mission_05_requires_an_authored_short_conversation_and_final_lines() -> None:
+    mission = get_course_mission(MISSION_05_ID)
+
+    assert mission is MISSION_05
+    assert mission.title == "Write a Conversation"
+    assert mission.instructions == (
+        "Author a 2–3-line conversation for one character, then speak through every "
+        "conversation NPC's final line."
+    )
+    assert "2–3-line conversation" in mission.instructions
+    assert "every conversation NPC's final line" in mission.instructions
+    assert (
+        mission.completion_rule
+        is ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED
+    )
+    with pytest.raises(FrozenInstanceError):
+        mission.instructions = "Changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("mission_id", ["mission-06", "write-conversation", "", None, 1])
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         get_course_mission(mission_id)  # type: ignore[arg-type]
