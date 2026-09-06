@@ -26,11 +26,13 @@ from explore.curriculum import (
     MISSION_07_ID,
     MISSION_08,
     MISSION_08_ID,
+    MISSION_09,
+    MISSION_09_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_08_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_09_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -39,8 +41,10 @@ def test_catalog_contains_exactly_missions_01_through_08_by_deterministic_identi
     assert MISSION_06_ID == "build-an-object-collection"
     assert MISSION_07_ID == "toggle-an-object-state"
     assert MISSION_08_ID == "respond-to-object-state"
+    assert MISSION_09_ID == "count-object-interactions"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
+        MISSION_09_ID,
         MISSION_02_ID,
         MISSION_04_ID,
         MISSION_03_ID,
@@ -52,6 +56,7 @@ def test_catalog_contains_exactly_missions_01_through_08_by_deterministic_identi
     assert tuple(COURSE_MISSION_CATALOG) == CANONICAL_COURSE_MISSION_IDS
     assert tuple(COURSE_MISSION_CATALOG.values()) == (
         MISSION_06,
+        MISSION_09,
         MISSION_02,
         MISSION_04,
         MISSION_03,
@@ -189,7 +194,21 @@ def test_mission_08_requires_displaying_both_conditional_branches() -> None:
         mission.instructions = "Changed"  # type: ignore[misc]
 
 
-@pytest.mark.parametrize("mission_id", ["mission-09", "write-conversation", "", None, 1])
+def test_mission_09_requires_reaching_every_counter_goal() -> None:
+    mission = get_course_mission(MISSION_09_ID)
+
+    assert mission is MISSION_09
+    assert mission.title == "Power It Up"
+    assert mission.instructions == (
+        "Give an object a goal from 2 to 5 and a goal-reached message, then interact until every "
+        "counter object reaches its goal."
+    )
+    assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED
+    with pytest.raises(FrozenInstanceError):
+        mission.instructions = "Changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("mission_id", ["mission-10", "write-conversation", "", None, 1])
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         get_course_mission(mission_id)  # type: ignore[arg-type]

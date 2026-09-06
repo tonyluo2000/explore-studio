@@ -107,7 +107,7 @@ collections are tuples.
 
 The detached specification retains Student API v0.1 character configuration
 plus optional inert greeting, conversation, or fixed conditional metadata used
-by Classroom Trail v0.6.
+by Classroom Trail v0.6+.
 The adapter does not apply that text as Student API behavior. Engine-owned size, movement
 speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
 invented.
@@ -127,8 +127,9 @@ invented.
 | optional `when_near` | `world_object.when_near` |
 | optional `when_interacted` | `world_object.when_interacted` |
 | optional strict `toggle` colors | `world_object.toggle` |
+| optional bounded `counter` | `world_object.counter` |
 
-Interaction messages remain inert strings. Python-looking text is not evaluated,
+Interaction and counter messages remain inert strings. Python-looking text is not evaluated,
 imported, converted to a callable, or installed as a callback.
 
 ## Assets

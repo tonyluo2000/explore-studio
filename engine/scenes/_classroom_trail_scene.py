@@ -7,8 +7,10 @@ entities and inert interaction text.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from engine.entities import Bounds, Character, WorldObject
@@ -50,6 +52,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_CONVERSATION_NPCS_COMPLETED = "ALL_CONVERSATION_NPCS_COMPLETED"
     ALL_TOGGLE_OBJECTS_CHANGED = "ALL_TOGGLE_OBJECTS_CHANGED"
     ALL_CONDITIONAL_BRANCHES_DISPLAYED = "ALL_CONDITIONAL_BRANCHES_DISPLAYED"
+    ALL_COUNTER_GOALS_REACHED = "ALL_COUNTER_GOALS_REACHED"
 
 
 @dataclass(frozen=True)
@@ -81,6 +84,8 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
@@ -88,6 +93,7 @@ class ClassroomTrailMission:
                 '"ALL_CONVERSATION_NPCS_COMPLETED" or '
                 '"ALL_TOGGLE_OBJECTS_CHANGED"'
                 ' or "ALL_CONDITIONAL_BRANCHES_DISPLAYED"'
+                ' or "ALL_COUNTER_GOALS_REACHED"'
             )
 
 
@@ -116,6 +122,20 @@ class ClassroomTrailObjectToggle:
 
 
 @dataclass(frozen=True)
+class ClassroomTrailObjectCounter:
+    """One fixed bounded interaction goal and its authored feedback."""
+
+    goal: int
+    when_goal_reached: str
+
+    def __post_init__(self) -> None:
+        if isinstance(self.goal, bool) or not isinstance(self.goal, int) or not 2 <= self.goal <= 5:
+            raise ValueError("goal must be a whole number from 2 through 5")
+        if not isinstance(self.when_goal_reached, str) or not self.when_goal_reached.strip():
+            raise ValueError("when_goal_reached must be non-whitespace text")
+
+
+@dataclass(frozen=True)
 class ClassroomTrailObject:
     """One inert, package-qualified object participating in a trail."""
 
@@ -124,6 +144,7 @@ class ClassroomTrailObject:
     when_near: str | None = None
     when_interacted: str | None = None
     toggle: ClassroomTrailObjectToggle | None = None
+    counter: ClassroomTrailObjectCounter | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -134,6 +155,8 @@ class ClassroomTrailObject:
             raise TypeError("toggle must be a ClassroomTrailObjectToggle when present")
         if self.toggle is not None and self.world_object.color != self.toggle.off_color:
             raise ValueError("world_object.color must equal toggle.off_color")
+        if self.counter is not None and not isinstance(self.counter, ClassroomTrailObjectCounter):
+            raise TypeError("counter must be a ClassroomTrailObjectCounter when present")
         for field_name, message in (
             ("when_near", self.when_near),
             ("when_interacted", self.when_interacted),
@@ -255,6 +278,9 @@ class ClassroomTrailScene(Scene):
         self._toggle_on_qualified_ids: frozenset[str] = frozenset()
         self._changed_toggle_qualified_ids: frozenset[str] = frozenset()
         self._displayed_conditional_branches: frozenset[tuple[str, bool]] = frozenset()
+        self._counter_counts: Mapping[str, int] = MappingProxyType(
+            {item.qualified_id: 0 for item in self._objects if item.counter is not None}
+        )
         self._interaction_pulse = False
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
@@ -327,6 +353,12 @@ class ClassroomTrailScene(Scene):
                 for is_on in (False, True)
             )
             return bool(conditional_npc_ids) and required <= self._displayed_conditional_branches
+        if rule is ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED:
+            counter_objects = tuple(item for item in self._objects if item.counter is not None)
+            return bool(counter_objects) and all(
+                self._counter_counts[item.qualified_id] >= item.counter.goal
+                for item in counter_objects
+            )
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -360,6 +392,10 @@ class ClassroomTrailScene(Scene):
     @property
     def displayed_conditional_branches(self) -> frozenset[tuple[str, bool]]:
         return self._displayed_conditional_branches
+
+    @property
+    def counter_counts(self) -> Mapping[str, int]:
+        return self._counter_counts
 
     @property
     def visited_count(self) -> int:
@@ -403,6 +439,20 @@ class ClassroomTrailScene(Scene):
                     self._changed_toggle_qualified_ids = self._changed_toggle_qualified_ids | {
                         qualified_id
                     }
+                if self._target.counter is not None:
+                    qualified_id = self._target.qualified_id
+                    count = self._counter_counts[qualified_id] + 1
+                    self._counter_counts = MappingProxyType(
+                        {**self._counter_counts, qualified_id: count}
+                    )
+                    counter = self._target.counter
+                    self._feedback_message = (
+                        f"{self._feedback_message} Count: {count} / {counter.goal}."
+                    )
+                    if count >= counter.goal:
+                        self._feedback_message = (
+                            f"{self._feedback_message} {counter.when_goal_reached}"
+                        )
             else:
                 self._spoken_npc_ids = self._spoken_npc_ids | {self._target.qualified_id}
                 conditional = self._target.respond_to_toggle

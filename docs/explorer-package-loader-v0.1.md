@@ -49,7 +49,7 @@ The identity and appearance fields map directly to Student API v0.1 character
 configuration. A character may instead declare an ordered `conversation` of
 exactly two or three nonblank strings. Greeting and conversation cannot both be
 present. This additive text is retained as inert registration metadata for
-Classroom Trail v0.6; it does not add dialogue behavior to the Student API.
+Classroom Trail v0.6+; it does not add dialogue behavior to the Student API.
 
 A character may alternatively declare this fixed conditional response:
 
@@ -85,6 +85,9 @@ when_interacted: "A crystal spark!"      # optional nonblank text
 toggle:                                  # optional strict Trail v0.5+ metadata
   off_color: "red"                       # required when toggle is present
   on_color: "green"                      # required and distinct from off_color
+counter:                                 # optional strict Trail v0.7 metadata
+  goal: 3                                # required integer from 2 through 5
+  when_goal_reached: "Fully powered!"    # required nonblank text
 ```
 
 This shape maps to the Student API v0.1 object configuration and its two
@@ -97,6 +100,11 @@ When `toggle` is present, it must contain exactly the required `off_color` and
 `color` and `asset_id` cannot coexist with `toggle`. The loader uses
 `off_color` as the immutable base object color and retains both colors as inert
 metadata for Classroom Trail v0.5+. It does not create mutable object state.
+
+When `counter` is present, it contains exactly the two required fields shown
+above. Boolean, non-integer, and out-of-range goals are rejected. Counter
+metadata may coexist with appearance, messages, and toggle metadata; it is
+retained inertly for Classroom Trail v0.7.
 
 ## Values and strict fields
 

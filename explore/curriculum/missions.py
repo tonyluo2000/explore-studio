@@ -15,6 +15,7 @@ MISSION_05_ID: Final = "write-a-short-conversation"
 MISSION_06_ID: Final = "build-an-object-collection"
 MISSION_07_ID: Final = "toggle-an-object-state"
 MISSION_08_ID: Final = "respond-to-object-state"
+MISSION_09_ID: Final = "count-object-interactions"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -86,6 +87,16 @@ MISSION_08: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
 )
 
+MISSION_09: Final = ClassroomTrailMission(
+    mission_id=MISSION_09_ID,
+    title="Power It Up",
+    instructions=(
+        "Give an object a goal from 2 to 5 and a goal-reached message, then interact until every "
+        "counter object reaches its goal."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -95,6 +106,7 @@ _MISSIONS = (
     MISSION_06,
     MISSION_07,
     MISSION_08,
+    MISSION_09,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

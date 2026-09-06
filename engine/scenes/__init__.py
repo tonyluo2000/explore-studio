@@ -16,6 +16,7 @@ from engine.scenes._classroom_trail_scene import (
     ClassroomTrailNPC,
     ClassroomTrailNPCConditionalResponse,
     ClassroomTrailObject,
+    ClassroomTrailObjectCounter,
     ClassroomTrailObjectToggle,
     ClassroomTrailScene,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "ClassroomTrailNPC",
     "ClassroomTrailNPCConditionalResponse",
     "ClassroomTrailObject",
+    "ClassroomTrailObjectCounter",
     "ClassroomTrailObjectToggle",
     "ClassroomTrailScene",
     "DefaultScene",

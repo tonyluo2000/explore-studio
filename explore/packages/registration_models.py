@@ -73,6 +73,14 @@ class WorldObjectToggleRegistrationSpec:
 
 
 @dataclass(frozen=True)
+class WorldObjectCounterRegistrationSpec:
+    """Detached bounded interaction goal for one world object."""
+
+    goal: int
+    when_goal_reached: str
+
+
+@dataclass(frozen=True)
 class WorldObjectRegistrationSpec:
     """Detached Student API v0.1 configuration for one world object."""
 
@@ -83,6 +91,7 @@ class WorldObjectRegistrationSpec:
     when_near: str | None = None
     when_interacted: str | None = None
     toggle: WorldObjectToggleRegistrationSpec | None = None
+    counter: WorldObjectCounterRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)

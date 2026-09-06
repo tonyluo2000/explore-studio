@@ -16,6 +16,7 @@ from explore.packages import (
     LoadedCharacter,
     LoadedCharacterToggleResponse,
     LoadedWorldObject,
+    LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
     PackageLoadIssueCode,
     PackageMetadata,
@@ -664,6 +665,94 @@ def test_world_object_toggle_rejects_ambiguous_top_level_appearance(
 
     assert result.package is None
     assert result.issues[0].code is PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].location == location
+
+
+def test_world_object_counter_loads_and_coexists_with_toggle(tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[{"id": "core", "type": "world_object", "path": "objects/core.yaml"}],
+        files={
+            "objects/core.yaml": (
+                b'name: "Power Core"\nx: 10\ny: 20\nwhen_interacted: "Pressed."\n'
+                b'toggle:\n  off_color: "red"\n  on_color: "green"\n'
+                b'counter:\n  goal: 3\n  when_goal_reached: "Fully powered!"\n'
+            )
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded
+    assert result.package is not None
+    world_object = result.package.world_objects[0]
+    assert world_object.toggle == LoadedWorldObjectToggle("red", "green")
+    assert world_object.counter == LoadedWorldObjectCounter(3, "Fully powered!")
+    with pytest.raises(FrozenInstanceError):
+        world_object.counter.goal = 4  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    ("counter_yaml", "code", "location"),
+    [
+        (
+            'counter: "three"\n',
+            PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+            "objects/core.yaml.counter",
+        ),
+        (
+            'counter: {when_goal_reached: "Ready"}\n',
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+            "objects/core.yaml.counter.goal",
+        ),
+        (
+            "counter: {goal: 3}\n",
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+            "objects/core.yaml.counter.when_goal_reached",
+        ),
+        (
+            'counter: {goal: true, when_goal_reached: "Ready"}\n',
+            PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+            "objects/core.yaml.counter.goal",
+        ),
+        (
+            'counter: {goal: 1, when_goal_reached: "Ready"}\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+            "objects/core.yaml.counter.goal",
+        ),
+        (
+            'counter: {goal: 6, when_goal_reached: "Ready"}\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+            "objects/core.yaml.counter.goal",
+        ),
+        (
+            'counter: {goal: 3, when_goal_reached: " "}\n',
+            PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+            "objects/core.yaml.counter.when_goal_reached",
+        ),
+        (
+            'counter: {goal: 3, when_goal_reached: "Ready", reset: true}\n',
+            PackageLoadIssueCode.CONTRIBUTION_FIELD_UNKNOWN,
+            "objects/core.yaml.counter.reset",
+        ),
+    ],
+)
+def test_world_object_counter_fails_closed_for_invalid_shape(
+    tmp_path: Path,
+    counter_yaml: str,
+    code: PackageLoadIssueCode,
+    location: str,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[{"id": "core", "type": "world_object", "path": "objects/core.yaml"}],
+        files={"objects/core.yaml": f'name: "Power Core"\nx: 10\ny: 20\n{counter_yaml}'.encode()},
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.package is None
+    assert result.issues[0].code is code
     assert result.issues[0].location == location
 
 

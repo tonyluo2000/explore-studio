@@ -29,6 +29,7 @@ from explore.packages.registration_models import (
     CharacterToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -163,6 +164,16 @@ def _valid_toggle(value: object, *, off_color: object) -> bool:
         and value.on_color in _VALID_COLORS
         and value.off_color != value.on_color
         and off_color == value.off_color
+    )
+
+
+def _valid_counter(value: object) -> bool:
+    return value is None or (
+        isinstance(value, WorldObjectCounterRegistrationSpec)
+        and isinstance(value.goal, int)
+        and not isinstance(value.goal, bool)
+        and 2 <= value.goal <= 5
+        and _is_nonblank_text(value.when_goal_reached)
     )
 
 
@@ -334,6 +345,19 @@ def _validate_entry_value(
                 _issue(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} must retain distinct supported off and on colors.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_counter(specification.counter):
+            field_location = f"{location}.world_object.counter"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must retain a goal from 2 through 5 and a message.",
                     field_location,
                     package_index=package_index,
                     package_id=package_id,

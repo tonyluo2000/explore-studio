@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.6.
+"""Planning and local execution for Classroom Trail contract v0.7.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -50,7 +50,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.6 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.7 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -73,7 +73,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.6 supports",
+        cardinality_contract="Classroom Trail v0.7 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -216,6 +216,7 @@ def create_classroom_trail_scene(
         ClassroomTrailNPC,
         ClassroomTrailNPCConditionalResponse,
         ClassroomTrailObject,
+        ClassroomTrailObjectCounter,
         ClassroomTrailObjectToggle,
         ClassroomTrailScene,
     )
@@ -224,7 +225,7 @@ def create_classroom_trail_scene(
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.6"')
+        raise ValueError('plan.contract_version must be "0.7"')
     mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
@@ -289,6 +290,14 @@ def create_classroom_trail_scene(
                 else ClassroomTrailObjectToggle(
                     off_color=resolve_color(entry.world_object.toggle.off_color),
                     on_color=resolve_color(entry.world_object.toggle.on_color),
+                )
+            ),
+            counter=(
+                None
+                if entry.world_object.counter is None
+                else ClassroomTrailObjectCounter(
+                    goal=entry.world_object.counter.goal,
+                    when_goal_reached=entry.world_object.counter.when_goal_reached,
                 )
             ),
         )
