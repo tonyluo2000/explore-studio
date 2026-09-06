@@ -26,6 +26,8 @@ from explore.curriculum import (
     MISSION_04_ID,
     MISSION_05,
     MISSION_05_ID,
+    MISSION_06,
+    MISSION_06_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -61,18 +63,20 @@ def _trail_object(
     qualified_id: str,
     x: int,
     *,
+    name: str | None = None,
+    color: tuple[int, int, int] = (0, 255, 0),
     near: str | None = None,
     interacted: str | None = None,
 ) -> ClassroomTrailObject:
     return ClassroomTrailObject(
         qualified_id,
         WorldObject(
-            name=qualified_id,
+            name=name or qualified_id,
             x=x,
             y=0,
             width=20,
             height=20,
-            color=(0, 255, 0),
+            color=color,
         ),
         near,
         interacted,
@@ -248,6 +252,67 @@ def test_mission_completion_is_derived_idempotent_and_monotonic() -> None:
     assert scene.mission_is_complete == scene.is_complete
     assert "Mission state: Complete" in renderer.text
     assert "_mission_complete" not in vars(scene)
+
+
+def test_mission_06_ui_and_completion_reuse_existing_three_object_trail_behavior() -> None:
+    renderer = _RecordingRenderer()
+    objects = (
+        _trail_object(
+            "collection:feather",
+            30,
+            name="Moon Feather",
+            color=(220, 50, 50),
+            interacted="The feather hums.",
+        ),
+        _trail_object(
+            "collection:shell",
+            190,
+            name="Star Shell",
+            color=(50, 80, 220),
+            interacted="The shell whispers.",
+        ),
+        _trail_object(
+            "collection:stone",
+            350,
+            name="Sun Stone",
+            color=(255, 200, 50),
+            interacted="The stone glows.",
+        ),
+    )
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        objects,
+        mission=MISSION_06,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.render()
+    assert "Mission: Build a Curious Collection" in renderer.text
+    assert MISSION_06.instructions in renderer.text
+    assert scene.mission_is_complete is False
+
+    for index, expected_response in enumerate(
+        ("The feather hums.", "The shell whispers.", "The stone glows.")
+    ):
+        if index:
+            scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+        scene.render()
+        assert expected_response in renderer.text
+
+    assert [item.world_object.name for item in scene.objects] == [
+        "Moon Feather",
+        "Star Shell",
+        "Sun Stone",
+    ]
+    assert len({item.world_object.x for item in scene.objects}) == 3
+    assert len({item.world_object.color for item in scene.objects}) == 3
+    assert scene.visited_qualified_ids == frozenset(item.qualified_id for item in objects)
+    assert scene.mission_is_complete is True
+    assert scene.mission_is_complete == scene.is_complete
+    assert "Mission state: Complete" in renderer.text
 
 
 def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
@@ -905,6 +970,24 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
     assert "Mission state: Incomplete" in mission_05_renderer.text
     assert mission_05_scene.completed_conversation_npc_ids == frozenset()
 
+    mission_06_renderer = _RecordingRenderer()
+    mission_06_scene = create_classroom_trail_scene(
+        mission_06_renderer,
+        planned.plan,
+        mission_id=MISSION_06_ID,
+    )
+    mission_06_scene.enter()
+    mission_06_scene.render()
+
+    assert mission_06_scene.mission is MISSION_06
+    assert "Mission: Build a Curious Collection" in mission_06_renderer.text
+    assert MISSION_06.instructions in mission_06_renderer.text
+    assert mission_06_scene.mission_is_complete == mission_06_scene.is_complete
+    assert [item.qualified_id for item in mission_06_scene.objects] == [
+        "alpha-package:lantern",
+        "beta-package:fountain",
+    ]
+
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         create_classroom_trail_scene(
             _RecordingRenderer(),
@@ -994,7 +1077,10 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     ]
 
 
-@pytest.mark.parametrize("mission_id", [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID, MISSION_05_ID])
+@pytest.mark.parametrize(
+    "mission_id",
+    [MISSION_02_ID, MISSION_03_ID, MISSION_04_ID, MISSION_05_ID, MISSION_06_ID],
+)
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

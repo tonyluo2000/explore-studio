@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.4. Canonical course content owns an immutable ID-keyed
-catalog containing five entries:
+catalog containing six entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -38,8 +38,17 @@ Mission 05:
 - instructions require students to author one 2–3-line character conversation
   and speak through every conversation NPC's final line.
 
+Mission 06:
+
+- mission ID: `build-an-object-collection`;
+- title: `Build a Curious Collection`;
+- instructions require three related objects with distinct names, positions,
+  colors, and responses, followed by interaction with every classroom object.
+- exactly three authored objects is curriculum and static-validation evidence;
+  local runtime completion does not enforce that artifact count.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
-fields. Missions 01–03 use `ALL_OBJECTS_VISITED`; Mission 04 uses
+fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
 `ALL_CONVERSATION_NPCS_COMPLETED`. Other rule values are rejected.
 
@@ -68,7 +77,8 @@ completion and later conversation wrap leave the evidence intact.
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
-NPC targeting, and conversation advancement and wrap remain unchanged.
+NPC targeting, conversation advancement and wrap, and multi-object package
+behavior remain unchanged.
 
 ## Deferred
 
