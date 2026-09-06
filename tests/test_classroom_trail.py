@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 
 import pytest
 
 from engine.entities import Character, WorldObject
 from engine.input import DirectionalInput, InteractionInput
-from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
+from engine.scenes import (
+    DEFAULT_CLASSROOM_TRAIL_MISSION,
+    ClassroomTrailMission,
+    ClassroomTrailMissionCompletionRule,
+    ClassroomTrailNPC,
+    ClassroomTrailObject,
+    ClassroomTrailScene,
+)
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
@@ -149,6 +156,110 @@ def _selection(root: Path) -> PackageSelection:
         provenance.package_version,
         registration.plan,
     )
+
+
+@pytest.mark.parametrize("field", ["mission_id", "title", "instructions"])
+@pytest.mark.parametrize("invalid", ["", "   ", 42])
+def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object) -> None:
+    values: dict[str, object] = {
+        "mission_id": "visit-all-classroom-objects",
+        "title": "Explore Every Object",
+        "instructions": "Interact with every classroom object.",
+    }
+    values[field] = invalid
+
+    with pytest.raises(ValueError, match=field):
+        ClassroomTrailMission(**values)  # type: ignore[arg-type]
+
+
+def test_local_mission_is_immutable_and_supports_exactly_one_rule() -> None:
+    mission = ClassroomTrailMission(
+        "visit-all-classroom-objects",
+        "Explore Every Object",
+        "Interact with every classroom object.",
+    )
+
+    assert tuple(ClassroomTrailMissionCompletionRule) == (
+        ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED,
+    )
+    assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
+    with pytest.raises(FrozenInstanceError):
+        mission.title = "Changed"  # type: ignore[misc]
+    with pytest.raises(ValueError, match="ALL_OBJECTS_VISITED"):
+        ClassroomTrailMission(
+            "invalid-rule",
+            "Invalid",
+            "Invalid",
+            "SOMETHING_ELSE",  # type: ignore[arg-type]
+        )
+
+
+def test_mission_ui_starts_incomplete_from_existing_trail_state() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 30),),
+    )
+    scene.enter()
+
+    scene.render()
+
+    assert scene.mission == DEFAULT_CLASSROOM_TRAIL_MISSION
+    assert scene.mission_is_complete is False
+    assert scene.mission_is_complete == scene.is_complete
+    assert "Mission: Explore Every Object" in renderer.text
+    assert "Interact with every classroom object." in renderer.text
+    assert "Mission state: Incomplete" in renderer.text
+    assert "_mission_complete" not in vars(scene)
+
+
+def test_mission_completion_is_derived_idempotent_and_monotonic() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 30),),
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.render()
+
+    assert scene.visited_qualified_ids == frozenset({"object:lantern"})
+    assert scene.mission_is_complete is True
+    assert scene.mission_is_complete == scene.is_complete
+    assert "Mission state: Complete" in renderer.text
+    assert "_mission_complete" not in vars(scene)
+
+
+def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (_trail_object("object:lantern", 220),),
+        (_trail_npc("guide:npc", 20, name="Guide", conversation=("First", "Second")),),
+        interaction_range=60,
+    )
+    scene.enter()
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Guide: First"
+    assert scene.mission_is_complete is False
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.25)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.mission_is_complete is True
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.25)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert renderer.text[-1] == "Guide: Second"
+    assert scene.mission_is_complete is True
 
 
 def test_nearest_in_range_object_is_targeted() -> None:
