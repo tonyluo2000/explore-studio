@@ -3,8 +3,8 @@
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
 Local Mission v0.1 provides the reusable immutable mission model used by
-Classroom Trail v0.6. Canonical course content owns an immutable ID-keyed
-catalog containing eight entries:
+Classroom Trail v0.7. Canonical course content owns an immutable ID-keyed
+catalog containing nine entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -61,12 +61,20 @@ Mission 08:
 - instructions require one NPC linked to a same-package toggle object, one OFF
   response, one ON response, and displaying both branches.
 
+Mission 09:
+
+- mission ID: `count-object-interactions`;
+- title: `Power It Up`;
+- instructions require a goal from 2 through 5, an authored goal-reached
+  message, and reaching every counter object's goal.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
 `ALL_CONVERSATION_NPCS_COMPLETED`; Mission 07 uses
 `ALL_TOGGLE_OBJECTS_CHANGED`; Mission 08 uses
-`ALL_CONDITIONAL_BRANCHES_DISPLAYED`. Other rule values are rejected.
+`ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 09 uses
+`ALL_COUNTER_GOALS_REACHED`. Other rule values are rejected.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -103,6 +111,12 @@ authored branch is displayed and is never removed. Both branches are required
 for every conditional NPC. Ordinary greeting/conversation NPCs are excluded,
 and a Trail with no conditional NPCs does not complete this rule.
 
+`ALL_COUNTER_GOALS_REACHED` uses a separate, session-only immutable mapping of
+counter-object qualified IDs to interaction counts. Every counter starts at
+zero and increments once per successful targeted interaction. Completion
+requires every count to meet or exceed its goal. Ordinary objects are
+excluded, and a Trail with no counter objects does not complete this rule.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -111,6 +125,7 @@ behavior remain unchanged.
 
 ## Deferred
 
-Additional completion rules, mission sequencing, nested or arbitrary
-conditions, choices, memory, quests, rewards, persistence, teacher controls,
-deployment, authentication, and Phase E integration remain out of scope.
+Additional completion rules, mission sequencing, decrement/reset, arithmetic
+expressions, nested or arbitrary conditions, choices, memory, quests, rewards,
+persistence, teacher controls, deployment, authentication, and Phase E
+integration remain out of scope.

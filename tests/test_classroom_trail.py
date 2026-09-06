@@ -15,6 +15,7 @@ from engine.scenes import (
     ClassroomTrailNPC,
     ClassroomTrailNPCConditionalResponse,
     ClassroomTrailObject,
+    ClassroomTrailObjectCounter,
     ClassroomTrailObjectToggle,
     ClassroomTrailScene,
 )
@@ -34,6 +35,8 @@ from explore.curriculum import (
     MISSION_07_ID,
     MISSION_08,
     MISSION_08_ID,
+    MISSION_09,
+    MISSION_09_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
@@ -74,6 +77,7 @@ def _trail_object(
     near: str | None = None,
     interacted: str | None = None,
     toggle: ClassroomTrailObjectToggle | None = None,
+    counter: ClassroomTrailObjectCounter | None = None,
 ) -> ClassroomTrailObject:
     return ClassroomTrailObject(
         qualified_id,
@@ -88,6 +92,7 @@ def _trail_object(
         near,
         interacted,
         toggle,
+        counter,
     )
 
 
@@ -197,7 +202,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_five_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_six_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -210,6 +215,7 @@ def test_local_mission_is_immutable_and_supports_exactly_five_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED,
         ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
         ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
+        ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -561,6 +567,127 @@ def test_conditional_completion_excludes_ordinary_npcs_and_zero_is_incomplete() 
     assert ordinary_scene.spoken_npc_ids == frozenset({"magic:greeter"})
     assert ordinary_scene.displayed_conditional_branches == frozenset()
     assert ordinary_scene.mission_is_complete is False
+
+
+def test_counter_runtime_model_is_bounded_and_immutable() -> None:
+    counter = ClassroomTrailObjectCounter(3, "Fully powered!")
+
+    with pytest.raises(FrozenInstanceError):
+        counter.goal = 4  # type: ignore[misc]
+    for invalid in (True, 1, 6, 2.0):
+        with pytest.raises(ValueError, match="goal"):
+            ClassroomTrailObjectCounter(invalid, "Ready")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="when_goal_reached"):
+        ClassroomTrailObjectCounter(2, " ")
+
+
+def test_counter_interaction_increments_once_and_combines_with_toggle() -> None:
+    renderer = _RecordingRenderer()
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    counter = ClassroomTrailObjectCounter(2, "Fully powered!")
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object(
+                "power:core",
+                30,
+                color=toggle.off_color,
+                interacted="Pressed.",
+                toggle=toggle,
+                counter=counter,
+            ),
+        ),
+        mission=MISSION_09,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    assert dict(scene.counter_counts) == {"power:core": 0}
+    with pytest.raises(TypeError):
+        scene.counter_counts["power:core"] = 9  # type: ignore[index]
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.counter_counts) == {"power:core": 1}
+    assert scene.toggle_on_qualified_ids == frozenset({"power:core"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"power:core"})
+    assert scene.visited_qualified_ids == frozenset({"power:core"})
+    assert "Pressed. Count: 1 / 2." in renderer.text
+    assert "Fully powered!" not in renderer.text
+    assert scene.mission_is_complete is False
+
+    renderer.text.clear()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.counter_counts) == {"power:core": 2}
+    assert scene.toggle_on_qualified_ids == frozenset()
+    assert scene.visited_qualified_ids == frozenset({"power:core"})
+    assert "Pressed. Count: 2 / 2. Fully powered!" in renderer.text
+    assert scene.mission_is_complete is True
+
+    renderer.text.clear()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.counter_counts) == {"power:core": 3}
+    assert scene.toggle_on_qualified_ids == frozenset({"power:core"})
+    assert "Pressed. Count: 3 / 2. Fully powered!" in renderer.text
+    assert scene.mission_is_complete is True
+
+
+def test_all_counter_goals_are_required_and_ordinary_objects_are_excluded() -> None:
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (
+            _trail_object(
+                "alpha:counter",
+                30,
+                counter=ClassroomTrailObjectCounter(2, "Alpha ready"),
+            ),
+            _trail_object("beta:ordinary", 190),
+            _trail_object(
+                "gamma:counter",
+                350,
+                counter=ClassroomTrailObjectCounter(2, "Gamma ready"),
+            ),
+        ),
+        mission=MISSION_09,
+        interaction_range=60,
+    )
+    scene.enter()
+
+    for _ in range(2):
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.mission_is_complete is False
+    assert scene.is_complete is False
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 2.0)
+    for _ in range(2):
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+
+    assert dict(scene.counter_counts) == {"alpha:counter": 2, "gamma:counter": 2}
+    assert scene.mission_is_complete is True
+    assert scene.is_complete is False
+    assert scene.visited_qualified_ids == frozenset({"alpha:counter", "gamma:counter"})
+
+
+def test_counter_completion_with_zero_counter_objects_is_incomplete() -> None:
+    renderer = _RecordingRenderer()
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (_trail_object("plain:object", 30, interacted="Original response"),),
+        mission=MISSION_09,
+    )
+    scene.enter()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.counter_counts == {}
+    assert "Original response" in renderer.text
+    assert scene.is_complete is True
+    assert scene.mission_is_complete is False
 
 
 def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
@@ -1013,7 +1140,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
     assert "A crystal spark appears!" in renderer.text
 
 
-def test_v01_rejects_but_v06_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
+def test_v01_rejects_but_v07_trail_accepts_multiple_package_objects(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1053,14 +1180,14 @@ def test_v01_rejects_but_v06_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.6"
+    assert trail.plan.contract_version == "0.7"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
     ]
 
 
-def test_v06_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
+def test_v07_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1104,7 +1231,7 @@ def test_v06_accepts_multiple_objects_from_one_package(tmp_path: Path) -> None:
     ]
 
 
-def test_v06_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: Path) -> None:
+def test_v07_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1134,7 +1261,7 @@ def test_v06_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.6"
+    assert planned.plan.contract_version == "0.7"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.toggle is not None
     assert registration.world_object.toggle.off_color == "red"
@@ -1162,7 +1289,7 @@ def test_v06_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
     assert scene.mission_is_complete is True
 
 
-def test_v06_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Path) -> None:
+def test_v07_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Path) -> None:
     player_root = _write_package(
         tmp_path / "player",
         "player-package",
@@ -1211,7 +1338,7 @@ def test_v06_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.6"
+    assert planned.plan.contract_version == "0.7"
     conditional = planned.plan.npcs[0].character.respond_to_toggle
     assert conditional is not None
     assert conditional.object_id == "magic-switch"
@@ -1237,6 +1364,64 @@ def test_v06_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
         {("magic-package:guide", False), ("magic-package:guide", True)}
     )
     assert scene.toggle_on_qualified_ids == frozenset({"magic-package:magic-switch"})
+    assert scene.mission_is_complete is True
+
+
+def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+    )
+    counter_root = _write_package(
+        tmp_path / "counter",
+        "power-package",
+        "core",
+        "world_object",
+        (
+            'name: "Power Core"\nx: 30\ny: 0\nwhen_interacted: "Pressed."\n'
+            "toggle:\n"
+            '  off_color: "red"\n'
+            '  on_color: "green"\n'
+            "counter:\n"
+            "  goal: 2\n"
+            '  when_goal_reached: "Fully powered!"\n'
+        ),
+    )
+
+    planned = plan_local_classroom_trail(
+        (player_root, counter_root),
+        player_qualified_id="player-package:player",
+    )
+
+    assert planned.is_planned
+    assert planned.plan is not None
+    assert planned.plan.contract_version == "0.7"
+    registration = planned.plan.world_objects[0]
+    assert registration.world_object.counter is not None
+    assert registration.world_object.counter.goal == 2
+    assert registration.world_object.counter.when_goal_reached == "Fully powered!"
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_09_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_09
+    assert "Mission: Power It Up" in renderer.text
+    assert MISSION_09.instructions in renderer.text
+    assert dict(scene.counter_counts) == {"power-package:core": 0}
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert dict(scene.counter_counts) == {"power-package:core": 2}
+    assert scene.visited_qualified_ids == frozenset({"power-package:core"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"power-package:core"})
+    assert scene.toggle_on_qualified_ids == frozenset()
+    assert "Pressed. Count: 2 / 2. Fully powered!" in renderer.text
     assert scene.mission_is_complete is True
 
 
@@ -1498,6 +1683,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_06_ID,
         MISSION_07_ID,
         MISSION_08_ID,
+        MISSION_09_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

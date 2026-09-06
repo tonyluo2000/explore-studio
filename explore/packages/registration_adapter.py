@@ -8,6 +8,7 @@ from explore.packages.contribution_models import (
     LoadedCharacterToggleResponse,
     LoadedExplorerPackage,
     LoadedWorldObject,
+    LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadResult,
@@ -28,6 +29,7 @@ from explore.packages.registration_models import (
     RegistrationPlanResult,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -212,6 +214,33 @@ def _validate_toggle(
                 location,
                 contribution=contribution,
                 field="toggle",
+            )
+        )
+
+
+def _validate_counter(
+    value: object,
+    *,
+    contribution: LoadedWorldObject,
+    location: str,
+    issues: list[RegistrationPlanIssue],
+) -> None:
+    if value is None:
+        return
+    if (
+        not isinstance(value, LoadedWorldObjectCounter)
+        or isinstance(value.goal, bool)
+        or not isinstance(value.goal, int)
+        or not 2 <= value.goal <= 5
+        or not _is_nonblank_text(value.when_goal_reached)
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} must retain a goal from 2 through 5 and a nonblank message.",
+                location,
+                contribution=contribution,
+                field="counter",
             )
         )
 
@@ -456,6 +485,14 @@ def _map_world_object(
             on_color=contribution.toggle.on_color,
         )
     )
+    counter = (
+        None
+        if not isinstance(contribution.counter, LoadedWorldObjectCounter)
+        else WorldObjectCounterRegistrationSpec(
+            goal=contribution.counter.goal,
+            when_goal_reached=contribution.counter.when_goal_reached,
+        )
+    )
     _validate_text(
         contribution.name,
         contribution=contribution,
@@ -495,6 +532,12 @@ def _map_world_object(
         location=f"{location}.toggle",
         issues=issues,
     )
+    _validate_counter(
+        contribution.counter,
+        contribution=contribution,
+        location=f"{location}.counter",
+        issues=issues,
+    )
     _validate_text(
         contribution.when_near,
         contribution=contribution,
@@ -523,6 +566,7 @@ def _map_world_object(
             when_near=contribution.when_near,
             when_interacted=contribution.when_interacted,
             toggle=toggle,
+            counter=counter,
         ),
         asset_reference=contribution.image,
     )

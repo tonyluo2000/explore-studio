@@ -64,6 +64,14 @@ class LoadedWorldObjectToggle:
 
 
 @dataclass(frozen=True)
+class LoadedWorldObjectCounter:
+    """Bounded interaction goal loaded from inert package data."""
+
+    goal: int
+    when_goal_reached: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacterToggleResponse:
     """Fixed two-branch response to one package-local toggle object."""
 
@@ -106,6 +114,7 @@ class LoadedWorldObject:
     when_near: str | None = None
     when_interacted: str | None = None
     toggle: LoadedWorldObjectToggle | None = None
+    counter: LoadedWorldObjectCounter | None = None
 
 
 LoadedContribution = LoadedCharacter | LoadedWorldObject

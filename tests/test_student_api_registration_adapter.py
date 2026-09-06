@@ -19,6 +19,7 @@ from explore.packages import (
     LoadedCharacterToggleResponse,
     LoadedExplorerPackage,
     LoadedWorldObject,
+    LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadIssue,
@@ -29,6 +30,7 @@ from explore.packages import (
     RegistrationPlanIssueCode,
     ValidationIssue,
     ValidationReport,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -277,6 +279,39 @@ def test_toggle_metadata_is_validated_and_preserved_losslessly() -> None:
         on_color="green",
     )
     assert entry.world_object.color == "red"
+
+
+def test_counter_metadata_is_validated_and_preserved_losslessly() -> None:
+    counter = LoadedWorldObjectCounter(goal=3, when_goal_reached="Fully powered!")
+
+    result = build_student_api_registration_plan(_package(_world_object(counter=counter)))
+
+    assert result.is_planned
+    assert result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, WorldObjectRegistration)
+    assert entry.world_object.counter == WorldObjectCounterRegistrationSpec(
+        goal=3,
+        when_goal_reached="Fully powered!",
+    )
+
+
+@pytest.mark.parametrize(
+    "counter",
+    [
+        object(),
+        LoadedWorldObjectCounter(goal=True, when_goal_reached="Ready"),
+        LoadedWorldObjectCounter(goal=1, when_goal_reached="Ready"),
+        LoadedWorldObjectCounter(goal=6, when_goal_reached="Ready"),
+        LoadedWorldObjectCounter(goal=3, when_goal_reached=" "),
+    ],
+)
+def test_forged_invalid_counter_metadata_is_rejected(counter: object) -> None:
+    result = build_student_api_registration_plan(_package(_world_object(counter=counter)))
+
+    assert result.plan is None
+    assert result.issues[0].code is RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID
+    assert result.issues[0].field == "counter"
 
 
 @pytest.mark.parametrize(

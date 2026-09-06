@@ -33,6 +33,7 @@ from explore.packages.registration_models import (
     CharacterToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -459,6 +460,17 @@ def _valid_toggle(value: object, *, off_color: object) -> bool:
     )
 
 
+def _valid_counter(value: object) -> bool:
+    return value is None or (
+        isinstance(value, WorldObjectCounterRegistrationSpec)
+        and isinstance(value.goal, int)
+        and not isinstance(value.goal, bool)
+        and 2 <= value.goal <= 5
+        and isinstance(value.when_goal_reached, str)
+        and bool(value.when_goal_reached.strip())
+    )
+
+
 def _valid_conditional(value: object) -> bool:
     return value is None or (
         isinstance(value, CharacterToggleResponseRegistrationSpec)
@@ -536,6 +548,7 @@ def _entry_value_issues(
                 )
             )
             and _valid_toggle(entry.world_object.toggle, off_color=entry.world_object.color)
+            and _valid_counter(entry.world_object.counter)
         )
         if entry.world_object.toggle is not None and entry.asset_reference is not None:
             values_valid = False

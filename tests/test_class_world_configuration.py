@@ -29,6 +29,7 @@ from explore.packages import (
     PackageSetPlan,
     SelectedPackagePlan,
     StudentAPIRegistrationPlan,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -567,6 +568,49 @@ def test_invalid_toggle_metadata_cannot_enter_class_world_configuration() -> Non
         ),
     )
     package = _selected("switch-package", entry)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in _codes(result)
+
+
+def test_valid_counter_metadata_is_retained_by_class_world_configuration() -> None:
+    counter = WorldObjectCounterRegistrationSpec(3, "Fully powered!")
+    entry = _world_object(
+        "power-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Core",
+            x=1,
+            y=2,
+            color="blue",
+            counter=counter,
+        ),
+    )
+    package = _selected("power-package", entry)
+    plan = _plan(package)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is not None
+    configured = result.configuration.package_set_plan.entries[0]
+    assert isinstance(configured, WorldObjectRegistration)
+    assert configured.world_object.counter is counter
+
+
+def test_invalid_counter_metadata_cannot_enter_class_world_configuration() -> None:
+    entry = _world_object(
+        "power-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Core",
+            x=1,
+            y=2,
+            color="blue",
+            counter=WorldObjectCounterRegistrationSpec(True, "Ready"),
+        ),
+    )
+    package = _selected("power-package", entry)
     plan = _plan(package)
 
     result = build_class_world_configuration(_spec(plan), plan)

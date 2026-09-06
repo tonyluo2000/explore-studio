@@ -14,6 +14,7 @@ from explore.packages.contribution_models import (
     LoadedCharacterToggleResponse,
     LoadedContribution,
     LoadedWorldObject,
+    LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
     PackageAssetReference,
     PackageLoadIssue,
@@ -36,6 +37,7 @@ _WORLD_OBJECT_FIELDS = frozenset(
         "when_near",
         "when_interacted",
         "toggle",
+        "counter",
     }
 )
 _VALID_COLORS = frozenset(valid_color_names())
@@ -330,6 +332,68 @@ def _toggle(
     return LoadedWorldObjectToggle(off_color=off_color, on_color=on_color)
 
 
+def _counter(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> LoadedWorldObjectCounter | None:
+    value = mapping.get("counter", _MISSING)
+    if value is _MISSING:
+        return None
+    location = _field_location(source_path, "counter")
+    if not isinstance(value, Mapping):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be a mapping with goal and when_goal_reached.",
+                location,
+            )
+        )
+        return None
+
+    goal = value.get("goal", _MISSING)
+    goal_location = _field_location(location, "goal")
+    if goal is _MISSING:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_FIELD_REQUIRED,
+                f"{goal_location} is required.",
+                goal_location,
+            )
+        )
+        goal = None
+    elif isinstance(goal, bool) or not isinstance(goal, int):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{goal_location} must be a whole number from 2 through 5.",
+                goal_location,
+            )
+        )
+        goal = None
+    elif not 2 <= goal <= 5:
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{goal_location} must be from 2 through 5.",
+                goal_location,
+            )
+        )
+        goal = None
+    when_goal_reached = _text(
+        value,
+        "when_goal_reached",
+        location,
+        issues,
+        required=True,
+        default=None,
+    )
+    _unknown_fields(value, frozenset({"goal", "when_goal_reached"}), location, issues)
+    if goal is None or not isinstance(when_goal_reached, str):
+        return None
+    return LoadedWorldObjectCounter(goal=goal, when_goal_reached=when_goal_reached)
+
+
 def _asset_reference(
     mapping: Mapping[object, object],
     source_path: str,
@@ -457,6 +521,7 @@ def _parse_world_object(
     x = _coordinate(mapping, "x", source_path, issues, required=True, default=0)
     y = _coordinate(mapping, "y", source_path, issues, required=True, default=0)
     toggle = _toggle(mapping, source_path, issues)
+    counter = _counter(mapping, source_path, issues)
     has_toggle = "toggle" in mapping
     if has_toggle and "color" in mapping:
         location = _field_location(source_path, "color")
@@ -522,6 +587,7 @@ def _parse_world_object(
             when_near=when_near,
             when_interacted=when_interacted,
             toggle=toggle,
+            counter=counter,
         ),
         (),
     )

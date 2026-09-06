@@ -21,6 +21,7 @@ from explore.packages import (
     PackageSetIssueCode,
     PackageSetPlanResult,
     StudentAPIRegistrationPlan,
+    WorldObjectCounterRegistrationSpec,
     WorldObjectRegistration,
     WorldObjectRegistrationSpec,
     WorldObjectToggleRegistrationSpec,
@@ -616,6 +617,56 @@ def test_valid_toggle_metadata_survives_package_set_preflight() -> None:
     planned = result.plan.entries[0]
     assert isinstance(planned, WorldObjectRegistration)
     assert planned.world_object.toggle is toggle
+
+
+def test_valid_counter_metadata_survives_package_set_preflight() -> None:
+    counter = WorldObjectCounterRegistrationSpec(3, "Fully powered!")
+    entry = _world_object(
+        "power-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Core",
+            x=30,
+            y=40,
+            color="red",
+            counter=counter,
+        ),
+    )
+
+    result = build_package_set_plan((_selection("power-package", entry),))
+
+    assert result.is_planned
+    assert result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, WorldObjectRegistration)
+    assert planned.world_object.counter is counter
+
+
+@pytest.mark.parametrize(
+    "counter",
+    [
+        object(),
+        WorldObjectCounterRegistrationSpec(True, "Ready"),
+        WorldObjectCounterRegistrationSpec(1, "Ready"),
+        WorldObjectCounterRegistrationSpec(6, "Ready"),
+        WorldObjectCounterRegistrationSpec(3, " "),
+    ],
+)
+def test_package_set_rejects_forged_counter_metadata(counter: object) -> None:
+    entry = _world_object(
+        "power-package",
+        world_object=WorldObjectRegistrationSpec(
+            name="Core",
+            x=30,
+            y=40,
+            color="red",
+            counter=counter,  # type: ignore[arg-type]
+        ),
+    )
+
+    result = build_package_set_plan((_selection("power-package", entry),))
+
+    assert result.plan is None
+    assert result.issues[0].location.endswith("world_object.counter")
 
 
 def test_valid_conditional_reference_survives_package_set_preflight() -> None:
