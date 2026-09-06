@@ -10,13 +10,13 @@ import pytest
 from engine.entities import Character, WorldObject
 from engine.input import DirectionalInput, InteractionInput
 from engine.scenes import (
-    DEFAULT_CLASSROOM_TRAIL_MISSION,
     ClassroomTrailMission,
     ClassroomTrailMissionCompletionRule,
     ClassroomTrailNPC,
     ClassroomTrailObject,
     ClassroomTrailScene,
 )
+from explore.curriculum import MISSION_01
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
@@ -110,6 +110,7 @@ def _scene(
         ),
         tuple(objects),
         npcs,
+        mission=MISSION_01,
         interaction_range=interaction_range,
     )
     scene.enter()
@@ -200,12 +201,13 @@ def test_mission_ui_starts_incomplete_from_existing_trail_state() -> None:
         renderer,  # type: ignore[arg-type]
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("object:lantern", 30),),
+        mission=MISSION_01,
     )
     scene.enter()
 
     scene.render()
 
-    assert scene.mission == DEFAULT_CLASSROOM_TRAIL_MISSION
+    assert scene.mission is MISSION_01
     assert scene.mission_is_complete is False
     assert scene.mission_is_complete == scene.is_complete
     assert "Mission: Explore Every Object" in renderer.text
@@ -220,6 +222,7 @@ def test_mission_completion_is_derived_idempotent_and_monotonic() -> None:
         renderer,  # type: ignore[arg-type]
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("object:lantern", 30),),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -243,6 +246,7 @@ def test_mission_preserves_npc_conversation_and_counts_only_objects() -> None:
         (_trail_object("object:lantern", 220),),
         (_trail_npc("guide:npc", 20, name="Guide", conversation=("First", "Second")),),
         interaction_range=60,
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -293,6 +297,7 @@ def test_npcs_are_canonical_and_nearest_greeting_is_displayed() -> None:
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("object:lantern", 250),),
         (far, near),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -324,6 +329,7 @@ def test_conversation_advances_in_authored_order_and_restarts() -> None:
                 conversation=("First line.", "Second line.", "Third line."),
             ),
         ),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -352,6 +358,7 @@ def test_conversation_position_is_independent_per_npc() -> None:
             _trail_npc("alpha:npc", 20, name="Alpha", conversation=("A1", "A2", "A3")),
             _trail_npc("beta:npc", 220, name="Beta", conversation=("B1", "B2")),
         ),
+        mission=MISSION_01,
         interaction_range=60,
     )
     scene.enter()
@@ -376,6 +383,7 @@ def test_greeting_remains_a_one_line_conversation() -> None:
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("object:lantern", 250),),
         (_trail_npc("guide:npc", 30, name="Guide", greeting="Welcome!"),),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -392,6 +400,7 @@ def test_conversation_npc_and_object_share_existing_targeting_and_state() -> Non
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("zebra:object", 40, interacted="Object found"),),
         (_trail_npc("alpha:npc", 40, name="Ari", conversation=("Hi", "Again")),),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -411,6 +420,7 @@ def test_equal_distance_npc_object_tie_uses_qualified_id() -> None:
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("zebra:object", 40),),
         (_trail_npc("alpha:npc", 40, name="Ari", greeting="Hi!"),),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -430,6 +440,7 @@ def test_npc_without_greeting_renders_but_does_not_mask_object_interaction() -> 
         Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
         (_trail_object("beta:object", 40, interacted="Object found"),),
         (silent,),
+        mission=MISSION_01,
     )
     scene.enter()
 
@@ -491,6 +502,7 @@ def test_ui_shows_authored_messages_progress_and_completion() -> None:
                 interacted="A crystal spark appears!",
             ),
         ),
+        mission=MISSION_01,
     )
     scene.enter()
     scene.update(_NO_MOVEMENT, _NO_INTERACTION, 0.0)
@@ -643,6 +655,7 @@ def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> 
 
     scene = create_classroom_trail_scene(_RecordingRenderer(), planned.plan)
     assert scene.player.name == "Player"
+    assert scene.mission is MISSION_01
     assert [item.qualified_id for item in scene.objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",

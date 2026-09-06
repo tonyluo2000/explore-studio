@@ -206,6 +206,7 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
     from engine.scenes import ClassroomTrailNPC, ClassroomTrailObject, ClassroomTrailScene
+    from explore.curriculum import MISSION_01_ID, get_course_mission
 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
@@ -292,6 +293,7 @@ def create_classroom_trail_scene(renderer: object, plan: ClassroomTrailPlan) -> 
         engine_player,
         engine_objects,
         engine_npcs,
+        mission=get_course_mission(MISSION_01_ID),
     )
 
 
