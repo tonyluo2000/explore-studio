@@ -51,7 +51,7 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 - [`docs/classroom-trail-v0.9.md`](docs/classroom-trail-v0.9.md) — additive local
   multi-package Classroom Trail contract.
 - [`docs/local-mission-v0.1.md`](docs/local-mission-v0.1.md) — curriculum-owned
-  canonical Missions 01–11 and their session-only Classroom Trail contract.
+  canonical Missions 01–12 and their session-only Classroom Trail contract.
 
 ## Repository Organization
 

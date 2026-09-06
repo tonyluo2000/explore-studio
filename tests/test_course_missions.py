@@ -32,11 +32,13 @@ from explore.curriculum import (
     MISSION_10_ID,
     MISSION_11,
     MISSION_11_ID,
+    MISSION_12,
+    MISSION_12_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_11_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_12_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -48,11 +50,13 @@ def test_catalog_contains_exactly_missions_01_through_11_by_deterministic_identi
     assert MISSION_09_ID == "count-object-interactions"
     assert MISSION_10_ID == "require-all-switches-on"
     assert MISSION_11_ID == "open-with-either-switch"
+    assert MISSION_12_ID == "invert-a-switch-condition"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
         MISSION_09_ID,
         MISSION_02_ID,
         MISSION_04_ID,
+        MISSION_12_ID,
         MISSION_03_ID,
         MISSION_11_ID,
         MISSION_10_ID,
@@ -67,6 +71,7 @@ def test_catalog_contains_exactly_missions_01_through_11_by_deterministic_identi
         MISSION_09,
         MISSION_02,
         MISSION_04,
+        MISSION_12,
         MISSION_03,
         MISSION_11,
         MISSION_10,
@@ -249,7 +254,24 @@ def test_mission_11_requires_all_three_pedagogical_or_cases() -> None:
     )
 
 
-@pytest.mark.parametrize("mission_id", ["mission-11", "write-conversation", "", None, 1])
+def test_mission_12_reuses_the_existing_one_toggle_conditional_rule() -> None:
+    mission = get_course_mission(MISSION_12_ID)
+
+    assert mission is MISSION_12
+    assert mission.title == "Turn the Rule Around"
+    assert "`not`" in mission.instructions
+    assert "OFF" in mission.instructions
+    assert "ON" in mission.instructions
+    assert (
+        mission.completion_rule
+        is ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED
+    )
+    assert mission.completion_rule is MISSION_08.completion_rule
+    with pytest.raises(FrozenInstanceError):
+        mission.instructions = "Changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize("mission_id", ["mission-12", "write-conversation", "", None, 1])
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         get_course_mission(mission_id)  # type: ignore[arg-type]
