@@ -5,6 +5,7 @@ from __future__ import annotations
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterToggleResponse,
     LoadedExplorerPackage,
     LoadedWorldObject,
     LoadedWorldObjectToggle,
@@ -21,6 +22,7 @@ from explore.packages.policy import (
 from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     RegistrationPlanIssue,
     RegistrationPlanIssueCode,
     RegistrationPlanResult,
@@ -67,6 +69,16 @@ def _is_conversation(value: object) -> bool:
         isinstance(value, tuple)
         and 2 <= len(value) <= 3
         and all(_is_nonblank_text(line) for line in value)
+    )
+
+
+def _valid_respond_to_toggle(value: object) -> bool:
+    return value is None or (
+        isinstance(value, LoadedCharacterToggleResponse)
+        and isinstance(value.object_id, str)
+        and is_valid_identifier(value.object_id)
+        and _is_nonblank_text(value.when_off)
+        and _is_nonblank_text(value.when_on)
     )
 
 
@@ -383,6 +395,37 @@ def _map_character(
                 field="conversation",
             )
         )
+    if not _valid_respond_to_toggle(contribution.respond_to_toggle):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_toggle must retain one valid package-local conditional.",
+                f"{location}.respond_to_toggle",
+                contribution=contribution,
+                field="respond_to_toggle",
+            )
+        )
+    if contribution.respond_to_toggle is not None and (
+        contribution.greeting is not None or contribution.conversation is not None
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_toggle cannot be combined with greeting or conversation.",
+                f"{location}.respond_to_toggle",
+                contribution=contribution,
+                field="respond_to_toggle",
+            )
+        )
+    conditional = (
+        CharacterToggleResponseRegistrationSpec(
+            object_id=contribution.respond_to_toggle.object_id,
+            when_off=contribution.respond_to_toggle.when_off,
+            when_on=contribution.respond_to_toggle.when_on,
+        )
+        if isinstance(contribution.respond_to_toggle, LoadedCharacterToggleResponse)
+        else None
+    )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -394,6 +437,7 @@ def _map_character(
             color=contribution.color,
             greeting=contribution.greeting,
             conversation=contribution.conversation,
+            respond_to_toggle=conditional,
         ),
         asset_reference=contribution.image,
     )
@@ -530,6 +574,13 @@ def build_student_api_registration_plan(
     entries: list[StudentAPIRegistrationEntry] = []
     seen_qualified_ids: set[str] = set()
 
+    contributions_by_id: dict[str, list[LoadedCharacter | LoadedWorldObject]] = {}
+    for contribution in contributions:
+        if type(contribution) in (LoadedCharacter, LoadedWorldObject) and isinstance(
+            contribution.contribution_id, str
+        ):
+            contributions_by_id.setdefault(contribution.contribution_id, []).append(contribution)
+
     for index, contribution in enumerate(contributions):
         location = f"contributions[{index}]"
         if type(contribution) is LoadedCharacter:
@@ -555,6 +606,30 @@ def build_student_api_registration_plan(
         )
         entry = mapper(contribution, location, issues)
         entries.append(entry)
+
+        if type(contribution) is LoadedCharacter and isinstance(
+            contribution.respond_to_toggle, LoadedCharacterToggleResponse
+        ):
+            reference = contribution.respond_to_toggle
+            matches = contributions_by_id.get(reference.object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            if (
+                len(matches) != 1
+                or not isinstance(target, LoadedWorldObject)
+                or target.toggle is None
+            ):
+                issues.append(
+                    _issue(
+                        RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID,
+                        (
+                            f"{location}.respond_to_toggle.object_id must resolve exactly to "
+                            "one toggle world object in the containing package."
+                        ),
+                        f"{location}.respond_to_toggle.object_id",
+                        contribution=contribution,
+                        field="object_id",
+                    )
+                )
 
         qualified_id = contribution.qualified_id
         if isinstance(qualified_id, str):

@@ -14,6 +14,7 @@ import yaml
 from explore.packages import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     PackageAssetReference,
     PackageProvenance,
     PackageSelection,
@@ -615,6 +616,61 @@ def test_valid_toggle_metadata_survives_package_set_preflight() -> None:
     planned = result.plan.entries[0]
     assert isinstance(planned, WorldObjectRegistration)
     assert planned.world_object.toggle is toggle
+
+
+def test_valid_conditional_reference_survives_package_set_preflight() -> None:
+    conditional = CharacterToggleResponseRegistrationSpec("switch", "Off", "On")
+    character = _character(
+        "magic",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            name="Guide",
+            x=10,
+            y=20,
+            color="gold",
+            respond_to_toggle=conditional,
+        ),
+    )
+    world_object = _world_object(
+        "magic",
+        contribution_id="switch",
+        world_object=WorldObjectRegistrationSpec(
+            name="Switch",
+            x=30,
+            y=40,
+            color="red",
+            toggle=WorldObjectToggleRegistrationSpec("red", "green"),
+        ),
+    )
+
+    result = build_package_set_plan((_selection("magic", character, world_object),))
+
+    assert result.is_planned
+    assert result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, CharacterRegistration)
+    assert planned.character.respond_to_toggle is conditional
+
+
+@pytest.mark.parametrize("object_id", ["missing", "other:switch"])
+def test_package_set_rejects_invalid_conditional_reference(object_id: str) -> None:
+    character = _character(
+        "magic",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec(
+            name="Guide",
+            x=10,
+            y=20,
+            color="gold",
+            respond_to_toggle=CharacterToggleResponseRegistrationSpec(object_id, "Off", "On"),
+        ),
+    )
+    world_object = _world_object("magic", contribution_id="switch")
+
+    result = build_package_set_plan((_selection("magic", character, world_object),))
+
+    assert result.plan is None
+    assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in result.issues]
 
 
 def test_package_set_rejects_forged_toggle_metadata() -> None:

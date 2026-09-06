@@ -102,10 +102,12 @@ collections are tuples.
 | `color` | `character.color` |
 | optional `greeting` | `character.greeting` |
 | optional `conversation` | `character.conversation` |
+| optional `respond_to_toggle` | `character.respond_to_toggle` |
 | optional `image` | `CharacterRegistration.asset_reference` |
 
 The detached specification retains Student API v0.1 character configuration
-plus the optional inert greeting or conversation used by Classroom Trail v0.5.
+plus optional inert greeting, conversation, or fixed conditional metadata used
+by Classroom Trail v0.6.
 The adapter does not apply that text as Student API behavior. Engine-owned size, movement
 speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
 invented.

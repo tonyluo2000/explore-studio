@@ -227,6 +227,7 @@ from explore.packages.classroom_trail_models import (
 )
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterToggleResponse,
     LoadedContribution,
     LoadedExplorerPackage,
     LoadedWorldObject,
@@ -309,6 +310,7 @@ from explore.packages.registration_application_models import (
 from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     RegistrationPlanIssue,
     RegistrationPlanIssueCode,
     RegistrationPlanResult,
@@ -414,6 +416,7 @@ __all__ = [
     "ClassroomTrailPlanResult",
     "CharacterRegistration",
     "CharacterRegistrationSpec",
+    "CharacterToggleResponseRegistrationSpec",
     "ContributionDeclaration",
     "DISPLAY_NAME_MAX_LENGTH",
     "ExplorerPackageManifest",
@@ -427,6 +430,7 @@ __all__ = [
     "IDENTIFIER_MAX_LENGTH",
     "IssueCode",
     "LoadedCharacter",
+    "LoadedCharacterToggleResponse",
     "LoadedContribution",
     "LoadedExplorerPackage",
     "LoadedWorldObject",

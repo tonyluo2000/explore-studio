@@ -30,6 +30,7 @@ from explore.packages.policy import (
 from explore.packages.registration_models import (
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
     StudentAPIRegistrationPlan,
     WorldObjectRegistration,
@@ -458,6 +459,18 @@ def _valid_toggle(value: object, *, off_color: object) -> bool:
     )
 
 
+def _valid_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterToggleResponseRegistrationSpec)
+        and isinstance(value.object_id, str)
+        and is_valid_identifier(value.object_id)
+        and isinstance(value.when_off, str)
+        and bool(value.when_off.strip())
+        and isinstance(value.when_on, str)
+        and bool(value.when_on.strip())
+    )
+
+
 def _entry_value_issues(
     entry: StudentAPIRegistrationEntry,
     *,
@@ -496,6 +509,13 @@ def _entry_value_issues(
             )
             and not (
                 entry.character.greeting is not None and entry.character.conversation is not None
+            )
+            and _valid_conditional(entry.character.respond_to_toggle)
+            and not (
+                entry.character.respond_to_toggle is not None
+                and (
+                    entry.character.greeting is not None or entry.character.conversation is not None
+                )
             )
         )
     elif type(entry) is WorldObjectRegistration and isinstance(
@@ -691,6 +711,48 @@ def _validate_package_set_plan(
                         package_id=package.package_id,
                         package_index=package_index,
                         field="qualified_id",
+                    )
+                )
+
+        entries_by_id: dict[str, list[StudentAPIRegistrationEntry]] = {}
+        for entry in entries:
+            if type(entry) in (CharacterRegistration, WorldObjectRegistration) and isinstance(
+                entry.contribution_id, str
+            ):
+                entries_by_id.setdefault(entry.contribution_id, []).append(entry)
+        for entry_index, entry in enumerate(entries):
+            if type(entry) is not CharacterRegistration or not isinstance(
+                entry.character, CharacterRegistrationSpec
+            ):
+                continue
+            conditional = entry.character.respond_to_toggle
+            if not isinstance(conditional, CharacterToggleResponseRegistrationSpec):
+                continue
+            matches = entries_by_id.get(conditional.object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            reference_valid = (
+                len(matches) == 1
+                and type(target) is WorldObjectRegistration
+                and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                and target.world_object.toggle is not None
+                and _valid_toggle(target.world_object.toggle, off_color=target.world_object.color)
+            )
+            if not reference_valid:
+                issues.append(
+                    _issue(
+                        ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                        (
+                            f"{location}.registration_plan.entries[{entry_index}]"
+                            ".character.respond_to_toggle.object_id must resolve exactly to one "
+                            "toggle world object in this package."
+                        ),
+                        (
+                            f"{location}.registration_plan.entries[{entry_index}]"
+                            ".character.respond_to_toggle.object_id"
+                        ),
+                        package_id=package.package_id,
+                        package_index=package_index,
+                        field="object_id",
                     )
                 )
 

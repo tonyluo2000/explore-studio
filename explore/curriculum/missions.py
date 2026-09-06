@@ -14,6 +14,7 @@ MISSION_04_ID: Final = "introduce-your-character"
 MISSION_05_ID: Final = "write-a-short-conversation"
 MISSION_06_ID: Final = "build-an-object-collection"
 MISSION_07_ID: Final = "toggle-an-object-state"
+MISSION_08_ID: Final = "respond-to-object-state"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -75,6 +76,16 @@ MISSION_07: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
 )
 
+MISSION_08: Final = ClassroomTrailMission(
+    mission_id=MISSION_08_ID,
+    title="Make an If/Else Character",
+    instructions=(
+        "Link one NPC to a toggle object, write a response for OFF and ON, then talk to the NPC "
+        "in both states."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -83,6 +94,7 @@ _MISSIONS = (
     MISSION_05,
     MISSION_06,
     MISSION_07,
+    MISSION_08,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

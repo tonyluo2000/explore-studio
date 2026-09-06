@@ -64,6 +64,15 @@ class LoadedWorldObjectToggle:
 
 
 @dataclass(frozen=True)
+class LoadedCharacterToggleResponse:
+    """Fixed two-branch response to one package-local toggle object."""
+
+    object_id: str
+    when_off: str
+    when_on: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacter:
     """One declarative character plus optional inert trail conversation."""
 
@@ -78,6 +87,7 @@ class LoadedCharacter:
     image: PackageAssetReference | None = None
     greeting: str | None = None
     conversation: tuple[str, ...] | None = None
+    respond_to_toggle: LoadedCharacterToggleResponse | None = None
 
 
 @dataclass(frozen=True)
