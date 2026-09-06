@@ -93,6 +93,22 @@ This mapping requires exactly those keys and is mutually exclusive with every
 other character dialogue mode. Its two distinct unqualified IDs each resolve
 exactly once in the same package to a valid toggle world object.
 
+A character may instead declare one fixed counter comparison response:
+
+```yaml
+respond_to_counter:
+  object_id: "power-core"
+  when_below_goal: "It needs more power."
+  when_at_or_above_goal: "The power level is ready!"
+```
+
+This mapping requires exactly those three keys and is mutually exclusive with
+every other character dialogue or conditional mode. `object_id` is one
+unqualified contribution ID that must resolve exactly once in the same package
+to a world object with valid `counter` metadata. Both responses must be
+nonblank. There is no separate comparison threshold: runtime uses the counter's
+authored `goal`.
+
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default

@@ -99,6 +99,15 @@ class LoadedCharacterEitherToggleResponse:
 
 
 @dataclass(frozen=True)
+class LoadedCharacterCounterResponse:
+    """Fixed comparison responses bound to one package-local counter."""
+
+    object_id: str
+    when_below_goal: str
+    when_at_or_above_goal: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacter:
     """One declarative character plus optional inert trail conversation."""
 
@@ -116,6 +125,7 @@ class LoadedCharacter:
     respond_to_toggle: LoadedCharacterToggleResponse | None = None
     respond_to_two_toggles: LoadedCharacterTwoToggleResponse | None = None
     respond_to_either_toggle: LoadedCharacterEitherToggleResponse | None = None
+    respond_to_counter: LoadedCharacterCounterResponse | None = None
 
 
 @dataclass(frozen=True)
