@@ -12,22 +12,30 @@ ordering or indexing mistake.
 
 ## Before class
 
+- Send `student/task-card.md` and confirm the shared Quick Start preflight.
 - Run the Python starter and validate the conversation package.
 - Prepare to model zero-based indexing with three visible cards or screen
   annotations. Do not introduce dialogue trees or branching.
 
 ## 45-minute runbook
 
-| Time | Teacher move | Student evidence |
-|---:|---|---|
-| 0:00–0:05 | Ask for a tiny exchange with a beginning and an ending. | Describes a 2–3-beat story arc. |
-| 0:05–0:12 | Number three lines as list positions 0, 1, 2. Ask students to predict first, final, length, and what happens after the final world line. | Records all four predictions. |
-| 0:12–0:24 | Students write 2–3 original list strings and inspect `[0]`, `[-1]`, and `len(...)`. | Correct first line, final line, and length. |
-| 0:24–0:37 | Students copy only their spoken text into the ordered declarative conversation, validate, run M05, and advance through its final line. | Lines appear in authored order; M05 completes on the final line. |
-| 0:37–0:42 | Give the ordering/index bug below. Students predict, repair, and retest the final line. | Explains zero-based indexing or uses `[-1]`. |
-| 0:42–0:45 | Lead the three-part self-review and Git close. | Names one creative choice, one Python change, and one test run; commits. |
+| Clock anchor | Range | Teacher move | Student evidence |
+|---:|---:|---|---|
+| 0:00–0:05 | 4–5 min | Ask for a tiny exchange with a beginning and an ending. | Describes a 2–3-beat story arc. |
+| 0:05–0:12 | 6–8 min | Number list positions and require first/final/length/wrap predictions. | Records all four predictions. |
+| 0:12–0:28 | 14–17 min | Students replace TODO lines, add `[0]`/`[-1]`, then complete indexing and order debugging before world work. | Correct output, repaired `IndexError`, and explained story order. |
+| 0:28–0:38 | 9–11 min | Students transfer 2–3 ordered lines to YAML, validate, run M05, verify the final line, and test wraparound. | M05 completes and behavior matches prediction. |
+| 0:38–0:42 | 3–5 min | Protect the three-part self-review and final evidence check. | Names creative choice, Python change, and test run. |
+| 0:42–0:45 | 3–5 min | Inspect status, unstaged/staged diffs, then commit or schedule it. | Descriptive commit or documented plan. |
+
+**Teacher cut line:** At 0:28, end Python wording changes and move to world
+verification. At 0:38, stop relaunching and protect the canonical self-review.
+Git may finish asynchronously, but the student must interpret the diff live.
 
 ## Student task and prediction
+
+Students follow `student/task-card.md`. The starter intentionally contains two
+TODO dialogue lines and leaves first/final indexing for the student.
 
 Write two or three original dialogue lines. Before running, identify the exact
 first line, final line, list length, and your prediction that the next world
@@ -50,7 +58,8 @@ more time to test the restart prediction.
 
 ## Deliberate debugging exercise
 
-For a three-line list, predict what is wrong here:
+Complete this during the 0:12–0:28 Python block, before package/world work. For
+a three-line list, predict what is wrong here:
 
 ```python
 print(dialogue[3])
@@ -61,7 +70,9 @@ predict the story effect, and restore the intended beginning-to-ending order.
 
 ## Expected output and behavior
 
-The sample output is:
+Before student work, the runnable starter prints only `2`, the list length. A
+student who chooses the sample package wording and adds both required print
+expressions sees:
 
 ```text
 Guide: The moon compass is awake.
@@ -93,6 +104,7 @@ Before committing, complete aloud or in chat:
 git status --short
 git diff
 git add lessons/sessions/s05/student
+git diff --staged
 git commit -m "Write an ordered guide conversation"
 ```
 
@@ -110,3 +122,5 @@ adds a clue. Keep the package conversation within the validated 2–3-line limit
   not erase completion evidence.
 - Accept any age-appropriate original exchange with 2–3 nonblank ordered lines.
   The student's explanation of order matters more than matching the sample.
+- Use the shared Quick Start for launch, accessibility, Git interpretation,
+  identity recovery, cancellation, and asynchronous completion.

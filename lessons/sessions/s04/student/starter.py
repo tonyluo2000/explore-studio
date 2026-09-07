@@ -2,8 +2,9 @@
 
 
 def greet(name):
-    print(f"Welcome to the Moonlit Trail, {name}!")
+    place = "TODO: name your setting"
+    print(f"Welcome to {place}, {name}!")
 
 
 greet("Ari")
-greet("Sam")
+# TODO: call greet one more time with a name you choose.
