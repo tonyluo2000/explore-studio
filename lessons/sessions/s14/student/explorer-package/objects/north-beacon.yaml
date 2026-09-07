@@ -1,0 +1,6 @@
+name: "North Beacon"
+x: 260
+y: 220
+when_near: "The north beacon shares an aurora pattern."
+when_interacted: "The north beacon changes with the shared style."
+toggle_style_id: "aurora-beacon"

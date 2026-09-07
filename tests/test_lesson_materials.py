@@ -190,5 +190,5 @@ def test_authored_session_package_is_valid(session: str) -> None:
     assert result.is_loaded, result.all_issues
 
 
-def test_v2_slice_does_not_create_s11_materials() -> None:
-    assert not (MATERIALS_ROOT / "s11").exists()
+def test_no_s16_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(16, 31))

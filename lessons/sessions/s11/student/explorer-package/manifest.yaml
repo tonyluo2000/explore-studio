@@ -1,0 +1,20 @@
+schema_version: "0.1"
+
+package:
+  id: "twin-star-vault"
+  display_name: "Twin Star Vault"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sun-key"
+    type: "world_object"
+    path: "objects/sun-key.yaml"
+  - id: "moon-key"
+    type: "world_object"
+    path: "objects/moon-key.yaml"
+  - id: "vault-keeper"
+    type: "character"
+    path: "character/vault-keeper.yaml"

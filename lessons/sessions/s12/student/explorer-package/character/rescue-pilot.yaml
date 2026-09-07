@@ -1,0 +1,8 @@
+name: "Rescue Pilot"
+x: 650
+y: 330
+color: "orange"
+respond_to_either_toggle:
+  object_ids: ["river-signal", "hill-signal"]
+  when_both_off: "No signal yet. The rescue craft keeps searching."
+  when_either_on: "A signal! The rescue craft has a safe route."

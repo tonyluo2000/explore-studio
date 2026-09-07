@@ -1,0 +1,8 @@
+name: "Sun Key"
+x: 250
+y: 230
+when_near: "The sun key waits for its twin."
+when_interacted: "You turn the sun key."
+toggle:
+  off_color: "orange"
+  on_color: "gold"

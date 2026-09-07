@@ -1,0 +1,22 @@
+schema_version: "0.2"
+
+package:
+  id: "twin-beacon-style"
+  display_name: "Twin Beacon Style"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+toggle_styles:
+  - id: "aurora-beacon"
+    off_color: "purple"
+    on_color: "gold"
+
+contributions:
+  - id: "north-beacon"
+    type: "world_object"
+    path: "objects/north-beacon.yaml"
+  - id: "south-beacon"
+    type: "world_object"
+    path: "objects/south-beacon.yaml"

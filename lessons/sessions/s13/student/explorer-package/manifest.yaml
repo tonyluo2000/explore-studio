@@ -1,0 +1,17 @@
+schema_version: "0.1"
+
+package:
+  id: "moonflower-garden"
+  display_name: "Moonflower Garden"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sun-lamp"
+    type: "world_object"
+    path: "objects/sun-lamp.yaml"
+  - id: "night-gardener"
+    type: "character"
+    path: "character/night-gardener.yaml"

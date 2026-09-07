@@ -1,0 +1,8 @@
+name: "Moon Key"
+x: 500
+y: 360
+when_near: "The moon key hums in the dark."
+when_interacted: "You turn the moon key."
+toggle:
+  off_color: "purple"
+  on_color: "blue"

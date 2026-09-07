@@ -1,0 +1,8 @@
+name: "River Signal"
+x: 220
+y: 390
+when_near: "A river beacon points through the rain."
+when_interacted: "You flash the river signal."
+toggle:
+  off_color: "blue"
+  on_color: "gold"

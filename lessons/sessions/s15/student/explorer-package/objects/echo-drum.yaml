@@ -1,0 +1,9 @@
+name: "Echo Drum"
+x: 610
+y: 400
+color: "orange"
+when_near: "The drum remembers each beat."
+when_interacted: "A final echo rolls across the Trail."
+counter:
+  goal: 2
+  when_goal_reached: "The echo drum is fully awake!"

@@ -1,0 +1,8 @@
+name: "Hill Signal"
+x: 520
+y: 190
+when_near: "A high beacon watches the clouds."
+when_interacted: "You flash the hill signal."
+toggle:
+  off_color: "purple"
+  on_color: "yellow"

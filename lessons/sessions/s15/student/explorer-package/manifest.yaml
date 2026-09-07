@@ -1,0 +1,23 @@
+schema_version: "0.1"
+
+package:
+  id: "star-song-sequence"
+  display_name: "Star Song Sequence"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "star-map"
+    type: "world_object"
+    path: "objects/star-map.yaml"
+  - id: "moon-switch"
+    type: "world_object"
+    path: "objects/moon-switch.yaml"
+  - id: "echo-drum"
+    type: "world_object"
+    path: "objects/echo-drum.yaml"
+  - id: "sequence-keeper"
+    type: "character"
+    path: "character/sequence-keeper.yaml"

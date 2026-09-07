@@ -1,0 +1,20 @@
+schema_version: "0.1"
+
+package:
+  id: "storm-rescue-signals"
+  display_name: "Storm Rescue Signals"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "river-signal"
+    type: "world_object"
+    path: "objects/river-signal.yaml"
+  - id: "hill-signal"
+    type: "world_object"
+    path: "objects/hill-signal.yaml"
+  - id: "rescue-pilot"
+    type: "character"
+    path: "character/rescue-pilot.yaml"
