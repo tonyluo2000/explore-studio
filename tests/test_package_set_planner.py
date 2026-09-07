@@ -12,6 +12,7 @@ import pytest
 import yaml
 
 from explore.packages import (
+    CharacterCounterResponseRegistrationSpec,
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -839,6 +840,48 @@ def test_either_toggle_conditional_survives_preflight_and_invalid_reference_fail
         maximum_characters=None,
         maximum_world_objects=None,
         cardinality_contract="Classroom Trail v0.9 supports",
+    )
+    assert failed.plan is None
+    assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]
+
+
+def test_counter_comparison_survives_preflight_and_invalid_reference_fails() -> None:
+    response = CharacterCounterResponseRegistrationSpec("core", "More", "Ready")
+    character = _character(
+        "power",
+        contribution_id="guide",
+        character=CharacterRegistrationSpec("Guide", 10, 20, "gold", respond_to_counter=response),
+    )
+    counter = _world_object(
+        "power",
+        contribution_id="core",
+        world_object=WorldObjectRegistrationSpec(
+            "Core", 30, 40, "red", counter=WorldObjectCounterRegistrationSpec(2, "Done")
+        ),
+    )
+    result = _build_package_set_plan(
+        (_selection("power", character, counter),),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.10 supports",
+    )
+    assert result.is_planned and result.plan is not None
+    planned = result.plan.entries[0]
+    assert isinstance(planned, CharacterRegistration)
+    assert planned.character.respond_to_counter is response
+
+    invalid = replace(
+        character,
+        character=replace(
+            character.character,
+            respond_to_counter=CharacterCounterResponseRegistrationSpec("missing", "More", "Ready"),
+        ),
+    )
+    failed = _build_package_set_plan(
+        (_selection("power", invalid, counter),),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.10 supports",
     )
     assert failed.plan is None
     assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]

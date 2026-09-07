@@ -58,6 +58,15 @@ class CharacterEitherToggleResponseRegistrationSpec:
 
 
 @dataclass(frozen=True)
+class CharacterCounterResponseRegistrationSpec:
+    """Detached fixed responses for one package-local counter comparison."""
+
+    object_id: str
+    when_below_goal: str
+    when_at_or_above_goal: str
+
+
+@dataclass(frozen=True)
 class RegistrationPlanIssue:
     """One deterministic Student API registration-planning diagnostic."""
 
@@ -82,6 +91,7 @@ class CharacterRegistrationSpec:
     respond_to_toggle: CharacterToggleResponseRegistrationSpec | None = None
     respond_to_two_toggles: CharacterTwoToggleResponseRegistrationSpec | None = None
     respond_to_either_toggle: CharacterEitherToggleResponseRegistrationSpec | None = None
+    respond_to_counter: CharacterCounterResponseRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)

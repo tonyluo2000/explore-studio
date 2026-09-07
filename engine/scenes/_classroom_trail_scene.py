@@ -55,6 +55,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_COUNTER_GOALS_REACHED = "ALL_COUNTER_GOALS_REACHED"
     ALL_TWO_TOGGLE_BRANCHES_DISPLAYED = "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"
     ALL_EITHER_TOGGLE_CASES_DISPLAYED = "ALL_EITHER_TOGGLE_CASES_DISPLAYED"
+    ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED = "ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED"
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,8 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
@@ -102,6 +105,7 @@ class ClassroomTrailMission:
                 ' or "ALL_COUNTER_GOALS_REACHED"'
                 ' or "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"'
                 ' or "ALL_EITHER_TOGGLE_CASES_DISPLAYED"'
+                ' or "ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED"'
             )
 
 
@@ -246,6 +250,25 @@ class ClassroomTrailNPCEitherToggleResponse:
 
 
 @dataclass(frozen=True)
+class ClassroomTrailNPCCounterResponse:
+    """Fixed response for comparison against one authored counter goal."""
+
+    counter_qualified_id: str
+    when_below_goal: str
+    when_at_or_above_goal: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.counter_qualified_id, str) or not self.counter_qualified_id.strip():
+            raise ValueError("counter_qualified_id must be non-whitespace text")
+        for field_name, value in (
+            ("when_below_goal", self.when_below_goal),
+            ("when_at_or_above_goal", self.when_at_or_above_goal),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-whitespace text")
+
+
+@dataclass(frozen=True)
 class ClassroomTrailNPC:
     """One stationary character whose NPC role exists only in this trail."""
 
@@ -256,6 +279,7 @@ class ClassroomTrailNPC:
     respond_to_toggle: ClassroomTrailNPCConditionalResponse | None = None
     respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None
     respond_to_either_toggle: ClassroomTrailNPCEitherToggleResponse | None = None
+    respond_to_counter: ClassroomTrailNPCCounterResponse | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -315,6 +339,23 @@ class ClassroomTrailNPC:
             raise ValueError(
                 "respond_to_either_toggle cannot be combined with greeting, conversation, "
                 "respond_to_toggle, or respond_to_two_toggles"
+            )
+        if self.respond_to_counter is not None and not isinstance(
+            self.respond_to_counter, ClassroomTrailNPCCounterResponse
+        ):
+            raise TypeError(
+                "respond_to_counter must be a ClassroomTrailNPCCounterResponse when present"
+            )
+        if self.respond_to_counter is not None and (
+            self.greeting is not None
+            or self.conversation is not None
+            or self.respond_to_toggle is not None
+            or self.respond_to_two_toggles is not None
+            or self.respond_to_either_toggle is not None
+        ):
+            raise ValueError(
+                "respond_to_counter cannot be combined with greeting, conversation, "
+                "respond_to_toggle, respond_to_two_toggles, or respond_to_either_toggle"
             )
 
     @property
@@ -376,6 +417,7 @@ class ClassroomTrailScene(Scene):
         self._displayed_conditional_branches: frozenset[tuple[str, bool]] = frozenset()
         self._displayed_two_toggle_branches: frozenset[tuple[str, bool]] = frozenset()
         self._displayed_either_toggle_cases: frozenset[tuple[str, bool, bool]] = frozenset()
+        self._displayed_counter_comparison_branches: frozenset[tuple[str, bool]] = frozenset()
         self._counter_counts: Mapping[str, int] = MappingProxyType(
             {item.qualified_id: 0 for item in self._objects if item.counter is not None}
         )
@@ -436,6 +478,23 @@ class ClassroomTrailScene(Scene):
                         "respond_to_either_toggle must reference exactly two same-package "
                         "toggle objects"
                     )
+
+        for npc in self._npcs:
+            conditional = npc.respond_to_counter
+            if conditional is None:
+                continue
+            target = objects_by_id.get(conditional.counter_qualified_id)
+            npc_package, _, _ = npc.qualified_id.partition(":")
+            target_package, separator, _ = conditional.counter_qualified_id.partition(":")
+            if (
+                target is None
+                or target.counter is None
+                or not separator
+                or target_package != npc_package
+            ):
+                raise ValueError(
+                    "respond_to_counter must reference one same-package counter object"
+                )
 
     @property
     def player(self) -> Character:
@@ -515,6 +574,18 @@ class ClassroomTrailScene(Scene):
                 for first_on, second_on in ((False, False), (True, False), (False, True))
             )
             return bool(conditional_npc_ids) and required <= self._displayed_either_toggle_cases
+        if rule is ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED:
+            conditional_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.respond_to_counter is not None
+            )
+            required = frozenset(
+                (qualified_id, at_or_above_goal)
+                for qualified_id in conditional_npc_ids
+                for at_or_above_goal in (False, True)
+            )
+            return bool(conditional_npc_ids) and (
+                required <= self._displayed_counter_comparison_branches
+            )
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -556,6 +627,10 @@ class ClassroomTrailScene(Scene):
     @property
     def displayed_either_toggle_cases(self) -> frozenset[tuple[str, bool, bool]]:
         return self._displayed_either_toggle_cases
+
+    @property
+    def displayed_counter_comparison_branches(self) -> frozenset[tuple[str, bool]]:
+        return self._displayed_counter_comparison_branches
 
     @property
     def counter_counts(self) -> Mapping[str, int]:
@@ -652,6 +727,28 @@ class ClassroomTrailScene(Scene):
                     self._displayed_either_toggle_cases = self._displayed_either_toggle_cases | {
                         (self._target.qualified_id, first_on, second_on)
                     }
+                elif self._target.respond_to_counter is not None:
+                    counter_response = self._target.respond_to_counter
+                    counter_object = next(
+                        item
+                        for item in self._objects
+                        if item.qualified_id == counter_response.counter_qualified_id
+                    )
+                    assert counter_object.counter is not None
+                    at_or_above_goal = (
+                        self._counter_counts[counter_response.counter_qualified_id]
+                        >= counter_object.counter.goal
+                    )
+                    response = (
+                        counter_response.when_at_or_above_goal
+                        if at_or_above_goal
+                        else counter_response.when_below_goal
+                    )
+                    self._feedback_message = f"{self._target.character.name}: {response}"
+                    self._displayed_counter_comparison_branches = (
+                        self._displayed_counter_comparison_branches
+                        | {(self._target.qualified_id, at_or_above_goal)}
+                    )
                 else:
                     lines = self._target.conversation_lines
                     assert lines
@@ -782,6 +879,7 @@ class ClassroomTrailScene(Scene):
                     or npc.respond_to_toggle is not None
                     or npc.respond_to_two_toggles is not None
                     or npc.respond_to_either_toggle is not None
+                    or npc.respond_to_counter is not None
                 )
             ),
         )

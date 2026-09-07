@@ -227,6 +227,7 @@ from explore.packages.classroom_trail_models import (
 )
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
@@ -311,6 +312,7 @@ from explore.packages.registration_application_models import (
     StudentAPIRegistrationTarget,
 )
 from explore.packages.registration_models import (
+    CharacterCounterResponseRegistrationSpec,
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -423,6 +425,7 @@ __all__ = [
     "CharacterRegistration",
     "CharacterRegistrationSpec",
     "CharacterEitherToggleResponseRegistrationSpec",
+    "CharacterCounterResponseRegistrationSpec",
     "CharacterTwoToggleResponseRegistrationSpec",
     "CharacterToggleResponseRegistrationSpec",
     "ContributionDeclaration",
@@ -438,6 +441,7 @@ __all__ = [
     "IDENTIFIER_MAX_LENGTH",
     "IssueCode",
     "LoadedCharacter",
+    "LoadedCharacterCounterResponse",
     "LoadedCharacterEitherToggleResponse",
     "LoadedCharacterTwoToggleResponse",
     "LoadedCharacterToggleResponse",

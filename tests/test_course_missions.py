@@ -34,11 +34,13 @@ from explore.curriculum import (
     MISSION_11_ID,
     MISSION_12,
     MISSION_12_ID,
+    MISSION_13,
+    MISSION_13_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_12_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_13_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -51,8 +53,10 @@ def test_catalog_contains_exactly_missions_01_through_12_by_deterministic_identi
     assert MISSION_10_ID == "require-all-switches-on"
     assert MISSION_11_ID == "open-with-either-switch"
     assert MISSION_12_ID == "invert-a-switch-condition"
+    assert MISSION_13_ID == "compare-a-counter-to-its-goal"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
+        MISSION_13_ID,
         MISSION_09_ID,
         MISSION_02_ID,
         MISSION_04_ID,
@@ -68,6 +72,7 @@ def test_catalog_contains_exactly_missions_01_through_12_by_deterministic_identi
     assert tuple(COURSE_MISSION_CATALOG) == CANONICAL_COURSE_MISSION_IDS
     assert tuple(COURSE_MISSION_CATALOG.values()) == (
         MISSION_06,
+        MISSION_13,
         MISSION_09,
         MISSION_02,
         MISSION_04,
@@ -271,7 +276,22 @@ def test_mission_12_reuses_the_existing_one_toggle_conditional_rule() -> None:
         mission.instructions = "Changed"  # type: ignore[misc]
 
 
-@pytest.mark.parametrize("mission_id", ["mission-12", "write-conversation", "", None, 1])
+def test_mission_13_requires_both_counter_comparison_branches() -> None:
+    mission = get_course_mission(MISSION_13_ID)
+
+    assert mission is MISSION_13
+    assert mission.title == "Check the Power Level"
+    assert "below its goal" in mission.instructions
+    assert "at or above its goal" in mission.instructions
+    assert (
+        mission.completion_rule
+        is ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED
+    )
+
+
+@pytest.mark.parametrize(
+    "mission_id", ["mission-12", "mission-13", "write-conversation", "", None, 1]
+)
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):
         get_course_mission(mission_id)  # type: ignore[arg-type]

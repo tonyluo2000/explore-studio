@@ -24,6 +24,7 @@ from explore.packages.policy import (
     is_valid_semantic_version,
 )
 from explore.packages.registration_models import (
+    CharacterCounterResponseRegistrationSpec,
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -213,6 +214,16 @@ def _valid_either_toggle_conditional(value: object) -> bool:
     )
 
 
+def _valid_counter_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterCounterResponseRegistrationSpec)
+        and isinstance(value.object_id, str)
+        and is_valid_identifier(value.object_id)
+        and _is_nonblank_text(value.when_below_goal)
+        and _is_nonblank_text(value.when_at_or_above_goal)
+    )
+
+
 def _validate_entry_value(
     entry: CharacterRegistration | WorldObjectRegistration,
     *,
@@ -382,6 +393,40 @@ def _validate_entry_value(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} cannot be combined with greeting, conversation, "
                     "respond_to_toggle, or respond_to_two_toggles.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_counter_conditional(specification.respond_to_counter):
+            field_location = f"{location}.character.respond_to_counter"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must retain one package-local counter ID and two valid "
+                    "responses.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.respond_to_counter is not None and (
+            specification.greeting is not None
+            or specification.conversation is not None
+            or specification.respond_to_toggle is not None
+            or specification.respond_to_two_toggles is not None
+            or specification.respond_to_either_toggle is not None
+        ):
+            field_location = f"{location}.character.respond_to_counter"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} cannot be combined with greeting, conversation, "
+                    "respond_to_toggle, respond_to_two_toggles, or respond_to_either_toggle.",
                     field_location,
                     package_index=package_index,
                     package_id=package_id,
@@ -698,6 +743,42 @@ def _validate_conditional_references(
                     entry=entry,
                 )
             )
+
+    for entry_index, entry in enumerate(entries):
+        if type(entry) is not CharacterRegistration or not isinstance(
+            entry.character, CharacterRegistrationSpec
+        ):
+            continue
+        conditional = entry.character.respond_to_counter
+        if not isinstance(
+            conditional, CharacterCounterResponseRegistrationSpec
+        ) or not _valid_counter_conditional(conditional):
+            continue
+        matches = by_id.get(conditional.object_id, [])
+        target = matches[0] if len(matches) == 1 else None
+        if (
+            len(matches) == 1
+            and type(target) is WorldObjectRegistration
+            and isinstance(target.world_object, WorldObjectRegistrationSpec)
+            and _valid_counter(target.world_object.counter)
+            and target.world_object.counter is not None
+        ):
+            continue
+        location = (
+            f"selections[{package_index}].registration_plan.entries[{entry_index}]"
+            ".character.respond_to_counter.object_id"
+        )
+        issues.append(
+            _issue(
+                PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                f"{location} must resolve exactly to one counter world object in this package.",
+                location,
+                package_index=package_index,
+                package_id=package_id,
+                entry_index=entry_index,
+                entry=entry,
+            )
+        )
 
     for entry_index, entry in enumerate(entries):
         if type(entry) is not CharacterRegistration or not isinstance(

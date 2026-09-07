@@ -11,6 +11,7 @@ import yaml
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
@@ -38,6 +39,7 @@ _CHARACTER_FIELDS = frozenset(
         "respond_to_toggle",
         "respond_to_two_toggles",
         "respond_to_either_toggle",
+        "respond_to_counter",
     }
 )
 _WORLD_OBJECT_FIELDS = frozenset(
@@ -453,6 +455,55 @@ def _respond_to_either_toggle(
     return LoadedCharacterEitherToggleResponse(object_ids, when_both_off, when_either_on)
 
 
+def _respond_to_counter(
+    mapping: Mapping[object, object],
+    source_path: str,
+    issues: list[PackageLoadIssue],
+) -> LoadedCharacterCounterResponse | None:
+    value = mapping.get("respond_to_counter", _MISSING)
+    if value is _MISSING:
+        return None
+    location = _field_location(source_path, "respond_to_counter")
+    if not isinstance(value, Mapping):
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_INVALID_TYPE,
+                f"{location} must be a mapping with object_id, when_below_goal, and "
+                "when_at_or_above_goal.",
+                location,
+            )
+        )
+        return None
+    object_id = _text(value, "object_id", location, issues, required=True, default=None)
+    if isinstance(object_id, str) and not is_valid_identifier(object_id):
+        object_location = _field_location(location, "object_id")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{object_location} must be one unqualified package-local contribution ID.",
+                object_location,
+            )
+        )
+    when_below_goal = _text(value, "when_below_goal", location, issues, required=True, default=None)
+    when_at_or_above_goal = _text(
+        value, "when_at_or_above_goal", location, issues, required=True, default=None
+    )
+    _unknown_fields(
+        value,
+        frozenset({"object_id", "when_below_goal", "when_at_or_above_goal"}),
+        location,
+        issues,
+    )
+    if (
+        not isinstance(object_id, str)
+        or not is_valid_identifier(object_id)
+        or not isinstance(when_below_goal, str)
+        or not isinstance(when_at_or_above_goal, str)
+    ):
+        return None
+    return LoadedCharacterCounterResponse(object_id, when_below_goal, when_at_or_above_goal)
+
+
 def _color(
     mapping: Mapping[object, object],
     source_path: str,
@@ -667,6 +718,7 @@ def _parse_character(
     respond_to_toggle = _respond_to_toggle(mapping, source_path, issues)
     respond_to_two_toggles = _respond_to_two_toggles(mapping, source_path, issues)
     respond_to_either_toggle = _respond_to_either_toggle(mapping, source_path, issues)
+    respond_to_counter = _respond_to_counter(mapping, source_path, issues)
     if greeting is not None and conversation is not None:
         location = _field_location(source_path, "conversation")
         issues.append(
@@ -714,6 +766,22 @@ def _parse_character(
                 location,
             )
         )
+    if respond_to_counter is not None and (
+        greeting is not None
+        or conversation is not None
+        or respond_to_toggle is not None
+        or respond_to_two_toggles is not None
+        or respond_to_either_toggle is not None
+    ):
+        location = _field_location(source_path, "respond_to_counter")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with greeting, conversation, "
+                "respond_to_toggle, respond_to_two_toggles, or respond_to_either_toggle.",
+                location,
+            )
+        )
     _unknown_fields(mapping, _CHARACTER_FIELDS, source_path, issues)
 
     if issues:
@@ -740,6 +808,7 @@ def _parse_character(
             respond_to_toggle=respond_to_toggle,
             respond_to_two_toggles=respond_to_two_toggles,
             respond_to_either_toggle=respond_to_either_toggle,
+            respond_to_counter=respond_to_counter,
         ),
         (),
     )

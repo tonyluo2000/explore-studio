@@ -5,6 +5,7 @@ from __future__ import annotations
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
     LoadedCharacter,
+    LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
@@ -23,6 +24,7 @@ from explore.packages.policy import (
     is_valid_semantic_version,
 )
 from explore.packages.registration_models import (
+    CharacterCounterResponseRegistrationSpec,
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
@@ -109,6 +111,16 @@ def _valid_respond_to_either_toggle(value: object) -> bool:
         and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
         and _is_nonblank_text(value.when_both_off)
         and _is_nonblank_text(value.when_either_on)
+    )
+
+
+def _valid_respond_to_counter(value: object) -> bool:
+    return value is None or (
+        isinstance(value, LoadedCharacterCounterResponse)
+        and isinstance(value.object_id, str)
+        and is_valid_identifier(value.object_id)
+        and _is_nonblank_text(value.when_below_goal)
+        and _is_nonblank_text(value.when_at_or_above_goal)
     )
 
 
@@ -531,6 +543,35 @@ def _map_character(
                 field="respond_to_either_toggle",
             )
         )
+    if not _valid_respond_to_counter(contribution.respond_to_counter):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_counter must retain one valid package-local counter "
+                "ID and two valid responses.",
+                f"{location}.respond_to_counter",
+                contribution=contribution,
+                field="respond_to_counter",
+            )
+        )
+    if contribution.respond_to_counter is not None and (
+        contribution.greeting is not None
+        or contribution.conversation is not None
+        or contribution.respond_to_toggle is not None
+        or contribution.respond_to_two_toggles is not None
+        or contribution.respond_to_either_toggle is not None
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_counter cannot be combined with greeting, "
+                "conversation, respond_to_toggle, respond_to_two_toggles, or "
+                "respond_to_either_toggle.",
+                f"{location}.respond_to_counter",
+                contribution=contribution,
+                field="respond_to_counter",
+            )
+        )
     conditional = (
         CharacterToggleResponseRegistrationSpec(
             object_id=contribution.respond_to_toggle.object_id,
@@ -558,6 +599,15 @@ def _map_character(
         if isinstance(contribution.respond_to_either_toggle, LoadedCharacterEitherToggleResponse)
         else None
     )
+    counter_response = (
+        CharacterCounterResponseRegistrationSpec(
+            object_id=contribution.respond_to_counter.object_id,
+            when_below_goal=contribution.respond_to_counter.when_below_goal,
+            when_at_or_above_goal=contribution.respond_to_counter.when_at_or_above_goal,
+        )
+        if isinstance(contribution.respond_to_counter, LoadedCharacterCounterResponse)
+        else None
+    )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -572,6 +622,7 @@ def _map_character(
             respond_to_toggle=conditional,
             respond_to_two_toggles=two_toggle,
             respond_to_either_toggle=either_toggle,
+            respond_to_counter=counter_response,
         ),
         asset_reference=contribution.image,
     )
@@ -806,6 +857,29 @@ def build_student_api_registration_plan(
                             field="object_ids",
                         )
                     )
+
+        if (
+            type(contribution) is LoadedCharacter
+            and isinstance(contribution.respond_to_counter, LoadedCharacterCounterResponse)
+            and _valid_respond_to_counter(contribution.respond_to_counter)
+        ):
+            matches = contributions_by_id.get(contribution.respond_to_counter.object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            if (
+                len(matches) != 1
+                or not isinstance(target, LoadedWorldObject)
+                or target.counter is None
+            ):
+                issues.append(
+                    _issue(
+                        RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID,
+                        f"{location}.respond_to_counter.object_id must resolve exactly to one "
+                        "counter world object in the containing package.",
+                        f"{location}.respond_to_counter.object_id",
+                        contribution=contribution,
+                        field="object_id",
+                    )
+                )
 
         if (
             type(contribution) is LoadedCharacter
