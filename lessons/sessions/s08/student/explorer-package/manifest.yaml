@@ -1,0 +1,17 @@
+schema_version: "0.1"
+
+package:
+  id: "cloud-gate"
+  display_name: "Cloud Gate"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sky-switch"
+    type: "world_object"
+    path: "objects/sky-switch.yaml"
+  - id: "gate-guardian"
+    type: "character"
+    path: "character/gate-guardian.yaml"

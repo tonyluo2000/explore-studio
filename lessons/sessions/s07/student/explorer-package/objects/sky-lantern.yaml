@@ -1,0 +1,8 @@
+name: "Sky Lantern"
+x: 360
+y: 300
+when_near: "The lantern waits for a spark."
+when_interacted: "Click! The lantern changes."
+toggle:
+  off_color: "blue"
+  on_color: "gold"

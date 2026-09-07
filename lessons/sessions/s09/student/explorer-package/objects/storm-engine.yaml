@@ -1,0 +1,9 @@
+name: "Storm Engine"
+x: 420
+y: 300
+color: "purple"
+when_near: "The engine crackles softly."
+when_interacted: "You add one spark."
+counter:
+  goal: 3
+  when_goal_reached: "The storm engine is fully charged!"

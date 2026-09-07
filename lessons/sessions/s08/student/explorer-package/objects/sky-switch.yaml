@@ -1,0 +1,8 @@
+name: "Sky Switch"
+x: 300
+y: 340
+when_near: "Cloud symbols circle the switch."
+when_interacted: "The gate hums."
+toggle:
+  off_color: "purple"
+  on_color: "yellow"

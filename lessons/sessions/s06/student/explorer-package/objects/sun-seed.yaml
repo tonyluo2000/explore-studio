@@ -1,0 +1,6 @@
+name: "Sun Seed"
+x: 180
+y: 180
+color: "gold"
+when_near: "The seed feels warm."
+when_interacted: "A tiny sunrise opens inside the seed!"

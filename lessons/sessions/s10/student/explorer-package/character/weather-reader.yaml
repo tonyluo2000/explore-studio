@@ -1,0 +1,8 @@
+name: "Weather Reader"
+x: 620
+y: 260
+color: "blue"
+respond_to_counter:
+  object_id: "storm-engine"
+  when_below_goal: "The storm needs more power."
+  when_at_or_above_goal: "The storm is ready to launch!"

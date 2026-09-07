@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "storm-engine"
+  display_name: "Storm Engine"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "storm-engine"
+    type: "world_object"
+    path: "objects/storm-engine.yaml"

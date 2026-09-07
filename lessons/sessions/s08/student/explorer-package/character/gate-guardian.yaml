@@ -1,0 +1,8 @@
+name: "Gate Guardian"
+x: 600
+y: 260
+color: "blue"
+respond_to_toggle:
+  object_id: "sky-switch"
+  when_off: "The cloud gate is sleeping."
+  when_on: "The cloud gate is open!"

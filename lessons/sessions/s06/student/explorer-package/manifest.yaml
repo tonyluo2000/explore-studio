@@ -1,0 +1,20 @@
+schema_version: "0.1"
+
+package:
+  id: "starlight-garden"
+  display_name: "Starlight Garden"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sun-seed"
+    type: "world_object"
+    path: "objects/sun-seed.yaml"
+  - id: "rain-bell"
+    type: "world_object"
+    path: "objects/rain-bell.yaml"
+  - id: "wind-flower"
+    type: "world_object"
+    path: "objects/wind-flower.yaml"
