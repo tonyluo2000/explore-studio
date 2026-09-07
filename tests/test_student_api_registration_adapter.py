@@ -14,6 +14,7 @@ from explore.packages import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     Compatibility,
@@ -21,6 +22,7 @@ from explore.packages import (
     LoadedCharacter,
     LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
+    LoadedCharacterSequenceResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
@@ -446,6 +448,56 @@ def test_character_two_toggle_conditional_cannot_coexist_with_other_dialogue() -
     assert RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID in [
         issue.code for issue in result.issues
     ]
+
+
+def test_character_sequence_is_resolved_and_preserved_immutably() -> None:
+    sequence = LoadedCharacterSequenceResponse(
+        ("sign", "other", "third"), "Still locked", "Unlocked"
+    )
+    objects = (
+        _world_object(),
+        _world_object(contribution_id="other", qualified_id="river-rescue:other"),
+        _world_object(contribution_id="third", qualified_id="river-rescue:third"),
+    )
+
+    result = build_student_api_registration_plan(
+        _package(_character(respond_to_sequence=sequence), *objects)
+    )
+
+    assert result.is_planned and result.plan is not None
+    entry = result.plan.entries[0]
+    assert isinstance(entry, CharacterRegistration)
+    assert entry.character.respond_to_sequence == CharacterSequenceResponseRegistrationSpec(
+        ("sign", "other", "third"), "Still locked", "Unlocked"
+    )
+    with pytest.raises(FrozenInstanceError):
+        entry.character.respond_to_sequence.when_complete = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "sequence",
+    [
+        LoadedCharacterSequenceResponse(("sign", "other", "missing"), "Locked", "Open"),
+        LoadedCharacterSequenceResponse(("sign", "other", "guide"), "Locked", "Open"),
+        LoadedCharacterSequenceResponse(("sign", "sign", "other"), "Locked", "Open"),
+        LoadedCharacterSequenceResponse(("sign", "other:bad", "third"), "Locked", "Open"),
+        LoadedCharacterSequenceResponse(("sign", "other", "third"), " ", "Open"),
+    ],
+)
+def test_character_sequence_forgery_fails_closed(
+    sequence: LoadedCharacterSequenceResponse,
+) -> None:
+    result = build_student_api_registration_plan(
+        _package(
+            _character(respond_to_sequence=sequence),
+            _world_object(),
+            _world_object(contribution_id="other", qualified_id="river-rescue:other"),
+            _world_object(contribution_id="third", qualified_id="river-rescue:third"),
+        )
+    )
+
+    assert result.plan is None
+    assert result.issues
 
 
 def test_character_conversation_is_validated_and_preserved() -> None:

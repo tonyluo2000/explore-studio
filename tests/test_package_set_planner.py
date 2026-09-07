@@ -16,6 +16,7 @@ from explore.packages import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     LoadedToggleStyleUse,
@@ -866,7 +867,7 @@ def test_counter_comparison_survives_preflight_and_invalid_reference_fails() -> 
         (_selection("power", character, counter),),
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.10 supports",
+        cardinality_contract="Classroom Trail v0.11 supports",
     )
     assert result.is_planned and result.plan is not None
     planned = result.plan.entries[0]
@@ -884,7 +885,7 @@ def test_counter_comparison_survives_preflight_and_invalid_reference_fails() -> 
         (_selection("power", invalid, counter),),
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.10 supports",
+        cardinality_contract="Classroom Trail v0.11 supports",
     )
     assert failed.plan is None
     assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]
@@ -915,7 +916,7 @@ def test_named_toggle_style_evidence_survives_preflight_and_forgery_fails() -> N
         (selection,),
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.10 supports",
+        cardinality_contract="Classroom Trail v0.11 supports",
     )
     assert result.is_planned and result.plan is not None
     assert result.plan.packages[0].registration_plan.toggle_style_uses is evidence
@@ -933,10 +934,57 @@ def test_named_toggle_style_evidence_survives_preflight_and_forgery_fails() -> N
         (forged,),
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.10 supports",
+        cardinality_contract="Classroom Trail v0.11 supports",
     )
     assert failed.plan is None
     assert PackageSetIssueCode.REGISTRATION_PLAN_INVALID in [issue.code for issue in failed.issues]
+
+
+def test_three_object_sequence_survives_preflight_and_bad_reference_fails() -> None:
+    sequence = CharacterSequenceResponseRegistrationSpec(
+        ("first", "second", "third"), "Locked", "Open"
+    )
+    entries = (
+        _character(
+            "magic",
+            character=CharacterRegistrationSpec(
+                "Guide", 10, 20, "gold", respond_to_sequence=sequence
+            ),
+        ),
+        _world_object("magic", contribution_id="first"),
+        _world_object("magic", contribution_id="second"),
+        _world_object("magic", contribution_id="third"),
+    )
+    selection = PackageSelection("magic", "1.0.0", _plan("magic", *entries))
+
+    result = _build_package_set_plan(
+        (selection,),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.11 supports",
+    )
+    assert result.is_planned and result.plan is not None
+    retained = result.plan.packages[0].registration_plan.entries[0]
+    assert isinstance(retained, CharacterRegistration)
+    assert retained.character.respond_to_sequence is sequence
+
+    forged_sequence = replace(sequence, object_ids=("first", "second", "missing"))
+    forged_character = replace(
+        entries[0],
+        character=replace(entries[0].character, respond_to_sequence=forged_sequence),
+    )
+    forged = replace(
+        selection,
+        registration_plan=_plan("magic", forged_character, *entries[1:]),
+    )
+    failed = _build_package_set_plan(
+        (forged,),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.11 supports",
+    )
+    assert failed.plan is None
+    assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]
 
 
 def test_package_set_rejects_forged_toggle_metadata() -> None:

@@ -110,6 +110,20 @@ to a world object with valid `counter` metadata. Both responses must be
 nonblank. There is no separate comparison threshold: runtime uses the counter's
 authored `goal`.
 
+A character may instead declare one fixed ordered sequence response:
+
+```yaml
+respond_to_sequence:
+  object_ids: ["first-object", "second-object", "third-object"]
+  when_incomplete: "The sequence is still locked."
+  when_complete: "The secret is revealed!"
+```
+
+The mapping requires exactly those keys and is mutually exclusive with every
+other character dialogue or response mode. Its ordered list contains exactly
+three distinct unqualified IDs, each resolving exactly once to a same-package
+world object. Ordinary, toggle, and counter objects are all valid members.
+
 The engine supplies character dimensions and movement speed, so dimensions,
 movement, speed, behavior, dialogue trees, and code hooks are not accepted
 fields. An asset is optional because the Student API has a color-based default

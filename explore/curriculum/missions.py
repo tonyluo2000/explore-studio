@@ -21,6 +21,7 @@ MISSION_11_ID: Final = "open-with-either-switch"
 MISSION_12_ID: Final = "invert-a-switch-condition"
 MISSION_13_ID: Final = "compare-a-counter-to-its-goal"
 MISSION_14_ID: Final = "reuse-a-named-toggle-style"
+MISSION_15_ID: Final = "complete-actions-in-order"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -153,6 +154,16 @@ MISSION_14: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
 )
 
+MISSION_15: Final = ClassroomTrailMission(
+    mission_id=MISSION_15_ID,
+    title="Solve the Secret Sequence",
+    instructions=(
+        "Choose three different objects and list them in order. Interact with them in that "
+        "exact order to unlock your NPC's success response."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -168,6 +179,7 @@ _MISSIONS = (
     MISSION_12,
     MISSION_13,
     MISSION_14,
+    MISSION_15,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

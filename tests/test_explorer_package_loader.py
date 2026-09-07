@@ -16,6 +16,7 @@ from explore.packages import (
     LoadedCharacter,
     LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
+    LoadedCharacterSequenceResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedToggleStyleUse,
@@ -221,6 +222,120 @@ def test_character_counter_reference_rejects_missing_non_object_and_non_counter_
     result = load_explorer_package(package)
     assert result.package is None
     assert any("respond_to_counter.object_id" in issue.location for issue in result.issues)
+
+
+def test_character_sequence_loads_ordered_immutable_world_object_references(
+    tmp_path: Path,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        schema_version="0.2",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+            {"id": "third", "type": "world_object", "path": "objects/third.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                b'name: "Guide"\nrespond_to_sequence:\n  object_ids: [first, second, third]\n'
+                b'  when_incomplete: "Still locked."\n  when_complete: "Unlocked!"\n'
+            ),
+            "objects/first.yaml": b'name: "First"\nx: 1\ny: 2\n',
+            "objects/second.yaml": (
+                b'name: "Second"\nx: 3\ny: 4\n' b"toggle: {off_color: red, on_color: green}\n"
+            ),
+            "objects/third.yaml": (
+                b'name: "Third"\nx: 5\ny: 6\ncounter:\n  goal: 2\n'
+                b'  when_goal_reached: "Ready"\n'
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded and result.package is not None
+    response = result.package.characters[0].respond_to_sequence
+    assert response == LoadedCharacterSequenceResponse(
+        ("first", "second", "third"), "Still locked.", "Unlocked!"
+    )
+    with pytest.raises(FrozenInstanceError):
+        response.when_complete = "Changed"  # type: ignore[union-attr,misc]
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        "respond_to_sequence: {object_ids: [first, second, third], " "when_incomplete: Locked}\n",
+        "respond_to_sequence: {object_ids: [first, second, third], "
+        "when_incomplete: Locked, when_complete: Open, extra: no}\n",
+        "respond_to_sequence: {object_ids: [first, second], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_sequence: {object_ids: [first, second, third, fourth], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_sequence: {object_ids: [first, first, third], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_sequence: {object_ids: [first, other:second, third], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_sequence: {object_ids: [first, BadId, third], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_sequence: {object_ids: [first, second, third], "
+        "when_incomplete: ' ', when_complete: Open}\n",
+        "greeting: Hello\nrespond_to_sequence: {object_ids: [first, second, third], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "conversation: [Hello]\nrespond_to_sequence: "
+        "{object_ids: [first, second, third], when_incomplete: Locked, "
+        "when_complete: Open}\n",
+        "respond_to_toggle: {object_id: first, when_off: Off, when_on: On}\n"
+        "respond_to_sequence: {object_ids: [first, second, third], "
+        "when_incomplete: Locked, when_complete: Open}\n",
+        "respond_to_two_toggles: {object_ids: [first, second], when_both_on: Open, "
+        "when_not_both_on: Locked}\nrespond_to_sequence: "
+        "{object_ids: [first, second, third], when_incomplete: Locked, "
+        "when_complete: Open}\n",
+        "respond_to_either_toggle: {object_ids: [first, second], when_both_off: Locked, "
+        "when_either_on: Open}\nrespond_to_sequence: "
+        "{object_ids: [first, second, third], when_incomplete: Locked, "
+        "when_complete: Open}\n",
+        "respond_to_counter: {object_id: first, when_below_goal: More, "
+        "when_at_or_above_goal: Ready}\nrespond_to_sequence: "
+        "{object_ids: [first, second, third], when_incomplete: Locked, "
+        "when_complete: Open}\n",
+    ],
+)
+def test_character_sequence_metadata_fails_closed(metadata: str, tmp_path: Path) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        files={"character/guide.yaml": f'name: "Guide"\n{metadata}'.encode()},
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert result.issues
+
+
+@pytest.mark.parametrize("target_id", ["missing", "guide"])
+def test_character_sequence_reference_rejects_unknown_and_character_targets(
+    target_id: str, tmp_path: Path
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        contributions=[
+            {"id": "guide", "type": "character", "path": "character/guide.yaml"},
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+        ],
+        files={
+            "character/guide.yaml": (
+                f'name: "Guide"\nrespond_to_sequence: {{object_ids: [first, second, {target_id}], '
+                "when_incomplete: Locked, when_complete: Open}\n"
+            ).encode(),
+            "objects/first.yaml": b'name: "First"\nx: 1\ny: 2\n',
+            "objects/second.yaml": b'name: "Second"\nx: 3\ny: 4\n',
+        },
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert any("respond_to_sequence.object_ids" in issue.location for issue in result.issues)
 
 
 @pytest.mark.parametrize(

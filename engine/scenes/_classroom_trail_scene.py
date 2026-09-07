@@ -56,6 +56,7 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_TWO_TOGGLE_BRANCHES_DISPLAYED = "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"
     ALL_EITHER_TOGGLE_CASES_DISPLAYED = "ALL_EITHER_TOGGLE_CASES_DISPLAYED"
     ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED = "ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED"
+    ALL_THREE_OBJECT_SEQUENCES_COMPLETED = "ALL_THREE_OBJECT_SEQUENCES_COMPLETED"
 
 
 @dataclass(frozen=True)
@@ -95,6 +96,8 @@ class ClassroomTrailMission:
             is not ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED
             and self.completion_rule
             is not ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED
+            and self.completion_rule
+            is not ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED
         ):
             raise ValueError(
                 'completion_rule must be "ALL_OBJECTS_VISITED" or '
@@ -106,6 +109,7 @@ class ClassroomTrailMission:
                 ' or "ALL_TWO_TOGGLE_BRANCHES_DISPLAYED"'
                 ' or "ALL_EITHER_TOGGLE_CASES_DISPLAYED"'
                 ' or "ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED"'
+                ' or "ALL_THREE_OBJECT_SEQUENCES_COMPLETED"'
             )
 
 
@@ -269,6 +273,33 @@ class ClassroomTrailNPCCounterResponse:
 
 
 @dataclass(frozen=True)
+class ClassroomTrailNPCSequenceResponse:
+    """Fixed responses bound to three package-local world objects in order."""
+
+    object_qualified_ids: tuple[str, str, str]
+    when_incomplete: str
+    when_complete: str
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.object_qualified_ids, tuple)
+            or len(self.object_qualified_ids) != 3
+            or any(
+                not isinstance(value, str) or not value.strip()
+                for value in self.object_qualified_ids
+            )
+            or len(set(self.object_qualified_ids)) != 3
+        ):
+            raise ValueError("object_qualified_ids must contain exactly three distinct IDs")
+        for field_name, value in (
+            ("when_incomplete", self.when_incomplete),
+            ("when_complete", self.when_complete),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be non-whitespace text")
+
+
+@dataclass(frozen=True)
 class ClassroomTrailNPC:
     """One stationary character whose NPC role exists only in this trail."""
 
@@ -280,6 +311,7 @@ class ClassroomTrailNPC:
     respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None
     respond_to_either_toggle: ClassroomTrailNPCEitherToggleResponse | None = None
     respond_to_counter: ClassroomTrailNPCCounterResponse | None = None
+    respond_to_sequence: ClassroomTrailNPCSequenceResponse | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.qualified_id, str) or not self.qualified_id.strip():
@@ -357,6 +389,24 @@ class ClassroomTrailNPC:
                 "respond_to_counter cannot be combined with greeting, conversation, "
                 "respond_to_toggle, respond_to_two_toggles, or respond_to_either_toggle"
             )
+        if self.respond_to_sequence is not None and not isinstance(
+            self.respond_to_sequence, ClassroomTrailNPCSequenceResponse
+        ):
+            raise TypeError(
+                "respond_to_sequence must be a ClassroomTrailNPCSequenceResponse when present"
+            )
+        if self.respond_to_sequence is not None and (
+            self.greeting is not None
+            or self.conversation is not None
+            or self.respond_to_toggle is not None
+            or self.respond_to_two_toggles is not None
+            or self.respond_to_either_toggle is not None
+            or self.respond_to_counter is not None
+        ):
+            raise ValueError(
+                "respond_to_sequence cannot be combined with greeting, conversation, or "
+                "another respond_to field"
+            )
 
     @property
     def conversation_lines(self) -> tuple[str, ...]:
@@ -418,6 +468,10 @@ class ClassroomTrailScene(Scene):
         self._displayed_two_toggle_branches: frozenset[tuple[str, bool]] = frozenset()
         self._displayed_either_toggle_cases: frozenset[tuple[str, bool, bool]] = frozenset()
         self._displayed_counter_comparison_branches: frozenset[tuple[str, bool]] = frozenset()
+        self._sequence_progress: Mapping[str, int] = MappingProxyType(
+            {npc.qualified_id: 0 for npc in self._npcs if npc.respond_to_sequence is not None}
+        )
+        self._completed_sequence_npc_ids: frozenset[str] = frozenset()
         self._counter_counts: Mapping[str, int] = MappingProxyType(
             {item.qualified_id: 0 for item in self._objects if item.counter is not None}
         )
@@ -495,6 +549,20 @@ class ClassroomTrailScene(Scene):
                 raise ValueError(
                     "respond_to_counter must reference one same-package counter object"
                 )
+
+        for npc in self._npcs:
+            sequence = npc.respond_to_sequence
+            if sequence is None:
+                continue
+            npc_package, _, _ = npc.qualified_id.partition(":")
+            for object_qualified_id in sequence.object_qualified_ids:
+                target = objects_by_id.get(object_qualified_id)
+                target_package, separator, _ = object_qualified_id.partition(":")
+                if target is None or not separator or target_package != npc_package:
+                    raise ValueError(
+                        "respond_to_sequence must reference exactly three same-package "
+                        "world objects"
+                    )
 
     @property
     def player(self) -> Character:
@@ -586,6 +654,11 @@ class ClassroomTrailScene(Scene):
             return bool(conditional_npc_ids) and (
                 required <= self._displayed_counter_comparison_branches
             )
+        if rule is ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED:
+            sequence_npc_ids = frozenset(
+                npc.qualified_id for npc in self._npcs if npc.respond_to_sequence is not None
+            )
+            return bool(sequence_npc_ids) and sequence_npc_ids <= self._completed_sequence_npc_ids
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -635,6 +708,14 @@ class ClassroomTrailScene(Scene):
     @property
     def counter_counts(self) -> Mapping[str, int]:
         return self._counter_counts
+
+    @property
+    def sequence_progress(self) -> Mapping[str, int]:
+        return self._sequence_progress
+
+    @property
+    def completed_sequence_npc_ids(self) -> frozenset[str]:
+        return self._completed_sequence_npc_ids
 
     @property
     def visited_count(self) -> int:
@@ -692,6 +773,7 @@ class ClassroomTrailScene(Scene):
                         self._feedback_message = (
                             f"{self._feedback_message} {counter.when_goal_reached}"
                         )
+                self._update_sequence_progress(self._target.qualified_id)
             else:
                 self._spoken_npc_ids = self._spoken_npc_ids | {self._target.qualified_id}
                 conditional = self._target.respond_to_toggle
@@ -749,6 +831,14 @@ class ClassroomTrailScene(Scene):
                         self._displayed_counter_comparison_branches
                         | {(self._target.qualified_id, at_or_above_goal)}
                     )
+                elif self._target.respond_to_sequence is not None:
+                    progress = self._sequence_progress[self._target.qualified_id]
+                    response = (
+                        self._target.respond_to_sequence.when_complete
+                        if progress == 3
+                        else self._target.respond_to_sequence.when_incomplete
+                    )
+                    self._feedback_message = f"{self._target.character.name}: {response}"
                 else:
                     lines = self._target.conversation_lines
                     assert lines
@@ -880,6 +970,7 @@ class ClassroomTrailScene(Scene):
                     or npc.respond_to_two_toggles is not None
                     or npc.respond_to_either_toggle is not None
                     or npc.respond_to_counter is not None
+                    or npc.respond_to_sequence is not None
                 )
             ),
         )
@@ -900,3 +991,21 @@ class ClassroomTrailScene(Scene):
         if not candidates:
             return None
         return min(candidates, key=lambda candidate: (candidate[0], candidate[1]))[2]
+
+    def _update_sequence_progress(self, object_qualified_id: str) -> None:
+        updated = dict(self._sequence_progress)
+        completed = self._completed_sequence_npc_ids
+        for npc in self._npcs:
+            sequence = npc.respond_to_sequence
+            if sequence is None or npc.qualified_id in completed:
+                continue
+            progress = updated[npc.qualified_id]
+            if object_qualified_id == sequence.object_qualified_ids[progress]:
+                progress += 1
+                updated[npc.qualified_id] = progress
+                if progress == 3:
+                    completed = completed | {npc.qualified_id}
+            elif object_qualified_id in sequence.object_qualified_ids:
+                updated[npc.qualified_id] = 0
+        self._sequence_progress = MappingProxyType(updated)
+        self._completed_sequence_npc_ids = completed

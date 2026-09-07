@@ -2,6 +2,9 @@
 
 > **Status:** Implemented additive local runtime contract.
 
+This version remains documented for compatibility. The current additive
+runtime contract is [Classroom Trail v0.11](classroom-trail-v0.11.md).
+
 Classroom Trail v0.10 preserves v0.9 behavior and adds one fixed declarative
 counter comparison for Mission 13. A character may retain:
 

@@ -36,6 +36,7 @@ from explore.packages.registration_models import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
@@ -530,6 +531,20 @@ def _valid_counter_conditional(value: object) -> bool:
     )
 
 
+def _valid_sequence_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterSequenceResponseRegistrationSpec)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 3
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and len(set(value.object_ids)) == 3
+        and isinstance(value.when_incomplete, str)
+        and bool(value.when_incomplete.strip())
+        and isinstance(value.when_complete, str)
+        and bool(value.when_complete.strip())
+    )
+
+
 def _entry_value_issues(
     entry: StudentAPIRegistrationEntry,
     *,
@@ -604,6 +619,18 @@ def _entry_value_issues(
                     or entry.character.respond_to_toggle is not None
                     or entry.character.respond_to_two_toggles is not None
                     or entry.character.respond_to_either_toggle is not None
+                )
+            )
+            and _valid_sequence_conditional(entry.character.respond_to_sequence)
+            and not (
+                entry.character.respond_to_sequence is not None
+                and (
+                    entry.character.greeting is not None
+                    or entry.character.conversation is not None
+                    or entry.character.respond_to_toggle is not None
+                    or entry.character.respond_to_two_toggles is not None
+                    or entry.character.respond_to_either_toggle is not None
+                    or entry.character.respond_to_counter is not None
                 )
             )
         )
@@ -1034,6 +1061,35 @@ def _validate_package_set_plan(
                             field="object_id",
                         )
                     )
+
+            sequence_response = entry.character.respond_to_sequence
+            if isinstance(
+                sequence_response, CharacterSequenceResponseRegistrationSpec
+            ) and _valid_sequence_conditional(sequence_response):
+                for object_id in sequence_response.object_ids:
+                    matches = entries_by_id.get(object_id, [])
+                    target = matches[0] if len(matches) == 1 else None
+                    reference_valid = (
+                        len(matches) == 1
+                        and type(target) is WorldObjectRegistration
+                        and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                    )
+                    if not reference_valid:
+                        field_location = (
+                            f"{location}.registration_plan.entries[{entry_index}]"
+                            ".character.respond_to_sequence.object_ids"
+                        )
+                        issues.append(
+                            _issue(
+                                ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                                f"{field_location} must each resolve exactly to one world "
+                                "object in this package.",
+                                field_location,
+                                package_id=package.package_id,
+                                package_index=package_index,
+                                field="object_ids",
+                            )
+                        )
 
     try:
         flattened_matches = isinstance(plan.entries, tuple) and tuple(flattened) == plan.entries

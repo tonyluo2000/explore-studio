@@ -16,6 +16,7 @@ from engine.scenes import (
     ClassroomTrailNPCConditionalResponse,
     ClassroomTrailNPCCounterResponse,
     ClassroomTrailNPCEitherToggleResponse,
+    ClassroomTrailNPCSequenceResponse,
     ClassroomTrailNPCTwoToggleResponse,
     ClassroomTrailObject,
     ClassroomTrailObjectCounter,
@@ -50,8 +51,11 @@ from explore.curriculum import (
     MISSION_13_ID,
     MISSION_14,
     MISSION_14_ID,
+    MISSION_15,
+    MISSION_15_ID,
 )
 from explore.packages import (
+    CharacterSequenceResponseRegistrationSpec,
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
     LoadedToggleStyleUse,
@@ -121,6 +125,7 @@ def _trail_npc(
     respond_to_two_toggles: ClassroomTrailNPCTwoToggleResponse | None = None,
     respond_to_either_toggle: ClassroomTrailNPCEitherToggleResponse | None = None,
     respond_to_counter: ClassroomTrailNPCCounterResponse | None = None,
+    respond_to_sequence: ClassroomTrailNPCSequenceResponse | None = None,
 ) -> ClassroomTrailNPC:
     return ClassroomTrailNPC(
         qualified_id,
@@ -138,6 +143,7 @@ def _trail_npc(
         respond_to_two_toggles,
         respond_to_either_toggle,
         respond_to_counter,
+        respond_to_sequence,
     )
 
 
@@ -226,7 +232,7 @@ def test_local_mission_requires_nonblank_text_fields(field: str, invalid: object
         ClassroomTrailMission(**values)  # type: ignore[arg-type]
 
 
-def test_local_mission_is_immutable_and_supports_exactly_nine_rules() -> None:
+def test_local_mission_is_immutable_and_supports_exactly_ten_rules() -> None:
     mission = ClassroomTrailMission(
         "visit-all-classroom-objects",
         "Explore Every Object",
@@ -243,6 +249,7 @@ def test_local_mission_is_immutable_and_supports_exactly_nine_rules() -> None:
         ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED,
         ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED,
         ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED,
+        ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED,
     )
     assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
     with pytest.raises(FrozenInstanceError):
@@ -851,6 +858,247 @@ def test_counter_runtime_model_is_bounded_and_immutable() -> None:
         ClassroomTrailObjectCounter(2, " ")
 
 
+def _sequence_runtime_scene(
+    *,
+    second_sequence: tuple[str, str, str] | None = None,
+) -> tuple[ClassroomTrailScene, _RecordingRenderer]:
+    renderer = _RecordingRenderer()
+    first_response = ClassroomTrailNPCSequenceResponse(
+        ("sequence:first", "sequence:second", "sequence:third"),
+        "Still locked.",
+        "Sequence solved!",
+    )
+    npcs = [_trail_npc("sequence:guide", 670, name="Guide", respond_to_sequence=first_response)]
+    if second_sequence is not None:
+        npcs.append(
+            _trail_npc(
+                "sequence:other-guide",
+                830,
+                respond_to_sequence=ClassroomTrailNPCSequenceResponse(
+                    second_sequence, "Other locked.", "Other solved!"
+                ),
+            )
+        )
+    toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
+    scene = ClassroomTrailScene(
+        renderer,  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(255, 200, 50)),
+        (
+            _trail_object("sequence:first", 30, interacted="First message."),
+            _trail_object(
+                "sequence:second",
+                190,
+                color=toggle.off_color,
+                interacted="Second message.",
+                toggle=toggle,
+            ),
+            _trail_object(
+                "sequence:third",
+                350,
+                interacted="Third message.",
+                counter=ClassroomTrailObjectCounter(2, "Third ready."),
+            ),
+            _trail_object("sequence:outside", 510, interacted="Outside message."),
+        ),
+        tuple(npcs),
+        mission=MISSION_15,
+        interaction_range=60,
+    )
+    scene.enter()
+    return scene, renderer
+
+
+def test_sequence_runtime_model_is_strict_and_immutable() -> None:
+    response = ClassroomTrailNPCSequenceResponse(
+        ("sequence:first", "sequence:second", "sequence:third"), "Locked", "Open"
+    )
+    with pytest.raises(FrozenInstanceError):
+        response.when_complete = "Changed"  # type: ignore[misc]
+    for object_ids in (
+        ("sequence:first", "sequence:second"),
+        ("sequence:first", "sequence:first", "sequence:third"),
+        ("sequence:first", "sequence:second", " "),
+    ):
+        with pytest.raises(ValueError, match="exactly three distinct"):
+            ClassroomTrailNPCSequenceResponse(  # type: ignore[arg-type]
+                object_ids, "Locked", "Open"
+            )
+    with pytest.raises(ValueError, match="when_incomplete"):
+        ClassroomTrailNPCSequenceResponse(
+            ("sequence:first", "sequence:second", "sequence:third"), " ", "Open"
+        )
+
+
+@pytest.mark.parametrize("invalid_id", ["sequence:missing", "other:third"])
+def test_sequence_runtime_rejects_missing_or_cross_package_object(
+    invalid_id: str,
+) -> None:
+    response = ClassroomTrailNPCSequenceResponse(
+        ("sequence:first", "sequence:second", invalid_id), "Locked", "Open"
+    )
+    with pytest.raises(ValueError, match="same-package world objects"):
+        ClassroomTrailScene(
+            _RecordingRenderer(),  # type: ignore[arg-type]
+            Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+            (
+                _trail_object("sequence:first", 30),
+                _trail_object("sequence:second", 190),
+                _trail_object("sequence:third", 350),
+            ),
+            (_trail_npc("sequence:guide", 510, respond_to_sequence=response),),
+            mission=MISSION_15,
+        )
+
+
+def test_sequence_advances_zero_to_three_and_preserves_existing_object_behavior() -> None:
+    scene, renderer = _sequence_runtime_scene()
+    assert dict(scene.sequence_progress) == {"sequence:guide": 0}
+    assert scene.completed_sequence_npc_ids == frozenset()
+    with pytest.raises(TypeError):
+        scene.sequence_progress["sequence:guide"] = 3  # type: ignore[index]
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.sequence_progress) == {"sequence:guide": 1}
+    assert scene.visited_qualified_ids == frozenset({"sequence:first"})
+    assert "First message." in renderer.text
+    renderer.text.clear()
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.sequence_progress) == {"sequence:guide": 2}
+    assert scene.toggle_on_qualified_ids == frozenset({"sequence:second"})
+    assert scene.changed_toggle_qualified_ids == frozenset({"sequence:second"})
+    assert "Second message." in renderer.text
+    renderer.text.clear()
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert dict(scene.sequence_progress) == {"sequence:guide": 3}
+    assert scene.completed_sequence_npc_ids == frozenset({"sequence:guide"})
+    assert dict(scene.counter_counts) == {"sequence:third": 1}
+    assert "Third message. Count: 1 / 2." in renderer.text
+    assert scene.displayed_conditional_branches == frozenset()
+    assert scene.displayed_two_toggle_branches == frozenset()
+    assert scene.displayed_either_toggle_cases == frozenset()
+    assert scene.displayed_counter_comparison_branches == frozenset()
+    assert scene.mission_is_complete
+
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: Sequence solved!" in renderer.text
+    assert dict(scene.sequence_progress) == {"sequence:guide": 3}
+    assert scene.completed_sequence_npc_ids == frozenset({"sequence:guide"})
+
+
+def test_wrong_sequence_members_reset_without_immediate_restart() -> None:
+    scene, _ = _sequence_runtime_scene()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first: 0 -> 1
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # third while expecting second
+    assert dict(scene.sequence_progress) == {"sequence:guide": 0}
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # second while expecting first
+    assert dict(scene.sequence_progress) == {"sequence:guide": 0}
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # second
+    assert dict(scene.sequence_progress) == {"sequence:guide": 2}
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)  # first while expecting third
+    assert dict(scene.sequence_progress) == {"sequence:guide": 0}
+
+
+def test_outside_object_does_not_change_sequence_progress() -> None:
+    scene, _ = _sequence_runtime_scene()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 3.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.target_qualified_id == "sequence:outside"
+    assert dict(scene.sequence_progress) == {"sequence:guide": 1}
+    assert "sequence:outside" in scene.visited_qualified_ids
+
+
+def test_one_object_interaction_updates_multiple_sequences_independently() -> None:
+    scene, _ = _sequence_runtime_scene(
+        second_sequence=("sequence:second", "sequence:first", "sequence:third")
+    )
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert dict(scene.sequence_progress) == {
+        "sequence:guide": 1,
+        "sequence:other-guide": 0,
+    }
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert dict(scene.sequence_progress) == {
+        "sequence:guide": 2,
+        "sequence:other-guide": 1,
+    }
+
+
+def test_sequence_npc_response_has_no_sequence_side_effects() -> None:
+    scene, renderer = _sequence_runtime_scene()
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 4.0)
+    before = scene.sequence_progress
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+    assert "Guide: Still locked." in renderer.text
+    assert scene.sequence_progress is before
+    assert scene.completed_sequence_npc_ids == frozenset()
+
+
+def test_completed_sequence_is_monotonic_and_idempotent() -> None:
+    scene, _ = _sequence_runtime_scene()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    evidence = scene.completed_sequence_npc_ids
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert dict(scene.sequence_progress) == {"sequence:guide": 3}
+    assert scene.completed_sequence_npc_ids is evidence
+    assert scene.mission_is_complete
+
+
+def test_sequence_completion_requires_qualifying_npcs() -> None:
+    scene = ClassroomTrailScene(
+        _RecordingRenderer(),  # type: ignore[arg-type]
+        Character(name="Player", x=0, y=0, width=20, height=20, color=(1, 2, 3)),
+        (_trail_object("plain:object", 30),),
+        mission=MISSION_15,
+    )
+    scene.enter()
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert not scene.mission_is_complete
+
+
+def test_sequence_completion_requires_every_qualifying_npc() -> None:
+    scene, _ = _sequence_runtime_scene(
+        second_sequence=("sequence:second", "sequence:first", "sequence:third")
+    )
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.completed_sequence_npc_ids == frozenset({"sequence:guide"})
+    assert not scene.mission_is_complete
+
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(left=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 2.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.completed_sequence_npc_ids == frozenset({"sequence:guide", "sequence:other-guide"})
+    assert scene.mission_is_complete
+
+
 def test_counter_interaction_increments_once_and_combines_with_toggle() -> None:
     renderer = _RecordingRenderer()
     toggle = ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50))
@@ -1450,7 +1698,7 @@ def test_v01_rejects_but_v07_trail_accepts_multiple_package_objects(tmp_path: Pa
 
     assert trail.is_planned
     assert trail.plan is not None
-    assert trail.plan.contract_version == "0.10"
+    assert trail.plan.contract_version == "0.11"
     assert [item.qualified_id for item in trail.plan.world_objects] == [
         "alpha-package:lantern",
         "beta-package:fountain",
@@ -1531,7 +1779,7 @@ def test_v07_projects_toggle_metadata_losslessly_into_runnable_trail(tmp_path: P
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.toggle is not None
     assert registration.world_object.toggle.off_color == "red"
@@ -1608,7 +1856,7 @@ def test_v07_projects_conditional_metadata_into_mission_08_runtime(tmp_path: Pat
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     conditional = planned.plan.npcs[0].character.respond_to_toggle
     assert conditional is not None
     assert conditional.object_id == "magic-switch"
@@ -1692,7 +1940,7 @@ def test_v07_projects_counter_metadata_into_mission_09_runtime(tmp_path: Path) -
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     registration = planned.plan.world_objects[0]
     assert registration.world_object.counter is not None
     assert registration.world_object.counter.goal == 2
@@ -1775,7 +2023,7 @@ def test_v08_projects_two_toggle_metadata_into_mission_10_runtime(tmp_path: Path
 
     assert planned.is_planned
     assert planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     conditional = planned.plan.npcs[0].character.respond_to_two_toggles
     assert conditional is not None
     assert conditional.object_ids == ("first", "second")
@@ -1847,7 +2095,7 @@ def test_v09_projects_either_toggle_metadata_into_mission_11_ui(tmp_path: Path) 
         (player_root, root), player_qualified_id="player-package:player"
     )
     assert planned.is_planned and planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     retained = planned.plan.npcs[0].character.respond_to_either_toggle
     assert retained is not None and retained.object_ids == ("first", "second")
 
@@ -1906,7 +2154,7 @@ def test_v010_projects_counter_comparison_into_mission_13_runtime_and_ui(
         (player_root, root), player_qualified_id="player-package:player"
     )
     assert planned.is_planned and planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     retained = planned.plan.npcs[0].character.respond_to_counter
     assert retained is not None
     assert retained.object_id == "core"
@@ -2055,7 +2303,7 @@ def test_mission_14_static_evidence_ui_and_existing_toggle_runtime(tmp_path: Pat
     root = _mission_14_package(tmp_path / "style")
     planned = plan_local_classroom_trail((root,), player_qualified_id="style-package:player")
     assert planned.is_planned and planned.plan is not None
-    assert planned.plan.contract_version == "0.10"
+    assert planned.plan.contract_version == "0.11"
     evidence = planned.plan.packages[0].registration_plan.toggle_style_uses
     assert len(evidence) == 1
     assert evidence[0].referencing_object_ids == ("first", "second")
@@ -2162,6 +2410,76 @@ def test_same_toggle_style_id_in_different_packages_does_not_collide(tmp_path: P
         ("first-package", "magic-switch"),
         ("second-package", "magic-switch"),
     ]
+
+
+def _mission_15_package(root: Path) -> Path:
+    package = _write_package(
+        root,
+        "sequence-package",
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+        schema_version="0.2",
+    )
+    manifest = package / "manifest.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8") + '  - id: "guide"\n    type: "character"\n'
+        '    path: "character/guide.yaml"\n'
+        '  - id: "first"\n    type: "world_object"\n'
+        '    path: "objects/first.yaml"\n'
+        '  - id: "second"\n    type: "world_object"\n'
+        '    path: "objects/second.yaml"\n'
+        '  - id: "third"\n    type: "world_object"\n'
+        '    path: "objects/third.yaml"\n',
+        encoding="utf-8",
+    )
+    (package / "character" / "guide.yaml").write_text(
+        'name: "Guide"\nx: 510\ny: 0\nrespond_to_sequence:\n'
+        '  object_ids: ["first", "second", "third"]\n'
+        '  when_incomplete: "Still locked."\n'
+        '  when_complete: "The vault is open!"\n',
+        encoding="utf-8",
+    )
+    (package / "objects").mkdir()
+    (package / "objects" / "first.yaml").write_text(
+        'name: "First"\nx: 30\ny: 0\nwhen_interacted: "First."\n', encoding="utf-8"
+    )
+    (package / "objects" / "second.yaml").write_text(
+        'name: "Second"\nx: 190\ny: 0\nwhen_interacted: "Second."\n', encoding="utf-8"
+    )
+    (package / "objects" / "third.yaml").write_text(
+        'name: "Third"\nx: 350\ny: 0\nwhen_interacted: "Third."\n', encoding="utf-8"
+    )
+    return package
+
+
+def test_mission_15_metadata_flows_into_v011_runtime_ui_and_completion(tmp_path: Path) -> None:
+    root = _mission_15_package(tmp_path / "sequence")
+    loaded = load_explorer_package(root)
+    assert loaded.is_loaded and loaded.validation_report.manifest is not None
+    assert loaded.validation_report.manifest.schema_version == "0.2"
+    planned = plan_local_classroom_trail((root,), player_qualified_id="sequence-package:player")
+    assert planned.is_planned and planned.plan is not None
+    assert planned.plan.contract_version == "0.11"
+    assert planned.plan.packages[0].registration_plan.provenance.student_api_version == "0.1"
+    retained = planned.plan.npcs[0].character.respond_to_sequence
+    assert retained == CharacterSequenceResponseRegistrationSpec(
+        ("first", "second", "third"), "Still locked.", "The vault is open!"
+    )
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_15_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_15
+    assert "Mission: Solve the Secret Sequence" in renderer.text
+    assert MISSION_15.instructions in renderer.text
+    for index in range(3):
+        if index:
+            scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+        scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.completed_sequence_npc_ids == frozenset({"sequence-package:guide"})
+    assert scene.mission_is_complete
 
 
 def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> None:
@@ -2428,6 +2746,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_12_ID,
         MISSION_13_ID,
         MISSION_14_ID,
+        MISSION_15_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

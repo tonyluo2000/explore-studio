@@ -117,6 +117,15 @@ class LoadedCharacterCounterResponse:
 
 
 @dataclass(frozen=True)
+class LoadedCharacterSequenceResponse:
+    """Fixed responses bound to three package-local world objects in order."""
+
+    object_ids: tuple[str, str, str]
+    when_incomplete: str
+    when_complete: str
+
+
+@dataclass(frozen=True)
 class LoadedCharacter:
     """One declarative character plus optional inert trail conversation."""
 
@@ -135,6 +144,7 @@ class LoadedCharacter:
     respond_to_two_toggles: LoadedCharacterTwoToggleResponse | None = None
     respond_to_either_toggle: LoadedCharacterEitherToggleResponse | None = None
     respond_to_counter: LoadedCharacterCounterResponse | None = None
+    respond_to_sequence: LoadedCharacterSequenceResponse | None = None
 
 
 @dataclass(frozen=True)

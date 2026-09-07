@@ -7,6 +7,7 @@ from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedCharacterCounterResponse,
     LoadedCharacterEitherToggleResponse,
+    LoadedCharacterSequenceResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
@@ -29,6 +30,7 @@ from explore.packages.registration_models import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     RegistrationPlanIssue,
@@ -122,6 +124,18 @@ def _valid_respond_to_counter(value: object) -> bool:
         and is_valid_identifier(value.object_id)
         and _is_nonblank_text(value.when_below_goal)
         and _is_nonblank_text(value.when_at_or_above_goal)
+    )
+
+
+def _valid_respond_to_sequence(value: object) -> bool:
+    return value is None or (
+        isinstance(value, LoadedCharacterSequenceResponse)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 3
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and len(set(value.object_ids)) == 3
+        and _is_nonblank_text(value.when_incomplete)
+        and _is_nonblank_text(value.when_complete)
     )
 
 
@@ -573,6 +587,35 @@ def _map_character(
                 field="respond_to_counter",
             )
         )
+    if not _valid_respond_to_sequence(contribution.respond_to_sequence):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_sequence must retain exactly three distinct "
+                "package-local object IDs and two valid responses.",
+                f"{location}.respond_to_sequence",
+                contribution=contribution,
+                field="respond_to_sequence",
+            )
+        )
+    if contribution.respond_to_sequence is not None and (
+        contribution.greeting is not None
+        or contribution.conversation is not None
+        or contribution.respond_to_toggle is not None
+        or contribution.respond_to_two_toggles is not None
+        or contribution.respond_to_either_toggle is not None
+        or contribution.respond_to_counter is not None
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location}.respond_to_sequence cannot be combined with greeting, "
+                "conversation, or another respond_to field.",
+                f"{location}.respond_to_sequence",
+                contribution=contribution,
+                field="respond_to_sequence",
+            )
+        )
     conditional = (
         CharacterToggleResponseRegistrationSpec(
             object_id=contribution.respond_to_toggle.object_id,
@@ -609,6 +652,15 @@ def _map_character(
         if isinstance(contribution.respond_to_counter, LoadedCharacterCounterResponse)
         else None
     )
+    sequence_response = (
+        CharacterSequenceResponseRegistrationSpec(
+            object_ids=contribution.respond_to_sequence.object_ids,
+            when_incomplete=contribution.respond_to_sequence.when_incomplete,
+            when_complete=contribution.respond_to_sequence.when_complete,
+        )
+        if isinstance(contribution.respond_to_sequence, LoadedCharacterSequenceResponse)
+        else None
+    )
     return CharacterRegistration(
         qualified_id=contribution.qualified_id,
         contribution_id=contribution.contribution_id,
@@ -624,6 +676,7 @@ def _map_character(
             respond_to_two_toggles=two_toggle,
             respond_to_either_toggle=either_toggle,
             respond_to_counter=counter_response,
+            respond_to_sequence=sequence_response,
         ),
         asset_reference=contribution.image,
     )
@@ -904,6 +957,26 @@ def build_student_api_registration_plan(
                                 "containing package."
                             ),
                             f"{location}.respond_to_two_toggles.object_ids",
+                            contribution=contribution,
+                            field="object_ids",
+                        )
+                    )
+
+        if (
+            type(contribution) is LoadedCharacter
+            and isinstance(contribution.respond_to_sequence, LoadedCharacterSequenceResponse)
+            and _valid_respond_to_sequence(contribution.respond_to_sequence)
+        ):
+            for object_id in contribution.respond_to_sequence.object_ids:
+                matches = contributions_by_id.get(object_id, [])
+                target = matches[0] if len(matches) == 1 else None
+                if len(matches) != 1 or not isinstance(target, LoadedWorldObject):
+                    issues.append(
+                        _issue(
+                            RegistrationPlanIssueCode.CONDITIONAL_REFERENCE_INVALID,
+                            f"{location}.respond_to_sequence.object_ids must each resolve "
+                            "exactly to one world object in the containing package.",
+                            f"{location}.respond_to_sequence.object_ids",
                             contribution=contribution,
                             field="object_ids",
                         )

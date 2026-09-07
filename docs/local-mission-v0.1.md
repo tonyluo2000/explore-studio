@@ -3,8 +3,8 @@
 > **Status:** Implemented local, session-only Classroom Trail mission contract.
 
 Local Mission v0.1 provides the reusable immutable mission model used by
-Classroom Trail v0.10. Canonical course content owns an immutable ID-keyed
-catalog containing fourteen entries:
+Classroom Trail v0.11. Canonical course content owns an immutable ID-keyed
+catalog containing fifteen entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -108,6 +108,14 @@ Mission 14:
   enforced from immutable package provenance before scene creation; inline
   toggle declarations do not count.
 
+Mission 15:
+
+- mission ID: `complete-actions-in-order`;
+- title: `Solve the Secret Sequence`;
+- instructions require three different objects authored in order and
+  interaction with them in that exact order to unlock an NPC's success
+  response.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -120,6 +128,7 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 13 uses
 `ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED`. Other rule values are rejected.
 Mission 14 reuses `ALL_TOGGLE_OBJECTS_CHANGED` and adds no completion rule.
+Mission 15 uses `ALL_THREE_OBJECT_SEQUENCES_COMPLETED`.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -190,6 +199,13 @@ Mission 14's reuse requirement is static. Once its package-set plan passes the
 pre-scene style-provenance gate, its runtime completion is the unchanged
 `ALL_TOGGLE_OBJECTS_CHANGED` rule. Named styles add no Trail state or behavior.
 
+`ALL_THREE_OBJECT_SEQUENCES_COMPLETED` uses a separate session-only immutable
+mapping of qualifying NPC IDs to matched-prefix lengths from 0 through 3 and a
+monotonic set of completed NPC IDs. Every qualifying NPC must complete its
+fixed three-object sequence; zero qualifying NPCs remains incomplete. Wrong
+sequence members reset incomplete progress to zero, unrelated objects do not
+change it, and completed sequences never regress.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -198,8 +214,8 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 15+, additional completion rules, mission sequencing, decrement/reset,
-arithmetic expressions, general `not` syntax, nested or arbitrary conditions,
-choices, memory, quests, generic actions or state machines, rewards,
+Mission 16+, additional completion rules, variable or branching sequences,
+decrement/reset, arithmetic expressions, general `not` syntax, arbitrary
+conditions, choices, memory, quests, generic actions or state machines, rewards,
 persistence, teacher controls, deployment, authentication, and Phase E
 integration remain out of scope.

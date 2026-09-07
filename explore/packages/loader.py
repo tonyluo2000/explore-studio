@@ -102,6 +102,24 @@ def _conditional_reference_issues(
                     location=location,
                 )
             )
+        if contribution.respond_to_sequence is not None:
+            for index, object_id in enumerate(contribution.respond_to_sequence.object_ids):
+                location = f"{contribution.source_path}.respond_to_sequence.object_ids[{index}]"
+                matches = by_id.get(object_id, [])
+                target = matches[0] if len(matches) == 1 else None
+                if len(matches) != 1:
+                    message = f"{location} must resolve exactly once within this package."
+                elif not isinstance(target, LoadedWorldObject):
+                    message = f"{location} must reference a world object in this package."
+                else:
+                    continue
+                issues.append(
+                    PackageLoadIssue(
+                        code=PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                        message=message,
+                        location=location,
+                    )
+                )
     return tuple(issues)
 
 
