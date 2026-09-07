@@ -21,6 +21,7 @@ from explore.packages import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     ClassWorldCohort,
@@ -886,6 +887,30 @@ def test_configuration_rejects_forged_named_toggle_style_reference() -> None:
                 LoadedToggleStyleUse("river-rescue", "shared-switch", ("missing",)),
             ),
         ),
+    )
+    plan = _plan(selected)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in {
+        issue.code for issue in result.issues
+    }
+
+
+def test_configuration_rejects_forged_three_object_sequence_reference() -> None:
+    sequence = CharacterSequenceResponseRegistrationSpec(
+        ("landmark", "missing-two", "missing-three"), "Locked", "Open"
+    )
+    character = _character("river-rescue")
+    character = replace(
+        character,
+        character=replace(character.character, respond_to_sequence=sequence),
+    )
+    selected = _selected(
+        "river-rescue",
+        character,
+        _world_object("river-rescue"),
     )
     plan = _plan(selected)
 

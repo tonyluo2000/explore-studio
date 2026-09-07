@@ -68,6 +68,15 @@ class CharacterCounterResponseRegistrationSpec:
 
 
 @dataclass(frozen=True)
+class CharacterSequenceResponseRegistrationSpec:
+    """Detached responses for three package-local world objects in order."""
+
+    object_ids: tuple[str, str, str]
+    when_incomplete: str
+    when_complete: str
+
+
+@dataclass(frozen=True)
 class RegistrationPlanIssue:
     """One deterministic Student API registration-planning diagnostic."""
 
@@ -93,6 +102,7 @@ class CharacterRegistrationSpec:
     respond_to_two_toggles: CharacterTwoToggleResponseRegistrationSpec | None = None
     respond_to_either_toggle: CharacterEitherToggleResponseRegistrationSpec | None = None
     respond_to_counter: CharacterCounterResponseRegistrationSpec | None = None
+    respond_to_sequence: CharacterSequenceResponseRegistrationSpec | None = None
 
 
 @dataclass(frozen=True)

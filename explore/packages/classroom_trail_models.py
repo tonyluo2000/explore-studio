@@ -1,4 +1,4 @@
-"""Immutable models for the additive local Classroom Trail contract."""
+"""Immutable models for the additive local Classroom Trail v0.11 contract."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from explore.packages.registration_models import (
     WorldObjectRegistration,
 )
 
-SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.10"
+SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION = "0.11"
 
 
 class ClassroomTrailPlanIssueCode(StrEnum):

@@ -110,7 +110,7 @@ collections are tuples.
 
 The detached specification retains Student API v0.1 character configuration
 plus optional inert greeting, conversation, or fixed conditional metadata used
-by Classroom Trail v0.6+ through v0.10.
+by Classroom Trail v0.6+ through v0.11.
 The adapter does not apply that text as Student API behavior. Engine-owned size, movement
 speed, health, inventory, dialogue trees, animation, AI, and callbacks are not
 invented.

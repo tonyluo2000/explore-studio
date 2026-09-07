@@ -1,4 +1,4 @@
-"""Planning and local execution for Classroom Trail contract v0.10.
+"""Planning and local execution for Classroom Trail contract v0.11.
 
 Each input package is first checked through the unchanged v0.1 package-set
 contract. The additive trail contract permits multiple characters and world
@@ -51,7 +51,7 @@ def build_classroom_trail_plan(
     *,
     player_qualified_id: str | None = None,
 ) -> ClassroomTrailPlanResult:
-    """Build a canonical v0.10 trail without changing v0.1 cardinality."""
+    """Build a canonical v0.11 trail without changing v0.1 cardinality."""
     if isinstance(selections, (str, bytes)):
         raise TypeError("selections must be an iterable of PackageSelection values")
     try:
@@ -74,7 +74,7 @@ def build_classroom_trail_plan(
         candidates,
         maximum_characters=None,
         maximum_world_objects=None,
-        cardinality_contract="Classroom Trail v0.10 supports",
+        cardinality_contract="Classroom Trail v0.11 supports",
     )
     if not package_set.is_planned or package_set.plan is None:
         return ClassroomTrailPlanResult(
@@ -218,6 +218,7 @@ def create_classroom_trail_scene(
         ClassroomTrailNPCConditionalResponse,
         ClassroomTrailNPCCounterResponse,
         ClassroomTrailNPCEitherToggleResponse,
+        ClassroomTrailNPCSequenceResponse,
         ClassroomTrailNPCTwoToggleResponse,
         ClassroomTrailObject,
         ClassroomTrailObjectCounter,
@@ -229,7 +230,7 @@ def create_classroom_trail_scene(
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
-        raise ValueError('plan.contract_version must be "0.10"')
+        raise ValueError('plan.contract_version must be "0.11"')
     mission = get_course_mission(mission_id)
     if (
         not isinstance(plan.packages, tuple)
@@ -397,6 +398,18 @@ def create_classroom_trail_scene(
                     when_at_or_above_goal=(
                         entry.character.respond_to_counter.when_at_or_above_goal
                     ),
+                )
+            ),
+            respond_to_sequence=(
+                None
+                if entry.character.respond_to_sequence is None
+                else ClassroomTrailNPCSequenceResponse(
+                    object_qualified_ids=tuple(
+                        f"{entry.provenance.package_id}:{object_id}"
+                        for object_id in entry.character.respond_to_sequence.object_ids
+                    ),
+                    when_incomplete=entry.character.respond_to_sequence.when_incomplete,
+                    when_complete=entry.character.respond_to_sequence.when_complete,
                 )
             ),
         )

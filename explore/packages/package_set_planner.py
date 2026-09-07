@@ -29,6 +29,7 @@ from explore.packages.registration_models import (
     CharacterEitherToggleResponseRegistrationSpec,
     CharacterRegistration,
     CharacterRegistrationSpec,
+    CharacterSequenceResponseRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
     StudentAPIRegistrationEntry,
@@ -222,6 +223,18 @@ def _valid_counter_conditional(value: object) -> bool:
         and is_valid_identifier(value.object_id)
         and _is_nonblank_text(value.when_below_goal)
         and _is_nonblank_text(value.when_at_or_above_goal)
+    )
+
+
+def _valid_sequence_conditional(value: object) -> bool:
+    return value is None or (
+        isinstance(value, CharacterSequenceResponseRegistrationSpec)
+        and isinstance(value.object_ids, tuple)
+        and len(value.object_ids) == 3
+        and all(isinstance(item, str) and is_valid_identifier(item) for item in value.object_ids)
+        and len(set(value.object_ids)) == 3
+        and _is_nonblank_text(value.when_incomplete)
+        and _is_nonblank_text(value.when_complete)
     )
 
 
@@ -428,6 +441,41 @@ def _validate_entry_value(
                     PackageSetIssueCode.ENTRY_VALUE_INVALID,
                     f"{field_location} cannot be combined with greeting, conversation, "
                     "respond_to_toggle, respond_to_two_toggles, or respond_to_either_toggle.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if not _valid_sequence_conditional(specification.respond_to_sequence):
+            field_location = f"{location}.character.respond_to_sequence"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} must retain exactly three distinct package-local "
+                    "object IDs and two valid responses.",
+                    field_location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+        if specification.respond_to_sequence is not None and (
+            specification.greeting is not None
+            or specification.conversation is not None
+            or specification.respond_to_toggle is not None
+            or specification.respond_to_two_toggles is not None
+            or specification.respond_to_either_toggle is not None
+            or specification.respond_to_counter is not None
+        ):
+            field_location = f"{location}.character.respond_to_sequence"
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{field_location} cannot be combined with greeting, conversation, or "
+                    "another respond_to field.",
                     field_location,
                     package_index=package_index,
                     package_id=package_id,
@@ -737,6 +785,41 @@ def _validate_conditional_references(
                         f"{location} must each resolve exactly to one toggle world object "
                         "in this package."
                     ),
+                    location,
+                    package_index=package_index,
+                    package_id=package_id,
+                    entry_index=entry_index,
+                    entry=entry,
+                )
+            )
+
+    for entry_index, entry in enumerate(entries):
+        if type(entry) is not CharacterRegistration or not isinstance(
+            entry.character, CharacterRegistrationSpec
+        ):
+            continue
+        conditional = entry.character.respond_to_sequence
+        if not isinstance(
+            conditional, CharacterSequenceResponseRegistrationSpec
+        ) or not _valid_sequence_conditional(conditional):
+            continue
+        for object_id in conditional.object_ids:
+            matches = by_id.get(object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            if (
+                len(matches) == 1
+                and type(target) is WorldObjectRegistration
+                and isinstance(target.world_object, WorldObjectRegistrationSpec)
+            ):
+                continue
+            location = (
+                f"selections[{package_index}].registration_plan.entries[{entry_index}]"
+                ".character.respond_to_sequence.object_ids"
+            )
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.ENTRY_VALUE_INVALID,
+                    f"{location} must each resolve exactly to one world object in this package.",
                     location,
                     package_index=package_index,
                     package_id=package_id,
