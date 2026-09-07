@@ -57,6 +57,9 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 - [`docs/curriculum-sessions-01-15.md`](docs/curriculum-sessions-01-15.md) —
   canonical integrated Python and Explorer Package curriculum for Sessions
   01–15.
+- [`docs/curriculum-sessions-16-30.md`](docs/curriculum-sessions-16-30.md) —
+  canonical data fluency, software fluency, and capstone curriculum for
+  Sessions 16–30.
 
 ## Repository Organization
 
