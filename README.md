@@ -54,6 +54,9 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   package-local named toggle style contract.
 - [`docs/local-mission-v0.1.md`](docs/local-mission-v0.1.md) — curriculum-owned
   canonical Missions 01–15 and their local Classroom Trail contract.
+- [`docs/curriculum-sessions-01-15.md`](docs/curriculum-sessions-01-15.md) —
+  canonical integrated Python and Explorer Package curriculum for Sessions
+  01–15.
 
 ## Repository Organization
 

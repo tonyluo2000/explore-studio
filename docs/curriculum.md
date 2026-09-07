@@ -12,6 +12,11 @@ The target online course contains 30 missions. Missions may be grouped into the
 six established Explorer World sprints so that teachers can retain sprint
 showcases while students receive smaller, age-appropriate steps.
 
+The canonical integrated first-half plan is
+[Sessions 01–15 Curriculum](curriculum-sessions-01-15.md). It pairs every
+implemented Mission 01–15 with progressive local Python practice while keeping
+the Explorer Package as the deterministic shared artifact.
+
 > **Everything is already built. Students gradually learn how to use it.**
 
 The engine capabilities and world systems required by a cohort are implemented
@@ -49,6 +54,6 @@ Each lesson follows a consistent structure:
 
 ---
 
-*Detailed mission content and assessment remain to be defined. Curriculum
+*Sessions 16–30 and detailed assessment remain to be defined. Curriculum
 sequencing is independent of whether the underlying capability has already been
 implemented.*
