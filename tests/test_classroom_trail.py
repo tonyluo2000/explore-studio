@@ -53,6 +53,8 @@ from explore.curriculum import (
     MISSION_14_ID,
     MISSION_15,
     MISSION_15_ID,
+    MISSION_16,
+    MISSION_16_ID,
 )
 from explore.packages import (
     CharacterSequenceResponseRegistrationSpec,
@@ -2730,6 +2732,47 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
     ]
 
 
+def test_mission_16_selection_ui_and_existing_object_visit_completion(tmp_path: Path) -> None:
+    player_root = _write_package(
+        tmp_path / "player",
+        "player-package",
+        "player",
+        "character",
+        'name: "Player"\n',
+    )
+    object_root = _write_package(
+        tmp_path / "object",
+        "object-package",
+        "object",
+        "world_object",
+        'name: "Capstone Object"\nx: 430\ny: 270\n',
+    )
+    planned = plan_local_classroom_trail(
+        (object_root, player_root),
+        player_qualified_id="player-package:player",
+    )
+    assert planned.is_planned and planned.plan is not None
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_16_ID)
+    scene.enter()
+    scene.render()
+
+    assert scene.mission is MISSION_16
+    assert "Mission: Share Your Expedition" in renderer.text
+    assert MISSION_16.instructions in renderer.text
+    assert scene.mission_is_complete is False
+    assert scene.mission_is_complete == scene.is_complete
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    scene.render()
+
+    assert scene.visited_qualified_ids == frozenset({"object-package:object"})
+    assert scene.mission_is_complete is True
+    assert scene.mission_is_complete == scene.is_complete
+    assert "Mission state: Complete" in renderer.text
+
+
 @pytest.mark.parametrize(
     "mission_id",
     [
@@ -2747,6 +2790,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_13_ID,
         MISSION_14_ID,
         MISSION_15_ID,
+        MISSION_16_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

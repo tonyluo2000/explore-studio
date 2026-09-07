@@ -2,8 +2,9 @@
 
 > **Status:** Canonical second-half curriculum for the 30-session course.
 
-Sessions 16–30 deepen local Python fluency while reusing the implemented
-Missions 01–15 and their declarative world mechanics. Student Python remains
+Sessions 16–30 deepen local Python fluency while reusing the declarative world
+mechanics established by Missions 01–15. Sessions 16–29 add no Mission, and
+content-only Mission 16 frames the S30 presentation. Student Python remains
 local-only. Only validated declarative Explorer Package artifacts cross into
 the shared runtime, and that runtime never executes student Python.
 
@@ -315,9 +316,7 @@ the generated package and playable M15 sequence as one integrated outcome.
   demonstration recovery.
 - **Local Python activity:** Run the clean test suite, validate, export twice to
   confirm determinism, and rehearse one algorithm walkthrough.
-- **World payoff:** Run proposed M16 as a final guided tour. Until M16 is
-  separately authorized and implemented, M01 provides the exact existing
-  completion-rule fallback.
+- **World payoff:** Run M16 as the final guided object tour.
 - **Prediction:** Script the demo path and recovery from one likely failure.
 - **Test/debug:** Show final regression and package-validation evidence.
 - **Bounded AI role:** Ask rehearsal questions only; the student explains all
@@ -343,11 +342,11 @@ object, or required by the shared artifact contract.
 
 ## Mission strategy
 
-Sessions and Missions are no longer 1:1. S16–S29 require no new canonical
-Mission; they reuse Missions 01–15 as visual and playable contexts for local
-Python work.
+Sessions and Missions are no longer 1:1. S16–S29 add no new canonical Mission;
+they reuse Missions 01–15 as visual and playable contexts for local Python
+work.
 
-One future Mission 16 is proposed only for S30:
+Mission 16 is implemented only for S30:
 
 - **ID:** `present-your-capstone-expedition`
 - **Title:** `Share Your Expedition`
@@ -356,10 +355,10 @@ One future Mission 16 is proposed only for S30:
   completion while the assessment rubric separately covers Python, validation,
   explanation, and presentation.
 
-M16 is proposed, not implemented or authorized by this curriculum document.
-Adding it requires a separate reviewed decision. It must add no Explorer
-Package field, runtime behavior, Trail state, or completion rule. No Missions
-17–30 are presently justified.
+M16 adds no Explorer Package field, runtime behavior, Trail state, or completion
+rule. Its Trail `Complete` state means only that the guided object tour is
+complete; it does not certify capstone mastery, approval, or release readiness.
+No Missions 17–30 are presently justified.
 
 ## Reuse plan
 
@@ -377,7 +376,7 @@ Package field, runtime behavior, Trail state, or completion rule. No Missions
 | S27 | M06/M14 generated collections or styles |
 | S28 | Existing dialogue, toggle, counter, comparison, style, or sequence mechanics |
 | S29 | Any representative M01–M15 walkthrough |
-| S30 | Proposed M16, with M01 as the zero-new-content fallback |
+| S30 | M16 using the existing M01 object-visit completion behavior |
 
 Only one exact Trail mission needs to be active for a demonstration. A package
 may still combine multiple compatible existing mechanics.
@@ -488,9 +487,9 @@ The substantial original project includes:
 
 ## Scope boundary
 
-This document completes the approved 30-session curriculum architecture. It
-does not implement Mission 16, modify Missions 01–15, add Mission 17–30, or
-change any engine, Explorer Package, Student API, Classroom Trail, test, or
-runtime contract. Student Python runs locally only; the shared runtime consumes
-only validated declarative artifacts. Deployment, authentication, publishing,
-and Phase E remain parked.
+This document completes the approved 30-session curriculum architecture.
+Mission 16 is content-only and leaves Missions 01–15 unchanged. This curriculum
+adds no Mission 17–30 and changes no engine, Explorer Package, Student API,
+Classroom Trail, or runtime contract. Student Python runs locally only; the
+shared runtime consumes only validated declarative artifacts. Deployment,
+authentication, publishing, and Phase E remain parked.

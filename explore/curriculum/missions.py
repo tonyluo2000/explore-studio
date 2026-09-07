@@ -22,6 +22,7 @@ MISSION_12_ID: Final = "invert-a-switch-condition"
 MISSION_13_ID: Final = "compare-a-counter-to-its-goal"
 MISSION_14_ID: Final = "reuse-a-named-toggle-style"
 MISSION_15_ID: Final = "complete-actions-in-order"
+MISSION_16_ID: Final = "present-your-capstone-expedition"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -164,6 +165,18 @@ MISSION_15: Final = ClassroomTrailMission(
     completion_rule=ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED,
 )
 
+MISSION_16: Final = ClassroomTrailMission(
+    mission_id=MISSION_16_ID,
+    title="Share Your Expedition",
+    instructions=(
+        "Present your own completed expedition and guide the visitor to every classroom "
+        "object. Trail completion means only that the guided object tour is complete; your "
+        "teacher separately assesses Python quality, tests, package validation, presentation "
+        "quality, and your explanation of AI use."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -180,6 +193,7 @@ _MISSIONS = (
     MISSION_13,
     MISSION_14,
     MISSION_15,
+    MISSION_16,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}
