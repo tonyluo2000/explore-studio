@@ -60,6 +60,8 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 - [`docs/curriculum-sessions-16-30.md`](docs/curriculum-sessions-16-30.md) —
   canonical data fluency, software fluency, and capstone curriculum for
   Sessions 16–30.
+- [`lessons/sessions/`](lessons/sessions/) — production teacher runbooks and
+  student materials for the implemented lesson slice.
 
 ## Repository Organization
 

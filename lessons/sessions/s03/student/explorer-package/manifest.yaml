@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "moon-compass-response"
+  display_name: "Moon Compass Response"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "compass"
+    type: "world_object"
+    path: "objects/compass.yaml"

@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "moonlit-guide"
+  display_name: "Moonlit Guide"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "guide"
+    type: "character"
+    path: "character/guide.yaml"

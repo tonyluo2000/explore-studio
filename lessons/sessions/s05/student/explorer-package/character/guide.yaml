@@ -1,0 +1,8 @@
+name: "Moonlit Guide"
+x: 540
+y: 220
+color: "blue"
+conversation:
+  - "The moon compass is awake."
+  - "Which trail should we follow?"
+  - "Follow the silver lights home."

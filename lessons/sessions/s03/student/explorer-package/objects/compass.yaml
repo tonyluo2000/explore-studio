@@ -1,0 +1,6 @@
+name: "Moon Compass"
+x: 240
+y: 180
+color: "purple"
+when_near: "The Moon Compass needle begins to shimmer."
+when_interacted: "You turn the Moon Compass toward a hidden trail!"
