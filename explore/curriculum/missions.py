@@ -20,6 +20,7 @@ MISSION_10_ID: Final = "require-all-switches-on"
 MISSION_11_ID: Final = "open-with-either-switch"
 MISSION_12_ID: Final = "invert-a-switch-condition"
 MISSION_13_ID: Final = "compare-a-counter-to-its-goal"
+MISSION_14_ID: Final = "reuse-a-named-toggle-style"
 
 MISSION_01: Final = ClassroomTrailMission(
     mission_id=MISSION_01_ID,
@@ -142,6 +143,16 @@ MISSION_13: Final = ClassroomTrailMission(
     completion_rule=(ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED),
 )
 
+MISSION_14: Final = ClassroomTrailMission(
+    mission_id=MISSION_14_ID,
+    title="Share a Switch Style",
+    instructions=(
+        "Define one named toggle style, reuse it on at least two different toggle objects, "
+        "then interact with every toggle object."
+    ),
+    completion_rule=ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED,
+)
+
 _MISSIONS = (
     MISSION_01,
     MISSION_02,
@@ -156,6 +167,7 @@ _MISSIONS = (
     MISSION_11,
     MISSION_12,
     MISSION_13,
+    MISSION_14,
 )
 COURSE_MISSION_CATALOG = MappingProxyType(
     {mission.mission_id: mission for mission in sorted(_MISSIONS, key=lambda item: item.mission_id)}

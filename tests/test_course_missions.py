@@ -36,11 +36,13 @@ from explore.curriculum import (
     MISSION_12_ID,
     MISSION_13,
     MISSION_13_ID,
+    MISSION_14,
+    MISSION_14_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_13_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_14_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -54,6 +56,7 @@ def test_catalog_contains_exactly_missions_01_through_13_by_deterministic_identi
     assert MISSION_11_ID == "open-with-either-switch"
     assert MISSION_12_ID == "invert-a-switch-condition"
     assert MISSION_13_ID == "compare-a-counter-to-its-goal"
+    assert MISSION_14_ID == "reuse-a-named-toggle-style"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
         MISSION_13_ID,
@@ -65,6 +68,7 @@ def test_catalog_contains_exactly_missions_01_through_13_by_deterministic_identi
         MISSION_11_ID,
         MISSION_10_ID,
         MISSION_08_ID,
+        MISSION_14_ID,
         MISSION_07_ID,
         MISSION_01_ID,
         MISSION_05_ID,
@@ -81,6 +85,7 @@ def test_catalog_contains_exactly_missions_01_through_13_by_deterministic_identi
         MISSION_11,
         MISSION_10,
         MISSION_08,
+        MISSION_14,
         MISSION_07,
         MISSION_01,
         MISSION_05,
@@ -289,8 +294,19 @@ def test_mission_13_requires_both_counter_comparison_branches() -> None:
     )
 
 
+def test_mission_14_reuses_existing_toggle_completion() -> None:
+    mission = get_course_mission(MISSION_14_ID)
+    assert mission is MISSION_14
+    assert mission.title == "Share a Switch Style"
+    assert "one named toggle style" in mission.instructions
+    assert "at least two different toggle objects" in mission.instructions
+    assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED
+    assert mission.completion_rule is MISSION_07.completion_rule
+
+
 @pytest.mark.parametrize(
-    "mission_id", ["mission-12", "mission-13", "write-conversation", "", None, 1]
+    "mission_id",
+    ["mission-12", "mission-13", "mission-14", "write-conversation", "", None, 1],
 )
 def test_unknown_mission_id_fails_closed(mission_id: object) -> None:
     with pytest.raises(KeyError, match="unknown canonical course mission ID"):

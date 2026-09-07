@@ -7,6 +7,7 @@ from pathlib import PurePosixPath
 
 from explore._colors import valid_color_names
 from explore.packages.contribution_models import (
+    LoadedToggleStyleUse,
     PackageAssetReference,
     PackageProvenance,
 )
@@ -743,7 +744,6 @@ def _validate_conditional_references(
                     entry=entry,
                 )
             )
-
     for entry_index, entry in enumerate(entries):
         if type(entry) is not CharacterRegistration or not isinstance(
             entry.character, CharacterRegistrationSpec
@@ -815,6 +815,79 @@ def _validate_conditional_references(
                     package_id=package_id,
                     entry_index=entry_index,
                     entry=entry,
+                )
+            )
+
+
+def _validate_toggle_style_uses(
+    evidence_items: object,
+    entries: tuple[object, ...],
+    *,
+    package_index: int,
+    package_id: object,
+    issues: list[PackageSetIssue],
+) -> None:
+    location = f"selections[{package_index}].registration_plan.toggle_style_uses"
+    if not isinstance(evidence_items, tuple):
+        issues.append(
+            _issue(
+                PackageSetIssueCode.REGISTRATION_PLAN_INVALID,
+                f"{location} must be an immutable tuple.",
+                location,
+                package_index=package_index,
+                package_id=package_id,
+            )
+        )
+        return
+    by_id: dict[str, list[object]] = {}
+    for entry in entries:
+        contribution_id = getattr(entry, "contribution_id", None)
+        if isinstance(contribution_id, str):
+            by_id.setdefault(contribution_id, []).append(entry)
+    seen_style_ids: set[str] = set()
+    for evidence_index, evidence in enumerate(evidence_items):
+        item_location = f"{location}[{evidence_index}]"
+        reference_ids_valid = isinstance(
+            getattr(evidence, "referencing_object_ids", None), tuple
+        ) and all(
+            isinstance(item, str) and is_valid_identifier(item)
+            for item in evidence.referencing_object_ids
+        )
+        valid = (
+            isinstance(evidence, LoadedToggleStyleUse)
+            and evidence.package_id == package_id
+            and isinstance(evidence.style_id, str)
+            and is_valid_identifier(evidence.style_id)
+            and evidence.style_id not in seen_style_ids
+            and reference_ids_valid
+            and len(evidence.referencing_object_ids) == len(set(evidence.referencing_object_ids))
+        )
+        if isinstance(evidence, LoadedToggleStyleUse):
+            if isinstance(evidence.style_id, str):
+                seen_style_ids.add(evidence.style_id)
+            for object_id in evidence.referencing_object_ids:
+                if not isinstance(object_id, str):
+                    valid = False
+                    continue
+                matches = by_id.get(object_id, [])
+                target = matches[0] if len(matches) == 1 else None
+                valid = valid and (
+                    len(matches) == 1
+                    and type(target) is WorldObjectRegistration
+                    and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                    and target.world_object.toggle is not None
+                    and _valid_toggle(
+                        target.world_object.toggle, off_color=target.world_object.color
+                    )
+                )
+        if not valid:
+            issues.append(
+                _issue(
+                    PackageSetIssueCode.REGISTRATION_PLAN_INVALID,
+                    f"{item_location} must retain unique package-local named-toggle provenance.",
+                    item_location,
+                    package_index=package_index,
+                    package_id=package_id,
                 )
             )
 
@@ -966,6 +1039,13 @@ def _build_package_set_plan(
             if entry is not None:
                 flattened.append((package_index, entry_index, package_id, entry))
         _validate_conditional_references(
+            entries,
+            package_index=package_index,
+            package_id=package_id,
+            issues=selection_issues,
+        )
+        _validate_toggle_style_uses(
+            registration_plan.toggle_style_uses,
             entries,
             package_index=package_index,
             package_id=package_id,

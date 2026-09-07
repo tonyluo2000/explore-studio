@@ -233,6 +233,7 @@ from explore.packages.contribution_models import (
     LoadedCharacterTwoToggleResponse,
     LoadedContribution,
     LoadedExplorerPackage,
+    LoadedToggleStyleUse,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
@@ -268,6 +269,7 @@ from explore.packages.models import (
     ExplorerPackageManifest,
     IssueCode,
     PackageMetadata,
+    ToggleStyleDeclaration,
     ValidationIssue,
     ValidationReport,
 )
@@ -292,6 +294,7 @@ from explore.packages.policy import (
     IDENTIFIER_MAX_LENGTH,
     MAX_ASSET_SIZE_BYTES,
     SUPPORTED_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
     SUPPORTED_STUDENT_API_VERSION,
 )
 from explore.packages.registration_adapter import (
@@ -447,6 +450,7 @@ __all__ = [
     "LoadedCharacterToggleResponse",
     "LoadedContribution",
     "LoadedExplorerPackage",
+    "LoadedToggleStyleUse",
     "LoadedWorldObject",
     "LoadedWorldObjectCounter",
     "LoadedWorldObjectToggle",
@@ -465,6 +469,7 @@ __all__ = [
     "PackageLoadIssueCode",
     "PackageLoadResult",
     "PackageMetadata",
+    "ToggleStyleDeclaration",
     "PackageProvenance",
     "PackageSelection",
     "PackageSetApplicationIssue",
@@ -483,6 +488,7 @@ __all__ = [
     "RegistrationPlanResult",
     "RegistrationType",
     "SUPPORTED_SCHEMA_VERSION",
+    "SUPPORTED_SCHEMA_VERSIONS",
     "SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_CONTRACT_VERSION",
     "SUPPORTED_CLASS_WORLD_ASSEMBLED_OUTPUT_MANIFEST_DIGEST_ALGORITHM",

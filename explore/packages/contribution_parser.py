@@ -24,7 +24,7 @@ from explore.packages.contribution_models import (
     PackageLoadIssueCode,
     PackageProvenance,
 )
-from explore.packages.models import ContributionDeclaration
+from explore.packages.models import ContributionDeclaration, ToggleStyleDeclaration
 from explore.packages.policy import is_valid_identifier
 
 _CHARACTER_FIELDS = frozenset(
@@ -53,6 +53,7 @@ _WORLD_OBJECT_FIELDS = frozenset(
         "when_interacted",
         "toggle",
         "counter",
+        "toggle_style_id",
     }
 )
 _VALID_COLORS = frozenset(valid_color_names())
@@ -819,15 +820,57 @@ def _parse_world_object(
     declaration: ContributionDeclaration,
     provenance: PackageProvenance,
     assets_by_id: Mapping[str, PackageAssetReference],
+    toggle_styles_by_id: Mapping[str, ToggleStyleDeclaration],
 ) -> tuple[LoadedWorldObject | None, tuple[PackageLoadIssue, ...]]:
     issues: list[PackageLoadIssue] = []
     source_path = declaration.path
     name = _text(mapping, "name", source_path, issues, required=True, default=None)
     x = _coordinate(mapping, "x", source_path, issues, required=True, default=0)
     y = _coordinate(mapping, "y", source_path, issues, required=True, default=0)
-    toggle = _toggle(mapping, source_path, issues)
+    inline_toggle = _toggle(mapping, source_path, issues)
+    style_id = _text(
+        mapping,
+        "toggle_style_id",
+        source_path,
+        issues,
+        required=False,
+        default=None,
+    )
+    style_toggle: LoadedWorldObjectToggle | None = None
+    if isinstance(style_id, str):
+        style_location = _field_location(source_path, "toggle_style_id")
+        if not is_valid_identifier(style_id):
+            issues.append(
+                _issue(
+                    PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                    f"{style_location} must be one unqualified package-local style ID.",
+                    style_location,
+                )
+            )
+        else:
+            style = toggle_styles_by_id.get(style_id)
+            if style is None:
+                issues.append(
+                    _issue(
+                        PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                        f"{style_location} must resolve exactly once within this package.",
+                        style_location,
+                    )
+                )
+            else:
+                style_toggle = LoadedWorldObjectToggle(style.off_color, style.on_color)
+    if "toggle" in mapping and "toggle_style_id" in mapping:
+        location = _field_location(source_path, "toggle_style_id")
+        issues.append(
+            _issue(
+                PackageLoadIssueCode.CONTRIBUTION_VALUE_INVALID,
+                f"{location} cannot be combined with toggle.",
+                location,
+            )
+        )
+    toggle = inline_toggle if inline_toggle is not None else style_toggle
     counter = _counter(mapping, source_path, issues)
-    has_toggle = "toggle" in mapping
+    has_toggle = "toggle" in mapping or "toggle_style_id" in mapping
     if has_toggle and "color" in mapping:
         location = _field_location(source_path, "color")
         issues.append(
@@ -893,6 +936,7 @@ def _parse_world_object(
             when_interacted=when_interacted,
             toggle=toggle,
             counter=counter,
+            toggle_style_id=style_id if style_toggle is not None else None,
         ),
         (),
     )
@@ -903,6 +947,7 @@ def parse_contribution_file(
     declaration: ContributionDeclaration,
     provenance: PackageProvenance,
     assets_by_id: Mapping[str, PackageAssetReference],
+    toggle_styles_by_id: Mapping[str, ToggleStyleDeclaration] | None = None,
 ) -> tuple[LoadedContribution | None, tuple[PackageLoadIssue, ...]]:
     """Safely parse one validator-approved declarative contribution file."""
     source_path = declaration.path
@@ -947,4 +992,10 @@ def parse_contribution_file(
 
     if declaration.type == "character":
         return _parse_character(document, declaration, provenance, assets_by_id)
-    return _parse_world_object(document, declaration, provenance, assets_by_id)
+    return _parse_world_object(
+        document,
+        declaration,
+        provenance,
+        assets_by_id,
+        {} if toggle_styles_by_id is None else toggle_styles_by_id,
+    )

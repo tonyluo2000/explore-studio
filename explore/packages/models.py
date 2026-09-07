@@ -30,6 +30,9 @@ class IssueCode(StrEnum):
     ASSET_ID_INVALID = "ASSET_ID_INVALID"
     ASSET_ID_DUPLICATE = "ASSET_ID_DUPLICATE"
     ASSET_TYPE_UNSUPPORTED = "ASSET_TYPE_UNSUPPORTED"
+    TOGGLE_STYLE_ID_INVALID = "TOGGLE_STYLE_ID_INVALID"
+    TOGGLE_STYLE_ID_DUPLICATE = "TOGGLE_STYLE_ID_DUPLICATE"
+    TOGGLE_STYLE_COLOR_INVALID = "TOGGLE_STYLE_COLOR_INVALID"
     PATH_EMPTY = "PATH_EMPTY"
     PATH_ABSOLUTE = "PATH_ABSOLUTE"
     PATH_TRAVERSAL = "PATH_TRAVERSAL"
@@ -78,14 +81,24 @@ class AssetDeclaration:
 
 
 @dataclass(frozen=True)
+class ToggleStyleDeclaration:
+    """One package-local named toggle presentation in schema v0.2."""
+
+    id: str
+    off_color: str
+    on_color: str
+
+
+@dataclass(frozen=True)
 class ExplorerPackageManifest:
-    """Typed representation of an Explorer Package manifest v0.1."""
+    """Typed representation of a supported Explorer Package manifest."""
 
     schema_version: str
     package: PackageMetadata
     compatibility: Compatibility
     contributions: tuple[ContributionDeclaration, ...]
     assets: tuple[AssetDeclaration, ...] = ()
+    toggle_styles: tuple[ToggleStyleDeclaration, ...] = ()
 
 
 @dataclass(frozen=True)

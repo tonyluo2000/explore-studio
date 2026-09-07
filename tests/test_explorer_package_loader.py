@@ -18,6 +18,7 @@ from explore.packages import (
     LoadedCharacterEitherToggleResponse,
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
+    LoadedToggleStyleUse,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
@@ -37,6 +38,8 @@ def _write_package(
     contributions: list[dict[str, str]] | None = None,
     files: dict[str, bytes] | None = None,
     assets: list[dict[str, str]] | None = None,
+    schema_version: str = "0.1",
+    toggle_styles: list[dict[str, str]] | None = None,
 ) -> Path:
     declarations = contributions or [
         {
@@ -46,7 +49,7 @@ def _write_package(
         }
     ]
     manifest: dict[str, Any] = {
-        "schema_version": "0.1",
+        "schema_version": schema_version,
         "package": {
             "id": "river-rescue",
             "display_name": "River Rescue",
@@ -57,6 +60,8 @@ def _write_package(
     }
     if assets is not None:
         manifest["assets"] = assets
+    if toggle_styles is not None:
+        manifest["toggle_styles"] = toggle_styles
 
     root.mkdir()
     (root / "manifest.yaml").write_text(
@@ -771,6 +776,104 @@ def test_world_object_toggle_loads_as_strict_two_color_metadata(tmp_path: Path) 
     assert world_object.toggle == LoadedWorldObjectToggle(off_color="red", on_color="green")
     assert world_object.when_near == "The switch is quiet."
     assert world_object.when_interacted == "Click!"
+
+
+def test_named_toggle_style_resolves_to_existing_toggle_model_with_immutable_evidence(
+    tmp_path: Path,
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        schema_version="0.2",
+        toggle_styles=[{"id": "magic-switch", "off_color": "red", "on_color": "green"}],
+        contributions=[
+            {"id": "first", "type": "world_object", "path": "objects/first.yaml"},
+            {"id": "second", "type": "world_object", "path": "objects/second.yaml"},
+            {"id": "inline", "type": "world_object", "path": "objects/inline.yaml"},
+        ],
+        files={
+            "objects/first.yaml": b'name: "First"\nx: 1\ny: 2\ntoggle_style_id: magic-switch\n',
+            "objects/second.yaml": b'name: "Second"\nx: 3\ny: 4\ntoggle_style_id: magic-switch\n',
+            "objects/inline.yaml": (
+                b'name: "Inline"\nx: 5\ny: 6\n' b"toggle: {off_color: blue, on_color: yellow}\n"
+            ),
+        },
+    )
+
+    result = load_explorer_package(package)
+
+    assert result.is_loaded and result.package is not None
+    assert [item.toggle for item in result.package.world_objects] == [
+        LoadedWorldObjectToggle("red", "green"),
+        LoadedWorldObjectToggle("red", "green"),
+        LoadedWorldObjectToggle("blue", "yellow"),
+    ]
+    assert result.package.toggle_style_uses == (
+        LoadedToggleStyleUse("river-rescue", "magic-switch", ("first", "second")),
+    )
+    with pytest.raises(FrozenInstanceError):
+        result.package.toggle_style_uses[0].style_id = "changed"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    ("reference", "extra", "location"),
+    [
+        ("missing", "", "objects/switch.yaml.toggle_style_id"),
+        ("other:magic-switch", "", "objects/switch.yaml.toggle_style_id"),
+        ("magic-switch", "color: blue\n", "objects/switch.yaml.color"),
+        ("magic-switch", "asset_id: image\n", "objects/switch.yaml.asset_id"),
+        (
+            "magic-switch",
+            "toggle: {off_color: blue, on_color: yellow}\n",
+            "objects/switch.yaml.toggle_style_id",
+        ),
+    ],
+)
+def test_named_toggle_style_reference_fails_closed(
+    tmp_path: Path, reference: str, extra: str, location: str
+) -> None:
+    assets = (
+        [{"id": "image", "type": "image", "path": "assets/image.png"}]
+        if "asset_id" in extra
+        else None
+    )
+    files = {
+        "objects/switch.yaml": (
+            f'name: "Switch"\nx: 1\ny: 2\n{extra}toggle_style_id: "{reference}"\n'.encode()
+        )
+    }
+    if assets:
+        files["assets/image.png"] = b"image"
+    package = _write_package(
+        tmp_path / "package",
+        schema_version="0.2",
+        toggle_styles=[{"id": "magic-switch", "off_color": "red", "on_color": "green"}],
+        contributions=[{"id": "switch", "type": "world_object", "path": "objects/switch.yaml"}],
+        files=files,
+        assets=assets,
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert any(issue.location == location for issue in result.issues)
+
+
+@pytest.mark.parametrize("reference", [42, " "])
+def test_named_toggle_style_reference_rejects_malformed_values(
+    tmp_path: Path, reference: object
+) -> None:
+    package = _write_package(
+        tmp_path / "package",
+        schema_version="0.2",
+        toggle_styles=[{"id": "magic-switch", "off_color": "red", "on_color": "green"}],
+        contributions=[{"id": "switch", "type": "world_object", "path": "objects/switch.yaml"}],
+        files={
+            "objects/switch.yaml": yaml.safe_dump(
+                {"name": "Switch", "x": 1, "y": 2, "toggle_style_id": reference}
+            ).encode()
+        },
+    )
+    result = load_explorer_package(package)
+    assert result.package is None
+    assert result.issues
 
 
 @pytest.mark.parametrize(

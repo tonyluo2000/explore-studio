@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.10. Canonical course content owns an immutable ID-keyed
-catalog containing thirteen entries:
+catalog containing fourteen entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -98,6 +98,16 @@ Mission 13:
   authored responses for below the goal and at or above the goal, and display
   of both comparison branches.
 
+Mission 14:
+
+- mission ID: `reuse-a-named-toggle-style`;
+- title: `Share a Switch Style`;
+- instructions require one named toggle style reused by at least two different
+  toggle objects, followed by interaction with every toggle object.
+- exactly one authored style and at least two distinct referencing objects are
+  enforced from immutable package provenance before scene creation; inline
+  toggle declarations do not count.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -109,6 +119,7 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_EITHER_TOGGLE_CASES_DISPLAYED`; Mission 12 reuses
 `ALL_CONDITIONAL_BRANCHES_DISPLAYED`; Mission 13 uses
 `ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED`. Other rule values are rejected.
+Mission 14 reuses `ALL_TOGGLE_OBJECTS_CHANGED` and adds no completion rule.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -175,6 +186,10 @@ must be displayed for every qualifying NPC; zero qualifying NPCs remains
 incomplete. Repeated displays are idempotent, evidence is monotonic, and the
 comparison does not mutate counters or existing runtime evidence.
 
+Mission 14's reuse requirement is static. Once its package-set plan passes the
+pre-scene style-provenance gate, its runtime completion is the unchanged
+`ALL_TOGGLE_OBJECTS_CHANGED` rule. Named styles add no Trail state or behavior.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -183,7 +198,7 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 14+, additional completion rules, mission sequencing, decrement/reset,
+Mission 15+, additional completion rules, mission sequencing, decrement/reset,
 arithmetic expressions, general `not` syntax, nested or arbitrary conditions,
 choices, memory, quests, generic actions or state machines, rewards,
 persistence, teacher controls, deployment, authentication, and Phase E

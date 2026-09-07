@@ -17,7 +17,11 @@ from explore.packages.class_world_configuration_models import (
     ClassWorldConfigurationSpec,
     ClassWorldPackagePin,
 )
-from explore.packages.contribution_models import PackageAssetReference, PackageProvenance
+from explore.packages.contribution_models import (
+    LoadedToggleStyleUse,
+    PackageAssetReference,
+    PackageProvenance,
+)
 from explore.packages.package_set_models import (
     PackageSetPlan,
     SelectedPackagePlan,
@@ -754,6 +758,63 @@ def _validate_package_set_plan(
             )
             continue
 
+        style_uses = registration_plan.toggle_style_uses
+        if not isinstance(style_uses, tuple):
+            issues.append(
+                _issue(
+                    ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                    f"{location}.registration_plan.toggle_style_uses must be an immutable tuple.",
+                    f"{location}.registration_plan.toggle_style_uses",
+                    package_id=package.package_id,
+                    package_index=package_index,
+                    field="toggle_style_uses",
+                )
+            )
+            style_uses = ()
+        entries_by_style_id: dict[str, list[LoadedToggleStyleUse]] = {}
+        for evidence_index, evidence in enumerate(style_uses):
+            evidence_location = f"{location}.registration_plan.toggle_style_uses[{evidence_index}]"
+            if isinstance(evidence, LoadedToggleStyleUse) and isinstance(evidence.style_id, str):
+                entries_by_style_id.setdefault(evidence.style_id, []).append(evidence)
+            reference_ids_valid = isinstance(
+                getattr(evidence, "referencing_object_ids", None), tuple
+            ) and all(
+                isinstance(item, str) and is_valid_identifier(item)
+                for item in evidence.referencing_object_ids
+            )
+            valid_evidence = (
+                isinstance(evidence, LoadedToggleStyleUse)
+                and evidence.package_id == package.package_id
+                and isinstance(evidence.style_id, str)
+                and is_valid_identifier(evidence.style_id)
+                and reference_ids_valid
+                and len(evidence.referencing_object_ids)
+                == len(set(evidence.referencing_object_ids))
+            )
+            if not valid_evidence:
+                issues.append(
+                    _issue(
+                        ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                        f"{evidence_location} must retain package-local named-toggle provenance.",
+                        evidence_location,
+                        package_id=package.package_id,
+                        package_index=package_index,
+                        field="toggle_style_uses",
+                    )
+                )
+        for style_id, matches in entries_by_style_id.items():
+            if len(matches) > 1:
+                issues.append(
+                    _issue(
+                        ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                        f'{location}.registration_plan duplicates toggle style "{style_id}".',
+                        f"{location}.registration_plan.toggle_style_uses",
+                        package_id=package.package_id,
+                        package_index=package_index,
+                        field="toggle_style_uses",
+                    )
+                )
+
         provenance = (
             registration_plan.provenance
             if isinstance(registration_plan.provenance, PackageProvenance)
@@ -806,6 +867,37 @@ def _validate_package_set_plan(
                 entry.contribution_id, str
             ):
                 entries_by_id.setdefault(entry.contribution_id, []).append(entry)
+        for evidence_index, evidence in enumerate(style_uses):
+            if not isinstance(evidence, LoadedToggleStyleUse):
+                continue
+            for object_id in evidence.referencing_object_ids:
+                if not isinstance(object_id, str):
+                    continue
+                matches = entries_by_id.get(object_id, [])
+                target = matches[0] if len(matches) == 1 else None
+                if (
+                    len(matches) == 1
+                    and type(target) is WorldObjectRegistration
+                    and isinstance(target.world_object, WorldObjectRegistrationSpec)
+                    and target.world_object.toggle is not None
+                    and _valid_toggle(
+                        target.world_object.toggle, off_color=target.world_object.color
+                    )
+                ):
+                    continue
+                evidence_location = (
+                    f"{location}.registration_plan.toggle_style_uses[{evidence_index}]"
+                )
+                issues.append(
+                    _issue(
+                        ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID,
+                        f"{evidence_location} must reference existing toggle world objects.",
+                        evidence_location,
+                        package_id=package.package_id,
+                        package_index=package_index,
+                        field="referencing_object_ids",
+                    )
+                )
         for entry_index, entry in enumerate(entries):
             if type(entry) is not CharacterRegistration or not isinstance(
                 entry.character, CharacterRegistrationSpec
