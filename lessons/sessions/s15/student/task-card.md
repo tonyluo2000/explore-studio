@@ -45,7 +45,7 @@ Checkpoint: teacher initials all three traces before execution.
 | `star-map` first | ordinary world object | Starts the star song |
 | `moon-switch` second | toggle object | Changes state and advances |
 | `echo-drum` third | counter object | Adds a beat and completes order |
-| `crystal-lantern` | external unrelated object | Leaves sequence progress unchanged |
+| `crystal-lantern` local test label | `crystal-lantern:lantern` from the separate Crystal Lantern example package | Leaves sequence progress unchanged |
 
 Python remains local and tests a model. Validated YAML
 `respond_to_sequence.object_ids` is the Trail's source of truth; runtime never
@@ -55,12 +55,14 @@ executes `starter.py`.
 
 1. Personalize names/messages only; retain three distinct IDs and the mixed
    ordinary/toggle/counter object types.
-2. Validate and launch with Nova's unrelated Crystal Lantern available:
+2. Validate and launch with Nova and Crystal Lantern loaded as separate example
+   packages:
 
    ```console
    explore-package validate lessons/sessions/s15/student/explorer-package
    explore-package trail \
      examples/explorer-packages/nova-character \
+     examples/explorer-packages/crystal-lantern \
      lessons/sessions/s15/student/explorer-package \
      --player "nova-character:nova" \
      --mission-id "complete-actions-in-order" \

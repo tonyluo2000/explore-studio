@@ -13,7 +13,10 @@ state tracing, S11–S14 reasoning, and shared Quick Start readiness.
 
 ## Before class
 
-- Validate the Star Song Sequence package and the external Nova package.
+- Validate all three required package roots: Nova at
+  `examples/explorer-packages/nova-character`, the separate Crystal Lantern at
+  `examples/explorer-packages/crystal-lantern`, and the Star Song Sequence at
+  `lessons/sessions/s15/student/explorer-package`.
 - Prepare three object cards plus an unrelated `crystal-lantern` card.
 - Keep the exact Trail reset rules visible to the teacher, not as predictions.
 - Arrange a 60-second screen-share presentation order and a text-only option.
@@ -82,5 +85,6 @@ or for interaction after completion. Do not alter the fixed three-object rule.
 - Completed progress never regresses. The counter can count independently; its
   membership in the sequence reacts to the interaction, not its goal.
 - The package uses exactly three same-package sequence members: ordinary Star
-  Map, toggle Moon Switch, counter Echo Drum. Nova's Crystal Lantern is unrelated.
+  Map, toggle Moon Switch, counter Echo Drum. Nova is the player from one example
+  package; Crystal Lantern is the unrelated object from a separate example package.
 - Student Python remains local; declarative package data alone enters runtime.

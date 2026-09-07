@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from explore.packages.classroom_trail import plan_local_classroom_trail
 from explore.packages.loader import load_explorer_package
 
 MATERIALS_ROOT = Path(__file__).parents[1] / "lessons" / "sessions"
@@ -223,6 +224,33 @@ def test_s15_materials_match_sequence_reset_semantics_and_capstone_requirements(
     object_text = " ".join(path.read_text() for path in object_paths)
     assert "toggle:" in object_text and "counter:" in object_text
     assert "AI may suggest tests only" in " ".join(task_card.split())
+
+
+def test_s15_documented_launch_roots_include_unrelated_crystal_lantern() -> None:
+    project_root = MATERIALS_ROOT.parents[1]
+    task_card = (MATERIALS_ROOT / "s15" / "student" / "task-card.md").read_text(encoding="utf-8")
+    runbook = (MATERIALS_ROOT / "s15" / "teacher-runbook.md").read_text(encoding="utf-8")
+    documented_roots = (
+        "examples/explorer-packages/nova-character",
+        "examples/explorer-packages/crystal-lantern",
+        "lessons/sessions/s15/student/explorer-package",
+    )
+
+    assert all(root in task_card and root in runbook for root in documented_roots)
+    planned = plan_local_classroom_trail(
+        (project_root / root for root in documented_roots),
+        player_qualified_id="nova-character:nova",
+    )
+
+    assert planned.is_planned, planned.issues
+    assert planned.plan is not None
+    qualified_object_ids = {item.qualified_id for item in planned.plan.world_objects}
+    assert "crystal-lantern:lantern" in qualified_object_ids
+    assert {
+        "star-song-sequence:star-map",
+        "star-song-sequence:moon-switch",
+        "star-song-sequence:echo-drum",
+    } <= qualified_object_ids
 
 
 def test_no_s16_or_later_lesson_materials_exist() -> None:
