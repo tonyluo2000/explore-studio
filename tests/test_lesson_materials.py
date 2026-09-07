@@ -39,15 +39,13 @@ EXPECTED_STARTER_OUTPUTS = {
         "The Moon Compass needle begins to shimmer.\n"
         "You turn the Moon Compass toward a hidden trail!\n"
     ),
-    "s04": (
-        "Welcome to the Moonlit Trail, Ari!\n"
-        "Welcome to the Moonlit Trail, Sam!\n"
-    ),
-    "s05": (
-        "Guide: The moon compass is awake.\n"
-        "Guide: Follow the silver lights home.\n"
-        "3\n"
-    ),
+    "s04": """Welcome to the Moonlit Trail, Ari!
+Welcome to the Moonlit Trail, Sam!
+""",
+    "s05": """Guide: The moon compass is awake.
+Guide: Follow the silver lights home.
+3
+""",
 }
 
 
