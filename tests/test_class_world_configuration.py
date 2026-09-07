@@ -28,6 +28,7 @@ from explore.packages import (
     ClassWorldConfigurationResult,
     ClassWorldConfigurationSpec,
     ClassWorldPackagePin,
+    LoadedToggleStyleUse,
     PackageProvenance,
     PackageSetPlan,
     SelectedPackagePlan,
@@ -840,6 +841,60 @@ def test_public_models_and_canonical_nested_state_are_deeply_immutable() -> None
     failure = build_class_world_configuration(None, plan)
     with pytest.raises((FrozenInstanceError, AttributeError)):
         failure.issues[0].location = "changed"  # type: ignore[misc]
+
+
+def test_named_toggle_style_evidence_is_preserved_in_configuration() -> None:
+    toggle_object = _world_object(
+        "river-rescue",
+        contribution_id="switch",
+        world_object=WorldObjectRegistrationSpec(
+            "Switch",
+            30,
+            40,
+            "red",
+            toggle=WorldObjectToggleRegistrationSpec("red", "green"),
+        ),
+    )
+    selected = _selected("river-rescue", _character("river-rescue"), toggle_object)
+    evidence = (LoadedToggleStyleUse("river-rescue", "shared-switch", ("switch",)),)
+    selected = replace(
+        selected,
+        registration_plan=replace(selected.registration_plan, toggle_style_uses=evidence),
+    )
+    plan = _plan(selected)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.is_configured and result.configuration is not None
+    retained = result.configuration.package_set_plan.packages[0].registration_plan.toggle_style_uses
+    assert retained is evidence
+    with pytest.raises(FrozenInstanceError):
+        retained[0].style_id = "changed"  # type: ignore[misc]
+
+
+def test_configuration_rejects_forged_named_toggle_style_reference() -> None:
+    selected = _selected(
+        "river-rescue",
+        _character("river-rescue"),
+        _world_object("river-rescue"),
+    )
+    selected = replace(
+        selected,
+        registration_plan=replace(
+            selected.registration_plan,
+            toggle_style_uses=(
+                LoadedToggleStyleUse("river-rescue", "shared-switch", ("missing",)),
+            ),
+        ),
+    )
+    plan = _plan(selected)
+
+    result = build_class_world_configuration(_spec(plan), plan)
+
+    assert result.configuration is None
+    assert ClassWorldConfigurationIssueCode.PACKAGE_SET_STRUCTURE_INVALID in {
+        issue.code for issue in result.issues
+    }
 
 
 def test_builder_performs_no_forbidden_activity(monkeypatch: pytest.MonkeyPatch) -> None:

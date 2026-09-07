@@ -10,6 +10,7 @@ from explore.packages.contribution_models import (
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
+    LoadedToggleStyleUse,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
@@ -753,6 +754,18 @@ def build_student_api_registration_plan(
     issues: list[RegistrationPlanIssue] = []
     provenance = _validate_package_provenance(loaded_package, issues)
     contributions = loaded_package.contributions
+    toggle_style_uses = loaded_package.toggle_style_uses
+    if not isinstance(toggle_style_uses, tuple) or any(
+        not isinstance(item, LoadedToggleStyleUse) for item in toggle_style_uses
+    ):
+        issues.append(
+            _issue(
+                RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                "package.toggle_style_uses must be an immutable tuple of style-use evidence.",
+                "package.toggle_style_uses",
+            )
+        )
+        toggle_style_uses = ()
     if not isinstance(contributions, tuple):
         issues.append(
             _issue(
@@ -780,6 +793,44 @@ def build_student_api_registration_plan(
             contribution.contribution_id, str
         ):
             contributions_by_id.setdefault(contribution.contribution_id, []).append(contribution)
+
+    seen_style_ids: set[str] = set()
+    for index, evidence in enumerate(toggle_style_uses):
+        location = f"package.toggle_style_uses[{index}]"
+        reference_ids_valid = isinstance(evidence.referencing_object_ids, tuple) and all(
+            isinstance(object_id, str) and is_valid_identifier(object_id)
+            for object_id in evidence.referencing_object_ids
+        )
+        valid = (
+            evidence.package_id == loaded_package.provenance.package_id
+            and isinstance(evidence.style_id, str)
+            and is_valid_identifier(evidence.style_id)
+            and evidence.style_id not in seen_style_ids
+            and reference_ids_valid
+            and len(evidence.referencing_object_ids) == len(set(evidence.referencing_object_ids))
+        )
+        if isinstance(evidence.style_id, str):
+            seen_style_ids.add(evidence.style_id)
+        for object_id in evidence.referencing_object_ids:
+            if not isinstance(object_id, str):
+                valid = False
+                continue
+            matches = contributions_by_id.get(object_id, [])
+            target = matches[0] if len(matches) == 1 else None
+            valid = valid and (
+                len(matches) == 1
+                and isinstance(target, LoadedWorldObject)
+                and target.toggle is not None
+                and target.toggle_style_id == evidence.style_id
+            )
+        if not valid:
+            issues.append(
+                _issue(
+                    RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID,
+                    f"{location} must retain unique package-local named-toggle provenance.",
+                    location,
+                )
+            )
 
     for index, contribution in enumerate(contributions):
         location = f"contributions[{index}]"
@@ -928,6 +979,7 @@ def build_student_api_registration_plan(
         plan=StudentAPIRegistrationPlan(
             provenance=provenance,
             entries=tuple(entries),
+            toggle_style_uses=toggle_style_uses,
         ),
         issues=(),
     )

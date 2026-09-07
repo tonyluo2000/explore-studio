@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from explore.packages.contribution_models import (
+    LoadedToggleStyleUse,
     PackageAssetReference,
     PackageLoadIssue,
     PackageProvenance,
@@ -156,6 +157,7 @@ class StudentAPIRegistrationPlan:
 
     provenance: PackageProvenance
     entries: tuple[StudentAPIRegistrationEntry, ...]
+    toggle_style_uses: tuple[LoadedToggleStyleUse, ...] = ()
 
 
 @dataclass(frozen=True)

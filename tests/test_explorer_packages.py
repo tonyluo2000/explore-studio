@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ from explore.packages import (
     DISPLAY_NAME_MAX_LENGTH,
     MAX_ASSET_SIZE_BYTES,
     IssueCode,
+    ToggleStyleDeclaration,
     ValidationReport,
     validate_explorer_package,
 )
@@ -84,6 +86,79 @@ assets:
     )
 
     assert validate_explorer_package(package).is_valid
+
+
+def test_schema_v02_parses_immutable_named_toggle_styles(tmp_path: Path) -> None:
+    manifest = VALID_MANIFEST.replace('schema_version: "0.1"', 'schema_version: "0.2"') + """\
+toggle_styles:
+  - id: "magic-switch"
+    off_color: "red"
+    on_color: "green"
+"""
+    report = validate_explorer_package(_write_package(tmp_path / "package", manifest))
+
+    assert report.is_valid and report.manifest is not None
+    assert report.manifest.toggle_styles == (
+        ToggleStyleDeclaration("magic-switch", "red", "green"),
+    )
+    with pytest.raises(FrozenInstanceError):
+        report.manifest.toggle_styles[0].on_color = "blue"  # type: ignore[misc]
+
+
+def test_schema_v01_remains_valid_and_rejects_v02_styles(tmp_path: Path) -> None:
+    unchanged = validate_explorer_package(_write_package(tmp_path / "unchanged"))
+    assert unchanged.is_valid and unchanged.manifest is not None
+    assert unchanged.manifest.toggle_styles == ()
+
+    manifest = VALID_MANIFEST + """\
+toggle_styles:
+  - id: "magic-switch"
+    off_color: "red"
+    on_color: "green"
+"""
+    rejected = validate_explorer_package(_write_package(tmp_path / "rejected", manifest))
+    assert IssueCode.MANIFEST_FIELD_UNKNOWN in _codes(rejected)
+
+
+@pytest.mark.parametrize(
+    ("styles", "code"),
+    [
+        (
+            "  - {id: magic-switch, off_color: red}\n",
+            IssueCode.MANIFEST_FIELD_REQUIRED,
+        ),
+        (
+            "  - {id: magic-switch, off_color: red, on_color: green, extra: nope}\n",
+            IssueCode.MANIFEST_FIELD_UNKNOWN,
+        ),
+        (
+            "  - {id: Other:style, off_color: red, on_color: green}\n",
+            IssueCode.TOGGLE_STYLE_ID_INVALID,
+        ),
+        (
+            "  - {id: magic-switch, off_color: red, on_color: red}\n",
+            IssueCode.TOGGLE_STYLE_COLOR_INVALID,
+        ),
+        (
+            "  - {id: magic-switch, off_color: cyan, on_color: green}\n",
+            IssueCode.TOGGLE_STYLE_COLOR_INVALID,
+        ),
+        (
+            "  - {id: magic-switch, off_color: red, on_color: green}\n"
+            "  - {id: magic-switch, off_color: blue, on_color: yellow}\n",
+            IssueCode.TOGGLE_STYLE_ID_DUPLICATE,
+        ),
+    ],
+)
+def test_schema_v02_toggle_styles_fail_closed(tmp_path: Path, styles: str, code: IssueCode) -> None:
+    manifest = (
+        VALID_MANIFEST.replace('schema_version: "0.1"', 'schema_version: "0.2"')
+        + "toggle_styles:\n"
+        + styles
+    )
+    report = validate_explorer_package(_write_package(tmp_path / "package", manifest))
+    assert not report.is_valid
+    assert code in _codes(report)
 
 
 def test_missing_manifest(tmp_path: Path) -> None:
@@ -464,7 +539,7 @@ def test_validation_never_executes_declared_python(tmp_path: Path) -> None:
 
 def test_diagnostics_are_deterministic_and_machine_independent(tmp_path: Path) -> None:
     """Repeated validation is equal and normal messages do not leak absolute paths."""
-    manifest = VALID_MANIFEST.replace('schema_version: "0.1"', 'schema_version: "0.2"')
+    manifest = VALID_MANIFEST.replace('schema_version: "0.1"', 'schema_version: "9.9"')
     manifest = manifest.replace('id: "river-rescue"', 'id: "River--Rescue"')
     manifest = manifest.replace('version: "1.0.0"', 'version: "1"')
     manifest = manifest.replace('student_api: "0.1"', 'student_api: "0.2"')

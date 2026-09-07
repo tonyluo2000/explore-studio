@@ -1,7 +1,8 @@
 # Local Explorer Package Loader v0.1
 
 > **Status:** Implemented local prototype. This document defines the
-> declarative contribution shapes accepted by the v0.1 loader.
+> declarative contribution shapes accepted by the local loader. It accepts
+> Explorer Package schemas v0.1 and v0.2 while retaining Student API v0.1.
 
 The Local Explorer Package Loader consumes one already-unpacked Explorer
 Package directory, runs the package validator, and returns immutable typed
@@ -145,6 +146,14 @@ When `toggle` is present, it must contain exactly the required `off_color` and
 `off_color` as the immutable base object color and retains both colors as inert
 metadata for Classroom Trail v0.5+. It does not create mutable object state.
 
+Under Explorer Package schema v0.2, a world object may instead declare one
+unqualified `toggle_style_id`. The manifest's style table is validated first;
+the loader then resolves the reference exactly once within that package into
+the same `LoadedWorldObjectToggle` used by inline declarations. A style
+reference cannot coexist with inline `toggle`, `color`, or `asset_id`.
+Immutable style-use provenance records the package ID, style ID, and distinct
+referencing object IDs. No style table or lookup crosses the runtime boundary.
+
 When `counter` is present, it contains exactly the two required fields shown
 above. Boolean, non-integer, and out-of-range goals are rejected. Counter
 metadata may coexist with appearance, messages, and toggle metadata; it is
@@ -206,6 +215,7 @@ returns `PackageLoadResult`. Its public immutable value objects are:
 - `LoadedExplorerPackage`, containing package metadata, compatibility,
   provenance, manifest-order contributions, and declared asset references;
 - `LoadedCharacter` and `LoadedWorldObject`;
+- `LoadedToggleStyleUse`, containing bounded package-local static provenance;
 - `PackageProvenance`, containing package ID, package version, and exact
   Student API version;
 - `PackageAssetReference`; and

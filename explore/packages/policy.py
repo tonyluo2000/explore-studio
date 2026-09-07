@@ -1,10 +1,11 @@
-"""Named prototype policy constants for Explorer Package contract v0.1."""
+"""Named prototype policy constants for Explorer Package schemas v0.1 and v0.2."""
 
 from __future__ import annotations
 
 import re
 
-SUPPORTED_SCHEMA_VERSION = "0.1"
+SUPPORTED_SCHEMA_VERSION = "0.2"
+SUPPORTED_SCHEMA_VERSIONS = frozenset({"0.1", "0.2"})
 SUPPORTED_STUDENT_API_VERSION = "0.1"
 
 IDENTIFIER_MAX_LENGTH = 64

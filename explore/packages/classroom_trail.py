@@ -19,6 +19,7 @@ from explore.packages.classroom_trail_models import (
     ClassroomTrailPlanIssueCode,
     ClassroomTrailPlanResult,
 )
+from explore.packages.contribution_models import LoadedToggleStyleUse
 from explore.packages.loader import load_explorer_package
 from explore.packages.package_set_models import PackageSelection, SelectedPackagePlan
 from explore.packages.package_set_planner import _build_package_set_plan
@@ -223,7 +224,7 @@ def create_classroom_trail_scene(
         ClassroomTrailObjectToggle,
         ClassroomTrailScene,
     )
-    from explore.curriculum import get_course_mission
+    from explore.curriculum import MISSION_14_ID, get_course_mission
 
     if not isinstance(plan, ClassroomTrailPlan):
         raise TypeError("plan must be a ClassroomTrailPlan")
@@ -265,6 +266,29 @@ def create_classroom_trail_scene(
         or canonical_objects != plan.world_objects
     ):
         raise ValueError("plan must retain its canonical package contribution projection")
+    if mission.mission_id == MISSION_14_ID:
+        style_uses = tuple(
+            evidence
+            for package in plan.packages
+            for evidence in package.registration_plan.toggle_style_uses
+        )
+        if len(style_uses) != 1:
+            raise ValueError("Mission 14 requires exactly one authored toggle style")
+        evidence = style_uses[0]
+        if not isinstance(evidence, LoadedToggleStyleUse) or not isinstance(
+            evidence.referencing_object_ids, tuple
+        ):
+            raise ValueError("Mission 14 requires valid immutable toggle-style evidence")
+        referencing_object_ids = evidence.referencing_object_ids
+        if (
+            not all(isinstance(object_id, str) for object_id in referencing_object_ids)
+            or len(referencing_object_ids) < 2
+            or len(set(referencing_object_ids)) < 2
+        ):
+            raise ValueError(
+                "Mission 14 requires its toggle style to be referenced by at least two "
+                "distinct world objects"
+            )
     player = plan.player.character
     engine_player = EngineCharacter(
         name=player.name,

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from explore._colors import valid_color_names
 from explore.packages.models import (
     AssetDeclaration,
     Compatibility,
@@ -14,6 +15,7 @@ from explore.packages.models import (
     ExplorerPackageManifest,
     IssueCode,
     PackageMetadata,
+    ToggleStyleDeclaration,
     ValidationIssue,
 )
 from explore.packages.policy import (
@@ -21,16 +23,21 @@ from explore.packages.policy import (
     CONTRIBUTION_FILE_EXTENSIONS,
     DISPLAY_NAME_MAX_LENGTH,
     IDENTIFIER_MAX_LENGTH,
-    SUPPORTED_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
     SUPPORTED_STUDENT_API_VERSION,
     is_valid_identifier,
     is_valid_semantic_version,
 )
 
-_ROOT_FIELDS = frozenset({"schema_version", "package", "compatibility", "contributions", "assets"})
+_V01_ROOT_FIELDS = frozenset(
+    {"schema_version", "package", "compatibility", "contributions", "assets"}
+)
+_V02_ROOT_FIELDS = _V01_ROOT_FIELDS | {"toggle_styles"}
 _PACKAGE_FIELDS = frozenset({"id", "display_name", "version"})
 _COMPATIBILITY_FIELDS = frozenset({"student_api"})
 _DECLARATION_FIELDS = frozenset({"id", "type", "path"})
+_TOGGLE_STYLE_FIELDS = frozenset({"id", "off_color", "on_color"})
+_VALID_COLORS = frozenset(valid_color_names())
 
 
 def _issue(code: IssueCode, message: str, location: str) -> ValidationIssue:
@@ -138,7 +145,7 @@ def _unknown_fields(
         issues.append(
             _issue(
                 IssueCode.MANIFEST_FIELD_UNKNOWN,
-                f"{field_location} is not part of Explorer Package manifest v0.1.",
+                f"{field_location} is not part of this Explorer Package manifest schema.",
                 field_location,
             )
         )
@@ -283,6 +290,95 @@ def _parse_declarations(
     return tuple(declarations), structurally_complete
 
 
+def _parse_toggle_styles(
+    root: Mapping[object, object],
+    schema_version: str | None,
+    issues: list[ValidationIssue],
+) -> tuple[tuple[ToggleStyleDeclaration, ...], bool]:
+    if "toggle_styles" not in root:
+        return (), True
+    if schema_version != "0.2":
+        issues.append(
+            _issue(
+                IssueCode.MANIFEST_FIELD_UNKNOWN,
+                "toggle_styles is available only in Explorer Package schema v0.2.",
+                "toggle_styles",
+            )
+        )
+        return (), False
+    value = root["toggle_styles"]
+    if not isinstance(value, list):
+        issues.append(
+            _issue(
+                IssueCode.MANIFEST_INVALID_TYPE,
+                "toggle_styles must be a list.",
+                "toggle_styles",
+            )
+        )
+        return (), False
+
+    styles: list[ToggleStyleDeclaration] = []
+    complete = True
+    seen_ids: set[str] = set()
+    for index, item in enumerate(value):
+        location = f"toggle_styles[{index}]"
+        mapping = _mapping(item, location, issues)
+        if mapping is None:
+            complete = False
+            continue
+        style_id = _required_string(mapping, "id", location, issues)
+        off_color = _required_string(mapping, "off_color", location, issues)
+        on_color = _required_string(mapping, "on_color", location, issues)
+        _unknown_fields(mapping, _TOGGLE_STYLE_FIELDS, location, issues)
+
+        if style_id is not None:
+            if not is_valid_identifier(style_id):
+                issues.append(
+                    _issue(
+                        IssueCode.TOGGLE_STYLE_ID_INVALID,
+                        f"{location}.id must be a valid lower-kebab-case identifier.",
+                        f"{location}.id",
+                    )
+                )
+            elif style_id in seen_ids:
+                issues.append(
+                    _issue(
+                        IssueCode.TOGGLE_STYLE_ID_DUPLICATE,
+                        f'Toggle style ID "{style_id}" is duplicated.',
+                        f"{location}.id",
+                    )
+                )
+            else:
+                seen_ids.add(style_id)
+
+        colors_valid = True
+        for field, color in (("off_color", off_color), ("on_color", on_color)):
+            if color is not None and (not color.strip() or color not in _VALID_COLORS):
+                colors_valid = False
+                issues.append(
+                    _issue(
+                        IssueCode.TOGGLE_STYLE_COLOR_INVALID,
+                        f"{location}.{field} must be a supported nonblank color.",
+                        f"{location}.{field}",
+                    )
+                )
+        if off_color is not None and on_color is not None and off_color == on_color:
+            colors_valid = False
+            issues.append(
+                _issue(
+                    IssueCode.TOGGLE_STYLE_COLOR_INVALID,
+                    f"{location}.off_color and {location}.on_color must be distinct.",
+                    location,
+                )
+            )
+        if style_id is None or off_color is None or on_color is None:
+            complete = False
+            continue
+        if is_valid_identifier(style_id) and colors_valid:
+            styles.append(ToggleStyleDeclaration(style_id, off_color, on_color))
+    return tuple(styles), complete
+
+
 def parse_manifest_document(
     document: object,
 ) -> tuple[ExplorerPackageManifest | None, tuple[ValidationIssue, ...]]:
@@ -297,13 +393,13 @@ def parse_manifest_document(
         return None, tuple(issues)
 
     schema_version = _required_string(root, "schema_version", "", issues)
-    if schema_version is not None and schema_version != SUPPORTED_SCHEMA_VERSION:
+    if schema_version is not None and schema_version not in SUPPORTED_SCHEMA_VERSIONS:
         issues.append(
             _issue(
                 IssueCode.SCHEMA_VERSION_UNSUPPORTED,
                 (
                     f'Explorer Package schema "{schema_version}" is unsupported; '
-                    f'use "{SUPPORTED_SCHEMA_VERSION}".'
+                    f'use one of: {", ".join(sorted(SUPPORTED_SCHEMA_VERSIONS))}.'
                 ),
                 "schema_version",
             )
@@ -404,7 +500,8 @@ def parse_manifest_document(
 
     contributions, contributions_complete = _parse_declarations(root, "contributions", issues)
     assets, assets_complete = _parse_declarations(root, "assets", issues)
-    _unknown_fields(root, _ROOT_FIELDS, "", issues)
+    toggle_styles, toggle_styles_complete = _parse_toggle_styles(root, schema_version, issues)
+    _unknown_fields(root, _V02_ROOT_FIELDS, "", issues)
 
     complete = all(
         value is not None
@@ -416,7 +513,7 @@ def parse_manifest_document(
             student_api,
         )
     )
-    complete = complete and contributions_complete and assets_complete
+    complete = complete and contributions_complete and assets_complete and toggle_styles_complete
     if not complete:
         return None, tuple(issues)
 
@@ -431,6 +528,7 @@ def parse_manifest_document(
             compatibility=Compatibility(student_api=student_api),
             contributions=tuple(contributions),  # type: ignore[arg-type]
             assets=tuple(assets),  # type: ignore[arg-type]
+            toggle_styles=toggle_styles,
         ),
         tuple(issues),
     )

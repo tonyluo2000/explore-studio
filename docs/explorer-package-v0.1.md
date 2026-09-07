@@ -3,6 +3,11 @@
 > **Status:** Implemented prototype. This document defines the current validator
 > contract; it does not freeze future package versions.
 
+This version remains supported unchanged. The additive named-toggle-style
+contract is documented separately in
+[Explorer Package v0.2](explorer-package-v0.2.md); v0.1 packages cannot declare
+those fields.
+
 Explorer Package v0.1 is the declarative boundary between an independently owned
 student repository and future shared-world assembly. The prototype validates an
 unpacked package directory. A separate

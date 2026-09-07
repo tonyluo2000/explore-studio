@@ -64,6 +64,15 @@ class LoadedWorldObjectToggle:
 
 
 @dataclass(frozen=True)
+class LoadedToggleStyleUse:
+    """Bounded immutable provenance for one package-local named toggle style."""
+
+    package_id: str
+    style_id: str
+    referencing_object_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class LoadedWorldObjectCounter:
     """Bounded interaction goal loaded from inert package data."""
 
@@ -145,6 +154,7 @@ class LoadedWorldObject:
     when_interacted: str | None = None
     toggle: LoadedWorldObjectToggle | None = None
     counter: LoadedWorldObjectCounter | None = None
+    toggle_style_id: str | None = None
 
 
 LoadedContribution = LoadedCharacter | LoadedWorldObject
@@ -159,6 +169,7 @@ class LoadedExplorerPackage:
     provenance: PackageProvenance
     contributions: tuple[LoadedContribution, ...]
     assets: tuple[PackageAssetReference, ...] = ()
+    toggle_style_uses: tuple[LoadedToggleStyleUse, ...] = ()
 
     @property
     def characters(self) -> tuple[LoadedCharacter, ...]:

@@ -48,10 +48,13 @@ from explore.curriculum import (
     MISSION_12_ID,
     MISSION_13,
     MISSION_13_ID,
+    MISSION_14,
+    MISSION_14_ID,
 )
 from explore.packages import (
     ClassroomTrailPlan,
     ClassroomTrailPlanIssueCode,
+    LoadedToggleStyleUse,
     PackageSelection,
     build_classroom_trail_plan,
     build_package_set_plan,
@@ -169,6 +172,9 @@ def _write_package(
     contribution_id: str,
     contribution_type: str,
     body: str,
+    *,
+    schema_version: str = "0.1",
+    toggle_styles: str = "",
 ) -> Path:
     contribution_dir = "character" if contribution_type == "character" else "objects"
     contribution_path = f"{contribution_dir}/{contribution_id}.yaml"
@@ -176,13 +182,14 @@ def _write_package(
     (root / contribution_dir).mkdir()
     (root / "manifest.yaml").write_text(
         (
-            'schema_version: "0.1"\n'
+            f'schema_version: "{schema_version}"\n'
             "package:\n"
             f'  id: "{package_id}"\n'
             f'  display_name: "{package_id}"\n'
             '  version: "1.0.0"\n'
             "compatibility:\n"
             '  student_api: "0.1"\n'
+            f"{toggle_styles}"
             "contributions:\n"
             f'  - id: "{contribution_id}"\n'
             f'    type: "{contribution_type}"\n'
@@ -1992,6 +1999,171 @@ def test_counter_comparison_completion_requires_qualifying_npcs_and_both_branche
         )
 
 
+def _mission_14_package(
+    root: Path,
+    *,
+    package_id: str = "style-package",
+    styles: tuple[tuple[str, str, str], ...] = (("magic-switch", "red", "green"),),
+    referenced_ids: tuple[str, ...] = ("first", "second"),
+    include_inline: bool = False,
+) -> Path:
+    style_yaml = (
+        "toggle_styles: []\n"
+        if not styles
+        else "toggle_styles:\n"
+        + "".join(
+            f'  - id: "{style_id}"\n    off_color: "{off}"\n    on_color: "{on}"\n'
+            for style_id, off, on in styles
+        )
+    )
+    package = _write_package(
+        root,
+        package_id,
+        "player",
+        "character",
+        'name: "Player"\nx: 0\ny: 0\ncolor: "gold"\n',
+        schema_version="0.2",
+        toggle_styles=style_yaml,
+    )
+    manifest = package / "manifest.yaml"
+    additions = ""
+    object_files: dict[str, str] = {}
+    for index, object_id in enumerate(referenced_ids):
+        additions += (
+            f'  - id: "{object_id}"\n    type: "world_object"\n'
+            f'    path: "objects/{object_id}.yaml"\n'
+        )
+        object_files[object_id] = (
+            f'name: "{object_id.title()}"\nx: {30 + index * 160}\ny: 0\n'
+            'toggle_style_id: "magic-switch"\n'
+        )
+    if include_inline:
+        additions += (
+            '  - id: "inline"\n    type: "world_object"\n' '    path: "objects/inline.yaml"\n'
+        )
+        object_files["inline"] = (
+            'name: "Inline"\nx: 350\ny: 0\n' "toggle: {off_color: blue, on_color: yellow}\n"
+        )
+    manifest.write_text(manifest.read_text(encoding="utf-8") + additions, encoding="utf-8")
+    (package / "objects").mkdir()
+    for object_id, body in object_files.items():
+        (package / "objects" / f"{object_id}.yaml").write_text(body, encoding="utf-8")
+    return package
+
+
+def test_mission_14_static_evidence_ui_and_existing_toggle_runtime(tmp_path: Path) -> None:
+    root = _mission_14_package(tmp_path / "style")
+    planned = plan_local_classroom_trail((root,), player_qualified_id="style-package:player")
+    assert planned.is_planned and planned.plan is not None
+    assert planned.plan.contract_version == "0.10"
+    evidence = planned.plan.packages[0].registration_plan.toggle_style_uses
+    assert len(evidence) == 1
+    assert evidence[0].referencing_object_ids == ("first", "second")
+
+    renderer = _RecordingRenderer()
+    scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=MISSION_14_ID)
+    scene.enter()
+    scene.render()
+    assert scene.mission is MISSION_14
+    assert "Mission: Share a Switch Style" in renderer.text
+    assert MISSION_14.instructions in renderer.text
+    assert [item.toggle for item in scene.objects] == [
+        ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50)),
+        ClassroomTrailObjectToggle((220, 50, 50), (50, 180, 50)),
+    ]
+
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.mission_is_complete is False
+    scene.update(DirectionalInput(right=True), _NO_INTERACTION, 1.0)
+    scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
+    assert scene.changed_toggle_qualified_ids == frozenset(
+        {"style-package:first", "style-package:second"}
+    )
+    assert scene.mission_is_complete is True
+
+
+@pytest.mark.parametrize(
+    ("styles", "referenced_ids", "include_inline", "message"),
+    [
+        ((), (), True, "exactly one authored toggle style"),
+        (
+            (("magic-switch", "red", "green"), ("other-switch", "blue", "yellow")),
+            ("first", "second"),
+            False,
+            "exactly one authored toggle style",
+        ),
+        (
+            (("magic-switch", "red", "green"),),
+            ("first",),
+            True,
+            "at least two distinct world objects",
+        ),
+    ],
+)
+def test_mission_14_static_requirements_fail_before_scene_creation(
+    tmp_path: Path,
+    styles: tuple[tuple[str, str, str], ...],
+    referenced_ids: tuple[str, ...],
+    include_inline: bool,
+    message: str,
+) -> None:
+    root = _mission_14_package(
+        tmp_path / "style",
+        styles=styles,
+        referenced_ids=referenced_ids,
+        include_inline=include_inline,
+    )
+    planned = plan_local_classroom_trail((root,), player_qualified_id="style-package:player")
+    assert planned.is_planned and planned.plan is not None
+    with pytest.raises(ValueError, match=message):
+        create_classroom_trail_scene(_RecordingRenderer(), planned.plan, mission_id=MISSION_14_ID)
+
+
+def test_mission_14_duplicate_reference_to_one_object_does_not_count(tmp_path: Path) -> None:
+    root = _mission_14_package(tmp_path / "style")
+    planned = plan_local_classroom_trail((root,), player_qualified_id="style-package:player")
+    assert planned.plan is not None
+    package = planned.plan.packages[0]
+    forged_evidence = (LoadedToggleStyleUse("style-package", "magic-switch", ("first", "first")),)
+    forged_package = replace(
+        package,
+        registration_plan=replace(
+            package.registration_plan,
+            toggle_style_uses=forged_evidence,
+        ),
+    )
+    forged_plan = replace(planned.plan, packages=(forged_package,))
+
+    with pytest.raises(ValueError, match="at least two distinct world objects"):
+        create_classroom_trail_scene(_RecordingRenderer(), forged_plan, mission_id=MISSION_14_ID)
+
+
+def test_same_toggle_style_id_in_different_packages_does_not_collide(tmp_path: Path) -> None:
+    first = _mission_14_package(
+        tmp_path / "first",
+        package_id="first-package",
+        referenced_ids=("first",),
+    )
+    second = _mission_14_package(
+        tmp_path / "second",
+        package_id="second-package",
+        referenced_ids=("second",),
+    )
+    planned = plan_local_classroom_trail(
+        (first, second), player_qualified_id="first-package:player"
+    )
+    assert planned.is_planned and planned.plan is not None
+    evidence = tuple(
+        item
+        for package in planned.plan.packages
+        for item in package.registration_plan.toggle_style_uses
+    )
+    assert [(item.package_id, item.style_id) for item in evidence] == [
+        ("first-package", "magic-switch"),
+        ("second-package", "magic-switch"),
+    ]
+
+
 def test_multiple_local_exports_feed_one_runnable_trail_plan(tmp_path: Path) -> None:
     roots = (
         _write_package(
@@ -2255,6 +2427,7 @@ def test_trail_requires_explicit_player_selection(tmp_path: Path) -> None:
         MISSION_11_ID,
         MISSION_12_ID,
         MISSION_13_ID,
+        MISSION_14_ID,
     ],
 )
 def test_cli_runs_planned_local_trail_with_explicit_mission_selection(

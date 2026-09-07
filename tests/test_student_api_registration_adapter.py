@@ -24,6 +24,7 @@ from explore.packages import (
     LoadedCharacterToggleResponse,
     LoadedCharacterTwoToggleResponse,
     LoadedExplorerPackage,
+    LoadedToggleStyleUse,
     LoadedWorldObject,
     LoadedWorldObjectCounter,
     LoadedWorldObjectToggle,
@@ -147,6 +148,48 @@ def test_character_greeting_is_validated_and_preserved() -> None:
     entry = result.plan.entries[0]
     assert isinstance(entry, CharacterRegistration)
     assert entry.character.greeting == greeting
+
+
+def test_named_toggle_style_evidence_is_validated_and_preserved() -> None:
+    toggle = LoadedWorldObjectToggle("red", "green")
+    first = _world_object(
+        contribution_id="first",
+        qualified_id="river-rescue:first",
+        color="red",
+        toggle=toggle,
+        toggle_style_id="magic-switch",
+    )
+    second = _world_object(
+        contribution_id="second",
+        qualified_id="river-rescue:second",
+        color="red",
+        toggle=toggle,
+        toggle_style_id="magic-switch",
+    )
+    evidence = (LoadedToggleStyleUse("river-rescue", "magic-switch", ("first", "second")),)
+
+    result = build_student_api_registration_plan(
+        replace(_package(first, second), toggle_style_uses=evidence)
+    )
+
+    assert result.is_planned and result.plan is not None
+    assert result.plan.toggle_style_uses is evidence
+    assert all(
+        isinstance(entry, WorldObjectRegistration) and entry.world_object.toggle is not None
+        for entry in result.plan.entries
+    )
+
+
+def test_forged_named_toggle_style_evidence_fails_closed() -> None:
+    world_object = _world_object(color="red", toggle=LoadedWorldObjectToggle("red", "green"))
+    evidence = (LoadedToggleStyleUse("other-package", "magic-switch", ("sign", "sign")),)
+    result = build_student_api_registration_plan(
+        replace(_package(world_object), toggle_style_uses=evidence)
+    )
+    assert result.plan is None
+    assert RegistrationPlanIssueCode.CONTRIBUTION_VALUE_INVALID in [
+        issue.code for issue in result.issues
+    ]
 
 
 def test_character_either_toggle_is_preserved_and_references_two_toggles() -> None:

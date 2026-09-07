@@ -9,6 +9,7 @@ from explore.packages.contribution_models import (
     LoadedCharacter,
     LoadedContribution,
     LoadedExplorerPackage,
+    LoadedToggleStyleUse,
     LoadedWorldObject,
     PackageAssetReference,
     PackageLoadIssue,
@@ -139,6 +140,7 @@ def load_explorer_package(package_root: str | os.PathLike[str]) -> PackageLoadRe
         for asset in manifest.assets
     )
     assets_by_id = {asset.id: asset for asset in assets}
+    toggle_styles_by_id = {style.id: style for style in manifest.toggle_styles}
 
     loaded: list[LoadedContribution] = []
     issues: list[PackageLoadIssue] = []
@@ -157,12 +159,14 @@ def load_explorer_package(package_root: str | os.PathLike[str]) -> PackageLoadRe
             declaration,
             provenance,
             assets_by_id,
+            toggle_styles_by_id,
         )
         issues.extend(contribution_issues)
         if contribution is not None:
             loaded.append(contribution)
 
-    issues.extend(_conditional_reference_issues(tuple(loaded)))
+    loaded_contributions = tuple(loaded)
+    issues.extend(_conditional_reference_issues(loaded_contributions))
     if issues:
         return PackageLoadResult(
             validation_report=validation_report,
@@ -176,8 +180,21 @@ def load_explorer_package(package_root: str | os.PathLike[str]) -> PackageLoadRe
             metadata=manifest.package,
             compatibility=manifest.compatibility,
             provenance=provenance,
-            contributions=tuple(loaded),
+            contributions=loaded_contributions,
             assets=assets,
+            toggle_style_uses=tuple(
+                LoadedToggleStyleUse(
+                    package_id=manifest.package.id,
+                    style_id=style.id,
+                    referencing_object_ids=tuple(
+                        contribution.contribution_id
+                        for contribution in loaded_contributions
+                        if isinstance(contribution, LoadedWorldObject)
+                        and contribution.toggle_style_id == style.id
+                    ),
+                )
+                for style in manifest.toggle_styles
+            ),
         ),
         issues=(),
     )

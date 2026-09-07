@@ -36,9 +36,15 @@ and zero qualifying NPCs is incomplete.
 The Trail planner emits exact version `0.10`; incompatible versions fail
 closed. Missions 01–12 and all v0.9 semantics remain unchanged.
 
+Mission 14 also uses Trail v0.10 unchanged. Before scene creation, the Trail
+requires immutable package provenance for exactly one authored toggle style
+referenced by at least two distinct world objects. It then reuses
+`ALL_TOGGLE_OBJECTS_CHANGED`; resolved toggles have no runtime style lookup or
+new toggle behavior.
+
 ## Deferred
 
-Mission 14+, editable thresholds, arithmetic or ranges, decrement/reset,
+Mission 15+, editable thresholds, arithmetic or ranges, decrement/reset,
 general predicates or actions, cross-package references, scripting,
 persistence, sequencing, rewards, teacher controls, deployment,
 authentication, and Phase E integration remain out of scope.

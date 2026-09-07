@@ -18,6 +18,7 @@ from explore.packages import (
     CharacterRegistrationSpec,
     CharacterToggleResponseRegistrationSpec,
     CharacterTwoToggleResponseRegistrationSpec,
+    LoadedToggleStyleUse,
     PackageAssetReference,
     PackageProvenance,
     PackageSelection,
@@ -102,6 +103,7 @@ def _plan(
     package_version: str = "1.0.0",
     student_api_version: str = "0.1",
     provenance: PackageProvenance | None = None,
+    toggle_style_uses: tuple[LoadedToggleStyleUse, ...] = (),
 ) -> StudentAPIRegistrationPlan:
     plan_provenance = provenance or _provenance(
         package_id,
@@ -111,6 +113,7 @@ def _plan(
     return StudentAPIRegistrationPlan(
         provenance=plan_provenance,
         entries=entries,  # type: ignore[arg-type]
+        toggle_style_uses=toggle_style_uses,
     )
 
 
@@ -885,6 +888,55 @@ def test_counter_comparison_survives_preflight_and_invalid_reference_fails() -> 
     )
     assert failed.plan is None
     assert PackageSetIssueCode.ENTRY_VALUE_INVALID in [issue.code for issue in failed.issues]
+
+
+def test_named_toggle_style_evidence_survives_preflight_and_forgery_fails() -> None:
+    first = _world_object(
+        "magic",
+        contribution_id="first",
+        world_object=WorldObjectRegistrationSpec(
+            "First", 30, 40, "red", toggle=WorldObjectToggleRegistrationSpec("red", "green")
+        ),
+    )
+    second = _world_object(
+        "magic",
+        contribution_id="second",
+        world_object=WorldObjectRegistrationSpec(
+            "Second", 50, 60, "red", toggle=WorldObjectToggleRegistrationSpec("red", "green")
+        ),
+    )
+    evidence = (LoadedToggleStyleUse("magic", "magic-switch", ("first", "second")),)
+    selection = PackageSelection(
+        "magic",
+        "1.0.0",
+        _plan("magic", first, second, toggle_style_uses=evidence),
+    )
+    result = _build_package_set_plan(
+        (selection,),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.10 supports",
+    )
+    assert result.is_planned and result.plan is not None
+    assert result.plan.packages[0].registration_plan.toggle_style_uses is evidence
+
+    forged = replace(
+        selection,
+        registration_plan=replace(
+            selection.registration_plan,
+            toggle_style_uses=(
+                LoadedToggleStyleUse("magic", "magic-switch", ("first", "missing")),
+            ),
+        ),
+    )
+    failed = _build_package_set_plan(
+        (forged,),
+        maximum_characters=None,
+        maximum_world_objects=None,
+        cardinality_contract="Classroom Trail v0.10 supports",
+    )
+    assert failed.plan is None
+    assert PackageSetIssueCode.REGISTRATION_PLAN_INVALID in [issue.code for issue in failed.issues]
 
 
 def test_package_set_rejects_forged_toggle_metadata() -> None:
