@@ -1,0 +1,6 @@
+name: "Wind Flower"
+x: 620
+y: 420
+color: "pink"
+when_near: "The petals turn toward you."
+when_interacted: "The flower whispers a map of the wind!"

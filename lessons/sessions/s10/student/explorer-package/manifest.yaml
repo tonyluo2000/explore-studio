@@ -1,0 +1,17 @@
+schema_version: "0.1"
+
+package:
+  id: "storm-observatory"
+  display_name: "Storm Observatory"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "storm-engine"
+    type: "world_object"
+    path: "objects/storm-engine.yaml"
+  - id: "weather-reader"
+    type: "character"
+    path: "character/weather-reader.yaml"

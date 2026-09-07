@@ -1,0 +1,6 @@
+name: "Rain Bell"
+x: 380
+y: 300
+color: "blue"
+when_near: "A drop rings like a bell."
+when_interacted: "Silver rain wakes the garden!"

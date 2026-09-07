@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "sky-lantern-switch"
+  display_name: "Sky Lantern Switch"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sky-lantern"
+    type: "world_object"
+    path: "objects/sky-lantern.yaml"
