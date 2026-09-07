@@ -1,0 +1,6 @@
+name: "Mist Bell"
+x: 420
+y: 260
+color: "purple"
+when_near: "The first priority-2 clue keeps its earlier position."
+when_interacted: "The second route mark rings."

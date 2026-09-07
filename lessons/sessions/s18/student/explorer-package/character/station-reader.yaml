@@ -1,0 +1,8 @@
+name: "Station Reader"
+x: 610
+y: 310
+color: "gold"
+respond_to_counter:
+  object_id: "wind-core"
+  when_below_goal: "Scoreboard: Wind Core is below goal."
+  when_at_or_above_goal: "Scoreboard: Wind Core is ready!"

@@ -1,0 +1,43 @@
+package:
+  id: "data-built-mystery"
+  display_name: "Data-Built Mystery Trail"
+  version: "0.1.0"
+
+objects:
+  - id: "whisper-stone"
+    name: "Whisper Stone"
+    x: 220
+    y: 220
+    color: "purple"
+    priority: 2
+    include: true
+  - id: "sun-compass"
+    name: "Sun Compass"
+    x: 420
+    y: 180
+    color: "gold"
+    priority: 1
+    include: true
+  - id: "tide-chime"
+    name: "Tide Chime"
+    x: 600
+    y: 360
+    color: "blue"
+    priority: 3
+    include: true
+  - id: "archive-seal"
+    name: "Archive Seal"
+    x: 700
+    y: 480
+    color: "green"
+    priority: 4
+    include: false
+
+keeper:
+  id: "mystery-keeper"
+  name: "Mystery Keeper"
+  x: 690
+  y: 220
+  color: "orange"
+  when_incomplete: "The data trail still hides its answer."
+  when_complete: "The ordered clues reveal the mystery!"

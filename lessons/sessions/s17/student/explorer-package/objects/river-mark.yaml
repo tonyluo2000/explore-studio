@@ -1,0 +1,6 @@
+name: "River Mark"
+x: 230
+y: 390
+color: "blue"
+when_near: "A blue mark points downstream."
+when_interacted: "Clue found: follow the water."

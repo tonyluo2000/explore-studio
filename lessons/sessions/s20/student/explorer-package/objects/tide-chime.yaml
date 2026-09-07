@@ -1,0 +1,6 @@
+name: Tide Chime
+x: 600
+y: 360
+color: blue
+when_near: You sense a clue near the Tide Chime.
+when_interacted: You study the Tide Chime.

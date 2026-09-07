@@ -1,0 +1,6 @@
+name: "Sky Thread"
+x: 460
+y: 190
+color: "blue"
+when_near: "A blue thread catches the wind."
+when_interacted: "Clue found: look above the ridge."

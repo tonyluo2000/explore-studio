@@ -1,0 +1,6 @@
+name: "Moss Map"
+x: 640
+y: 410
+color: "green"
+when_near: "Atlas 3: moss draws a living path."
+when_interacted: "You catalog the Moss Map."
