@@ -4,7 +4,7 @@
 
 Local Mission v0.1 provides the reusable immutable mission model used by
 Classroom Trail v0.11. Canonical course content owns an immutable ID-keyed
-catalog containing fifteen entries:
+catalog containing sixteen entries:
 
 - mission ID: `visit-all-classroom-objects`;
 - title: `Explore Every Object`;
@@ -116,6 +116,17 @@ Mission 15:
   interaction with them in that exact order to unlock an NPC's success
   response.
 
+Mission 16:
+
+- mission ID: `present-your-capstone-expedition`;
+- title: `Share Your Expedition`;
+- instructions ask the student to present their own completed expedition and
+  guide the visitor to every classroom object;
+- instructions explicitly limit Trail completion to the guided object tour;
+  and
+- Python quality, tests, package validation, presentation quality, and the
+  student's explanation of AI use remain separate teacher/rubric assessments.
+
 Each definition contains nonblank `mission_id`, `title`, and `instructions`
 fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_INTERACTABLE_NPCS_SPOKEN_TO`; Mission 05 uses
@@ -129,6 +140,7 @@ fields. Missions 01–03 and 06 use `ALL_OBJECTS_VISITED`; Mission 04 uses
 `ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED`. Other rule values are rejected.
 Mission 14 reuses `ALL_TOGGLE_OBJECTS_CHANGED` and adds no completion rule.
 Mission 15 uses `ALL_THREE_OBJECT_SEQUENCES_COMPLETED`.
+Mission 16 reuses `ALL_OBJECTS_VISITED` and adds no completion rule.
 
 Catalog keys are emitted in deterministic mission-ID order. Exact lookup
 returns each canonical immutable definition; unknown or malformed IDs
@@ -206,6 +218,12 @@ fixed three-object sequence; zero qualifying NPCs remains incomplete. Wrong
 sequence members reset incomplete progress to zero, unrelated objects do not
 change it, and completed sequences never regress.
 
+Mission 16 uses the unchanged `ALL_OBJECTS_VISITED` derivation. Its `Complete`
+state records only that every classroom object was visited during the guided
+tour. It does not certify capstone mastery, teacher approval, package release
+readiness, Python quality, test quality, validation evidence, presentation
+quality, or the student's explanation of AI use.
+
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
 object state. Object interaction, visited-object progress, Trail completion,
@@ -214,7 +232,7 @@ behavior remain unchanged.
 
 ## Deferred
 
-Mission 16+, additional completion rules, variable or branching sequences,
+Mission 17+, additional completion rules, variable or branching sequences,
 decrement/reset, arithmetic expressions, general `not` syntax, arbitrary
 conditions, choices, memory, quests, generic actions or state machines, rewards,
 persistence, teacher controls, deployment, authentication, and Phase E

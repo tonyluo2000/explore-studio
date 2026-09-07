@@ -40,11 +40,13 @@ from explore.curriculum import (
     MISSION_14_ID,
     MISSION_15,
     MISSION_15_ID,
+    MISSION_16,
+    MISSION_16_ID,
     get_course_mission,
 )
 
 
-def test_catalog_contains_exactly_missions_01_through_15_by_deterministic_identity() -> None:
+def test_catalog_contains_exactly_missions_01_through_16_by_deterministic_identity() -> None:
     assert MISSION_01_ID == "visit-all-classroom-objects"
     assert MISSION_02_ID == "create-a-classroom-object"
     assert MISSION_03_ID == "make-your-object-respond"
@@ -60,6 +62,7 @@ def test_catalog_contains_exactly_missions_01_through_15_by_deterministic_identi
     assert MISSION_13_ID == "compare-a-counter-to-its-goal"
     assert MISSION_14_ID == "reuse-a-named-toggle-style"
     assert MISSION_15_ID == "complete-actions-in-order"
+    assert MISSION_16_ID == "present-your-capstone-expedition"
     assert CANONICAL_COURSE_MISSION_IDS == (
         MISSION_06_ID,
         MISSION_13_ID,
@@ -70,6 +73,7 @@ def test_catalog_contains_exactly_missions_01_through_15_by_deterministic_identi
         MISSION_12_ID,
         MISSION_03_ID,
         MISSION_11_ID,
+        MISSION_16_ID,
         MISSION_10_ID,
         MISSION_08_ID,
         MISSION_14_ID,
@@ -88,6 +92,7 @@ def test_catalog_contains_exactly_missions_01_through_15_by_deterministic_identi
         MISSION_12,
         MISSION_03,
         MISSION_11,
+        MISSION_16,
         MISSION_10,
         MISSION_08,
         MISSION_14,
@@ -321,6 +326,23 @@ def test_mission_15_requires_all_fixed_three_object_sequences() -> None:
     )
 
 
+def test_mission_16_is_the_exact_immutable_capstone_tour_definition() -> None:
+    mission = get_course_mission(MISSION_16_ID)
+
+    assert mission is MISSION_16
+    assert mission.title == "Share Your Expedition"
+    assert mission.instructions == (
+        "Present your own completed expedition and guide the visitor to every classroom "
+        "object. Trail completion means only that the guided object tour is complete; your "
+        "teacher separately assesses Python quality, tests, package validation, presentation "
+        "quality, and your explanation of AI use."
+    )
+    assert mission.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
+    assert mission.completion_rule is MISSION_01.completion_rule
+    with pytest.raises(FrozenInstanceError):
+        mission.instructions = "Changed"  # type: ignore[misc]
+
+
 @pytest.mark.parametrize(
     "mission_id",
     [
@@ -328,6 +350,7 @@ def test_mission_15_requires_all_fixed_three_object_sequences() -> None:
         "mission-13",
         "mission-14",
         "mission-15",
+        "mission-16",
         "write-conversation",
         "",
         None,

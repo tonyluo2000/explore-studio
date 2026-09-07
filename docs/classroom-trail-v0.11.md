@@ -51,7 +51,8 @@ closed. Explorer Package remains v0.2, Student API remains v0.1, and Missions
 
 ## Deferred
 
-Mission 16+, variable-length or branching sequences, generalized events,
-actions or state machines, loops, timers, persistence, rewards, inventory,
-teacher controls, deployment, authentication, and Phase E integration remain
-out of scope.
+Mission 16 adds content only and reuses the existing `ALL_OBJECTS_VISITED`
+behavior. Mission 17+, variable-length or branching sequences, generalized
+events, actions or state machines, loops, timers, persistence, rewards,
+inventory, teacher controls, deployment, authentication, and Phase E
+integration remain out of scope.

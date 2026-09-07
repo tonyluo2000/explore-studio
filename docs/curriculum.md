@@ -20,8 +20,9 @@ the Explorer Package as the deterministic shared artifact.
 
 The canonical second-half plan is
 [Sessions 16–30 Curriculum](curriculum-sessions-16-30.md). It makes Python
-primary, reuses Missions 01–15, and culminates in an independently designed
-capstone without expanding the runtime or package contract.
+primary, reuses Missions 01–15 through S29, and culminates in an independently
+designed S30 capstone framed by content-only Mission 16 without expanding the
+runtime or package contract.
 
 > **Everything is already built. Students gradually learn how to use it.**
 
