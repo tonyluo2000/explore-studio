@@ -12,22 +12,30 @@ adjust one coordinate after a local test.
 
 ## Before class
 
+- Send `student/task-card.md` and confirm the shared Quick Start preflight.
 - Run the Python starter and validate `student/explorer-package`.
 - Prepare a shared screen or sketch with left/right and up/down coordinate
   directions. Keep the activity inside the existing declarative fields.
 
 ## 45-minute runbook
 
-| Time | Teacher move | Student evidence |
-|---:|---|---|
-| 0:00–0:05 | Invite students to invent a prop with one story purpose. | States a prop name and purpose. |
-| 0:05–0:12 | Introduce variables, strings, integers, and coordinates. Ask for a location prediction before showing the world. | Labels name/color as strings, x/y as integers, and predicts a location. |
-| 0:12–0:24 | Students personalize the four variables, run the file, and compare output with the matching YAML values. | Prints a name, coordinate pair, and color; explains each variable. |
-| 0:24–0:37 | Students edit only supported object fields, validate, launch M02, find the prop, and interact with all objects. | Valid package and completed object tour. |
-| 0:37–0:42 | Students move x once, predict the direction, validate, relaunch, and reconcile the result. Use the type bug below if needed. | One evidence-based coordinate adjustment. |
-| 0:42–0:45 | Review the prediction and inspect the diff before committing. | Descriptive commit for the prop. |
+| Clock anchor | Range | Teacher move | Student evidence |
+|---:|---:|---|---|
+| 0:00–0:05 | 4–5 min | Invite students to invent a prop with one story purpose. | States a prop name and purpose. |
+| 0:05–0:12 | 6–8 min | Introduce variables, types, and coordinates; display the Python → YAML → world map from the task card. | Labels types, names the runtime-driving file, and predicts a location. |
+| 0:12–0:24 | 11–15 min | Students personalize variables, run Python, and transfer the same values to supported YAML fields. | Prints and explains all four values. |
+| 0:24–0:37 | 9–13 min | Students validate, launch M02, observe the prop, then predict and make one coordinate adjustment. | Valid package, visible movement, and completed object tour. |
+| 0:37–0:42 | 4–6 min | Use the quoted-integer bug or troubleshoot one observed mismatch. | Explains type and one evidence-based adjustment. |
+| 0:42–0:45 | 3–5 min | Review the prediction and inspect status/diffs; commit now or schedule completion. | Descriptive commit or documented commit plan. |
+
+**Teacher cut line:** At 0:34, stop creative changes. Protect one valid package,
+one visible placement, and a spoken coordinate prediction. If relaunch takes too
+long, demonstrate the predicted adjustment once and finish Git asynchronously.
 
 ## Student task and prediction
+
+Students work from `student/task-card.md`, including its explicit value mapping,
+safe visibility range, supported colors, and troubleshooting steps.
 
 Personalize the same `object_name`, `x`, `y`, and `color` in the Python starter
 and the declarative object file. Before launching, sketch or say where `(x, y)`
@@ -86,6 +94,7 @@ not choose the prop, coordinates, color, or add schema fields.
 git status --short
 git diff
 git add lessons/sessions/s02/student
+git diff --staged
 git commit -m "Place a moon compass prop"
 ```
 
@@ -102,3 +111,10 @@ object contribution and the existing package schema.
   the world contribution; no Python is executed from the package.
 - Accept any supported color and in-range coordinates that validate. Ask the
   student to explain differences if Python and YAML no longer match.
+- The task-card range x = 80–800 and y = 100–500 is a lesson visibility guide,
+  not a new validator rule.
+- For invalid colors, use the supported list. For YAML indentation, align the
+  four object fields with spaces. For off-screen coordinates, return to the safe
+  range, save, validate, close the old Trail, and relaunch.
+- Use the shared Quick Start for Git identity/status recovery. Do not sacrifice
+  the student's mapping explanation to force a live commit.

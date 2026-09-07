@@ -1,65 +1,73 @@
-# Session Materials
+# Session Materials v2
 
-This directory contains production teaching materials for the 45-minute online
-Explore Studio sessions. Each session uses the same small, reusable layout:
+These production materials support 45-minute online Explore Studio sessions for
+ages 10–14. Every session uses the same student-readable structure:
 
 ```text
 sNN/
 ├── teacher-runbook.md
 └── student/
+    ├── task-card.md
     ├── starter.py
-    └── explorer-package/   # present when students author package content
+    ├── debug.py           # optional isolated debugging activity
+    └── explorer-package/  # optional validated declarative world content
 ```
 
-The teacher runbook is the delivery source of truth. Every runbook includes the
-learning objective, prerequisites, canonical timing, world task, prediction,
-deliberate debugging exercise, expected behavior, bounded AI workflow, Git
-close, optional extension, and an answer key.
+Teachers deliver from `teacher-runbook.md`. Students work from `task-card.md`
+and `starter.py`. All students use the shared
+[`student-quick-start.md`](student-quick-start.md) for setup, controls,
+accessibility choices, troubleshooting, AI evidence, and Git recovery.
 
-Student Python is local practice. Explorer Package YAML is declarative content:
-validate it with `explore-package validate` and load it through the package
-workflow. Never copy Python into an Explorer Package or import package YAML as
-code.
+## Shared 45-minute rhythm
 
-## Shared lesson rhythm
+The course duration remains 45 minutes. The clock markers are anchors, not a
+promise that every computer operation takes exactly the same time.
 
-| Time | Activity |
-|---:|---|
-| 0:00–0:05 | Creative hook |
-| 0:05–0:12 | Concept introduction and prediction |
-| 0:12–0:24 | Local Python activity |
-| 0:24–0:37 | Explorer Package and world activity |
-| 0:37–0:42 | Test and deliberate debugging |
-| 0:42–0:45 | Review and descriptive Git commit |
+| Clock anchor | Typical range | Activity |
+|---:|---:|---|
+| 0:00–0:05 | 4–5 min | Creative hook |
+| 0:05–0:12 | 6–8 min | Concept introduction and prediction |
+| 0:12–0:24 | 11–15 min | Local Python activity |
+| 0:24–0:37 | 9–13 min | Explorer Package and visible world activity |
+| 0:37–0:42 | 4–6 min | Test and deliberate debugging |
+| 0:42–0:45 | 3–5 min | Review and descriptive Git close |
 
-## Student commands
+Each runbook names a **cut line**: the minimum evidence to protect when launch,
+audio, screen sharing, or setup takes longer. Git understanding takes priority
+over a rushed commit. A student may finish the same descriptive commit after
+the live session when operational problems use the closing minutes.
 
-Run these from the repository root, replacing `sNN` with the session number:
+## Learning boundary
 
-```console
-python lessons/sessions/sNN/student/starter.py
-explore-package validate lessons/sessions/sNN/student/explorer-package
-git status --short
-git diff
-git add lessons/sessions/sNN/student
-git commit -m "Describe the story or code change"
+Student Python runs only on the student's computer for concept practice. It is
+never placed in an Explorer Package and is never executed by the shared
+runtime. Explorer Packages contain validated declarative YAML. The package
+loader validates that data before Classroom Trail consumes it.
+
+The recurring bridge is made explicit in every relevant task card:
+
+```text
+local Python value → declarative package field → visible world result
 ```
 
-The validation command applies only when the session includes an
-`explorer-package` directory. The teacher chooses the local package set and
-player when launching the corresponding canonical mission in Classroom Trail.
+The bridge is a learning comparison, not automatic code generation. Students
+copy only the intended values into supported YAML fields, validate, then test
+the visible behavior.
 
-## AI boundary
+## Three paths
 
-Every session uses one workflow:
+- **Core path:** produces the required session evidence.
+- **Support path:** reduces typing or supplies one recovery example without
+  changing the learning objective.
+- **Extension path:** adds creative depth only after core evidence is complete.
 
-1. Explain your intent in your own words.
-2. Predict the code or world behavior before running it.
-3. Ask one bounded question about one line, error, or mismatch.
-4. Test the suggestion locally.
-5. Revise only what you understand.
-6. Explain every accepted line of code.
+Teachers may move students between paths. The mission, validation boundary,
+and expected explanation remain the same.
 
-AI may explain a concept, traceback, or validation message. It must not write a
-student's story, complete the whole activity, edit engine internals, invent
-schema fields, or replace the student's prediction and explanation.
+## Canonical habits
+
+AI: explain intent → predict → bounded question → test → revise → explain
+accepted code.
+
+Git: status → diff → stage intentionally → inspect staged diff → descriptive
+commit.
