@@ -1,0 +1,6 @@
+name: "South Beacon"
+x: 500
+y: 380
+when_near: "The south beacon matches its partner."
+when_interacted: "The south beacon changes with the shared style."
+toggle_style_id: "aurora-beacon"

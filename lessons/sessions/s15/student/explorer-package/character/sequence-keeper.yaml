@@ -1,0 +1,8 @@
+name: "Sequence Keeper"
+x: 680
+y: 230
+color: "gold"
+respond_to_sequence:
+  object_ids: ["star-map", "moon-switch", "echo-drum"]
+  when_incomplete: "The star song is incomplete. Trace the order again."
+  when_complete: "Map, moon, echo—the secret star song is complete!"

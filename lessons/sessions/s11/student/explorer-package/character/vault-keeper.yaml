@@ -1,0 +1,8 @@
+name: "Vault Keeper"
+x: 640
+y: 260
+color: "gold"
+respond_to_two_toggles:
+  object_ids: ["sun-key", "moon-key"]
+  when_not_all_on: "The twin-star vault needs both keys."
+  when_all_on: "Both stars shine. The vault opens!"

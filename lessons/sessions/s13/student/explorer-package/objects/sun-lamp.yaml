@@ -1,0 +1,8 @@
+name: "Sun Lamp"
+x: 310
+y: 300
+when_near: "The lamp controls the garden light."
+when_interacted: "You switch the garden light."
+toggle:
+  off_color: "purple"
+  on_color: "yellow"

@@ -1,0 +1,8 @@
+name: "Moon Switch"
+x: 430
+y: 300
+when_near: "A silver switch waits for the second note."
+when_interacted: "The moon switch rings."
+toggle:
+  off_color: "purple"
+  on_color: "blue"

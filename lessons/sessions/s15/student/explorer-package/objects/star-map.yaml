@@ -1,0 +1,6 @@
+name: "Star Map"
+x: 220
+y: 220
+color: "blue"
+when_near: "Three constellations form a path."
+when_interacted: "The first constellation begins to glow."

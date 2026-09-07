@@ -1,0 +1,8 @@
+name: "Night Gardener"
+x: 590
+y: 300
+color: "green"
+respond_to_toggle:
+  object_id: "sun-lamp"
+  when_off: "Darkness falls—the moonflowers open!"
+  when_on: "The moonflowers curl up in the bright light."
