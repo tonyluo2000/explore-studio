@@ -1,0 +1,6 @@
+name: "Sun Dial"
+x: 220
+y: 190
+color: "gold"
+when_near: "Atlas 1: a dial records the dawn."
+when_interacted: "You catalog the Sun Dial."

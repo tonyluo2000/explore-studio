@@ -1,0 +1,20 @@
+schema_version: '0.1'
+package:
+  id: data-built-mystery
+  display_name: Data-Built Mystery Trail
+  version: 0.1.0
+compatibility:
+  student_api: '0.1'
+contributions:
+- id: sun-compass
+  type: world_object
+  path: objects/sun-compass.yaml
+- id: whisper-stone
+  type: world_object
+  path: objects/whisper-stone.yaml
+- id: tide-chime
+  type: world_object
+  path: objects/tide-chime.yaml
+- id: mystery-keeper
+  type: character
+  path: character/mystery-keeper.yaml

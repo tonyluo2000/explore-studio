@@ -1,0 +1,9 @@
+name: "Wind Core"
+x: 340
+y: 310
+color: "blue"
+when_near: "The wind core scoreboard reads zero."
+when_interacted: "You add one gust of power."
+counter:
+  goal: 3
+  when_goal_reached: "Wind Core goal reached: three gusts!"

@@ -1,0 +1,23 @@
+schema_version: "0.1"
+
+package:
+  id: "priority-route"
+  display_name: "Priority Route"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "river-rune"
+    type: "world_object"
+    path: "objects/river-rune.yaml"
+  - id: "mist-bell"
+    type: "world_object"
+    path: "objects/mist-bell.yaml"
+  - id: "star-lens"
+    type: "world_object"
+    path: "objects/star-lens.yaml"
+  - id: "route-keeper"
+    type: "character"
+    path: "character/route-keeper.yaml"

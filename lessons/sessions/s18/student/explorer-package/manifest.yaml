@@ -1,0 +1,17 @@
+schema_version: "0.1"
+
+package:
+  id: "power-scoreboard"
+  display_name: "Power Station Scoreboard"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "wind-core"
+    type: "world_object"
+    path: "objects/wind-core.yaml"
+  - id: "station-reader"
+    type: "character"
+    path: "character/station-reader.yaml"

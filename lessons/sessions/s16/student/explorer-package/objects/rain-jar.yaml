@@ -1,0 +1,6 @@
+name: "Rain Jar"
+x: 430
+y: 300
+color: "blue"
+when_near: "Atlas 2: a jar holds a tiny cloud."
+when_interacted: "You catalog the Rain Jar."

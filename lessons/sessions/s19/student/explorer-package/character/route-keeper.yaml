@@ -1,0 +1,8 @@
+name: "Route Keeper"
+x: 690
+y: 390
+color: "green"
+respond_to_sequence:
+  object_ids: ["river-rune", "mist-bell", "star-lens"]
+  when_incomplete: "The priority route is incomplete."
+  when_complete: "The stable route reaches its destination!"

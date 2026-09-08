@@ -1,0 +1,6 @@
+name: "Star Lens"
+x: 620
+y: 180
+color: "gold"
+when_near: "The second priority-2 clue follows the Mist Bell."
+when_interacted: "The third route mark reveals the stars."

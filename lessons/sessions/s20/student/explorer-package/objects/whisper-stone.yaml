@@ -1,0 +1,6 @@
+name: Whisper Stone
+x: 220
+y: 220
+color: purple
+when_near: You sense a clue near the Whisper Stone.
+when_interacted: You study the Whisper Stone.

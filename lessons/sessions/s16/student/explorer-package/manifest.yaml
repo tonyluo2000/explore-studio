@@ -1,0 +1,20 @@
+schema_version: "0.1"
+
+package:
+  id: "curators-atlas"
+  display_name: "Curator's Atlas"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "sun-dial"
+    type: "world_object"
+    path: "objects/sun-dial.yaml"
+  - id: "rain-jar"
+    type: "world_object"
+    path: "objects/rain-jar.yaml"
+  - id: "moss-map"
+    type: "world_object"
+    path: "objects/moss-map.yaml"

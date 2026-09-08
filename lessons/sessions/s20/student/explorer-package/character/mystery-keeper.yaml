@@ -1,0 +1,11 @@
+name: Mystery Keeper
+x: 690
+y: 220
+color: orange
+respond_to_sequence:
+  object_ids:
+  - sun-compass
+  - whisper-stone
+  - tide-chime
+  when_incomplete: The data trail still hides its answer.
+  when_complete: The ordered clues reveal the mystery!

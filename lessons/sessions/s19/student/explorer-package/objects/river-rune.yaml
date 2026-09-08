@@ -1,0 +1,6 @@
+name: "River Rune"
+x: 210
+y: 380
+color: "blue"
+when_near: "Priority 1 waits by the river."
+when_interacted: "The first route mark glows."

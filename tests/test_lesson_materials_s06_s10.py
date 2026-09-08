@@ -155,5 +155,5 @@ def test_s10_requires_prediction_gate_function_and_three_assertions() -> None:
     assert all(item in task_card for item in ("Creative choice", "Python change", "Test run"))
 
 
-def test_no_s16_or_later_lesson_materials_exist() -> None:
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(16, 31))
+def test_no_s21_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(21, 31))

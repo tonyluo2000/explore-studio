@@ -1,0 +1,6 @@
+name: "Moss Arrow"
+x: 650
+y: 350
+color: "green"
+when_near: "A green arrow bends toward the grove."
+when_interacted: "Clue found: the trail turns here."

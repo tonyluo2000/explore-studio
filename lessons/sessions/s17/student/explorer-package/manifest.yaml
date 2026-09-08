@@ -1,0 +1,20 @@
+schema_version: "0.1"
+
+package:
+  id: "clue-finder"
+  display_name: "Clue Finder"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "river-mark"
+    type: "world_object"
+    path: "objects/river-mark.yaml"
+  - id: "sky-thread"
+    type: "world_object"
+    path: "objects/sky-thread.yaml"
+  - id: "moss-arrow"
+    type: "world_object"
+    path: "objects/moss-arrow.yaml"
