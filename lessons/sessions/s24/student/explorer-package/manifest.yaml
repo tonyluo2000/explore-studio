@@ -1,0 +1,20 @@
+schema_version: "0.1"
+package:
+  id: "fast-ranger-route"
+  display_name: "Fast Ranger Route"
+  version: "0.1.0"
+compatibility:
+  student_api: "0.1"
+contributions:
+  - id: "signal-map"
+    type: "world_object"
+    path: "objects/signal-map.yaml"
+  - id: "river-token"
+    type: "world_object"
+    path: "objects/river-token.yaml"
+  - id: "summit-bell"
+    type: "world_object"
+    path: "objects/summit-bell.yaml"
+  - id: "route-keeper"
+    type: "character"
+    path: "character/route-keeper.yaml"

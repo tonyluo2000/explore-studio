@@ -1,0 +1,6 @@
+name: "Compass Flag"
+x: 220
+y: 190
+color: "gold"
+when_near: "The checked compass flag points toward camp."
+when_interacted: "Gatekeeper record one is ready."

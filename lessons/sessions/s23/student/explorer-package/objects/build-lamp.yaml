@@ -1,0 +1,6 @@
+name: "Build Lamp"
+x: 520
+y: 380
+when_near: "The build lamp matches its partner."
+when_interacted: "The build lamp changes with the shared style."
+toggle_style_id: "workshop-glow"

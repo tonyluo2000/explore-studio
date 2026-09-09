@@ -1,0 +1,6 @@
+name: "River Token"
+x: 430
+y: 300
+color: "green"
+when_near: "The river token marks the middle route."
+when_interacted: "River Token is second."

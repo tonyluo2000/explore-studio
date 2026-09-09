@@ -1,0 +1,17 @@
+package:
+  id: "workshop-twins"
+  display_name: "Builder's Workshop Twins"
+  version: "0.1.0"
+style:
+  id: "workshop-glow"
+  off_color: "blue"
+  on_color: "gold"
+objects:
+  - id: "design-lamp"
+    name: "Design Lamp"
+    x: 260
+    y: 220
+  - id: "build-lamp"
+    name: "Build Lamp"
+    x: 520
+    y: 380
