@@ -1,0 +1,23 @@
+schema_version: "0.1"
+
+package:
+  id: "stormlight-rescue-trail"
+  display_name: "Stormlight Rescue Trail"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "harbor-drum"
+    type: "world_object"
+    path: "objects/harbor-drum.yaml"
+  - id: "north-lantern"
+    type: "world_object"
+    path: "objects/north-lantern.yaml"
+  - id: "summit-flare"
+    type: "world_object"
+    path: "objects/summit-flare.yaml"
+  - id: "rescue-keeper"
+    type: "character"
+    path: "character/rescue-keeper.yaml"

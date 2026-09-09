@@ -1,0 +1,6 @@
+name: "Harbor Drum"
+x: 210
+y: 330
+color: "orange"
+when_near: "A low beat carries through the storm."
+when_interacted: "The harbor signal starts the rescue route."

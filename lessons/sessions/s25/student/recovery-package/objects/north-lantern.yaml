@@ -1,0 +1,6 @@
+name: "North Lantern"
+x: 410
+y: 220
+color: "blue"
+when_near: "Rain sparks around a steady lantern."
+when_interacted: "The north signal joins the rescue route."

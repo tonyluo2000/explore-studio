@@ -1,0 +1,8 @@
+name: "Rescue Keeper"
+x: 700
+y: 220
+color: "gold"
+respond_to_sequence:
+  object_ids: ["harbor-drum", "north-lantern", "summit-flare"]
+  when_incomplete: "The rescue route is incomplete. Check the station order."
+  when_complete: "All three signals shine. The rescue trail is open!"
