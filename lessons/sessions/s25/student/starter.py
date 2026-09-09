@@ -1,9 +1,12 @@
 """S25: complete one tested catalog-to-playable-preview pipeline."""
 
 try:
-    from lessons.sessions.s25.student.fixtures import NORMAL_CATALOG, REQUIRED_IDS
+    from lessons.sessions.s25.student.project_catalog import (
+        PROJECT_CATALOG,
+        PROJECT_ROUTE_IDS,
+    )
 except ModuleNotFoundError:  # Supports running this file directly.
-    from fixtures import NORMAL_CATALOG, REQUIRED_IDS
+    from project_catalog import PROJECT_CATALOG, PROJECT_ROUTE_IDS
 
 REQUIRED_STATION_FIELDS = (
     "id",
@@ -95,8 +98,8 @@ def build_preview(catalog, required_ids):
 
 def main():
     print("S25 scaffold ready")
-    print("Catalog stations:", len(catalog_stations(NORMAL_CATALOG)))
-    print("Required route count:", len(REQUIRED_IDS))
+    print("My project stations:", len(catalog_stations(PROJECT_CATALOG)))
+    print("My required route count:", len(PROJECT_ROUTE_IDS))
     print("Record all four predictions, then complete the TODO functions.")
 
 

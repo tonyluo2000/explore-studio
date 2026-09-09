@@ -5,23 +5,28 @@
 **World payoff:** Build one complete, bounded adventure loop with existing M15
 `complete-actions-in-order` and exactly three route objects.
 
-**Learning target:** Turn your own premise into 3–5 observable acceptance
-criteria, then complete and test a fail-closed Python pipeline whose reviewed
-preview maps to a valid three-step package.
+**Learning target:** Turn your own premise into exactly three core observable
+acceptance criteria, then complete and test a fail-closed Python pipeline whose
+reviewed preview maps to your valid three-step package. Criteria 4–5 are optional
+extensions.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
 ## Choose and scope (0:00–0:04)
 
-The included Stormlight Rescue Trail is a teacher example only. Choose your own:
+You may prepare your premise before class. The included Moonlit Garden project is
+an editable starting point, while Stormlight Rescue Trail is a teacher recovery
+example only. Choose your own:
 
 - place and reason for the route;
 - three station names and visitor-facing messages;
 - keeper name and success message.
 
-Write **3–5 observable acceptance criteria**. Each must be checkable by a printed
-result, a test, package validation, or a visitor action. Keep one three-object
-vertical slice; mark extra fields, polish, and optional behavior “deferred.”
+Record the premise in `project-record.md`. Write **exactly 3 core observable
+acceptance criteria**. Each must be checkable by a printed result, a test,
+package validation, or a visitor action. Criteria 4–5 are optional extensions.
+Keep one three-object vertical slice; mark extra fields, polish, and optional
+behavior “deferred.”
 
 ## Predict before running (0:04–0:09)
 
@@ -38,7 +43,8 @@ Checkpoint: explain which pipeline stage proves each prediction.
 
 ## Build the core pipeline (0:09–0:31)
 
-Complete the TODO bodies in `starter.py` without changing `fixtures.py`:
+Edit your three records in `project_catalog.py`, then complete the TODO bodies in
+`starter.py` without changing the fixed read-only `fixtures.py`:
 
 ```text
 validate → filter enabled → search required IDs → count selected
@@ -58,32 +64,56 @@ Run:
 
 ```console
 python lessons/sessions/s25/student/starter.py
+```
+
+These tests are expected to fail until you complete the TODO functions.
+
+```console
 python -m pytest -q lessons/sessions/s25/student/test_pipeline.py
 ```
 
 ## Playable check (0:31–0:38)
 
 Python remains local. Only reviewed, validated declarative YAML crosses into the
-existing runtime. The prepared recovery package demonstrates the bridge:
+existing runtime. Your editable project demonstrates the bridge:
 
 ```text
-local catalog → tested pipeline preview → reviewed package YAML → visible M15 route
+student premise → editable catalog → completed pipeline
+→ reviewed selected/ordered values → student package YAML
+→ validation → visible M15 world
 ```
 
 ```console
-explore-package validate lessons/sessions/s25/student/recovery-package
+explore-package validate lessons/sessions/s25/student/explorer-package
 explore-package trail \
   examples/explorer-packages/nova-character \
-  lessons/sessions/s25/student/recovery-package \
+  lessons/sessions/s25/student/explorer-package \
   --player "nova-character:nova" \
   --mission-id "complete-actions-in-order" \
-  --name "S25 Playable Prototype"
+  --name "My S25 Playable Prototype"
 ```
 
-For the teacher example, try the predicted correct order and record completion.
-Then restart and try first → wrong authored member: existing M15 semantics reset
-progress to zero and do not immediately reuse that wrong member as a new first
-step. Your own premise and names may differ; the fixed requirement is three.
+Try your predicted correct order and record completion. Then restart and try first
+→ wrong authored member: existing M15 semantics reset progress to zero and do not
+immediately reuse that wrong member as a new first step. Your premise and names
+may differ; the fixed requirement is three.
+
+## Review the catalog-to-world mapping
+
+Before editing YAML, compare the pipeline's selected and ordered preview with
+`explorer-package/` and record the review in `project-record.md`.
+
+| Student catalog value | Reviewed package/runtime value |
+|---|---|
+| station `id` | manifest contribution `id`, object filename, and sequence object ID |
+| station `name` and story text | object `name`, `when_near`, and `when_interacted` |
+| `world.x` and `world.y` | object `x` and `y` coordinates |
+| `world.color` | object `color` style |
+| `route_order` | order of the keeper's `respond_to_sequence.object_ids` |
+| `signal_power` | local reasoning/aggregation evidence only; it is not copied into runtime YAML |
+
+Local Python helps you reason, transform, and validate. Validated package YAML
+drives the visible world. The shared runtime never executes student Python.
 
 ## Test and review (0:38–0:42)
 
@@ -107,7 +137,7 @@ correct-order/wrong-member result.
 
 ## Required evidence/checkpoints
 
-- 3–5 observable acceptance criteria.
+- Exactly three core observable acceptance criteria; criteria 4–5 are optional.
 - Visitor-path trace and invalid-data prediction made before execution.
 - Expected selected IDs/order and total power made before execution.
 - Pipeline output and five-case test results.
@@ -117,9 +147,11 @@ correct-order/wrong-member result.
 ## Support path
 
 Use the prepared three-record `EXACTLY_THREE_CATALOG` and transformation scaffold.
-If building stalls, validate the recovery package and explain one function while
-the teacher gives a text-only or Trail demonstration. Predictions still come
-first.
+If building stalls, the teacher may validate `recovery-package/` and give a
+text-only or Trail demonstration. That package is teacher-only, partial recovery:
+using it does not complete your student-owned project artifact. You still
+provide every prediction and explain at least one completed function, then later
+finish your own editable catalog and `explorer-package/`.
 
 ## Extension path
 

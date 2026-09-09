@@ -1,0 +1,8 @@
+name: "Garden Keeper"
+x: 700
+y: 210
+color: "orange"
+respond_to_sequence:
+  object_ids: ["seed-marker", "brook-chime", "moon-bloom"]
+  when_incomplete: "The garden path needs all three clues in order."
+  when_complete: "The moon garden opens for tonight's visitors!"
