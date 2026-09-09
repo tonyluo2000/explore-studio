@@ -1,0 +1,6 @@
+name: "Seed Marker"
+x: 180
+y: 310
+color: "green"
+when_near: "A carved seed points toward the garden path."
+when_interacted: "The first garden clue is ready."

@@ -1,0 +1,6 @@
+name: "Moon Bloom"
+x: 610
+y: 350
+color: "purple"
+when_near: "A moonlit flower opens at the end of the path."
+when_interacted: "The final garden clue glows."

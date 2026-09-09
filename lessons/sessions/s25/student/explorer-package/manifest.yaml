@@ -1,0 +1,23 @@
+schema_version: "0.1"
+
+package:
+  id: "moonlit-garden-route"
+  display_name: "Moonlit Garden Route"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "seed-marker"
+    type: "world_object"
+    path: "objects/seed-marker.yaml"
+  - id: "brook-chime"
+    type: "world_object"
+    path: "objects/brook-chime.yaml"
+  - id: "moon-bloom"
+    type: "world_object"
+    path: "objects/moon-bloom.yaml"
+  - id: "garden-keeper"
+    type: "character"
+    path: "character/garden-keeper.yaml"

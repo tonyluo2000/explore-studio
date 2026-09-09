@@ -1,0 +1,6 @@
+name: "Brook Chime"
+x: 390
+y: 230
+color: "blue"
+when_near: "A silver chime rings beside the brook."
+when_interacted: "The second garden clue begins to sing."

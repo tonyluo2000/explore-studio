@@ -18,20 +18,25 @@ aggregation, stable sorting, transformation, testing, package validation, and Gi
 - Confirm the shared Quick Start, Python environment, package validator, Trail
   controls, Git identity, accessibility choices, and screen-sharing fallback.
 - Keep `student/fixtures.py` unchanged so all five cases remain comparable.
-- Validate `student/recovery-package` and prepare its text-only walkthrough.
+- Confirm `student/project_catalog.py` and `student/explorer-package/` are the
+  learner's editable project sources; keep them visibly separate from fixtures.
+- Validate the teacher-only `student/recovery-package` and prepare its text-only
+  walkthrough without presenting it as completed student work.
 - Present Stormlight Rescue Trail as a teacher exemplar, not a required premise.
   Students choose their own place, purpose, station names, object text, and keeper.
 - Remind students that Python stays local and emits a preview; only reviewed,
   validated declarative YAML enters the existing Trail.
+- A student may prepare the premise before class, but the predictions, pipeline
+  reasoning, reviewed mapping, validation, and evidence remain session work.
 
 ## 45-minute runbook
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:04 | 4 min | State the vertical-slice goal; students name their premise and visitor payoff. | Creative choice plus 3–5 observable acceptance criteria. |
+| 0:00–0:04 | 4 min | State the vertical-slice goal; students name or confirm their premise and visitor payoff. | Creative choice plus three core acceptance criteria; criteria 4–5 are optional. |
 | 0:04–0:09 | 5 min | Gate execution on four written predictions. | Visitor path, invalid-data path, selected IDs/order, and total power. |
 | 0:09–0:31 | 22 min | Complete the four student-owned functions and run the five focused cases. | Validation → filter → search → count → aggregate → stable sort → preview output. |
-| 0:31–0:38 | 7 min | Validate and play the three-object recovery package, or the student's reviewed package. | Correct order completes M15; wrong authored member resets. |
+| 0:31–0:38 | 7 min | Validate and play the student's reviewed three-object package; use the teacher-only recovery package only if blocked. | Correct order completes M15; wrong authored member resets. |
 | 0:38–0:42 | 4 min | Review tests, package output, criteria, and milestone evidence. | Five-case results and self-review. |
 | 0:42–0:45 | 3 min | Use status → diff → staged diff → descriptive commit. | Reviewable prototype commit. |
 
@@ -48,9 +53,10 @@ data reaches preview/package generation; the three expected selected IDs in
 route order; and the expected total `signal_power`. Ask the student to point to
 the stage responsible for each prediction.
 
-Students write 3–5 observable acceptance criteria for their own premise. Keep
-them visitor-visible or command-visible and achievable in this session. The
-teacher may ask, “Which criterion could be deferred?” but does not author the
+Students write exactly three core observable acceptance criteria for their own
+premise. Criteria 4–5 are optional extensions. Keep every criterion
+visitor-visible or command-visible and achievable in this session. The teacher
+may ask, “Which optional criterion could be deferred?” but does not author the
 criteria.
 
 ## Deliberate debugging exercise
@@ -63,10 +69,16 @@ closed. In the regression, stable sorting preserves the earlier selected record.
 
 ## Expected output and behavior
 
-For the teacher exemplar, enabled filtering followed by required-ID search finds
-exactly `harbor-drum`, `north-lantern`, and `summit-flare`. Stable sorting produces
-that order and the total signal power is 12. The preview contains exactly three
-current-contract world-object documents and the fixed three-ID keeper sequence.
+The student starts with an editable Moonlit Garden catalog and matching valid
+package, both intended to be personalized. Its route is `seed-marker`,
+`brook-chime`, and `moon-bloom`. The fixed fixtures remain the independent source
+for the five intentionally-red pipeline tests.
+
+For the teacher recovery exemplar, enabled filtering followed by required-ID
+search finds exactly `harbor-drum`, `north-lantern`, and `summit-flare`. Stable
+sorting produces that order and the total signal power is 12. The preview
+contains exactly three current-contract world-object documents and the fixed
+three-ID keeper sequence.
 
 The recovery package validates and plans with Nova using existing package and
 Trail behavior. In M15, Harbor Drum → North Lantern → Summit Flare completes;
@@ -74,16 +86,40 @@ Harbor Drum → Summit Flare resets progress to zero without immediately treatin
 Summit Flare as step one. No Python, catalog-only fields, or new behavior enters
 the runtime.
 
-## Teacher exemplar acceptance criteria
+## Acceptance-criteria calibration
 
-1. Malformed station data fails before package generation.
-2. Enabled stations are filtered and exactly three required IDs are found.
-3. Selected stations are stably sorted by `route_order`.
-4. Total `signal_power` is reported.
-5. A valid package completes M15 only in the correct order.
+1. Core: malformed station data fails before package generation.
+2. Core: exactly three required IDs are selected and stably ordered.
+3. Core: a valid student package completes M15 only in the correct order.
+4. Optional extension: report or compare total `signal_power`.
+5. Optional extension: add bounded polish without adding a route member.
 
-These are the Stormlight exemplar criteria. Students must write 3–5 observable
-criteria for their own premise rather than copying its names or content.
+Exactly the first three criteria are required. Criteria 4–5 are optional
+extensions. Students write their own observable wording in `project-record.md`
+rather than copying exemplar names or story content.
+
+## Project-primary v2 ownership and runtime boundary
+
+Use this reusable S25 structure for later project-primary lessons without adding
+S26–S30 materials now: teacher runbook; task card; persistent project record;
+editable catalog; runnable incomplete scaffold; fixed fixtures; focused
+intentionally-red learner tests; editable student Explorer Package; separate
+teacher-only recovery exemplar; milestone evidence; AI receipt; Git close; and
+support, extension, and cut-line guidance.
+
+The ownership chain is: student premise → editable catalog → completed local
+pipeline → reviewed selected/ordered values → student package YAML → validation
+→ visible M15 world. Local Python helps students reason, transform, and validate.
+Validated package YAML drives the world. The shared runtime never executes
+student Python.
+
+## Recovery-package boundary
+
+`student/recovery-package/` is a teacher-only fallback that preserves a playable
+M15 demonstration when a student is blocked. Using it does not complete the
+student-owned project artifact. The student must later finish their own editable
+catalog and `student/explorer-package/`. Even under recovery, the student still
+provides all predictions and explains at least one completed pipeline function.
 
 ## Bounded AI assistance
 
@@ -103,10 +139,12 @@ diff, intentional staging, staged diff, and commit for their own change. Explain
 
 ## Support path
 
-Use `EXACTLY_THREE_CATALOG`, the transformation scaffold, and the validated
-`recovery-package`. The teacher can demonstrate the Trail as a spoken or
-text-only trace: Harbor Drum → North Lantern → Summit Flare → keeper response.
-The student still owns predictions and explains one completed function.
+Use `EXACTLY_THREE_CATALOG`, the transformation scaffold, and, only when blocked,
+the teacher-only validated `recovery-package`. The teacher can demonstrate the
+Trail as a spoken or text-only trace: Harbor Drum → North Lantern → Summit Flare
+→ keeper response. This is partial recovery only: the student still owns all
+predictions, explains at least one completed function, and later finishes their
+own editable catalog and package.
 
 ## Optional extension
 
