@@ -1,0 +1,6 @@
+name: "Summit Bell"
+x: 620
+y: 410
+color: "gold"
+when_near: "The final indexed clue rings above."
+when_interacted: "Summit Bell is third."

@@ -1,0 +1,17 @@
+schema_version: "0.1"
+package:
+  id: "ranger-gatekeeper-kit"
+  display_name: "Ranger Gatekeeper Kit"
+  version: "0.1.0"
+compatibility:
+  student_api: "0.1"
+contributions:
+  - id: "compass-flag"
+    type: "world_object"
+    path: "objects/compass-flag.yaml"
+  - id: "field-lens"
+    type: "world_object"
+    path: "objects/field-lens.yaml"
+  - id: "echo-marker"
+    type: "world_object"
+    path: "objects/echo-marker.yaml"

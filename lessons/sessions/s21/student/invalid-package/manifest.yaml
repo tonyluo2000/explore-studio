@@ -1,0 +1,11 @@
+schema_version: "0.1"
+package:
+  id: "broken-gatekeeper-kit"
+  display_name: "Broken Gatekeeper Kit"
+  version: "0.1.0"
+compatibility:
+  student_api: "0.1"
+contributions:
+  - id: "missing-tool"
+    type: "world_object"
+    path: "objects/missing-tool.yaml"

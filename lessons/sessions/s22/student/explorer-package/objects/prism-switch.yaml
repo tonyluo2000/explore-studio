@@ -1,0 +1,8 @@
+name: "Prism Switch"
+x: 300
+y: 340
+when_near: "A repaired prism waits for a careful test."
+when_interacted: "The prism state changes."
+toggle:
+  off_color: "purple"
+  on_color: "gold"

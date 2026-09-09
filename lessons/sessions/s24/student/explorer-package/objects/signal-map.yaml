@@ -1,0 +1,6 @@
+name: "Signal Map"
+x: 220
+y: 220
+color: "blue"
+when_near: "The indexed route begins here."
+when_interacted: "Signal Map is first."

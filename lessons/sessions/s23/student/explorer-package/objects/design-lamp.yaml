@@ -1,0 +1,6 @@
+name: "Design Lamp"
+x: 260
+y: 220
+when_near: "The design lamp shares one workshop pattern."
+when_interacted: "The design lamp changes with the shared style."
+toggle_style_id: "workshop-glow"

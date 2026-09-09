@@ -1,0 +1,8 @@
+name: "Prism Guardian"
+x: 600
+y: 260
+color: "blue"
+respond_to_toggle:
+  object_id: "prism-switch"
+  when_off: "The prism gate is sleeping."
+  when_on: "The prism gate is open!"

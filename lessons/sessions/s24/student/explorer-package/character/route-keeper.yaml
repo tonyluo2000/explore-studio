@@ -1,0 +1,8 @@
+name: "Route Keeper"
+x: 680
+y: 220
+color: "orange"
+respond_to_sequence:
+  object_ids: ["signal-map", "river-token", "summit-bell"]
+  when_incomplete: "The ranger route is not resolved yet."
+  when_complete: "The indexed ranger route is complete!"

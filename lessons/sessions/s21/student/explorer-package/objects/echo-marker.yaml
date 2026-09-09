@@ -1,0 +1,6 @@
+name: "Echo Marker"
+x: 620
+y: 410
+color: "purple"
+when_near: "The repaired echo marker answers softly."
+when_interacted: "Gatekeeper record three is ready."

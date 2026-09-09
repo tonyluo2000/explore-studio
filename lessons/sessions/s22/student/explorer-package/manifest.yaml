@@ -1,0 +1,14 @@
+schema_version: "0.1"
+package:
+  id: "prism-guardian-repair"
+  display_name: "Prism Guardian Repair"
+  version: "0.1.0"
+compatibility:
+  student_api: "0.1"
+contributions:
+  - id: "prism-switch"
+    type: "world_object"
+    path: "objects/prism-switch.yaml"
+  - id: "prism-guardian"
+    type: "character"
+    path: "character/prism-guardian.yaml"

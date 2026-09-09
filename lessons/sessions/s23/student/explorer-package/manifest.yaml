@@ -1,0 +1,18 @@
+schema_version: "0.2"
+package:
+  id: "builders-workshop-twins"
+  display_name: "Builder's Workshop Twins"
+  version: "0.1.0"
+compatibility:
+  student_api: "0.1"
+toggle_styles:
+  - id: "workshop-glow"
+    off_color: "blue"
+    on_color: "gold"
+contributions:
+  - id: "design-lamp"
+    type: "world_object"
+    path: "objects/design-lamp.yaml"
+  - id: "build-lamp"
+    type: "world_object"
+    path: "objects/build-lamp.yaml"

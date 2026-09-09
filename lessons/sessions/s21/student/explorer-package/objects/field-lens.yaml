@@ -1,0 +1,6 @@
+name: "Field Lens"
+x: 420
+y: 300
+color: "blue"
+when_near: "The validated field lens catches the light."
+when_interacted: "Gatekeeper record two is ready."
