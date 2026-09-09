@@ -1,0 +1,6 @@
+name: "Summit Flare"
+x: 610
+y: 350
+color: "purple"
+when_near: "A violet flare waits above the clouds."
+when_interacted: "The summit signal completes the rescue route."
