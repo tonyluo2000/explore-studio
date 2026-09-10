@@ -56,7 +56,7 @@ def test_s26_identity_classification_structure_and_exact_rhythm():
             "test_blueprint.py",
         )
     )
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(27, 31))
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(28, 31))
 
 
 def test_s26_project_record_persists_scope_evidence_and_decisions():
