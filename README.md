@@ -46,6 +46,8 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   class-world assembly.
 - [`docs/architecture/decisions/`](docs/architecture/decisions/) — accepted
   architecture decision records.
+- [`docs/development-handoff.md`](docs/development-handoff.md) — required
+  GitHub publication and exact-head handoff procedure for development work.
 - [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
   implemented Student API contract.
 - [`docs/classroom-trail-v0.11.md`](docs/classroom-trail-v0.11.md) — additive local
