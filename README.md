@@ -30,11 +30,11 @@ creative problem-solving — one interactive lesson at a time.
 
 | Phase | Focus |
 |-------|-------|
-| 0 | Repository foundation and tooling |
-| 1 | Core engine: rendering, input, world model |
-| 2 | Lesson framework and first curriculum module |
-| 3 | Teacher dashboard and student progress tracking |
-| 4 | Community lesson marketplace |
+| 0 | Delivered: repository foundation, tooling, and CI baselines |
+| 1 | Delivered local baseline: rendering, input, world model, interactions |
+| 2 | Delivered: deterministic package/lesson framework and S01–S30 course |
+| 3 | Planned: teacher dashboard and student progress tracking |
+| 4 | Planned: community lesson marketplace |
 
 See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 
@@ -48,6 +48,8 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   architecture decision records.
 - [`docs/development-handoff.md`](docs/development-handoff.md) — required
   GitHub publication and exact-head handoff procedure for development work.
+- [`docs/classroom-student-workspace.md`](docs/classroom-student-workspace.md) —
+  canonical student repository provisioning, bootstrap, and Windows/WSL path.
 - [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
   implemented Student API contract.
 - [`docs/classroom-trail-v0.11.md`](docs/classroom-trail-v0.11.md) — additive local
@@ -62,8 +64,8 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 - [`docs/curriculum-sessions-16-30.md`](docs/curriculum-sessions-16-30.md) —
   canonical data fluency, software fluency, and capstone curriculum for
   Sessions 16–30.
-- [`lessons/sessions/`](lessons/sessions/) — production teacher runbooks and
-  student materials for the implemented lesson slice.
+- [`lessons/sessions/`](lessons/sessions/) — complete S01–S30 production teacher
+  runbooks and student materials.
 
 ## Repository Organization
 
@@ -82,8 +84,10 @@ uses one independent repository per student; students export versioned Explorer
 Package candidates that future trusted workflows can publish for class-world
 assembly. Student repositories are created from the standalone
 [`student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template),
-are not directories in this repository, and are not merged to produce a release.
-See the [student contribution model](docs/architecture/student-contribution-model.md).
+then receive the student-only course overlay through the
+[classroom workspace procedure](docs/classroom-student-workspace.md). They are
+not directories in this repository and are not merged to produce a release. See
+the [student contribution model](docs/architecture/student-contribution-model.md).
 
 ## License
 

@@ -4,11 +4,16 @@
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| 0 | Active | Repository foundation and tooling |
-| 1 | Planned | Core engine: rendering, input, world model |
-| 2 | Planned | Lesson framework and first curriculum module |
+| 0 | Delivered | Repository foundation, tooling, and targeted CI |
+| 1 | Delivered baseline | Local engine, rendering, input, and world model |
+| 2 | Delivered | Package/lesson framework and S01–S30 course materials |
 | 3 | Planned | Teacher dashboard and student progress tracking |
 | 4 | Planned | Community lesson marketplace |
+
+The canonical classroom distribution model is one independent repository per
+student, created from the standalone template and provisioned with the
+student-only course overlay. See
+[`classroom-student-workspace.md`](classroom-student-workspace.md).
 
 ## Contribution Guidelines
 

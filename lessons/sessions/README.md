@@ -1,7 +1,7 @@
 # Session Materials v2
 
 These production materials support 45-minute online Explore Studio sessions for
-ages 10–14. Every session uses the same student-readable structure:
+ages 10–14. S01–S28 use the core student-readable structure:
 
 ```text
 sNN/
@@ -13,8 +13,10 @@ sNN/
     └── explorer-package/  # optional validated declarative world content
 ```
 
-Teachers deliver from `teacher-runbook.md`. Students work from `task-card.md`
-and `starter.py`. All students use the shared
+S29–S30 are project-primary closeout sessions. They keep `task-card.md` but use
+review/evidence harnesses and the student's persistent capstone instead of a new
+`starter.py`. Teachers deliver from `teacher-runbook.md`; only student subtrees
+are provisioned into derived student repositories. All students use the shared
 [`student-quick-start.md`](student-quick-start.md) for setup, controls,
 accessibility choices, troubleshooting, AI evidence, and Git recovery.
 

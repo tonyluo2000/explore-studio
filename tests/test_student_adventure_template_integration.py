@@ -5,10 +5,16 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import textwrap
 import venv
 from pathlib import Path
 
 import pytest
+
+from scripts.provision_student_workspace import (
+    COURSE_PLATFORM_COMMIT,
+    provision_student_workspace,
+)
 
 PROJECT_ROOT = Path(__file__).parents[1]
 TEMPLATE_REPOSITORY = "https://github.com/tonyluo2000/student-adventure-template.git"
@@ -111,11 +117,17 @@ def test_pinned_standalone_template_contract(tmp_path: Path) -> None:
     assert PLATFORM_REQUIREMENT in requirements.splitlines()
     assert 'dependencies = ["explore-studio==0.1.0"]' in project
 
+    receipt = provision_student_workspace(checkout, PROJECT_ROOT)
+    assert receipt["course_platform_commit"] == COURSE_PLATFORM_COMMIT
+    assert not any(checkout.glob("lessons/sessions/s*/teacher-runbook.md"))
+    assert len(tuple(checkout.glob("lessons/sessions/s*/student/task-card.md"))) == 30
+    assert not (checkout / "lessons" / "sessions" / "s31").exists()
+
     venv.EnvBuilder(with_pip=True).create(environment_root)
     scripts = environment_root / "bin"
     python = scripts / "python"
     _run(
-        [str(python), "-m", "pip", "install", "--quiet", "-r", "requirements-dev.txt"],
+        [str(python), "-m", "pip", "install", "--quiet", "-r", "requirements-course.txt"],
         cwd=checkout,
         environment=environment,
     )
@@ -134,6 +146,80 @@ def test_pinned_standalone_template_contract(tmp_path: Path) -> None:
     )
     assert json.loads(validation)["valid"] is True
     _run([str(python), "-m", "pytest", "-q"], cwd=checkout, environment=environment)
+
+    assert (scripts / "explore-package").is_file()
+    _run([str(scripts / "explore-package"), "--help"], cwd=checkout, environment=environment)
+    starter_output = _run(
+        [str(python), "lessons/sessions/s01/student/starter.py"],
+        cwd=checkout,
+        environment=environment,
+    )
+    assert starter_output.splitlines() == [
+        "The crystal lantern glows beside the path.",
+        "The river fountain sounds like quiet rain.",
+        "Fern waits near the edge of the trail.",
+    ]
+    for package_id in (
+        "nova-character",
+        "forest-guide",
+        "crystal-lantern",
+        "river-fountain",
+    ):
+        _run(
+            [
+                str(scripts / "explore-package"),
+                "validate",
+                f"examples/explorer-packages/{package_id}",
+            ],
+            cwd=checkout,
+            environment=environment,
+        )
+
+    trail_environment = environment.copy()
+    trail_environment["SDL_VIDEODRIVER"] = "dummy"
+    trail_environment["SDL_AUDIODRIVER"] = "dummy"
+    trail_rehearsal = textwrap.dedent("""
+        import threading
+        import time
+
+        import pygame
+
+        from explore.packages.cli import main
+
+        posted = []
+
+        def close_trail():
+            for _ in range(200):
+                time.sleep(0.01)
+                if pygame.display.get_init():
+                    try:
+                        pygame.event.post(pygame.event.Event(pygame.QUIT))
+                    except pygame.error:
+                        continue
+                    posted.append(True)
+                    return
+
+        closer = threading.Thread(target=close_trail)
+        closer.start()
+        result = main([
+            "trail",
+            "examples/explorer-packages/nova-character",
+            "examples/explorer-packages/forest-guide",
+            "examples/explorer-packages/crystal-lantern",
+            "examples/explorer-packages/river-fountain",
+            "--player", "nova-character:nova",
+            "--mission-id", "visit-all-classroom-objects",
+            "--name", "S01 Clean Workspace Rehearsal",
+        ])
+        closer.join()
+        assert result == 0
+        assert posted == [True]
+        """)
+    _run(
+        [str(python), "-I", "-c", trail_rehearsal],
+        cwd=checkout,
+        environment=trail_environment,
+    )
 
     destination = checkout / "dist" / "student-beacon-1.0.0.explorer-package.zip"
     exported = _run(

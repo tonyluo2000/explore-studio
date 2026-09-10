@@ -5,6 +5,9 @@ on:
     paths:
       - ".github/workflows/student-template-integration.yml"
       - "docs/student-adventure-template-v0.1.md"
+      - "docs/classroom-student-workspace.md"
+      - "classroom/requirements-course.txt"
+      - "scripts/provision_student_workspace.py"
       - "tests/test_student_adventure_template_integration.py"
   push:
     branches:
@@ -12,6 +15,9 @@ on:
     paths:
       - ".github/workflows/student-template-integration.yml"
       - "docs/student-adventure-template-v0.1.md"
+      - "docs/classroom-student-workspace.md"
+      - "classroom/requirements-course.txt"
+      - "scripts/provision_student_workspace.py"
       - "tests/test_student_adventure_template_integration.py"
   workflow_dispatch:
 
