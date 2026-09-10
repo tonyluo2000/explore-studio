@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "skyglass-observatory"
+  display_name: "Skyglass Observatory"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "echo-lens"
+    type: "world_object"
+    path: "objects/echo-lens.yaml"

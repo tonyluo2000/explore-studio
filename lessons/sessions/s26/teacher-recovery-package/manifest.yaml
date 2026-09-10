@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "stormlight-blueprint-example"
+  display_name: "Stormlight Blueprint Example"
+  version: "0.1.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "harbor-beacon"
+    type: "world_object"
+    path: "objects/harbor-beacon.yaml"

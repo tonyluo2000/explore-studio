@@ -253,5 +253,5 @@ def test_s15_documented_launch_roots_include_unrelated_crystal_lantern() -> None
     } <= qualified_object_ids
 
 
-def test_no_s26_or_later_lesson_materials_exist() -> None:
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(26, 31))
+def test_no_s27_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(27, 31))
