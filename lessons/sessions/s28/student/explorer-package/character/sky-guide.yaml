@@ -1,0 +1,11 @@
+name: "Sky Guide"
+x: 430
+y: 420
+color: "gold"
+respond_to_sequence:
+  object_ids:
+    - "echo-lens"
+    - "wind-dial"
+    - "comet-bell"
+  when_incomplete: "The observatory route still needs another signal."
+  when_complete: "The Skyglass Observatory route is complete!"
