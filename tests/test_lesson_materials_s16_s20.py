@@ -277,5 +277,5 @@ def test_s20_requires_trace_three_tests_validation_play_and_milestone_review() -
     assert "AI may ask one pipeline question or propose one test only" in normalized
 
 
-def test_no_s30_or_later_lesson_materials_exist() -> None:
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(30, 31))
+def test_no_s31_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(31, 32))
