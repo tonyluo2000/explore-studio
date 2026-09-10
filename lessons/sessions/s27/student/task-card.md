@@ -79,6 +79,12 @@ python lessons/sessions/s27/student/starter.py
 ```
 
 These tests are expected to fail until you complete the TODO functions.
+The expected pristine result is **6 failed / 2 passed**.
+`test_accepted_s26_plan_has_no_diagnostics` and
+`test_empty_zone_flattens_to_empty_list` pass only because the current TODO
+stubs return empty lists.
+Those two passes are stub artifacts, not completed work: both `validate_plan`
+and `flatten_stations` still need real implementations because other cases fail.
 
 ```console
 python -m pytest -q lessons/sessions/s27/student/test_core.py

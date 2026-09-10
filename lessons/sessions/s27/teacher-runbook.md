@@ -105,6 +105,11 @@ case; and expected deterministic document dictionaries. The pristine learner
 suite is intentionally red and remains outside default repository discovery.
 A correct bounded implementation makes every learner test green.
 
+The two green pristine tests are stub coincidences caused by empty-list returns,
+not proof that `validate_plan` or `flatten_stations` is complete. Do not let
+students skip either helper; use the other failing cases as evidence that both
+still require real implementations.
+
 ## Project record and evidence
 
 Students continue one persistent record: premise, acceptance criteria,

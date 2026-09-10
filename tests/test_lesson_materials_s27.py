@@ -289,13 +289,30 @@ def test_s27_fixtures_are_fixed_complete_and_separate_from_editable_data():
 
 def test_s27_exact_intentional_red_guidance_and_learner_cases():
     task = (STUDENT_ROOT / "task-card.md").read_text(encoding="utf-8")
+    runbook = (S27_ROOT / "teacher-runbook.md").read_text(encoding="utf-8")
     learner = LEARNER_TEST.read_text(encoding="utf-8")
+    normalized_task = " ".join(task.lower().split())
+    normalized_runbook = " ".join(runbook.lower().split())
     expected = "These tests are expected to fail until you complete the TODO functions."
 
     assert task.count(expected) == 1
     assert task.index(expected) < task.index(
         "python -m pytest -q lessons/sessions/s27/student/test_core.py"
     )
+    assert "expected pristine result is **6 failed / 2 passed**" in normalized_task
+    assert "test_accepted_s26_plan_has_no_diagnostics" in task
+    assert "test_empty_zone_flattens_to_empty_list" in task
+    assert "pass only because the current todo stubs return empty lists" in normalized_task
+    assert "stub artifacts, not completed work" in normalized_task
+    assert "both `validate_plan` and `flatten_stations` still need real implementations" in (
+        normalized_task
+    )
+    assert "two green pristine tests are stub coincidences" in normalized_runbook
+    assert "not proof that `validate_plan` or `flatten_stations` is complete" in (
+        normalized_runbook
+    )
+    assert "do not let students skip either helper" in normalized_runbook
+    assert "other failing cases as evidence" in normalized_runbook
     assert all(
         case in learner
         for case in (
