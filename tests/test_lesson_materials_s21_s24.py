@@ -213,5 +213,5 @@ def test_s24_counts_inspections_rejects_duplicates_and_preserves_results() -> No
     assert "do not create a runtime index/cache feature" in normalized
 
 
-def test_no_s29_or_later_lesson_materials_exist() -> None:
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(29, 31))
+def test_no_s30_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(30, 31))
