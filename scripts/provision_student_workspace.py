@@ -29,6 +29,7 @@ GENERATED_PATHS = (
     "docs",
 )
 COPY_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
+REHEARSAL_RECORD = "operations/s01-clean-rehearsal-2026-09-10.md"
 
 
 class ProvisionError(ValueError):
@@ -64,6 +65,8 @@ def _validate_source(source_root: Path) -> None:
         raise ProvisionError("course source is missing requirements-course.txt")
     if not (source_root / "docs" / "classroom-student-workspace.md").is_file():
         raise ProvisionError("course source is missing classroom workspace guidance")
+    if not (source_root / "docs" / REHEARSAL_RECORD).is_file():
+        raise ProvisionError("course source is missing the S01 rehearsal record")
 
 
 def _validate_target(target_root: Path) -> None:
@@ -129,6 +132,12 @@ def provision_student_workspace(target_root, source_root=None):
     shutil.copy2(
         source / "docs" / "classroom-student-workspace.md",
         target_docs / "classroom-student-workspace.md",
+    )
+    target_operations = target_docs / "operations"
+    target_operations.mkdir()
+    shutil.copy2(
+        source / "docs" / REHEARSAL_RECORD,
+        target_docs / REHEARSAL_RECORD,
     )
     receipt = {
         "contract_version": "0.1",

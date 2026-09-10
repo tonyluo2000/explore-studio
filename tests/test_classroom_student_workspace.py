@@ -9,12 +9,28 @@ import pytest
 from scripts.provision_student_workspace import (
     COURSE_PLATFORM_COMMIT,
     EXAMPLE_PACKAGE_IDS,
+    REHEARSAL_RECORD,
     SESSION_IDS,
     ProvisionError,
     provision_student_workspace,
 )
 
 PROJECT_ROOT = Path(__file__).parents[1]
+
+
+def unresolved_local_links(documents: list[Path]) -> list[tuple[Path, str]]:
+    missing = []
+    for document in documents:
+        text = document.read_text(encoding="utf-8")
+        for link in re.findall(r"(?<!!)\[[^\]]+\]\(([^)]+)\)", text):
+            relative = link.split("#", 1)[0]
+            if (
+                relative
+                and not relative.startswith(("http://", "https://", "mailto:"))
+                and not (document.parent / relative).resolve().exists()
+            ):
+                missing.append((document, relative))
+    return missing
 
 
 def make_template(target: Path) -> Path:
@@ -58,23 +74,17 @@ def test_provisioned_workspace_has_exact_course_pin_examples_and_receipt(tmp_pat
     receipt = json.loads((target / "course-materials.json").read_text(encoding="utf-8"))
     assert receipt["course_platform_commit"] == COURSE_PLATFORM_COMMIT
     assert (target / "docs" / "classroom-student-workspace.md").is_file()
+    assert (target / "docs" / REHEARSAL_RECORD).is_file()
 
 
 def test_all_student_task_card_local_links_and_course_paths_resolve(tmp_path):
     target = make_template(tmp_path / "student")
     provision_student_workspace(target, PROJECT_ROOT)
 
-    missing = []
-    for task_card in (target / "lessons" / "sessions").glob("s*/student/task-card.md"):
+    task_cards = list((target / "lessons" / "sessions").glob("s*/student/task-card.md"))
+    missing = unresolved_local_links(task_cards)
+    for task_card in task_cards:
         text = task_card.read_text(encoding="utf-8")
-        for link in re.findall(r"(?<!!)\[[^\]]+\]\(([^)]+)\)", text):
-            relative = link.split("#", 1)[0]
-            if (
-                relative
-                and not relative.startswith(("http://", "https://"))
-                and not (task_card.parent / relative).resolve().exists()
-            ):
-                missing.append((task_card, relative))
         for path_text in re.findall(
             r"(?:lessons/sessions/s\d{2}/student|examples/explorer-packages)/[a-zA-Z0-9_./-]+",
             text,
@@ -83,6 +93,18 @@ def test_all_student_task_card_local_links_and_course_paths_resolve(tmp_path):
             if not (target / cleaned).exists():
                 missing.append((task_card, cleaned))
     assert missing == []
+
+
+def test_provisioned_student_facing_document_links_resolve(tmp_path):
+    target = make_template(tmp_path / "student")
+    provision_student_workspace(target, PROJECT_ROOT)
+
+    documents = [
+        target / "lessons" / "sessions" / "student-quick-start.md",
+        target / "lessons" / "sessions" / "README.md",
+        target / "docs" / "classroom-student-workspace.md",
+    ]
+    assert unresolved_local_links(documents) == []
 
 
 def test_provisioning_refuses_non_template_or_existing_overlay_without_partial_copy(tmp_path):
