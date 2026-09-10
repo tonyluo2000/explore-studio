@@ -1,0 +1,32 @@
+name: "Invalid Observatory"
+package:
+  id: "invalid-observatory"
+  display_name: "Invalid Observatory"
+  toggle_style:
+    id: "observatory-glow"
+    off_color: "blue"
+    on_color: "gold"
+required_station_ids:
+  - "echo-lens"
+sequence_guide:
+  id: "sky-guide"
+  name: "Sky Guide"
+  x: 430
+  y: 420
+  color: "gold"
+  when_incomplete: "Waiting."
+  when_complete: "Complete."
+zones:
+  - id: "lower-deck"
+    name: "Lower Deck"
+    stations:
+      - id: "echo-lens"
+        name: "Echo Lens"
+        enabled: true
+        coordinates: {x: 260, y: 300}
+        color: "blue"
+        route_order: "first"
+        signal_power: 3
+        story:
+          when_near: "The lens hums."
+          when_interacted: "The lens aligns."

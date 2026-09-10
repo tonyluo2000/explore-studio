@@ -1,0 +1,32 @@
+name: "Unsafe Observatory"
+package:
+  id: "unsafe-observatory"
+  display_name: "Unsafe Observatory"
+  toggle_style:
+    id: "observatory-glow"
+    off_color: "blue"
+    on_color: "gold"
+required_station_ids:
+  - "../escape"
+sequence_guide:
+  id: "sky-guide"
+  name: "Sky Guide"
+  x: 430
+  y: 420
+  color: "gold"
+  when_incomplete: "Waiting."
+  when_complete: "Complete."
+zones:
+  - id: "lower-deck"
+    name: "Lower Deck"
+    stations:
+      - id: "../escape"
+        name: "Unsafe Lens"
+        enabled: true
+        coordinates: {x: 260, y: 300}
+        color: "blue"
+        route_order: 1
+        signal_power: 3
+        story:
+          when_near: "Unsafe."
+          when_interacted: "Unsafe."
