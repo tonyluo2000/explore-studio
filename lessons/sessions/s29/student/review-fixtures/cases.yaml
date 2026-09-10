@@ -1,0 +1,8 @@
+- id: "echo-lens"
+  name: "  Echo Lens  "
+  enabled: true
+- id: "wind-dial"
+  name: "Wind Dial"
+  enabled: false
+- id: "comet-bell"
+  name: "Comet Bell"

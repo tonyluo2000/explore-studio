@@ -1,0 +1,17 @@
+all_records:
+  - id: "echo-lens"
+    label: "Echo Lens"
+    enabled: true
+  - id: "wind-dial"
+    label: "Wind Dial"
+    enabled: false
+  - id: "comet-bell"
+    label: "Comet Bell"
+    enabled: true
+enabled_records:
+  - id: "echo-lens"
+    label: "Echo Lens"
+    enabled: true
+  - id: "comet-bell"
+    label: "Comet Bell"
+    enabled: true
