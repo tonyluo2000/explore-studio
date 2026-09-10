@@ -75,5 +75,5 @@ markers = [
     "student_template_integration: networked verification of the pinned standalone template",
 ]
 
-[tool.setuptools]
-packages = ["explore", "explore.curriculum", "explore.online", "explore.packages", "engine"]
+[tool.setuptools.packages.find]
+include = ["explore*", "engine*"]
