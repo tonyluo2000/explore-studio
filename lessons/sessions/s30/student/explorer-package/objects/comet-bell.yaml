@@ -1,0 +1,6 @@
+name: "Comet Bell"
+x: 620
+y: 180
+color: "orange"
+when_near: "The Comet Bell waits beneath the open dome."
+when_interacted: "The bell answers with one bright note."

@@ -231,7 +231,7 @@ def test_s28_identity_classification_structure_and_exact_rhythm():
             "0:42–0:45",
         )
     )
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(30, 31))
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(31, 32))
 
 
 def test_s28_project_primary_structure_helpers_and_incomplete_scaffold(capsys):

@@ -60,7 +60,7 @@ def test_s29_identity_project_primary_structure_and_exact_rhythm():
             PACKAGE_ROOT / "manifest.yaml",
         )
     )
-    assert not (MATERIALS_ROOT / "s30").exists()
+    assert not (MATERIALS_ROOT / "s31").exists()
 
 
 def test_s29_requires_student_review_and_risk_prediction_before_outside_feedback():

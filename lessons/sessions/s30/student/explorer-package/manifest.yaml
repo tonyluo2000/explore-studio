@@ -1,0 +1,28 @@
+schema_version: "0.2"
+
+package:
+  id: "skyglass-premiere"
+  display_name: "Skyglass Observatory Premiere"
+  version: "1.0.0"
+
+compatibility:
+  student_api: "0.1"
+
+toggle_styles:
+  - id: "observatory-glow"
+    off_color: "blue"
+    on_color: "gold"
+
+contributions:
+  - id: "echo-lens"
+    type: "world_object"
+    path: "objects/echo-lens.yaml"
+  - id: "wind-dial"
+    type: "world_object"
+    path: "objects/wind-dial.yaml"
+  - id: "comet-bell"
+    type: "world_object"
+    path: "objects/comet-bell.yaml"
+  - id: "sky-guide"
+    type: "character"
+    path: "character/sky-guide.yaml"
