@@ -190,5 +190,5 @@ def test_authored_session_package_is_valid(session: str) -> None:
     assert result.is_loaded, result.all_issues
 
 
-def test_no_s28_or_later_lesson_materials_exist() -> None:
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(28, 31))
+def test_no_s29_or_later_lesson_materials_exist() -> None:
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(29, 31))

@@ -47,7 +47,7 @@ def test_s25_v2_identity_classification_and_exact_rhythm():
     assert (STUDENT_ROOT / "project_catalog.py").is_file()
     assert (STUDENT_PACKAGE_ROOT / "manifest.yaml").is_file()
     assert (RECOVERY_PACKAGE_ROOT / "manifest.yaml").is_file()
-    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(28, 31))
+    assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(29, 31))
 
 
 def test_s25_starter_runs_but_leaves_four_core_functions_incomplete(capsys):
