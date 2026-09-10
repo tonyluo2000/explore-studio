@@ -1,0 +1,6 @@
+name: "Harbor Beacon"
+x: 220
+y: 320
+color: "orange"
+when_near: "The harbor beacon flickers through the rain."
+when_interacted: "You focus the harbor beacon across the water."

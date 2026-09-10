@@ -1,0 +1,6 @@
+name: "Echo Lens"
+x: 460
+y: 270
+color: "purple"
+when_near: "The Echo Lens hums with captured starlight."
+when_interacted: "You align the Echo Lens with the night sky!"

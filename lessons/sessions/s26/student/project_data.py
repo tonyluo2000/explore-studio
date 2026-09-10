@@ -25,7 +25,7 @@ PROJECT_EXPEDITION = {
                     "id": "echo-lens",
                     "name": "Echo Lens",
                     "enabled": True,
-                    "coordinates": {"x": 260, "y": 300},
+                    "coordinates": {"x": 460, "y": 270},
                     "color": "purple",
                     "route_order": 1,
                     "signal_power": 3,
