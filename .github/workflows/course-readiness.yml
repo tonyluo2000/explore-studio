@@ -1,0 +1,60 @@
+name: Course readiness
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/course-readiness.yml"
+      - "classroom/**"
+      - "docs/classroom-student-workspace.md"
+      - "docs/operations/s01-clean-rehearsal-*.md"
+      - "docs/curriculum*.md"
+      - "lessons/sessions/**"
+      - "scripts/provision_student_workspace.py"
+      - "tests/test_classroom_student_workspace.py"
+      - "tests/test_lesson_materials*.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/course-readiness.yml"
+      - "classroom/**"
+      - "docs/classroom-student-workspace.md"
+      - "docs/operations/s01-clean-rehearsal-*.md"
+      - "docs/curriculum*.md"
+      - "lessons/sessions/**"
+      - "scripts/provision_student_workspace.py"
+      - "tests/test_classroom_student_workspace.py"
+      - "tests/test_lesson_materials*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-course-materials:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Explore Studio
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+      - name: Verify course materials and workspace bootstrap
+        run: >-
+          python -m pytest -q
+          tests/test_lesson_materials.py
+          tests/test_lesson_materials_s06_s10.py
+          tests/test_lesson_materials_s11_s15.py
+          tests/test_lesson_materials_s16_s20.py
+          tests/test_lesson_materials_s21_s24.py
+          tests/test_lesson_materials_s25.py
+          tests/test_lesson_materials_s26.py
+          tests/test_lesson_materials_s27.py
+          tests/test_lesson_materials_s28.py
+          tests/test_lesson_materials_s29.py
+          tests/test_lesson_materials_s30.py
+          tests/test_classroom_student_workspace.py

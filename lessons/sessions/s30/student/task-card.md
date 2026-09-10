@@ -98,7 +98,7 @@ explore-package trail \
   examples/explorer-packages/nova-character \
   lessons/sessions/s30/student/explorer-package \
   --player nova-character:nova \
-  --mission present-your-capstone-expedition
+  --mission-id present-your-capstone-expedition
 ```
 
 Guide the visitor to every world object. Point out the existing M14 named style

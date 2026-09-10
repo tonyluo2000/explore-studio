@@ -32,10 +32,13 @@ and experiences are introduced; it is not a source-code security boundary.
 Students who inspect later capabilities locally are demonstrating curiosity.
 
 Each student works in an independent repository, develops and tests locally
-without login, and publishes a versioned Explorer Package for review. Online
+without login, and exports a versioned Explorer Package candidate for review.
+The repository starts from the standalone template; before delivery, a teacher
+adds the student-only S01–S30 course overlay through the
+[Classroom Student Workspace](classroom-student-workspace.md) procedure. Online
 course and shared-world services require authenticated identity. See the
 [Student Contribution and Class-World Model](architecture/student-contribution-model.md)
-for the canonical workflow.
+for the canonical ownership workflow.
 
 ### Planned Module Areas
 

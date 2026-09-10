@@ -36,6 +36,14 @@ Its README documents clean virtual-environment setup, validation, tests, and
 deterministic local export. Export retains the documented POSIX descriptor
 confinement boundary and fails closed on unsupported native Windows platforms.
 
+The template repository itself remains minimal. For a taught S01–S30 cohort, a
+teacher creates an independent repository from the pinned template and then
+adds the student-only course overlay using the
+[Classroom Student Workspace](classroom-student-workspace.md) procedure. The
+overlay supplies the lesson paths, shared example packages, and exact course
+platform pin without copying teacher runbooks, engine source, or platform
+source into the student's repository.
+
 ## Integration verification
 
 Maintainers can run the pinned network integration explicitly:

@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+
+from setuptools.discovery import PackageFinder
+
+PROJECT_ROOT = Path(__file__).parents[1]
+
 
 def test_engine_package_imports() -> None:
     """The top-level engine package imports without error."""
@@ -33,3 +40,23 @@ def test_public_api_exports() -> None:
 def test_platform_module_importable() -> None:
     """The internal platform module is importable."""
     from engine import _platform  # noqa: F401
+
+
+def test_distribution_discovers_engine_and_explore_subpackages() -> None:
+    """Installed student environments retain every runtime subpackage."""
+    configuration = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+    include = configuration["tool"]["setuptools"]["packages"]["find"]["include"]
+    discovered = set(PackageFinder.find(PROJECT_ROOT, include=include))
+
+    assert {
+        "engine",
+        "engine.entities",
+        "engine.input",
+        "engine.interactions",
+        "engine.rendering",
+        "engine.scenes",
+        "explore",
+        "explore.curriculum",
+        "explore.online",
+        "explore.packages",
+    } <= discovered

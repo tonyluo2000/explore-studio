@@ -2,11 +2,24 @@
 
 Use this page before S01 and keep it open during every session.
 
+## Your course repository
+
+Work only in the **derived student repository** provided by your teacher. It
+starts from the official student template and already contains
+`lessons/sessions/s01` through `s30`, the shared example packages, and
+`requirements-course.txt`. It does not contain engine source or teacher answer
+keys. Do not run lesson commands from a separate Explore Studio platform clone.
+
+The teacher setup procedure is documented in
+[`Classroom Student Workspace`](../../docs/classroom-student-workspace.md).
+
 ## First-day setup checklist
 
-- [ ] Open a terminal in the Explore Studio repository—not Downloads or your
+- [ ] Open a terminal in your derived student repository—not Downloads or your
       home folder.
-- [ ] Activate the project virtual environment.
+- [ ] Create a fresh project virtual environment if the teacher has not already
+      prepared one.
+- [ ] Install the exact course requirements and activate the environment.
 - [ ] Confirm Python runs.
 - [ ] Confirm `explore-package` is available.
 - [ ] Open and close one Classroom Trail window.
@@ -25,31 +38,35 @@ pwd
 ls
 ```
 
-On Windows PowerShell, use `Get-Location` and `Get-ChildItem`. If you cannot see
-those repository files, stop and ask the teacher before running lesson commands.
+On Windows, run these checks inside the supported WSL 2 Ubuntu shell. If you
+cannot see those repository files, stop and ask the teacher before running
+lesson commands.
 
-## Activate Python
+## Install and activate Python
 
 macOS or Linux:
 
 ```console
+python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements-course.txt
 python --version
 explore-package --help
 ```
 
-Windows PowerShell:
+Windows students use an Ubuntu shell in **WSL 2 with WSLg**, then run the same
+commands above. Keep the repository under the Linux home directory, for example
+`/home/student/explorer-course`, not under `/mnt/c`. Native PowerShell Python is
+not the supported complete-course path because deterministic export requires
+POSIX filesystem operations.
 
-```powershell
-.venv\Scripts\Activate.ps1
-python --version
-explore-package --help
-```
+Teachers install and verify WSL before class using the linked guidance in
+[`Classroom Student Workspace`](../../docs/classroom-student-workspace.md).
 
 The prompt often gains `(.venv)` after activation. If `explore-package` says
-“command not found” or “not recognized,” confirm the environment is active and
-ask the teacher to check installation. Do not install random packages during
-class.
+“command not found,” confirm the environment is active and rerun
+`python -m pip install -r requirements-course.txt`. If it is still missing,
+stop and ask the teacher. Do not install an unpinned package by name.
 
 ## Launch, control, stop, and relaunch the Trail
 
