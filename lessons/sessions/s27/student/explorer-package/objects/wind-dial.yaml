@@ -1,0 +1,6 @@
+name: "Wind Dial"
+x: 460
+y: 250
+when_near: "The Wind Dial turns toward a quiet constellation."
+when_interacted: "You record the observatory wind direction."
+toggle_style_id: "observatory-glow"
