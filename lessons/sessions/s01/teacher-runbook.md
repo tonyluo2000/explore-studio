@@ -11,6 +11,9 @@ matching quotation marks to record three observations from a local world.
 
 ## Before class
 
+- Complete the
+  [clean-Mac and Zoom preflight](../../../docs/classroom-student-workspace.md#teacher-preflight-clean-mac-and-zoom)
+  on the actual teaching computer and network.
 - Send students `student/task-card.md` and the shared
   `lessons/sessions/student-quick-start.md` before class.
 - Complete the first-day setup checklist with every student: repository root,

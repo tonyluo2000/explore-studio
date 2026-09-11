@@ -11,6 +11,7 @@ from scripts.provision_student_workspace import (
     EXAMPLE_PACKAGE_IDS,
     REHEARSAL_RECORD,
     SESSION_IDS,
+    STUDENT_GITIGNORE_RULE,
     ProvisionError,
     provision_student_workspace,
 )
@@ -36,6 +37,7 @@ def unresolved_local_links(documents: list[Path]) -> list[tuple[Path, str]]:
 def make_template(target: Path) -> Path:
     (target / ".git").mkdir(parents=True)
     (target / "explorer-package").mkdir()
+    (target / ".gitignore").write_text(".venv/\n", encoding="utf-8")
     (target / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
     (target / "requirements-dev.txt").write_text("template pin\n", encoding="utf-8")
     (target / "explorer-package" / "manifest.yaml").write_text(
@@ -75,6 +77,7 @@ def test_provisioned_workspace_has_exact_course_pin_examples_and_receipt(tmp_pat
     assert receipt["course_platform_commit"] == COURSE_PLATFORM_COMMIT
     assert (target / "docs" / "classroom-student-workspace.md").is_file()
     assert (target / "docs" / REHEARSAL_RECORD).is_file()
+    assert STUDENT_GITIGNORE_RULE in (target / ".gitignore").read_text().splitlines()
 
 
 def test_all_student_task_card_local_links_and_course_paths_resolve(tmp_path):
@@ -126,6 +129,7 @@ def test_readiness_docs_use_canonical_cli_windows_and_completed_course_status():
     s30 = (PROJECT_ROOT / "lessons" / "sessions" / "s30" / "student" / "task-card.md").read_text()
     roadmap = (PROJECT_ROOT / "docs" / "roadmap.md").read_text()
     setup = (PROJECT_ROOT / "docs" / "classroom-student-workspace.md").read_text()
+    s01_runbook = (PROJECT_ROOT / "lessons" / "sessions" / "s01" / "teacher-runbook.md").read_text()
     rehearsal = (
         PROJECT_ROOT / "docs" / "operations" / "s01-clean-rehearsal-2026-09-10.md"
     ).read_text()
@@ -139,6 +143,10 @@ def test_readiness_docs_use_canonical_cli_windows_and_completed_course_status():
     assert "S01–S30 course materials complete" in roadmap
     assert "student-adventure-template" in setup
     assert "teacher runbooks" in setup
+    assert "Python 3.11" in setup and "git --version" in setup
+    assert "Zoom desktop client" in setup and "private channel" in setup
+    assert "screen sharing" in setup and "actual class meeting" in setup
+    assert "clean-Mac and Zoom preflight" in s01_runbook
     assert "1 passed in 16.14s" in rehearsal
     assert COURSE_PLATFORM_COMMIT in rehearsal
     assert "--mission-id visit-all-classroom-objects" in rehearsal

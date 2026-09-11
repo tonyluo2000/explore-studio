@@ -131,6 +131,8 @@ def test_pinned_standalone_template_contract(tmp_path: Path) -> None:
         cwd=checkout,
         environment=environment,
     )
+    status_after_install = _run(["git", "status", "--short"], cwd=checkout, environment=environment)
+    assert ".egg-info" not in status_after_install
     imported_from = _run(
         [str(python), "-I", "-c", "import explore; print(explore.__file__)"],
         cwd=checkout,
