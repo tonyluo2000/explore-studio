@@ -17,6 +17,7 @@ EXAMPLE_PACKAGE_IDS = (
     "river-fountain",
 )
 TEMPLATE_MARKERS = (
+    ".gitignore",
     "pyproject.toml",
     "requirements-dev.txt",
     "explorer-package/manifest.yaml",
@@ -30,6 +31,7 @@ GENERATED_PATHS = (
 )
 COPY_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 REHEARSAL_RECORD = "operations/s01-clean-rehearsal-2026-09-10.md"
+STUDENT_GITIGNORE_RULE = "*.egg-info/"
 
 
 class ProvisionError(ValueError):
@@ -84,6 +86,17 @@ def _validate_target(target_root: Path) -> None:
         raise ProvisionError("student repository must not contain platform or engine source")
 
 
+def _ignore_generated_package_metadata(target_root: Path) -> None:
+    gitignore = target_root / ".gitignore"
+    content = gitignore.read_text(encoding="utf-8")
+    if STUDENT_GITIGNORE_RULE not in content.splitlines():
+        separator = "" if not content or content.endswith("\n") else "\n"
+        gitignore.write_text(
+            f"{content}{separator}{STUDENT_GITIGNORE_RULE}\n",
+            encoding="utf-8",
+        )
+
+
 def provision_student_workspace(target_root, source_root=None):
     """Copy the student course overlay after all source and target checks pass."""
     source = (
@@ -98,6 +111,7 @@ def provision_student_workspace(target_root, source_root=None):
     _validate_source(source)
     _validate_target(target)
     source_revision = _git_revision(source)
+    _ignore_generated_package_metadata(target)
 
     source_sessions = source / "lessons" / "sessions"
     target_sessions = target / "lessons" / "sessions"

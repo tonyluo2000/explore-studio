@@ -22,6 +22,29 @@ The Explore Studio platform remains an installed dependency. This preserves
 independent student ownership while making every lesson path and Git command in
 the task cards valid from the student repository root.
 
+## Teacher preflight: clean Mac and Zoom
+
+Complete this on the actual teaching Mac before preparing student repositories:
+
+1. Confirm `python3 --version` reports Python 3.11 or newer and `git --version`
+   succeeds. Install these before class if either command is unavailable.
+2. Confirm the Mac can reach GitHub and Python package indexes on the network
+   that will be used for setup. The first installation is not offline.
+3. Install or update the Zoom desktop client. Join the actual class meeting
+   from the teaching Mac and a test participant device; verify microphone,
+   speakers or headphones, camera choice, chat, and the planned host/admission
+   settings.
+4. Share the terminal or Trail window once. Complete any macOS screen sharing
+   permission prompt and restart Zoom if requested, then test sharing again.
+5. Turn off private notifications and prepare the documented low-bandwidth
+   route: pasted commands in chat plus text evidence instead of Trail video.
+6. Send the meeting link and passcode through the approved private channel.
+   Never place meeting credentials in Git, course files, screenshots, or logs.
+
+No hosted Explore Studio service, student login, API credential, or secret is
+required for S01. GitHub and package-index access are needed only during setup;
+the starter, package validation, and Classroom Trail run locally afterward.
+
 ## Teacher provisioning
 
 Start with two separate clean checkouts: this repository at the approved course
@@ -29,7 +52,7 @@ materials revision and one new repository created from the pinned student
 template. From the Explore Studio checkout, run:
 
 ```console
-python scripts/provision_student_workspace.py /absolute/path/to/student-repository
+python3 scripts/provision_student_workspace.py /absolute/path/to/student-repository
 ```
 
 The command validates all 30 student material directories and required example
@@ -41,7 +64,9 @@ overlay.
 Review and commit the provisioned files in the student's repository before
 delivery. Do not commit `.venv`, generated archives, credentials, or teacher
 materials. `course-materials.json` records the exact source revision and the
-course platform pin without personal data.
+course platform pin without personal data. Provisioning also ignores generated
+Python `*.egg-info/` metadata so the first install does not pollute the
+student's Git status.
 
 ## Student bootstrap — macOS or Linux
 
