@@ -11,9 +11,10 @@ export default function SiteHeader() {
         <span>course4teen</span>
       </Link>
       <nav aria-label="Main navigation">
-        <Link href="/#program">Program</Link>
+        <Link href="/students/prepare/">Prepare</Link>
         <Link href="/calendar/">Calendar</Link>
         <Link href="/students/slides/">Student slides</Link>
+        <Link href="/#program">Program</Link>
         <Link href="/#parents">For parents</Link>
         <a className="nav-cta" href={contactHref}>Join the next cohort</a>
       </nav>

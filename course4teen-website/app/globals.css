@@ -224,6 +224,16 @@ footer a:hover { text-decoration: underline; }
 .slide-code code { background: none; padding: 0; }
 kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3em; padding: .05em .4em; font: 700 .85em/1 monospace; }
 
+.prep-table { display: grid; gap: .5px; background: var(--line); border: 1px solid var(--line); margin: 1.4rem 0; }
+.prep-table div { display: flex; justify-content: space-between; gap: 1rem; background: var(--paper); padding: .7rem 1rem; }
+.prep-table dt { font-weight: 700; color: var(--ink); }
+.prep-table dd { margin: 0; text-align: right; }
+.prep-list { margin: 0 0 .9rem; padding-left: 1.3rem; display: grid; gap: .6rem; }
+.prep-list li::marker { color: var(--coral-accessible); }
+.prep-downloads { list-style: none; margin: 0 0 1.4rem; padding: 0; display: grid; gap: 1.4rem; }
+.prep-downloads .button { margin-bottom: .6rem; }
+.prep-downloads p { max-width: 520px; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; }
