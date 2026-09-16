@@ -4,7 +4,9 @@ Use this checklist as a speaking and recovery aid, not as a mastery score.
 
 ## Before the visitor arrives
 
-- [ ] My reviewed S29 state is committed and the working tree is understood.
+- [ ] My reviewed S29 state is committed and the working tree is understood
+      (Git-managed folders), or my files match my last saved S29 checkpoint
+      (ZIP path without Git).
 - [ ] The focused learner tests and appropriate full suite are green.
 - [ ] `explore-package validate` reports valid with zero issues.
 - [ ] Two fresh local exports have identical SHA-256 and bytes.
@@ -41,6 +43,7 @@ schema, runtime feature, credential, publication, or deployment step.
 ## Close
 
 - [ ] Teacher rubric evidence is recorded separately from Trail completion.
-- [ ] Final `git status --short`, diff, staged diff, and reviewed commit complete.
+- [ ] Git-managed folders only: final `git status --short`, diff, staged diff,
+      and reviewed commit complete. ZIP path without Git: skip.
 - [ ] Optional tag is local only and points to the final reviewed commit.
 - [ ] I did not publish or deploy the package.

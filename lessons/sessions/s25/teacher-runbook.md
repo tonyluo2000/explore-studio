@@ -131,6 +131,8 @@ function bodies, route solution, or test answers. Enforce the whole-file ban.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 The repository history must keep planning separate from implementation. The
 lesson plan/task card commit comes first; the prototype code, fixtures, tests,
 and package use a second descriptive commit. Students still perform status,

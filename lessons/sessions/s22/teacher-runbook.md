@@ -57,6 +57,8 @@ interprets the traceback. It may not propose a repair before frame/cause evidenc
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Review status, diff, stage, `git diff --staged`, then commit one isolated fix with
 its regression test. Interpret `M`, `??`, no output, identity errors, and retry.
 Understanding takes priority over a rushed commit.

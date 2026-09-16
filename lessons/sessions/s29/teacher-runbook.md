@@ -151,6 +151,8 @@ runtime features.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Preserve review history with follow-up commits such as:
 
 1. review notes / test evidence;

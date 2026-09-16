@@ -61,6 +61,8 @@ first trace. It must not generate the collection, loop, package, or theme.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use the task card sequence through `git diff --staged`. Interpret status before
 staging; use shared identity/cancel/retry recovery. Understanding outranks a
 rushed live commit.

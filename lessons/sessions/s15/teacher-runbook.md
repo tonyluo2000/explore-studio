@@ -65,6 +65,8 @@ solution, order, trace, assertions, or helper implementation.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Follow status/diff/stage/staged diff/commit. Interpret `M`, `??`, and no output;
 recover identity or cancel/retry safely. Understanding comes before a rushed
 capstone commit.

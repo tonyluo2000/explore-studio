@@ -57,6 +57,8 @@ prediction; it may not write flattening/sorting code or determine the route.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Commit the algorithm separately from optional story-data edits. Use shared Git
 interpretation/recovery and staged-diff review.
 

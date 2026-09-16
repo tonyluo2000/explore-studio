@@ -2,4 +2,8 @@
 #
 # No Git client and no GitHub account are required. Pip downloads the exact
 # reviewed course platform commit as a plain HTTPS archive.
+#
+# pytest is pinned directly here (not pulled from the platform's [dev] extra)
+# so the S20-S30 session tests run on a plain ZIP install.
+pytest==8.3.3
 explore-studio @ https://github.com/tonyluo2000/explore-studio/archive/308bc6c0a2b149e8058f46c8f1beece50b793969.tar.gz

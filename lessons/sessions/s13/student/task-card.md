@@ -89,6 +89,8 @@ your explanation after you write it; it must not supply the explanation.
 
 ## Git close
 
+**ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
+
 ```console
 git status --short
 git diff

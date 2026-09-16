@@ -148,6 +148,8 @@ answers. The student accepts or rejects the suggestion and records why.
 
 ## Git review
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 The supplied repository history separates the blueprint/project record, initial
 tests, and playable spike into three reviewable commits. For student work, retain
 status → diff → staged diff → descriptive commit:

@@ -237,6 +237,69 @@ def test_student_pin_installs_the_course_platform_without_a_git_client():
     assert pin.strip().endswith(".tar.gz")
 
 
+def test_student_pin_provides_a_minimal_pinned_pytest_without_the_dev_extra():
+    pin = (PROJECT_ROOT / "classroom" / "requirements-student.txt").read_text(encoding="utf-8")
+
+    match = re.search(r"^pytest==([\w.]+)$", pin, flags=re.MULTILINE)
+    assert match, "requirements-student.txt must pin an exact pytest version"
+    assert match.group(1) >= "8.0"
+    dependency_lines = [line for line in pin.splitlines() if line and not line.startswith("#")]
+    assert not any(
+        "[dev]" in line for line in dependency_lines
+    ), "the ZIP pin must not pull the full dev extra"
+    assert "pytest-cov" not in pin
+
+
+def test_session_pytest_commands_through_s30_only_need_the_student_pin():
+    pin = (PROJECT_ROOT / "classroom" / "requirements-student.txt").read_text(encoding="utf-8")
+    assert re.search(r"^pytest==", pin, flags=re.MULTILINE)
+
+    sessions_with_pytest_commands = ("s20", "s25", "s26", "s27", "s28", "s29", "s30")
+    for session_id in sessions_with_pytest_commands:
+        task_card = (
+            PROJECT_ROOT / "lessons" / "sessions" / session_id / "student" / "task-card.md"
+        ).read_text(encoding="utf-8")
+        assert "python -m pytest" in task_card, f"{session_id} task card lost its pytest command"
+
+
+GIT_SECTION_HEADING = re.compile(r"^## .*Git.*(close|review|commit)", re.IGNORECASE | re.MULTILINE)
+ZIP_GATE_MARKERS = ("ZIP path check", "ZIP classes", "ZIP path without Git")
+
+
+def test_s02_through_s30_git_sections_are_gated_for_zip_students():
+    for session_id in SESSION_IDS:
+        if session_id in ("s01",):
+            continue
+        task_card_path = (
+            PROJECT_ROOT / "lessons" / "sessions" / session_id / "student" / "task-card.md"
+        )
+        text = task_card_path.read_text(encoding="utf-8")
+        for match in GIT_SECTION_HEADING.finditer(text):
+            tail = text[match.end() :]
+            gate_offset = min(
+                (tail.find(marker) for marker in ZIP_GATE_MARKERS if marker in tail),
+                default=None,
+            )
+            assert (
+                gate_offset is not None
+            ), f"{task_card_path} has an unconditional Git section: {match.group(0)!r}"
+
+
+def test_s01_task_card_has_no_git_commands():
+    task_card = (
+        PROJECT_ROOT / "lessons" / "sessions" / "s01" / "student" / "task-card.md"
+    ).read_text(encoding="utf-8")
+    assert not GIT_SECTION_HEADING.search(task_card)
+    assert not re.search(r"^git ", task_card, flags=re.MULTILINE)
+
+
+def test_student_quick_start_git_claim_is_accurate():
+    quick_start = (PROJECT_ROOT / "lessons" / "sessions" / "student-quick-start.md").read_text(
+        encoding="utf-8"
+    )
+    assert "no session is blocked without it" in quick_start
+
+
 def test_provisioned_workspace_also_carries_the_zip_entry_points(tmp_path):
     target = make_template(tmp_path / "student")
 

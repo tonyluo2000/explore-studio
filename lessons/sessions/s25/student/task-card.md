@@ -171,6 +171,8 @@ function bodies, route solution, or test answers.
 
 ## Git close (0:42–0:45)
 
+**ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
+
 Planning and prototype implementation belong in separate commits. For your
 prototype change, use:
 

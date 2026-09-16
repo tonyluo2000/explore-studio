@@ -17,10 +17,13 @@ target, not a replacement for your original project.
 
 ## Freeze the reviewed starting point (0:00–0:05)
 
-Run `git status --short` and name the exact reviewed commit you are presenting.
-Do not add features during premiere rehearsal. Record the premise, visitor
-payoff, acceptance criteria, deferred ideas, and clean or understood working
-tree in `project-record.md`.
+If your course folder is Git-managed, run `git status --short` and name the
+exact reviewed commit you are presenting. On the ZIP path without Git (see
+[Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed)),
+instead name the last saved state of your files and confirm nothing has
+changed since your S29 review. Do not add features during premiere rehearsal.
+Record the premise, visitor payoff, acceptance criteria, deferred ideas, and
+clean or understood working tree in `project-record.md`.
 
 Predict before running anything:
 

@@ -56,6 +56,8 @@ proposes a candidate. It may not write modules or change expected output.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use status, diff, intentional stage, `git diff --staged`, and an isolated
 behavior-preserving refactor commit. Interpret `M`, `??`, no output, identity
 failure, and retry. Understanding and exact evidence outrank speed.

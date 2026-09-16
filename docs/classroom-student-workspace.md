@@ -8,8 +8,10 @@ There are two student distribution paths from one reviewed course source.
 
 **The student ZIP distribution is the primary beginner path.** Students unzip
 one folder, run the computer check, install pinned course tools once, and start
-S01. No Git client, GitHub account, or clone is involved at any point. This is
-the path used for S01 onboarding.
+S01 — no Git client, GitHub account, or clone is required to obtain, install,
+or run any of it. S02–S30 task cards each carry a Git-close step for classes
+that have moved to the Git-managed path; it is explicitly gated skippable for
+students still on the ZIP path, so no session ever blocks on Git.
 
 **The Git-derived student repository is the later, advanced path.** It is
 unchanged and remains available for classes that have reached the Git lesson.
