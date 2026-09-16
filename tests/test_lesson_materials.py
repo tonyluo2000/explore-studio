@@ -75,14 +75,21 @@ def test_each_session_has_student_task_card(session: str) -> None:
 
     assert all(item.lower() in task_card.lower() for item in REQUIRED_TASK_CARD_CONTENT)
     assert "../../student-quick-start.md" in task_card
-    assert "git diff --staged" in task_card
+    if session == "s01":
+        # S01 onboards from the student ZIP distribution, so it must not require
+        # Git. The Git close is preserved from S02 onward.
+        assert "git diff --staged" not in task_card
+        assert "You do not need Git or a GitHub account for this session." in task_card
+    else:
+        assert "git diff --staged" in task_card
 
 
 def test_shared_quick_start_covers_setup_accessibility_ai_and_git() -> None:
     quick_start = (MATERIALS_ROOT / "student-quick-start.md").read_text(encoding="utf-8")
 
     required_setup = (
-        "repository root",
+        "course folder root",
+        "check-my-computer.py",
         ".venv",
         "explore-package --help",
         "WASD",
@@ -90,7 +97,6 @@ def test_shared_quick_start_covers_setup_accessibility_ai_and_git() -> None:
         "Press **E**",
         "keyboard focus",
         "Control-C",
-        "Git knows your name and email",
         "screen sharing",
         "Accessibility and low-bandwidth route",
         "Common failures",

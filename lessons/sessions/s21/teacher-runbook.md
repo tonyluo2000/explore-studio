@@ -58,6 +58,8 @@ may not write a validator, reorder the errors, or provide a complete solution.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use status, diff, intentional stage, `git diff --staged`, and a descriptive
 behavior-plus-regression commit. Interpret `M`, `??`, and no output; use identity
 and cancellation/retry guidance. Understanding beats a rushed commit.

@@ -120,6 +120,8 @@ repair failures, invent evidence, assess mastery, or add features.
 
 ## Git close, support, and cut line
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use status → diff → staged diff → one descriptive final reviewed commit. An
 optional tag stays local and points to that commit; publishing and deployment
 remain outside the course.

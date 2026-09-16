@@ -60,6 +60,8 @@ flag one discrepancy. It may not fill the table or write the function.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use the task card and shared Git interpretation/recovery. Confirm `M`, `??`, no
 output, and the staged diff before a descriptive commit. Understanding outranks
 a rushed commit.

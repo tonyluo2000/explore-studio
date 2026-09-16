@@ -179,6 +179,8 @@ Do not paste whole files or ask AI for a complete solution.
 
 ## Git close (0:42–0:45)
 
+**ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
+
 The lesson materials were supplied as three separate reviewable changes:
 blueprint/project record, initial tests, and playable spike. For your work use
 status → diff → staged diff → descriptive commit:

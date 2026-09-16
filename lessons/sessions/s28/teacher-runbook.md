@@ -162,6 +162,8 @@ handling, or provide final package contents.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use reviewable behavior commits after status → diff → staged diff:
 
 1. input loading + failure tests;

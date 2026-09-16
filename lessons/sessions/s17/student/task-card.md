@@ -95,6 +95,8 @@ one edge case only; it must not write `find_by_id`, `filter_by_color`, or
 
 ## Git close
 
+**ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
+
 ```console
 git status --short
 git diff

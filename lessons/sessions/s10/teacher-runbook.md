@@ -69,6 +69,8 @@ case, which the student predicts and explains before testing.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Follow the task card through staged diff and descriptive commit. Use shared Git
 interpretation/recovery and allow asynchronous completion.
 

@@ -57,6 +57,8 @@ It may not supply a table or choose the mismatch first.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use the task-card sequence through `git diff --staged`; interpret status and use
 identity/cancel/retry recovery. Understanding comes first.
 

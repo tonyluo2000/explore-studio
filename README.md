@@ -49,7 +49,10 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 - [`docs/development-handoff.md`](docs/development-handoff.md) — required
   GitHub publication and exact-head handoff procedure for development work.
 - [`docs/classroom-student-workspace.md`](docs/classroom-student-workspace.md) —
-  canonical student repository provisioning, bootstrap, and Windows/WSL path.
+  canonical student ZIP distribution, Git-derived repository provisioning,
+  bootstrap, and Windows/WSL path.
+- [`docs/computer-readiness.md`](docs/computer-readiness.md) — minimum hardware,
+  supported devices, and the student-facing computer check.
 - [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
   implemented Student API contract.
 - [`docs/classroom-trail-v0.11.md`](docs/classroom-trail-v0.11.md) — additive local
@@ -79,10 +82,14 @@ explore-studio/
 └── pyproject.toml  # Package and tool configuration
 ```
 
-This repository is the official platform repository. The target course model
-uses one independent repository per student; students export versioned Explorer
-Package candidates that future trusted workflows can publish for class-world
-assembly. Student repositories are created from the standalone
+This repository is the official platform repository. Beginners receive the
+deterministic student ZIP distribution built by
+[`scripts/build_student_zip.py`](scripts/build_student_zip.py); S01 onboarding
+needs no Git client and no GitHub account.
+
+The Git-derived workspace remains the later, advanced path: students export
+versioned Explorer Package candidates that future trusted workflows can publish
+for class-world assembly. Student repositories are created from the standalone
 [`student-adventure-template`](https://github.com/tonyluo2000/student-adventure-template),
 then receive the student-only course overlay through the
 [classroom workspace procedure](docs/classroom-student-workspace.md). They are

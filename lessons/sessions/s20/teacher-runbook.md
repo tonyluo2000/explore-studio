@@ -64,6 +64,8 @@ not generate the pipeline, package, or whole-file answer.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Review input, Python, generated YAML, and tests as one milestone diff. Stage only
 under S20, inspect `git diff --staged`, and use shared identity/retry guidance.
 

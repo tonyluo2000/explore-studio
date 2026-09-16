@@ -55,6 +55,8 @@ number or Boolean. It must not supply the explanation or truth table.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Follow task-card status, diff, stage, staged diff, and descriptive commit steps
 with shared recovery guidance.
 

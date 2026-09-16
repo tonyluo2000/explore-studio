@@ -18,7 +18,12 @@ review/evidence harnesses and the student's persistent capstone instead of a new
 `starter.py`. Teachers deliver from `teacher-runbook.md`; only student subtrees
 are provisioned into derived student repositories. All students use the shared
 [`student-quick-start.md`](student-quick-start.md) for setup, controls,
-accessibility choices, troubleshooting, AI evidence, and Git recovery.
+accessibility choices, troubleshooting, AI evidence, and the optional Git close.
+
+S01 onboarding runs from the student ZIP distribution and requires no Git client
+and no GitHub account. The Git close in the rhythm below is teacher-managed: it
+applies once the teacher has introduced Git and, where used, handed out the
+Git-managed course folder. It never blocks a session.
 
 ## Shared 45-minute rhythm
 
@@ -32,7 +37,7 @@ promise that every computer operation takes exactly the same time.
 | 0:12–0:24 | 11–15 min | Local Python activity |
 | 0:24–0:37 | 9–13 min | Explorer Package and visible world activity |
 | 0:37–0:42 | 4–6 min | Test and deliberate debugging |
-| 0:42–0:45 | 3–5 min | Review and descriptive Git close |
+| 0:42–0:45 | 3–5 min | Review, save, and the teacher-managed Git close |
 
 Each runbook names a **cut line**: the minimum evidence to protect when launch,
 audio, screen sharing, or setup takes longer. Git understanding takes priority

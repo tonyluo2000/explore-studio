@@ -55,6 +55,8 @@ student implements and predicts. It must never write a search function.
 
 ## Git close
 
+**ZIP classes:** Skip this step for classes still on the ZIP distribution that have not started the Git lesson yet; use it once the class has a Git-managed course folder. See [Student Quick Start → Later: Git](../student-quick-start.md#later-git-optional-teacher-managed).
+
 Commit implementations and assertions together after status, diff, stage, and
 staged-diff interpretation. Use shared recovery guidance.
 

@@ -154,6 +154,8 @@ whole files or request a complete solution.
 
 ## Git close (0:42–0:45)
 
+**ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
+
 Use status → diff → staged diff and reviewable behavior commits:
 
 1. input loading + failure tests;
