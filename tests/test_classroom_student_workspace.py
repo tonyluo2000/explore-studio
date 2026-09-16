@@ -9,7 +9,6 @@ import pytest
 from scripts.provision_student_workspace import (
     COURSE_PLATFORM_COMMIT,
     EXAMPLE_PACKAGE_IDS,
-    REHEARSAL_RECORD,
     SESSION_IDS,
     STUDENT_GITIGNORE_RULE,
     ProvisionError,
@@ -76,8 +75,39 @@ def test_provisioned_workspace_has_exact_course_pin_examples_and_receipt(tmp_pat
     receipt = json.loads((target / "course-materials.json").read_text(encoding="utf-8"))
     assert receipt["course_platform_commit"] == COURSE_PLATFORM_COMMIT
     assert (target / "docs" / "classroom-student-workspace.md").is_file()
-    assert (target / "docs" / REHEARSAL_RECORD).is_file()
     assert STUDENT_GITIGNORE_RULE in (target / ".gitignore").read_text().splitlines()
+
+
+def test_provisioned_workspace_excludes_internal_operations_docs(tmp_path):
+    target = make_template(tmp_path / "student")
+
+    provision_student_workspace(target, PROJECT_ROOT)
+
+    assert not (target / "docs" / "operations").exists()
+    assert not (target / "docs" / "operations" / "s01-clean-rehearsal-2026-09-10.md").exists()
+
+
+def test_provisioned_workspace_excludes_teacher_and_platform_source(tmp_path):
+    target = make_template(tmp_path / "student")
+
+    provision_student_workspace(target, PROJECT_ROOT)
+
+    assert not (target / "engine").exists()
+    assert not (target / "explore").exists()
+    assert not (target / "scripts").exists()
+    assert not (target / "tests").exists()
+    for session_id in SESSION_IDS:
+        assert not (target / "lessons" / "sessions" / session_id / "teacher-runbook.md").exists()
+        assert not (target / "lessons" / "sessions" / session_id / "answer-key.md").exists()
+    for staff_doc in (
+        "staff-pilot-incident.md",
+        "staff-pilot-rollback.md",
+        "staff-pilot-secret-rotation.md",
+        "staff-pilot-synthetic-reset.md",
+    ):
+        assert not (target / "docs" / "operations" / staff_doc).exists()
+    assert (target / "docs" / "computer-readiness.md").is_file()
+    assert (target / "docs" / "classroom-student-workspace.md").is_file()
 
 
 def test_all_student_task_card_local_links_and_course_paths_resolve(tmp_path):

@@ -36,7 +36,6 @@ READINESS_CHECK_SOURCE = "scripts/check_computer_readiness.py"
 READINESS_CHECK_TARGET = "check-my-computer.py"
 READINESS_DOC = "computer-readiness.md"
 COPY_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
-REHEARSAL_RECORD = "operations/s01-clean-rehearsal-2026-09-10.md"
 STUDENT_GITIGNORE_RULE = "*.egg-info/"
 
 
@@ -78,8 +77,6 @@ def _validate_source(source_root: Path) -> None:
         raise ProvisionError("course source is missing computer readiness guidance")
     if not (source_root / "docs" / "classroom-student-workspace.md").is_file():
         raise ProvisionError("course source is missing classroom workspace guidance")
-    if not (source_root / "docs" / REHEARSAL_RECORD).is_file():
-        raise ProvisionError("course source is missing the S01 rehearsal record")
 
 
 def _validate_target(target_root: Path) -> None:
@@ -157,12 +154,6 @@ def provision_student_workspace(target_root, source_root=None):
     target_docs.mkdir()
     for doc_name in ("classroom-student-workspace.md", READINESS_DOC):
         shutil.copy2(source / "docs" / doc_name, target_docs / doc_name)
-    target_operations = target_docs / "operations"
-    target_operations.mkdir()
-    shutil.copy2(
-        source / "docs" / REHEARSAL_RECORD,
-        target_docs / REHEARSAL_RECORD,
-    )
     receipt = {
         "contract_version": "0.1",
         "course_materials_source_commit": source_revision,
