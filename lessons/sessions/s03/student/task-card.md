@@ -7,6 +7,13 @@ and predict which player event reveals each authored response.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+## Expedition story
+
+Tonight you join the shared Moonlit expedition. The Moon Compass has a secret
+it is hiding — **you choose what that secret is**: a lantern, a fork in the
+trail, a clearing, or an idea of your own. Your nearby clue should hint at the
+secret without giving it away; your interaction line reveals it.
+
 ## The bridge to the world
 
 | Local Python value | Declarative YAML field | Visible world result |
@@ -18,15 +25,19 @@ YAML drives the runtime. Python helps you compose and inspect the text locally.
 
 ## Predict before running
 
-Complete: “Moving near will show ___; pressing E will show ___.”
+Complete: "Moving near will show ___; pressing E will show ___." With a
+partner, read your clue aloud and have them guess the reveal before either of
+you presses E.
 
 ## Core path
 
-1. In `starter.py`, expand `near_message = f"{object_name}"` into a complete
-   nearby clue. Keep `{object_name}` inside the f-string.
-2. Write your own interaction line, then run the file.
-3. Checkpoint: point to the braces and explain what value appears there.
-4. Copy only the final message text into the matching YAML fields, then run:
+1. Choose your secret — what the Moon Compass's clue is hiding.
+2. In `starter.py`, expand `near_message = f"{object_name}"` into a complete
+   nearby clue that hints at the secret. Keep `{object_name}` inside the
+   f-string.
+3. Write your own reveal line for `interacted_message`, then run the file.
+4. Checkpoint: point to the braces and explain what value appears there.
+5. Copy only the final message text into the matching YAML fields, then run:
 
    ```console
    explore-package validate lessons/sessions/s03/student/explorer-package
@@ -38,9 +49,11 @@ Complete: “Moving near will show ___; pressing E will show ___.”
      --name "S03 Make the World React"
    ```
 
-5. Approach without pressing E; record the near response. Press E; record the
+6. Have your partner read the clue and predict the reveal before pressing E.
+   Approach without pressing E; record the near response. Press E; record the
    interaction response. Complete the object interaction.
-6. Checkpoint: compare both observations with your event prediction.
+7. Checkpoint: compare your partner's prediction with the actual reveal, and
+   compare both observations with your original event prediction.
 
 ## Deliberate debug workflow
 
@@ -56,12 +69,15 @@ Use **edit → predict → run → restore**:
 ## Support path
 
 Start with `near_message = f"The {object_name} glows."`, then replace `glows`
-with your own clue. Ask the teacher to identify the field—not write the message.
+with your own clue. Ask the teacher to identify the field—not write the
+message. **Solo or low-bandwidth:** if you have no partner, write your reveal
+prediction on paper before pressing E, or ask the teacher to read the clue
+aloud and collect predictions verbally.
 
 ## Extension path
 
-Make the near response foreshadow the interaction response without revealing
-the whole surprise.
+Write a second, harder clue that foreshadows the same reveal with less detail,
+so a partner has to think longer before predicting it correctly.
 
 ## AI receipt
 

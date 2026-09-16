@@ -48,6 +48,49 @@ This teaching order is deliberate: the Mission 13 comparison follows the
 Mission 09 counter that supplies its values, then students compose Boolean
 conditions with AND, OR, and NOT. Stable mission numbers and IDs do not change.
 
+## Expedition storyline (S03–S15)
+
+Starting in S03, sessions S03–S15 share one loose, narrative-only expedition:
+the Moonlit / Storm expedition. S01 and S02 remain frozen and are not part of
+the storyline. The story never implies engine verification that does not
+exist, adds no invented inventory, resources, decrements, or state-aware text,
+and never introduces a cross-package reference — it is framing only, layered
+onto the existing canonical missions and packages.
+
+**Route:**
+
+- **S03–S06 — Moonlit trail and starlight garden.** The Moon Compass's clue
+  points the way; a Moonlit Guide is met and given a voice, then a short
+  conversation and a themed collection extend the trail.
+- **S07–S08 — Sky gate.** A two-state prop and its if/else guardian decide
+  whether the gate is passable.
+- **S09–S10 — Storm observatory.** A Storm Engine is charged in S09; the
+  Weather Reader judges whether it has reached its goal in S10. S07's own
+  end-state goals stay teacher-checked only — no state-aware toggle
+  extension is introduced anywhere in the storyline.
+- **S11–S15 — Locks and the secret sequence.** Switch conditions, styles, and
+  an ordered sequence of actions unlock the expedition's final secret.
+
+**Story beats:** Moon Compass → Moonlit Guide → guide conversation →
+expedition onward. The Storm Engine charged in S09 is judged by the Weather
+Reader in S10.
+
+**Rules:**
+
+- One expedition, many independent packages — each session's package still
+  stands alone; nothing reaches across package boundaries.
+- Every object and NPC introduced by the story has a reason to exist tied to
+  that session's Python concept.
+- Clue before reveal, in both the story and each session's near/interacted
+  pair.
+- A failure or bug always points the student toward recovery, never toward a
+  narrative dead end.
+- The challenge in every session still comes from the Python concept being
+  taught, not from the story.
+- The story never implies engine verification, state tracking, or mechanics
+  that are not actually implemented.
+- No invented inventory, resources, decrements, or state-aware toggle text.
+
 ## Session plans
 
 ### S01 — Explorer's Field Notes
@@ -76,11 +119,14 @@ conditions with AND, OR, and NOT. Stable mission numbers and IDs do not change.
 
 ### S03 — Make the World React
 
-- **Creative goal:** Give the prop a surprising nearby clue and interaction line.
+- **Creative goal:** Choose what the Moon Compass's clue is hiding, opening
+  the shared expedition, then write its surprising nearby clue and
+  interaction reveal line.
 - **Programming concept:** String composition and f-strings.
 - **Python activity:** Build both messages from an object-name variable.
 - **World activity:** Complete M03 with `when_near` and `when_interacted` text.
-- **Prediction:** State which player action should reveal each message.
+- **Prediction:** With a partner, read the clue aloud and predict the reveal
+  before pressing E, then compare the prediction with the actual reveal.
 - **Test/debug:** Exercise proximity and interaction separately; fix blank,
   misplaced, or malformed text.
 - **Bounded AI role:** Suggest revisions only after the student writes both lines.

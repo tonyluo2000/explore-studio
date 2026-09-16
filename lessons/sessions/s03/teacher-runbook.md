@@ -10,36 +10,47 @@ reveals each message.
 
 **Prerequisite:** S02 variables and strings.
 
+## Expedition context
+
+S03 opens the shared, loosely continuous Moonlit expedition that runs through
+S15: the Moon Compass's clue leads toward a guide who appears in S04. The
+continuity is narrative only — no new mechanic, inventory, or engine state is
+introduced. Students still author only the two existing declarative fields.
+
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
 - Run the starter and validate the package.
-- Be ready to demonstrate “move near” separately from “press interact.” Avoid
+- Be ready to demonstrate "move near" separately from "press interact." Avoid
   introducing general event systems; use the two existing declarative fields.
 
 ## 45-minute runbook
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Ask how a silent prop could hint at a secret. | Invents one nearby clue and one discovery. |
+| 0:00–0:05 | 4–5 min | Ask how a silent prop could hint at a secret, and introduce the Moonlit expedition framing. | Invents one nearby clue and states what secret it hides. |
 | 0:05–0:12 | 6–8 min | Build one f-string together and contrast the two package event fields. | Predicts near vs. interacted behavior. |
-| 0:12–0:24 | 11–15 min | Students complete the intentionally minimal near f-string, author the second response, and run locally. | Prints two lines and explains brace substitution. |
-| 0:24–0:37 | 9–13 min | Students transfer plain text to YAML, validate, and exercise proximity and interaction separately. | Observes both events and completes M03. |
+| 0:12–0:24 | 11–15 min | Students choose their secret, complete the intentionally minimal near f-string as a clue, author the reveal line, and run locally. | Prints two lines and explains brace substitution. |
+| 0:24–0:37 | 9–13 min | Students transfer plain text to YAML, validate, and pair up so a partner reads the clue and predicts the reveal before pressing E. | Observes both events, compares partner prediction to reveal, and completes M03. |
 | 0:37–0:42 | 4–6 min | Lead the task card's edit → predict → run → restore brace exercise and reason about swapped fields. | Restores working code and explains the mapping. |
 | 0:42–0:45 | 3–5 min | Compare prediction/result and inspect status/diffs; commit or schedule it. | Descriptive commit or documented plan. |
 
-**Teacher cut line:** At 0:35, stop wording revisions. Protect one completed
-f-string explanation and separate evidence for near versus E interaction. Use a
-teacher demonstration if bandwidth blocks the Trail; move Git after class.
+**Teacher cut line:** At 0:35, stop wording revisions. If the partner-prediction
+step has not started, reduce it to one written guess instead of a live
+exchange. Protect one completed f-string explanation and separate evidence for
+near versus E interaction. Use a teacher demonstration if bandwidth blocks the
+Trail; move Git after class.
 
 ## Student task and event prediction
 
 Students follow `student/task-card.md`. Its starter deliberately prints only the
 object name for `near_message` until the student constructs the clue.
 
-Complete this sentence before running the Trail: “Moving near will show ___;
-pressing interact will show ___.” Personalize both Python messages and their
-matching declarative package fields.
+Complete this sentence before running the Trail: "Moving near will show ___;
+pressing interact will show ___." Personalize both Python messages and their
+matching declarative package fields. A partner reads the near clue aloud and
+predicts the interaction reveal before either student presses E; compare the
+prediction with the actual reveal afterward.
 
 ```console
 python lessons/sessions/s03/student/starter.py
@@ -81,7 +92,8 @@ every world object is interacted with.
 Student sequence: explain intent → predict → ask one bounded question → test →
 revise → explain accepted code. AI may suggest wording revisions only after the
 student writes both original lines. It may explain one brace or field mismatch;
-it may not author either message or invent a new event.
+it may not author either message, choose the student's secret, or invent a new
+event.
 
 ## Git close
 
@@ -97,12 +109,17 @@ git commit -m "Add moon compass response messages"
 
 ## Optional extension
 
-Revise the nearby line to foreshadow the interaction line without revealing the
-whole surprise. Keep exactly the existing two response fields.
+Have the student write a second, harder clue that foreshadows the same reveal
+with less detail, so a partner needs longer to predict it correctly. Keep
+exactly the existing two response fields.
 
 ## Teacher notes and answer key
 
-- Correct Python: `near_message = f"The {object_name} needle begins to shimmer."`
+- Correct Python: `near_message = f"The {object_name} needle trembles toward
+  the dark trees."`
+- A strong clue hints at the reveal's shape (direction, feeling, or object)
+  without naming it; if a clue simply restates the reveal, ask the student to
+  make it more indirect before validating.
 - If values are swapped, the discovery appears merely by approaching and the
   clue appears after interaction. Repair the YAML field assignment.
 - Reinforce that the f-string exercise helps compose text; the package receives

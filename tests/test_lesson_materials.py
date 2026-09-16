@@ -47,7 +47,7 @@ EXPECTED_STARTER_OUTPUTS = {
         "Fern waits near the edge of the trail.\n"
     ),
     "s02": "Moon Compass\n240 180\npurple\n",
-    "s03": "Moon Compass\nYou turn the Moon Compass toward a hidden trail!\n",
+    "s03": "Moon Compass\nThe Moon Compass points past the trees to a guide's lantern!\n",
     "s04": "Welcome to TODO: name your setting, Ari!\n",
     "s05": "2\n",
 }
