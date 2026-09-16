@@ -184,8 +184,9 @@ For every classroom device or image:
 Record only device/image identifiers and pass/fail results. Do not record
 student credentials or personal data.
 
-The first automated clean-room execution is recorded in the
-[S01 clean student-flow rehearsal](operations/s01-clean-rehearsal-2026-09-10.md).
+The first automated clean-room execution is recorded in the S01 clean
+student-flow rehearsal record kept under `docs/operations/` in the
+teacher/source repository (not distributed to students).
 
 ## Ownership and update boundary
 

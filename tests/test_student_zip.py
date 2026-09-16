@@ -75,6 +75,12 @@ def test_zip_excludes_teacher_material_platform_source_and_environment_noise(stu
         assert parts[0] not in {"explore", "engine", "scripts", "tests", ".git", ".venv"}
 
 
+def test_zip_excludes_internal_operations_docs(student_zip):
+    paths = set(course_paths(student_zip))
+    assert not any(path.startswith("docs/operations") for path in paths)
+    assert "docs/operations/s01-clean-rehearsal-2026-09-10.md" not in paths
+
+
 def test_zip_ships_only_the_no_git_dependency_pin(student_zip):
     paths = set(course_paths(student_zip))
     for excluded in ZIP_EXCLUDED_PATHS:
