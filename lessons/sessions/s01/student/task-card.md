@@ -5,6 +5,12 @@
 **Learning target:** Use `print(...)` and string literals to record three world
 observations, then repair mismatched quotation marks.
 
+## You've just arrived
+
+You're stepping into an unfamiliar place, and the first thing any explorer
+does is start a field notebook. Today's three observations are the opening
+page of yours.
+
 ## Get ready
 
 Complete the first-day checklist in the shared
@@ -33,7 +39,10 @@ whether the player, Fern, the lantern, and the fountain should count.
    ```
 
 4. Checkpoint: show three separate printed lines and explain what a string is.
-5. Paste this complete command into the terminal from the repository root:
+5. Field note reflection: reread your three observations, then choose one
+   detail that feels worth investigating next. There is no required answer —
+   just pick the one that interests you and be ready to say why.
+6. Paste this complete command into the terminal from the repository root:
 
    ```console
    explore-package trail \
@@ -46,10 +55,10 @@ whether the player, Fern, the lantern, and the fountain should count.
      --name "S01 Explorer's Field Notes"
    ```
 
-6. Click the Trail window for focus. Move with WASD/arrows and press E once near
+7. Click the Trail window for focus. Move with WASD/arrows and press E once near
    each world object.
-7. Checkpoint: compare the final visited count with your prediction.
-8. Close the Trail window. To retry: edit, save, run the same command again.
+8. Checkpoint: compare the final visited count with your prediction.
+9. Close the Trail window. To retry: edit, save, run the same command again.
 
 ## Debug checkpoint
 

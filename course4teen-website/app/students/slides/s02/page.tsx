@@ -33,10 +33,16 @@ const supportedColors = [
 
 const slides = [
   {
-    kicker: "Mission",
+    kicker: "Your first expedition instrument",
     heading: "Create Your First Object",
     body: (
       <>
+        <p>
+          The Moon Compass is the expedition&rsquo;s first instrument. Where
+          you place it is a world decision, not just a coordinate exercise
+          &mdash; put it somewhere an explorer would actually notice it and
+          want to reach.
+        </p>
         <p>
           <strong>Mission:</strong> <code>create-a-classroom-object</code>
         </p>
@@ -122,12 +128,12 @@ const slides = [
   },
   {
     kicker: "Predict before running",
-    heading: "Call the position before you see it",
+    heading: "Where should this instrument go, and why?",
     body: (
       <p>
-        Sketch or describe where <code>(240, 180)</code> should appear. Then
-        predict what increasing <code>x</code> by 100 will do &mdash; before you
-        change anything.
+        Sketch or describe where <code>(240, 180)</code> should appear so an
+        explorer passing through would notice it. Then predict what increasing{" "}
+        <code>x</code> by 100 will do &mdash; before you change anything.
       </p>
     ),
   },
@@ -249,6 +255,17 @@ explore-package validate <your explorer package>`}</code>
         exact bounded question you asked, the suggestion you tested, whether you
         accepted or rejected it, and your own explanation of the change. Do not
         paste whole files or ask AI for a complete solution.
+      </p>
+    ),
+  },
+  {
+    kicker: "Looking ahead",
+    heading: "A static instrument, for now",
+    body: (
+      <p>
+        Today&rsquo;s Moon Compass sits where you placed it and does nothing
+        else yet. Next session, it gains its own clue and reveal, becoming an
+        active part of the expedition story.
       </p>
     ),
   },

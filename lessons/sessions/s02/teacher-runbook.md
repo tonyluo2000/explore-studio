@@ -10,6 +10,17 @@ adjust one coordinate after a local test.
 
 **Prerequisite:** S01 literals and output.
 
+## Expedition context
+
+S02 frames the existing Moon Compass object as the explorer's first
+expedition instrument. Students place it intentionally, in a spot an
+explorer would notice, and the coordinate prediction becomes part of that
+world decision. This is narrative framing only: `object_name`/`x`/`y`/`color`
+mechanics, the package schema, and M02 completion are unchanged. The session
+ends with a light forward reference — next session the same static instrument
+gains a clue and a reveal (S03) — without implying any saved or persistent
+runtime state.
+
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
@@ -21,8 +32,8 @@ adjust one coordinate after a local test.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Invite students to invent a prop with one story purpose. | States a prop name and purpose. |
-| 0:05–0:12 | 6–8 min | Introduce variables, types, and coordinates; display the Python → YAML → world map from the task card. | Labels types, names the runtime-driving file, and predicts a location. |
+| 0:00–0:05 | 4–5 min | Introduce the Moon Compass as the expedition's first instrument. Invite students to invent a prop with one story purpose. | States a prop name and purpose. |
+| 0:05–0:12 | 6–8 min | Introduce variables, types, and coordinates; display the Python → YAML → world map from the task card. Ask where an explorer would notice this instrument. | Labels types, names the runtime-driving file, and predicts a location an explorer would notice. |
 | 0:12–0:24 | 11–15 min | Students personalize variables, run Python, and transfer the same values to supported YAML fields. | Prints and explains all four values. |
 | 0:24–0:37 | 9–13 min | Students validate, launch M02, observe the prop, then predict and make one coordinate adjustment. | Valid package, visible movement, and completed object tour. |
 | 0:37–0:42 | 4–6 min | Use the quoted-integer bug or troubleshoot one observed mismatch. | Explains type and one evidence-based adjustment. |
@@ -39,7 +50,8 @@ safe visibility range, supported colors, and troubleshooting steps.
 
 Personalize the same `object_name`, `x`, `y`, and `color` in the Python starter
 and the declarative object file. Before launching, sketch or say where `(x, y)`
-should place the prop.
+should place the prop — an explorer's first instrument belongs somewhere it
+would actually be noticed.
 
 ```console
 python lessons/sessions/s02/student/starter.py
@@ -107,6 +119,10 @@ object contribution and the existing package schema.
 
 ## Teacher notes and answer key
 
+- The "first instrument" framing and placement question are narrative only —
+  do not imply the compass is saved, persisted, or carried between sessions.
+  S03 introduces its clue-and-reveal behavior as new authored content, not as
+  continuity from today's state.
 - Correct YAML: `x: 240`; removing quotes makes the value an integer.
 - `object_name` and `color` are strings; `x` and `y` are integers.
 - Python variables are learning practice. YAML remains the validated source for
