@@ -9,8 +9,12 @@ observations, then repair mismatched quotation marks.
 
 Complete the first-day checklist in the shared
 [`Student Quick Start`](../../student-quick-start.md). Be able to show the
-repository root, active `.venv`, working `explore-package --help`, Trail window,
-controls, Git name/email, and screen-sharing choice.
+course folder root, a `READY FOR EXPLORE STUDIO` result from
+`python3 check-my-computer.py`, an active `.venv`, a working
+`explore-package --help`, the Trail window, the controls, and your
+screen-sharing choice.
+
+You do not need Git or a GitHub account for this session.
 
 ## Predict before running
 
@@ -75,15 +79,16 @@ accepted/rejected change; student explanation.
 
 **Do not paste whole files or ask AI for a complete solution.**
 
-## Git close
+## Close
 
-```console
-git status --short
-git diff
-git add lessons/sessions/s01/student/starter.py
-git diff --staged
-git commit -m "Write three explorer field notes"
-```
+Save `starter.py` and keep your course folder where you can find it next
+session. Your work stays on your own computer; nothing is uploaded and no
+account is involved.
 
-Use the Quick Start to interpret `M`, `??`, or no output and to recover from an
-identity error. Understanding the diff matters more than finishing during class.
+Understanding what you changed matters more than finishing every path during
+class. Be ready to say which line you edited and why.
+
+**Optional, only if your teacher has started the Git lesson:** record this
+session with the Git close in the
+[`Student Quick Start`](../../student-quick-start.md). S01 is complete without
+it.

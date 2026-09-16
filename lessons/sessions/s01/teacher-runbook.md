@@ -8,6 +8,7 @@
 matching quotation marks to record three observations from a local world.
 
 **Prerequisites:** Basic typing, opening a terminal, and finding a file.
+No Git client, GitHub account, or clone is required for this session.
 
 ## Before class
 
@@ -16,13 +17,18 @@ matching quotation marks to record three observations from a local world.
   on the actual teaching computer and network.
 - Send students `student/task-card.md` and the shared
   `lessons/sessions/student-quick-start.md` before class.
-- Complete the first-day setup checklist with every student: repository root,
-  `.venv`, Python, `explore-package`, Trail open/close, controls, Git identity,
-  window switching, and screen-sharing readiness.
+- Deliver the student ZIP distribution built with
+  `python3 scripts/build_student_zip.py` and confirm each student unzipped it to
+  a supported location.
+- Have every student run `python3 check-my-computer.py` and report the final
+  result line. Resolve `SETUP HELP NEEDED` before class, not during S01.
+- Complete the first-day setup checklist with every student: course folder root,
+  `.venv`, Python, `explore-package`, Trail open/close, controls, window
+  switching, and screen-sharing readiness. Git identity is not part of S01.
 - Confirm `python lessons/sessions/s01/student/starter.py` runs locally.
 - Confirm the four example package directories in the world command below
   validate. Screen-share controls; students run their own local copy.
-- Ask students to rename or copy the starter only if that matches the class Git
+- Ask students to rename or copy the starter only if that matches the class
   setup. Do not edit engine code or package files in this session.
 
 ## 45-minute runbook
@@ -34,13 +40,13 @@ matching quotation marks to record three observations from a local world.
 | 0:12–0:24 | 11–15 min | Open `student/starter.py`. Students personalize exactly three observations and run the file after each change. | Three readable printed lines. |
 | 0:24–0:37 | 9–13 min | Launch M01. Coach window focus, WASD/arrows, and E; compare the count with the prediction. | Both objects visited and the trail reports completion. |
 | 0:37–0:42 | 4–6 min | Give the quoting bug below. Students predict the cause, repair it, and rerun. | Explains that an opening quote needs a matching closing quote. |
-| 0:42–0:45 | 3–5 min | Ask for one observation and one test result. Guide or schedule the Git close. | Reads status/diffs and makes or plans one descriptive commit. |
+| 0:42–0:45 | 3–5 min | Ask for one observation and one test result. Confirm the file is saved. | States which line changed and why, with the saved file as evidence. |
 
 **Teacher cut line:** At 0:37, stop setup troubleshooting. Protect one
 successful three-line Python run and an M01 observation through the student's
-Trail or the low-bandwidth teacher demonstration. Move the quoting repair or
-Git commit after class if necessary; still require the prediction and diff
-explanation.
+Trail or the low-bandwidth teacher demonstration. Move the quoting repair after
+class if necessary; still require the prediction and the student's explanation
+of what changed.
 
 ## Student task and prediction
 
@@ -93,19 +99,16 @@ revise → explain accepted code. A suitable question is, “Why does Python say
 this one print line has an unfinished string?” AI may explain the error after
 the prediction; it may not write the three observations.
 
-## Git close
+## Close
 
-```console
-git status --short
-git diff
-git add lessons/sessions/s01/student/starter.py
-git diff --staged
-git commit -m "Write three explorer field notes"
-```
+Students save `starter.py` and keep the course folder in the same location for
+the next session. Nothing is uploaded and no student account is used.
 
-The student reads both diffs aloud before committing. Use the shared Quick Start
-for `M`, `??`, no-output meanings, identity recovery, cancellation, and retry.
-Understanding takes priority; the same commit may finish asynchronously.
+Git is optional and teacher-managed. It is not an S01 prerequisite and must not
+block this session. When the class is ready, introduce the Git close from the
+shared Quick Start and, if you use it, hand out the Git-managed course folder
+described in
+[`Classroom Student Workspace`](../../../docs/classroom-student-workspace.md).
 
 ## Optional extension
 

@@ -25,10 +25,16 @@ TEMPLATE_MARKERS = (
 GENERATED_PATHS = (
     "course-materials.json",
     "requirements-course.txt",
+    "requirements-student.txt",
+    "check-my-computer.py",
+    "START-HERE.md",
     "lessons",
     "examples",
     "docs",
 )
+READINESS_CHECK_SOURCE = "scripts/check_computer_readiness.py"
+READINESS_CHECK_TARGET = "check-my-computer.py"
+READINESS_DOC = "computer-readiness.md"
 COPY_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 REHEARSAL_RECORD = "operations/s01-clean-rehearsal-2026-09-10.md"
 STUDENT_GITIGNORE_RULE = "*.egg-info/"
@@ -63,8 +69,13 @@ def _validate_source(source_root: Path) -> None:
     for package_id in EXAMPLE_PACKAGE_IDS:
         if not (source_root / "examples" / "explorer-packages" / package_id).is_dir():
             raise ProvisionError(f"course source is missing example package {package_id}")
-    if not (source_root / "classroom" / "requirements-course.txt").is_file():
-        raise ProvisionError("course source is missing requirements-course.txt")
+    for classroom_file in ("requirements-course.txt", "requirements-student.txt", "START-HERE.md"):
+        if not (source_root / "classroom" / classroom_file).is_file():
+            raise ProvisionError(f"course source is missing {classroom_file}")
+    if not (source_root / READINESS_CHECK_SOURCE).is_file():
+        raise ProvisionError("course source is missing the computer readiness check")
+    if not (source_root / "docs" / READINESS_DOC).is_file():
+        raise ProvisionError("course source is missing computer readiness guidance")
     if not (source_root / "docs" / "classroom-student-workspace.md").is_file():
         raise ProvisionError("course source is missing classroom workspace guidance")
     if not (source_root / "docs" / REHEARSAL_RECORD).is_file():
@@ -137,16 +148,15 @@ def provision_student_workspace(target_root, source_root=None):
             ignore=COPY_IGNORE,
         )
 
-    shutil.copy2(
-        source / "classroom" / "requirements-course.txt",
-        target / "requirements-course.txt",
-    )
+    for classroom_file in ("requirements-course.txt", "requirements-student.txt", "START-HERE.md"):
+        shutil.copy2(source / "classroom" / classroom_file, target / classroom_file)
+    readiness_check = target / READINESS_CHECK_TARGET
+    shutil.copy2(source / READINESS_CHECK_SOURCE, readiness_check)
+    readiness_check.chmod(0o755)
     target_docs = target / "docs"
     target_docs.mkdir()
-    shutil.copy2(
-        source / "docs" / "classroom-student-workspace.md",
-        target_docs / "classroom-student-workspace.md",
-    )
+    for doc_name in ("classroom-student-workspace.md", READINESS_DOC):
+        shutil.copy2(source / "docs" / doc_name, target_docs / doc_name)
     target_operations = target_docs / "operations"
     target_operations.mkdir()
     shutil.copy2(
