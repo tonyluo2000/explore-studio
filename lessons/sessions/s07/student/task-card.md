@@ -7,6 +7,13 @@ predict a toggle object's color across repeated interactions.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+**Story target:** S06's last breadcrumb marker pointed toward a gate hidden in
+the sky. Your lantern is the signal for that gate — the class's story says it
+should end lit (ON/gold) before S08. The mission does not check this for
+you: it only notices that you changed the toggle at least once, not what it
+ends on. Leave it lit if your story calls for it, and be ready to show your
+teacher.
+
 ## Predict before running
 
 Complete this trace before Python or the Trail:
@@ -68,7 +75,7 @@ route by reading the trace and watching one teacher toggle demonstration.
 ## Extension path
 
 Choose a different pair of supported, distinct colors and justify how they fit
-the object's story. Do not add a third state.
+the sky-gate signal's story. Do not add a third state.
 
 ## AI receipt
 

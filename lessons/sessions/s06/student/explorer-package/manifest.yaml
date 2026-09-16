@@ -2,7 +2,7 @@ schema_version: "0.1"
 
 package:
   id: "starlight-garden"
-  display_name: "Starlight Garden"
+  display_name: "Starlight Garden Trail"
   version: "0.1.0"
 
 compatibility:

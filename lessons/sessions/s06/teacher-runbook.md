@@ -11,6 +11,13 @@ objects.
 
 **Prerequisite:** S05 lists and S02 object properties.
 
+**Expedition thread:** The Moonlit trail from S05 continues here. The three
+objects are planted in order as breadcrumb markers — Sun Seed, Rain Bell, Wind
+Flower — so a student who visits them in sequence notices each one pointing to
+the next. The final marker's response gestures toward "a gate hidden in the
+sky," handing off to S07's lantern and S08's guardian. This is narrative
+framing only: no new object, key, or mechanic is added.
+
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
@@ -23,7 +30,7 @@ objects.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Invite a three-object environmental story. | Names a theme and relationship. |
+| 0:00–0:05 | 4–5 min | Invite a three-marker breadcrumb trail with a reason for its order. | Names a theme and why each marker leads to the next. |
 | 0:05–0:12 | 6–8 min | Model one dictionary lookup and trace only the first loop iteration. | Completed first-iteration trace before execution. |
 | 0:12–0:29 | 15–18 min | Students complete exactly three records, run one plain loop, then repair the isolated malformed record. | Three inventory lines and missing-property explanation. |
 | 0:29–0:38 | 8–11 min | Use the transfer table; edit/validate the three YAML objects and launch M06. | Valid package and three visible related objects. |
@@ -51,7 +58,10 @@ Then they begin a separate YAML validation phase; do not combine error hunts.
 The starter prints exactly three lines in list order. Its third name visibly
 contains `TODO` until personalized. After valid transfer, the world contains
 exactly three package objects with distinct authored identities and responses.
-M06 completes after all classroom objects are interacted with.
+Encourage students to keep list order meaningful — first-to-last should read
+as a small trail, not three unrelated items — since M06 completes only after
+every classroom object is interacted with, and the order they're placed in is
+how the trail reads to a player.
 
 ## Bounded AI assistance
 
@@ -69,8 +79,9 @@ rushed live commit.
 
 ## Optional extension
 
-Improve the environmental story through the existing three response strings.
-Do not add records, loops, package fields, or objects.
+Strengthen the breadcrumb-trail story through the existing three response
+strings — make each one point a little more clearly to the next. Do not add
+records, loops, package fields, or objects.
 
 ## Teacher notes and answer key
 

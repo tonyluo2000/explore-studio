@@ -2,7 +2,7 @@ schema_version: "0.1"
 
 package:
   id: "starlight-garden-recovery"
-  display_name: "Starlight Garden Recovery"
+  display_name: "Starlight Garden Trail Recovery"
   version: "0.1.0"
 
 compatibility:

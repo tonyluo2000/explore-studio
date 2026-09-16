@@ -2,5 +2,5 @@ name: "Wind Flower"
 x: 620
 y: 420
 color: "pink"
-when_near: "The petals turn toward you."
-when_interacted: "The flower whispers a map of the wind!"
+when_near: "The petals turn toward you, as if they already know the way."
+when_interacted: "The flower whispers a map of the wind — it points toward a gate hidden in the sky."

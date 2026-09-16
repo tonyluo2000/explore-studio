@@ -7,6 +7,12 @@ condition, and connect one declarative NPC response to one same-package toggle.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+**This is the gate S06 and S07 pointed toward.** The Guardian's refusal is
+meant to teach, not just say no: it names the Sky Switch as the fix. Flip the
+switch, speak again, and the Guardian's answer changes. Nothing physically
+blocks you — you could always walk past the Guardian — but the story's gate is
+the Guardian's word, and that's the part your `if`/`else` controls.
+
 ## Predict both branches before execution
 
 Do not run `starter.py` yet. Write the response that should result for:
@@ -38,7 +44,9 @@ and two plain responses; the Trail evaluates its own toggle state.
 
 ## Package and world path
 
-1. Personalize both responses without changing `object_id`.
+1. Personalize both responses without changing `object_id`. Keep the off
+   response actionable — it should tell the player what to do, the same way
+   the starter one did before you repaired it.
 2. Validate and launch:
 
    ```console
@@ -66,8 +74,8 @@ matching branch before editing. Keep the sample package wording.
 
 ## Extension path
 
-Rewrite the two guardian responses in a consistent character voice. Do not add
-branches, conditions, or package fields.
+Rewrite the two guardian responses in a consistent character voice — keep the
+refusal actionable. Do not add branches, conditions, or package fields.
 
 ## AI receipt
 

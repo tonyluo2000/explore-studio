@@ -7,6 +7,11 @@ one list and use one plain `for` loop to print their design inventory.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+The Moonlit trail from S05 continues here: your three objects are breadcrumb
+markers, planted in order, each with a reason to exist and a reason to lead to
+the next. The last marker should point toward what's coming in S07 — a gate
+hidden in the sky.
+
 ## Predict and trace before running
 
 Do not run `starter.py` yet. Trace the first loop iteration on paper:
@@ -49,7 +54,7 @@ Python records help plan; validated YAML drives the visible world.
 |---|---|---|
 | `objects[0]` | `objects/sun-seed.yaml` | Sun Seed |
 | `objects[1]` | `objects/rain-bell.yaml` | Rain Bell |
-| `objects[2]` | `objects/wind-flower.yaml` | Your third themed object |
+| `objects[2]` | `objects/wind-flower.yaml` | Your third trail marker |
 
 Copy the intended values yourself. Python never executes from the package.
 
@@ -74,8 +79,8 @@ Copy the intended values yourself. Python never executes from the package.
      --name "S06 Build a Themed Collection"
    ```
 
-4. Checkpoint: find and interact with all three objects; explain how their order
-   or placement tells one environmental story.
+4. Checkpoint: find and interact with all three objects in order; explain why
+   each one leads to the next and what the final one points toward.
 
 ## Support path and recovery package
 
@@ -85,8 +90,8 @@ observation. Do not merge its files into a partly edited package.
 
 ## Extension path
 
-Strengthen the relationship among the three responses without adding a fourth
-object or another loop.
+Strengthen the breadcrumb trail among the three responses — make the hand-off
+from one to the next clearer — without adding a fourth object or another loop.
 
 ## AI receipt
 
@@ -105,7 +110,7 @@ git status --short
 git diff
 git add lessons/sessions/s06/student
 git diff --staged
-git commit -m "Build a three-object starlight garden"
+git commit -m "Build a three-marker breadcrumb trail"
 ```
 
 Use the Quick Start for `M`, `??`, no output, identity recovery, cancellation,

@@ -1,8 +1,8 @@
 name: "Sky Switch"
 x: 300
 y: 340
-when_near: "Cloud symbols circle the switch."
-when_interacted: "The gate hums."
+when_near: "Cloud symbols circle the switch, waiting to be asked."
+when_interacted: "The gate hums. Somewhere close, the guardian stirs."
 toggle:
   off_color: "purple"
   on_color: "yellow"
