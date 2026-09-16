@@ -23,8 +23,11 @@ the Trail should do on the interaction after the final line.
 
 ## Core Python and debugging path
 
-1. Replace both TODO strings in `starter.py` with an opening and ending. Add one
-   optional middle line only if it improves the story.
+1. Replace both TODO strings in `starter.py` with an opening line (the
+   situation) and an ending line (an actionable task). Add one optional
+   middle line — a clue — only if it improves the story. If you write all
+   three, keep the situation → clue → task order: it's what makes the
+   briefing make sense.
 2. Add expressions that print `dialogue[0]` and `dialogue[-1]`. Run Python.
 3. Checkpoint: show the first line, final line, and length.
 4. Before world work, temporarily change `dialogue[-1]` to `dialogue[3]`.
@@ -58,7 +61,8 @@ print expressions. Ask the teacher to point to the list position.
 
 ## Extension path
 
-Add one middle clue to a two-line conversation, staying within 2–3 lines.
+Add one middle clue to a two-line (situation, task) conversation, staying
+within 2–3 lines.
 
 ## Required self-review
 

@@ -10,6 +10,17 @@ ordering or indexing mistake.
 
 **Prerequisite:** S04 functions and authored character text.
 
+## Expedition context
+
+S05 continues the Moonlit expedition: the guide who asked for help in S04 now
+gives a full briefing. The conversation's three lines are, in order, the
+situation (the trail problem), a clue (what to look for), and an actionable
+task — the final line, `dialogue[-1]`, hands the student off into S06's
+object collection. The order carries the meaning: swapping any two lines
+weakens or confuses the briefing, which is why restoring the intended order
+is part of the debugging exercise below. The continuity is narrative
+only — no new mechanic, inventory, or session-persisted state is introduced.
+
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
@@ -65,8 +76,10 @@ a three-line list, predict what is wrong here:
 print(dialogue[3])
 ```
 
-Repair it so it always selects the final line. Next, swap two list items,
-predict the story effect, and restore the intended beginning-to-ending order.
+Repair it so it always selects the final line. Next, swap two list items —
+for example, putting the clue before the situation, or the task before either
+— predict the story effect, and restore the intended
+situation → clue → task order.
 
 ## Expected output and behavior
 
@@ -75,8 +88,8 @@ student who chooses the sample package wording and adds both required print
 expressions sees:
 
 ```text
-Guide: The moon compass is awake.
-Guide: Follow the silver lights home.
+Guide: The dark stretch past the ridge won't clear.
+Guide: Find those three lights and lead me home.
 3
 ```
 
@@ -112,8 +125,9 @@ git commit -m "Write an ordered guide conversation"
 
 ## Optional extension
 
-If the conversation has two lines, add one middle line that raises tension or
-adds a clue. Keep the package conversation within the validated 2–3-line limit.
+If the conversation has two lines (situation and task), add one middle clue
+line that raises tension. Keep the package conversation within the validated
+2–3-line limit.
 
 ## Teacher notes and answer key
 
@@ -124,5 +138,7 @@ adds a clue. Keep the package conversation within the validated 2–3-line limit
   not erase completion evidence.
 - Accept any age-appropriate original exchange with 2–3 nonblank ordered lines.
   The student's explanation of order matters more than matching the sample.
+  For a 3-line briefing, the pedagogically meaningful order is situation,
+  then clue, then an actionable final line the student could act on next.
 - Use the shared Quick Start for launch, accessibility, Git interpretation,
   identity recovery, cancellation, and asynchronous completion.

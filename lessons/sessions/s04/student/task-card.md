@@ -27,7 +27,9 @@ second call should insert.
 2. Add one second `greet("...")` call with a name you choose.
 3. Run Python. Checkpoint: explain function, parameter, and argument using your
    two output lines.
-4. Personalize the plain YAML `greeting`, validate, and launch:
+4. Personalize the plain YAML `greeting` in one sentence that tells who the
+   guide is, what the trail problem is, and what help the guide needs.
+   Validate and launch:
 
    ```console
    explore-package validate lessons/sessions/s04/student/explorer-package
