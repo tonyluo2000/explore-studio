@@ -14,10 +14,15 @@ const session = classSessions.find((s) => s.id === "S01")!;
 
 const slides = [
   {
-    kicker: "Mission",
+    kicker: "You've just arrived",
     heading: "Explore Every Object",
     body: (
       <>
+        <p>
+          You&rsquo;re stepping into an unfamiliar place, and the first thing
+          any explorer does is start a field notebook. Today&rsquo;s three
+          observations are the opening page of yours.
+        </p>
         <p>
           <strong>Mission:</strong> <code>visit-all-classroom-objects</code>
         </p>
@@ -54,6 +59,11 @@ const slides = [
         <li>
           <strong>Checkpoint:</strong> show three separate printed lines and
           explain what a string is.
+        </li>
+        <li>
+          Field note reflection: reread your three observations and choose one
+          detail that feels worth investigating next. There&rsquo;s no
+          required answer &mdash; just pick the one that interests you.
         </li>
         <li>Launch the Trail for this mission from your terminal.</li>
         <li>

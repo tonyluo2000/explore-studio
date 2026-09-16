@@ -10,6 +10,15 @@ matching quotation marks to record three observations from a local world.
 **Prerequisites:** Basic typing, opening a terminal, and finding a file.
 No Git client, GitHub account, or clone is required for this session.
 
+## Expedition context
+
+S01 opens the shared expedition with the lightest possible touch: students are
+arriving somewhere unfamiliar and starting a field notebook. This is narrative
+framing only — mechanics, Trail behavior, and M01 completion are unchanged.
+Do not steer students toward a specific "worth investigating" answer or
+mention the Moon Compass; S02 introduces it independently, and S01 must stand
+on its own as simple first-day practice.
+
 ## Before class
 
 - Complete the
@@ -37,7 +46,7 @@ No Git client, GitHub account, or clone is required for this session.
 |---:|---:|---|---|
 | 0:00–0:05 | 4–5 min | Show the local trail. Ask, “What would an explorer write down here?” | Names one sensory or story detail. |
 | 0:05–0:12 | 6–8 min | Model a string literal and `print`. Before running, ask which visible things should count toward M01 completion. | Predicts that world objects—not the player or guide—fill the visited count. |
-| 0:12–0:24 | 11–15 min | Open `student/starter.py`. Students personalize exactly three observations and run the file after each change. | Three readable printed lines. |
+| 0:12–0:24 | 11–15 min | Open `student/starter.py`. Students personalize exactly three observations, run the file after each change, then choose one detail worth investigating next. | Three readable printed lines and one self-chosen detail, with no forced answer. |
 | 0:24–0:37 | 9–13 min | Launch M01. Coach window focus, WASD/arrows, and E; compare the count with the prediction. | Both objects visited and the trail reports completion. |
 | 0:37–0:42 | 4–6 min | Give the quoting bug below. Students predict the cause, repair it, and rerun. | Explains that an opening quote needs a matching closing quote. |
 | 0:42–0:45 | 3–5 min | Ask for one observation and one test result. Confirm the file is saved. | States which line changed and why, with the saved file as evidence. |
@@ -59,8 +68,10 @@ Run the field notes:
 python lessons/sessions/s01/student/starter.py
 ```
 
-Change the three strings to observations from the world. Before starting the
-trail, write: “I think ___ things count because ___.” Then run:
+Change the three strings to observations from the world. After the three
+lines print, have each student pick one detail worth investigating next — an
+open choice, not a graded answer. Before starting the trail, write: “I think
+___ things count because ___.” Then run:
 
 ```console
 explore-package trail \
@@ -117,6 +128,10 @@ not add or change a mission.
 
 ## Teacher notes and answer key
 
+- The "worth investigating" question is open-ended and ungraded. Do not steer
+  students toward a specific detail and do not mention the Moon Compass — S02
+  introduces it on its own, and S01 must stand alone as simple field-note
+  practice.
 - Correct bug: `print("The lantern flickers near the fountain.")` (matching
   single quotes are also valid).
 - Accept creative sentences if each is one valid string passed to `print`.

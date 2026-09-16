@@ -8,6 +8,12 @@ variables; predict its position; then adjust one coordinate from evidence.
 Use the shared [`Student Quick Start`](../../student-quick-start.md) before
 beginning.
 
+## Your first expedition instrument
+
+The Moon Compass is the expedition's first instrument. Where you place it is
+a world decision, not just a coordinate exercise: put it somewhere an
+explorer would actually notice it and want to reach.
+
 ## The bridge to the world
 
 The YAML object file—not `starter.py`—drives the shared runtime.
@@ -26,8 +32,9 @@ visibility guide, not a new schema rule. Supported colors are `red`, `orange`,
 
 ## Predict before running
 
-Sketch or describe where `(240, 180)` should appear. Predict what increasing x
-by 100 will do before changing anything.
+Where should this important instrument be placed, and why? Sketch or describe
+where `(240, 180)` should appear so an explorer passing through would notice
+it. Predict what increasing x by 100 will do before changing anything.
 
 ## Core path
 
@@ -78,6 +85,12 @@ check indentation before you retype the file.
 ## Extension path
 
 Make a second evidence-based coordinate adjustment after predicting it.
+
+## Looking ahead
+
+Today's Moon Compass is a static instrument — it sits where you placed it and
+does nothing else yet. Next session, it gains its own clue and reveal,
+becoming an active part of the expedition story.
 
 ## AI receipt
 

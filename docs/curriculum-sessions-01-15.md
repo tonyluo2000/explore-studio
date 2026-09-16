@@ -48,17 +48,25 @@ This teaching order is deliberate: the Mission 13 comparison follows the
 Mission 09 counter that supplies its values, then students compose Boolean
 conditions with AND, OR, and NOT. Stable mission numbers and IDs do not change.
 
-## Expedition storyline (S03–S15)
+## Expedition storyline (S01–S15)
 
-Starting in S03, sessions S03–S15 share one loose, narrative-only expedition:
-the Moonlit / Storm expedition. S01 and S02 remain frozen and are not part of
-the storyline. The story never implies engine verification that does not
-exist, adds no invented inventory, resources, decrements, or state-aware text,
-and never introduces a cross-package reference — it is framing only, layered
-onto the existing canonical missions and packages.
+S01 and S02 open the expedition with the lightest possible touch: S01 frames
+students as arriving somewhere unfamiliar and recording field notes, and S02
+frames the existing Moon Compass object as the explorer's first instrument,
+placed intentionally. Neither session gains new mechanics, and S01 never
+forces a Moon Compass reference. Starting in S03, sessions S03–S15 share one
+loose, narrative-only expedition: the Moonlit / Storm expedition, where the
+static Moon Compass placed in S02 becomes a clue-and-reveal object. The story
+never implies engine verification that does not exist, adds no invented
+inventory, resources, decrements, or state-aware text, and never introduces a
+cross-package reference — it is framing only, layered onto the existing
+canonical missions and packages.
 
 **Route:**
 
+- **S01–S02 — Arrival.** Students record first field notes on arrival (S01)
+  and place the Moon Compass, the expedition's first instrument (S02) —
+  framing only, no new mechanics.
 - **S03–S06 — Moonlit trail and starlight garden.** The Moon Compass's clue
   points the way; a Moonlit Guide is met and given a voice, then a short
   conversation and a themed collection extend the trail.
@@ -71,9 +79,9 @@ onto the existing canonical missions and packages.
 - **S11–S15 — Locks and the secret sequence.** Switch conditions, styles, and
   an ordered sequence of actions unlock the expedition's final secret.
 
-**Story beats:** Moon Compass → Moonlit Guide → guide conversation →
-expedition onward. The Storm Engine charged in S09 is judged by the Weather
-Reader in S10.
+**Story beats:** Arrival field notes → Moon Compass placed → Moon Compass's
+clue → Moonlit Guide → guide conversation → expedition onward. The Storm
+Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Rules:**
 
@@ -95,7 +103,9 @@ Reader in S10.
 
 ### S01 — Explorer's Field Notes
 
-- **Creative goal:** Tour the shared world and record three discoveries.
+- **Creative goal:** Arrive somewhere unfamiliar, tour the shared world, and
+  record three discoveries, then choose one detail worth investigating next
+  (an open choice, not a forced answer).
 - **Programming concept:** `print`, literals, and string values.
 - **Python activity:** Print three short observations about objects in the world.
 - **World activity:** Complete M01 by interacting with every classroom object.
@@ -107,7 +117,8 @@ Reader in S10.
 
 ### S02 — Place Your First Prop
 
-- **Creative goal:** Add a personally themed prop to the world.
+- **Creative goal:** Place the Moon Compass, the expedition's first
+  instrument, intentionally somewhere an explorer would notice it.
 - **Programming concept:** Variables and basic string and integer types.
 - **Python activity:** Store and print the object's name, x/y coordinates, and
   color using clearly named variables.
@@ -115,6 +126,8 @@ Reader in S10.
 - **Prediction:** Sketch or describe where the coordinates will place the object.
 - **Test/debug:** Validate, run, and adjust one coordinate based on observation.
 - **Bounded AI role:** Review variable names after the student explains each one.
+- **Continuity:** Ends with a light narrative handoff — next session this same
+  static instrument gains a clue and reveal (S03); no runtime state carries over.
 - **Prerequisite:** S01 literals and output.
 
 ### S03 — Make the World React
