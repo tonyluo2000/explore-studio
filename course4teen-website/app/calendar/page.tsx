@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import {
@@ -6,6 +7,7 @@ import {
   classSessions,
   formatBreakRange,
   formatSessionDate,
+  sessionsWithSlides,
 } from "../../lib/calendar";
 
 export const metadata: Metadata = {
@@ -44,12 +46,22 @@ export default function CalendarPage() {
           <ol className="calendar-list">
             {classSessions.map((session) => {
               const brk = breaksAfter.get(session.id);
+              const isPublished = sessionsWithSlides.includes(session.id);
               return (
                 <li key={session.id} className="calendar-item">
                   <div className="calendar-row">
                     <span className="calendar-session-id">{session.id}</span>
                     <span className="calendar-date">{formatSessionDate(session.date)}</span>
-                    <span className="calendar-title">{session.title}</span>
+                    {isPublished ? (
+                      <Link
+                        className="calendar-title slides-link"
+                        href={`/students/slides/${session.id.toLowerCase()}/`}
+                      >
+                        {session.title}
+                      </Link>
+                    ) : (
+                      <span className="calendar-title">{session.title}</span>
+                    )}
                   </div>
                   {brk ? (
                     <div className="calendar-break" role="note">
