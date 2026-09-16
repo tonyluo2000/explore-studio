@@ -212,7 +212,7 @@ footer a:hover { text-decoration: underline; }
 }
 
 .slide-deck { display: grid; gap: 1.5px; background: var(--line); border: 1px solid var(--line); padding-top: 0; }
-.slide-card { background: var(--paper); padding: 2.2rem; }
+.slide-card { background: var(--paper); padding: 2.2rem; min-width: 0; }
 .slide-card h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); margin-bottom: 1.1rem; }
 .slide-body { color: var(--ink-soft); font-size: .98rem; line-height: 1.75; max-width: 680px; }
 .slide-body p { margin: 0 0 .9rem; }
@@ -223,6 +223,23 @@ footer a:hover { text-decoration: underline; }
 .slide-code { background: var(--ink); color: #eaf2ee; padding: 1rem 1.2rem; border-radius: .6rem; overflow-x: auto; font-size: .88rem; margin: 0 0 .9rem; }
 .slide-code code { background: none; padding: 0; }
 kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3em; padding: .05em .4em; font: 700 .85em/1 monospace; }
+
+.slide-body ul.slide-checks { margin: 0; padding-left: 1.3rem; display: grid; gap: .7rem; }
+.slide-checks li::marker { color: var(--coral-accessible); }
+.slide-checks strong { color: var(--ink); }
+
+.slide-map-wrap { overflow-x: auto; margin: 0 0 .9rem; }
+.slide-map { border-collapse: collapse; width: 100%; min-width: 420px; font-size: .92rem; text-align: left; }
+.slide-map-caption { text-align: left; font-weight: 700; color: var(--ink); padding-bottom: .5rem; }
+.slide-map th, .slide-map td { border-bottom: 1px solid var(--line); padding: .6rem .8rem .6rem 0; vertical-align: top; }
+.slide-map thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); }
+.slide-map tbody th { font-weight: 400; }
+.slide-map tbody tr:last-child th, .slide-map tbody tr:last-child td { border-bottom: 0; }
+
+.slide-swatches { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem .7rem; }
+.slide-swatches li { display: flex; align-items: center; gap: .45rem; background: var(--cream); border-radius: 2em; padding: .25rem .8rem .25rem .45rem; }
+.slide-swatch { width: .95rem; height: .95rem; border-radius: 50%; border: 1px solid var(--line); flex: none; }
+.slide-swatches code { background: none; padding: 0; }
 
 .prep-table { display: grid; gap: .5px; background: var(--line); border: 1px solid var(--line); margin: 1.4rem 0; }
 .prep-table div { display: flex; justify-content: space-between; gap: 1rem; background: var(--paper); padding: .7rem 1rem; }
