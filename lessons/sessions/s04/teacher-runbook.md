@@ -10,6 +10,15 @@ error.
 
 **Prerequisite:** S03 strings and function-call syntax.
 
+## Expedition context
+
+S04 continues the Moonlit expedition opened in S03: the Moon Compass's clue
+leads here, to the guide who now needs the student's help. The continuity is
+narrative only — no new mechanic, inventory, or engine state is introduced,
+and nothing checks that S03 was completed. The guide's one-sentence greeting
+states who the guide is, what the trail problem is, and what help is needed;
+it seeds the fuller briefing the guide gives in S05.
+
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
@@ -79,7 +88,9 @@ Welcome to the Moonlit Trail, Sam!
 
 The bad call raises a `TypeError` stating that the required `name` argument is
 missing. The package validates. In the Trail, interaction displays
-`Moonlit Guide: Welcome to the Moonlit Trail, explorer!` and M04 completes.
+`Moonlit Guide: I'm the Moonlit Guide, explorer — the trail beyond this ridge
+has gone dark, and I need your help finding a way through.` and M04
+completes.
 
 ## Bounded AI assistance
 
@@ -112,6 +123,9 @@ output. Do not add another character or package field.
   call. The same function body produces personalized output for each argument.
 - The package greeting is declarative text, not a Python function. M04 evaluates
   actual NPC greeting behavior through the existing Trail rule.
+- The greeting is one sentence that names the guide, states the trail problem,
+  and asks for help. Students may personalize the wording but should keep all
+  three elements and the `name` parameter's role as who is being addressed.
 - If the NPC cannot be reached, first confirm validation and coordinates; do
   not change engine or Student API code.
 - Indentation: the two function-body lines must use the same four spaces.
