@@ -1,3 +1,6 @@
+import SiteHeader from "./components/SiteHeader";
+import SiteFooter from "./components/SiteFooter";
+
 const contactHref =
   "mailto:hello@course4teen.com?subject=Course4Teen%20enrollment%20interest";
 
@@ -47,17 +50,7 @@ export default function Home() {
     <>
       <a className="skip-link" href="#main">Skip to content</a>
 
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Course4Teen home">
-          <span className="brand-mark" aria-hidden="true"><span /></span>
-          <span>course4teen</span>
-        </a>
-        <nav aria-label="Main navigation">
-          <a href="#program">Program</a>
-          <a href="#parents">For parents</a>
-          <a className="nav-cta" href={contactHref}>Join the next cohort</a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main id="main">
         <section className="hero" id="top">
@@ -177,11 +170,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer>
-        <a className="brand footer-brand" href="#top"><span className="brand-mark" aria-hidden="true"><span /></span><span>course4teen</span></a>
-        <p>Real Python. Real projects. Built for teens.</p>
-        <div><a href="mailto:hello@course4teen.com">hello@course4teen.com</a><span>© {new Date().getFullYear()} Course4Teen</span></div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }
