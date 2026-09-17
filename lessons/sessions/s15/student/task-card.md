@@ -2,6 +2,12 @@
 
 **Mission:** M15 `complete-actions-in-order` — Solve the Secret Sequence
 
+This is the expedition's final challenge — the payoff for everything since
+S01. Like every lock before it, this is its own independent package; nothing
+from S14 or earlier carries in. The order is the whole puzzle: the Trail
+resets your progress to zero whenever you touch an authored sequence object
+out of turn, so the same three objects in the wrong order do not complete it.
+
 **Learning target:** Build and test small helpers for exactly three distinct IDs
 and attempted order, then ship a three-object first-half capstone puzzle.
 
@@ -108,6 +114,10 @@ progress. Do not create a fourth sequence member or branching sequence.
 - Creative choice: “I chose ___ because ___.”
 - Python change: “I changed ___, which made ___.”
 - Test run: “I tested ___ and observed ___.”
+- Sequence logic: “The order matters because ___.” Explain why the keeper's
+  response changes only after the exact order — the keeper's “complete”
+  response is response text changing, not a locked door or a new engine
+  feature.
 - In 60 seconds, present the story, show one trace/test, and demonstrate or
   describe the visible success payoff. A text/chat presentation is valid.
 
@@ -126,6 +136,13 @@ accepted/rejected change; student explanation.
 **Do not paste whole files or ask AI for a complete solution. AI may suggest
 tests only; never ask it to write the sequence solution, order, trace, assertion,
 or helper.** Predict each test before using it.
+
+## Expedition finale
+
+You just completed the first 15-session expedition. The payoff was your own
+reasoning and code — decomposed functions, traced Boolean rules, and tested
+assertions — not just reaching a final screen. Nothing here carries into
+S16; that next region of the course is a new phase, still to come.
 
 ## Git close
 

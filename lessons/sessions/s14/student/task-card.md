@@ -2,6 +2,12 @@
 
 **Mission:** M14 `reuse-a-named-toggle-style` — Share a Switch Style
 
+The expedition's three locks are open. Before the crew can tackle S15's
+secret-sequence finale, the switch system needs one consistent, shared look
+instead of copy-pasted colors. This is its own independent package — nothing
+here carries into S15 — but a cleaner shared style makes the finale easier to
+build.
+
 **Learning target:** Find duplication, then reuse one named style in two Python
 object-building calls and two declarative world objects.
 
@@ -79,7 +85,8 @@ Retain exactly one named style referenced twice.
 
 - Duplication marked and named before refactoring.
 - One dictionary reused by two object-building calls.
-- Python→style→two-object mapping explanation.
+- Python→style→two-object mapping explanation, including why one shared
+  definition is safer than two copies that could drift apart.
 - Conflict seen, restored valid package, and both beacons changed.
 
 ## AI receipt

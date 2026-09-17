@@ -17,6 +17,11 @@ shared Quick Start readiness.
 - Display the duplicated inline dictionary from the task card, not the answer.
 - Prepare a two-arrow diagram from one style to two beacons.
 - Keep color names paired with text labels for accessibility.
+- Frame this as the expedition preparing for its final challenge: S13 closed
+  the lock sequence, and this session's job is to make the switch system
+  consistent and easier to build on before S15's secret-sequence finale. That
+  framing is narrative only — the refactor changes no runtime behavior and
+  carries no code or package state into S15's independent package.
 
 ## 45-minute runbook
 
@@ -79,3 +84,9 @@ one style and two references; do not add inheritance or runtime behavior.
 - `toggle_style_id` conflicts with inline `color`, `asset_id`, or `toggle`.
 - Named styles are validated declarative data resolved before runtime; M14 adds
   no runtime behavior.
+- Refactoring here means same behavior, cleaner structure — not shorter code
+  at any cost. A student who can name what was duplicated (the repeated
+  `{"off_color": "purple", "on_color": "gold"}` dictionary), what it became
+  (`shared_style`), and why a single named definition is safer to change
+  later than two copies that could silently drift apart has met the goal,
+  regardless of line count.
