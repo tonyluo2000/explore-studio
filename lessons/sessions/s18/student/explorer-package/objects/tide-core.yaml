@@ -1,0 +1,9 @@
+name: "Tide Core"
+x: 340
+y: 440
+color: "blue"
+when_near: "The tide core scoreboard reads zero."
+when_interacted: "You add one surge of power."
+counter:
+  goal: 5
+  when_goal_reached: "Tide Core goal reached: five surges!"

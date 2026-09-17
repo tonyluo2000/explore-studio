@@ -10,6 +10,10 @@ one plain loop.
 
 **Prerequisite:** S06 collections/loops and the shared Quick Start.
 
+**Phase note:** First session of the Builder / Systems Expedition (S16–S30).
+Trail/Mission mechanics are unchanged from the First Expedition; the new
+emphasis is reading and organizing data before building the visible result.
+
 ## Before class
 
 - Confirm repository, virtual environment, Python, `explore-package`, Trail

@@ -8,16 +8,29 @@ content-only Mission 16 frames the S30 presentation. Student Python remains
 local-only. Only validated declarative Explorer Package artifacts cross into
 the shared runtime, and that runtime never executes student Python.
 
+S01–S15 was the First Expedition. Sessions 16–30 begin a distinct **Builder /
+Systems Expedition**: engine architecture is unchanged, but the visible phase
+change is less "solve the teacher's puzzle" and more "inspect, transform,
+reason about, and build systems from data." Its first mini-arc, **S16–S20
+(Data Fluency)**, raises student ownership one step at a time: S16 observe →
+S17 search → S18 interpret/score → S19 organize/order → S20 build a complete
+data pipeline. S20, **Milestone A**, is the arc's payoff session.
+
 ## Second-half arc
 
 | Sessions | Arc | Emphasis |
 |---|---|---|
-| S16–S20 | Data fluency | Traverse, search, aggregate, sort, and transform data. |
+| S16–S20 | Data fluency (Milestone A: S20) | Observe, search, aggregate/interpret, order, and build a complete data pipeline. |
 | S21–S24 | Software fluency | Validate, test, debug, decompose, refactor, and reason about algorithm cost. |
 | S25–S30 | Independent creation | Plan, construct, review, and present an original capstone. |
 
 Guided code continues through S20. Choice and partial independence begin in
 S21. S25 is the formal transition to project-primary work.
+
+Sessions 16–29 reuse Missions 01–15 rather than introducing a new Mission
+each week (see Mission strategy below); framed honestly, the rising
+challenge across S16–S20 is in the Python and system work a student does
+with existing world mechanics, not a new engine mechanic every session.
 
 ## Session rhythms
 
@@ -43,8 +56,9 @@ Project-primary sessions use this 45-minute rhythm:
 | 4 minutes | Test and review |
 | 3 minutes | Git review and descriptive commit |
 
-S20 is a balanced milestone. It uses the Python-primary timing while treating
-the generated package and playable M15 sequence as one integrated outcome.
+S20 is Milestone A, a balanced milestone. It uses the Python-primary timing
+while treating the generated package and playable M15 sequence as one
+integrated outcome.
 
 ## Session plans
 
@@ -120,7 +134,7 @@ the generated package and playable M15 sequence as one integrated outcome.
 
 ### S20 — Data-Built Mystery Trail
 
-**Balanced milestone.**
+**Milestone A — balanced milestone.**
 
 - **Creative goal:** Build a playable trail from a structured plan.
 - **Primary Python concept:** A data-transformation pipeline and deterministic
@@ -446,7 +460,7 @@ Every session retains `status → diff → descriptive commit`.
 
 ## Milestone rubrics
 
-### S20 — Data-built mystery trail
+### S20 — Data-built mystery trail (Milestone A)
 
 The scaffolded milestone includes:
 

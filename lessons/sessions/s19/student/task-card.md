@@ -40,6 +40,11 @@ Keep this concrete: do not introduce a generalized sorting algorithm or class.
 | stable `sorted` by priority | equal keys retain their earlier relative order |
 | take first three | River Rune → Mist Bell → Star Lens M15 sequence |
 
+The route order is not accidental: it is an authored system decision (the
+`priority` field) applied by a stable sort, not a performance optimization.
+S20 reuses this same idea — validate, select, order, and transform records —
+as one stage in a complete pipeline.
+
 Python remains local. Validated YAML is the shared-runtime source of truth.
 
 ## World payoff

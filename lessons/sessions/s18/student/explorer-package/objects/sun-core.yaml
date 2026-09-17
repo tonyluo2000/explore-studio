@@ -1,0 +1,9 @@
+name: "Sun Core"
+x: 340
+y: 180
+color: "gold"
+when_near: "The sun core scoreboard reads zero."
+when_interacted: "You add one beam of power."
+counter:
+  goal: 4
+  when_goal_reached: "Sun Core goal reached: four beams!"

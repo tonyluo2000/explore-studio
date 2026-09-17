@@ -41,4 +41,23 @@ def test_malformed_record_fails_before_package_write(tmp_path):
     assert not output_root.exists()
 
 
-# TODO: after explaining determinism, add one repeat-build byte comparison.
+def test_repeat_build_from_unchanged_input_is_byte_identical(tmp_path):
+    plan = load_plan(INPUT_PATH)
+    first_root = tmp_path / "first-package"
+    second_root = tmp_path / "second-package"
+
+    build_package(plan, first_root)
+    build_package(plan, second_root)
+
+    first_files = {
+        path.relative_to(first_root): path.read_bytes()
+        for path in first_root.rglob("*")
+        if path.is_file()
+    }
+    second_files = {
+        path.relative_to(second_root): path.read_bytes()
+        for path in second_root.rglob("*")
+        if path.is_file()
+    }
+
+    assert first_files == second_files

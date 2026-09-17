@@ -48,8 +48,9 @@ maximum value from the records sharing it.
 ## Expected output and behavior
 
 The nonempty summary returns min 2, max 4, total 10, average `10 / 3`; empty
-returns `None`. Boundary results are False, True, True. The Wind Core reaches its
-M09 goal at three interactions; Station Reader displays M13 below and at/above.
+returns `None`. Boundary results are False, True, True. Wind Core, Sun Core,
+and Tide Core each reach their own M09 goal message (3/4/5 interactions);
+Station Reader displays M13 below and at/above for Wind Core only.
 
 ## Bounded AI assistance
 
@@ -73,5 +74,9 @@ Return the IDs tied for maximum using a simple loop after core evidence.
   `average = total / len(counts)` after the empty guard.
 - `at_goal` returns `count >= goal`; 2/3/4 against 3 yields False/True/True.
 - Sun Core and Tide Core tie at count 4.
-- The authored counter goal is current-contract data; local summaries do not run
-  inside Trail.
+- The authored counter goal is current-contract data; local aggregate
+  summaries (`minimum`/`maximum`/`total`/`average`/ties) never run inside
+  Trail. Each station's own count-versus-goal state does, since Wind Core,
+  Sun Core, and Tide Core are each authored as their own M09 counter — that
+  is Python evidence vs. Trail evidence: Trail shows one station at a time,
+  never a summary across all three.
