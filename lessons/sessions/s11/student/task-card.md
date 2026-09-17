@@ -2,6 +2,10 @@
 
 **Mission:** M10 `require-all-switches-on` — Unlock the Secret
 
+The expedition reaches its first lock: the Twin Star Vault. It is its own
+independent package — nothing from S10 carries into it, and nothing here will
+carry into S12 or S13's locks either.
+
 **Learning target:** Use Boolean `and` in a two-parameter function and prove
 that all conditions must be true before the Twin Star Vault opens.
 
@@ -55,6 +59,10 @@ Python remains local. Validated YAML is the Trail's source of truth.
 
 3. Focus the Trail window. Use WASD/arrows and E. Speak to the keeper with one
    key off, then with both on. Checkpoint: capture both responses and M10 success.
+
+The keeper's fallback line is the same whether one key or both keys are off —
+it never says which key is still missing. Use your truth table to work out
+which key needs to change, rather than tapping keys to see what happens.
 
 ## Deliberate debugging exercise
 

@@ -2,6 +2,10 @@
 
 **Mission:** M12 `invert-a-switch-condition` — Turn the Rule Around
 
+This is the last rule change in the lock sequence: S11 required both of two
+conditions, S12 accepted either one, and this is a new, independent package
+that reverses a single condition instead. Nothing from S11 or S12 carries in.
+
 **Learning target:** Use `not` to invert one Boolean condition and explain why
 world response text is not the same thing as Python syntax.
 
@@ -15,6 +19,9 @@ The moonflower wakes when the sun lamp is not on. Complete both rows first.
 |---|---|---|
 | False | ___ | ___ |
 | True | ___ | ___ |
+
+Paired reasoning: if `is_on` is True, `not is_on` is False. If `is_on` is
+False, `not is_on` is True — the two rows always land on opposite values.
 
 Checkpoint: show both rows before running the starter.
 
@@ -35,6 +42,10 @@ Checkpoint: show both rows before running the starter.
 Swapping authored response text can imitate inversion in this narrow world case,
 but it is not general `not` syntax. The YAML has fixed state labels; only local
 Python evaluates `not`.
+
+Before this rule, ON was the ordinary state and OFF triggered nothing special.
+`not` reverses which state is accepted: now OFF produces the special response
+and ON is ordinary. Be ready to say what changed, not just that it did.
 
 Python remains local. Validated YAML is the Trail's source of truth.
 

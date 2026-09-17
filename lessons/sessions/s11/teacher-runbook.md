@@ -18,6 +18,10 @@ working local Python/venv and `explore-package` command.
 - Keep the answer key hidden until all four prediction rows are complete.
 - Offer the shared low-bandwidth route: printed output, package fields, and a
   teacher Trail demonstration are acceptable evidence.
+- Frame this as the expedition's first lock: S10 confirmed the storm engine
+  was ready, and now the trail's next obstacle is a rule the crew must reason
+  through, not a puzzle to click around. S12 and S13 will each present a new,
+  independent lock with a different rule — nothing here carries forward.
 
 ## 45-minute runbook
 
@@ -51,6 +55,13 @@ replace the return with `first_on and second_on` and retest all four rows.
 The repaired output ends in `False, False, False, True` in case order. In the
 Trail, either key off produces `when_not_all_on`; both keys on produces
 `when_all_on`. Students must display both branches to complete M10.
+
+The package stores only those two responses, so the Vault Keeper says the same
+`when_not_all_on` line whether one key or both keys are off — it never names
+which key is still missing. That is a genuine limit of this package's fields,
+not a story detail to work around. Point students back to their own four-case
+truth table to identify the missing key; recovery should come from that
+reasoning, not from re-tapping keys to see what happens.
 
 ## Bounded AI assistance
 
