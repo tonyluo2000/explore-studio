@@ -85,7 +85,9 @@ canonical missions and packages.
   reverses a single condition (`not`). Each lock is its own package with its
   own entities; nothing about a lock's outcome carries over to the next one.
   Switch conditions, styles, and an ordered sequence of actions then unlock
-  the expedition's final secret in S14–S15.
+  the expedition's final secret in S14–S15: S14 prepares the expedition's
+  shared systems for that challenge, and S15 delivers it as the payoff for
+  the whole first expedition.
 
 **Story beats:** Arrival field notes → Moon Compass placed → Moon Compass's
 clue → Moonlit Guide → guide conversation → expedition onward. The Storm
@@ -307,7 +309,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 ### S14 — Refactor a Shared Look
 
-- **Creative goal:** Give multiple switches a recognizable shared visual style.
+- **Creative goal:** Prepare the expedition's switch systems for the final
+  challenge by giving multiple switches one recognizable shared visual style.
 - **Programming concept:** Reusable named data, parameters, and decomposition.
 - **Python activity:** Pass one style dictionary into two calls to a small
   object-description function.
@@ -318,14 +321,18 @@ Engine charged in S09 is judged by the Weather Reader in S10.
   reuse count using package validation.
 - **Bounded AI role:** Identify duplicated data only after the student marks it.
 - **Prerequisite:** S06 dictionaries, S07 toggles, and S04 functions.
-- **Capstone bridge:** Optionally sketch the three-object story for S15; formal
-  Mission 15 work remains in S15.
+- **Capstone bridge:** Optionally sketch the three-object story for S15;
+  formal Mission 15 work remains in S15, and no code or package state carries
+  forward — S14's payoff is a cleaner, more consistent system to build the
+  finale on, not a shared save.
 
 ### S15 — Ship a Secret Sequence
 
 **Python-primary.**
 
-- **Creative goal:** Deliver a three-object puzzle with a clear story and payoff.
+- **Creative goal:** Deliver the expedition's final challenge — a three-object
+  secret sequence that pays off every session since S01 — with a clear story
+  and payoff.
 - **Programming concept:** Ordered data, functions, loops, decomposition,
   assertions, and systematic debugging.
 - **Python activity:** Write small functions that check three distinct object IDs
@@ -339,8 +346,9 @@ Engine charged in S09 is judged by the Weather Reader in S10.
   accepted line before committing it.
 - **Prerequisite:** All earlier object, character, state, collection, function,
   Boolean, and testing work.
-- **Self-review:** Name the creative intent, explain the decomposition, show the
-  test evidence, and describe one revision.
+- **Self-review:** Name the creative intent, explain the decomposition, explain
+  why the same three actions in a different order do not complete the
+  sequence, show the test evidence, and describe one revision.
 
 ## Python progression
 
@@ -392,6 +400,13 @@ and a fixed secret sequence. A companion local Python program generates,
 transforms, or validates selected data and contains student-authored assertions.
 The student can explain the package references, trace the sequence and Boolean
 behavior, interpret validation failures, and justify accepted AI assistance.
+
+S15 closes the first 15-session expedition arc that began with S01's arrival.
+What is worth celebrating is the student's own reasoning and code across that
+arc — decomposed functions, traced Boolean rules, tested assertions, and a
+validated package — not merely reaching a final screen. A closing note points
+forward only: S16 opens a new phase of the course; nothing about that phase
+is designed here.
 
 ## Scope boundary
 

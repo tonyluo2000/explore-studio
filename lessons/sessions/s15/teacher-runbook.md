@@ -20,6 +20,10 @@ state tracing, S11–S14 reasoning, and shared Quick Start readiness.
 - Prepare three object cards plus an unrelated `crystal-lantern` card.
 - Keep the exact Trail reset rules visible to the teacher, not as predictions.
 - Arrange a 60-second screen-share presentation order and a text-only option.
+- Frame S15 as the expedition's final challenge — the payoff for every
+  session since S01's arrival. It is still its own independent package,
+  built fresh like every session before it; nothing from S14 or earlier
+  carries in. The story payoff is real, but no runtime state is inherited.
 
 ## 45-minute runbook
 
@@ -90,3 +94,13 @@ or for interaction after completion. Do not alter the fixed three-object rule.
   Map, toggle Moon Switch, counter Echo Drum. Nova is the player from one example
   package; Crystal Lantern is the unrelated object from a separate example package.
 - Student Python remains local; declarative package data alone enters runtime.
+
+## Expedition finale close
+
+Close the session by naming what the crew actually did across S01–S15:
+authored objects and characters, traced Boolean rules, decomposed and reused
+code, and shipped a tested, validated sequence — not just finished a game.
+Read or paraphrase: "You just completed the first expedition. Every reasoning
+step was yours — the truth tables, the reset logic, the tests that passed."
+Point forward with one line only: the next region of the course opens in
+S16; nothing about it is defined yet, so do not promise specifics.
