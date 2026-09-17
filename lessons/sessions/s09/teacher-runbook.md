@@ -10,6 +10,26 @@ off-by-one error, and write one basic assertion.
 
 **Prerequisite:** S06 loops and S02 integer values.
 
+**Expedition thread:** This is the device that prepares the observatory for
+next session's readiness check. Each spark the student adds is one real
+charging action, so "how many sparks?" is not decoration — it is the exact
+quantity the loop must produce.
+
+1. Student arrives at the Storm Engine, not yet charged.
+2. Each interaction adds one spark; the loop's count is the story's charge
+   level, and it only ever goes up.
+3. At the goal, the engine declares itself fully charged.
+4. That charged state is what next session's Weather Reader will be asked to
+   judge — the story continues into S10, but nothing about this session's
+   Python or package state is saved there.
+
+**Critical honesty:** There is no fuel, resource, or consumable in the
+engine — counting only increases, and there is no decrement or cost mechanic
+to invent. The charge does not persist into S10 as engine or Trail state:
+S10 opens its own independent package that begins uncharged again, and the
+student's actions in that session reconstruct the same charging beat. Teach
+it as continuous story, not continuous save data.
+
 ## Before class
 
 - Send the task card and confirm shared Quick Start readiness.

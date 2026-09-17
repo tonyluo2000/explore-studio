@@ -7,6 +7,12 @@ Boolean return value, and verify three boundary cases with assertions.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+**The engine you charge this session meets its judge.** The Weather Reader
+doesn't care how the storm engine got charged — only whether its count has
+reached the goal. That's why the exact-goal case is the one worth predicting
+most carefully: "just barely enough" and "not quite enough" are one spark
+apart, and your comparison has to get that boundary right.
+
 ## Prediction gate: complete before the comparison is revealed
 
 Do not ask AI, open an answer key, or change `return False` yet. For your chosen

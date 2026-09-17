@@ -6,4 +6,4 @@ when_near: "The engine crackles softly."
 when_interacted: "You add one spark."
 counter:
   goal: 3
-  when_goal_reached: "The storm engine is fully charged!"
+  when_goal_reached: "The storm engine is fully charged — ready for the reading!"

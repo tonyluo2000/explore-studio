@@ -73,9 +73,11 @@ canonical missions and packages.
 - **S07–S08 — Sky gate.** A two-state prop and its if/else guardian decide
   whether the gate is passable.
 - **S09–S10 — Storm observatory.** A Storm Engine is charged in S09; the
-  Weather Reader judges whether it has reached its goal in S10. S07's own
-  end-state goals stay teacher-checked only — no state-aware toggle
-  extension is introduced anywhere in the storyline.
+  Weather Reader judges whether it has reached its goal in S10. The charge
+  carries forward only as story, not as saved Trail state — S10 opens its
+  own independent package and begins uncharged again. S07's own end-state
+  goals stay teacher-checked only — no state-aware toggle extension is
+  introduced anywhere in the storyline.
 - **S11–S15 — Locks and the secret sequence.** Switch conditions, styles, and
   an ordered sequence of actions unlock the expedition's final secret.
 
@@ -224,7 +226,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 ### S09 — Power Up a Device
 
-- **Creative goal:** Turn repeated interactions into a visible charging story.
+- **Creative goal:** Turn repeated interactions into a visible charging story
+  that prepares the engine for next session's readiness check.
 - **Programming concept:** Integer counters, updates, and simple loops.
 - **Python activity:** Increment a count toward a goal and print every step.
 - **World activity:** Complete M09 with a bounded goal and goal-reached message.
@@ -237,7 +240,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Python-primary.**
 
-- **Creative goal:** Make an NPC judge whether the device has enough power.
+- **Creative goal:** Make an NPC judge whether the engine charged in S09's
+  story has reached the exact power needed to launch.
 - **Programming concept:** `>=`, function return values, and boundary cases.
 - **Python activity:** Define `at_goal(count, goal)` and test goal minus one, the
   exact goal, and goal plus one.

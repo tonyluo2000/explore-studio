@@ -7,6 +7,12 @@ exact success point, repair an off-by-one mistake, and author one assertion.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
+**This is the engine that powers next session's readiness check.** Every
+press adds one spark — the exact number of sparks is what your loop counts,
+and reaching the goal is what lets the story call this engine "charged."
+That charged state lives in this session's story; next session's Weather
+Reader runs its own fresh check, not something saved here.
+
 ## Predict before running
 
 For `goal = 3`, write the count after interactions 1, 2, 3, and 4. Circle the

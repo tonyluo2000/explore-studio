@@ -10,6 +10,29 @@ comparison, and verify all three cases with assertions.
 
 **Prerequisite:** S09 counters and S04 functions.
 
+**Expedition thread:** The Weather Reader is the observatory's threshold
+check on the engine charged in S09's story. The goal is not an arbitrary
+number — it is the exact charge the story treats as "enough to launch," which
+is why the exact-goal case matters pedagogically: real thresholds are almost
+always about whether "just enough" counts, not only "too little" versus
+"plenty."
+
+1. Student predicts what should happen at goal - 1, exactly at goal, and
+   goal + 1, before any code decides for them.
+2. The revealed comparison, `count >= goal`, is the Weather Reader's rule:
+   reaching the goal exactly must count as ready, not almost-ready.
+3. Below goal, the Weather Reader names what is missing; at or above goal, it
+   declares the storm ready to launch.
+4. This session's engine begins uncharged again — the story continues from
+   S09, but the Trail state does not.
+
+**Critical honesty:** This is a fresh package instance, not a saved
+continuation of S09's charge — do not tell students the engine "remembers"
+last session. Preserve `count >= goal` exactly; changing it to `count >
+goal` is the one intentional boundary flip for the debugging exercise, and it
+must be restored before the checkpoint. There is no second, hidden threshold
+or executable rule beyond the same-package counter's authored goal.
+
 ## Before class
 
 - Send the task card but do not reveal this runbook's answer key.
