@@ -18,6 +18,9 @@ on:
       - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_lesson_materials*.py"
+      - "examples/explorer-packages/**"
+      - "scripts/check_computer_readiness.py"
+      - "docs/computer-readiness.md"
   push:
     branches:
       - main
@@ -37,6 +40,9 @@ on:
       - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_lesson_materials*.py"
+      - "examples/explorer-packages/**"
+      - "scripts/check_computer_readiness.py"
+      - "docs/computer-readiness.md"
   workflow_dispatch:
 
 permissions:
