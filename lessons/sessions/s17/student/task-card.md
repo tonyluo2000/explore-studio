@@ -32,6 +32,10 @@ Implement the empty bodies in `starter.py`; none is completed for you:
 
 Use small `for` loops, `if`, and `return`. Do not use a comprehension.
 
+Each function is reusable: once `find_by_id` works, you can look up any
+record by ID without rewriting the loop. Be ready to explain why a small
+named function beats copying the same search three times.
+
 ## Python selection → package records → visible clues
 
 | Local selection | Existing package field | World payoff |

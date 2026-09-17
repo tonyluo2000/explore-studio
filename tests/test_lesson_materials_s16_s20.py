@@ -200,6 +200,9 @@ def test_s18_defines_empty_contract_statistics_ties_and_boundaries() -> None:
     assert all(name in task_card for name in ("min(counts)", "max(counts)", "sum(counts)"))
     assert "average" in task_card and "tied for maximum" in task_card
     assert all(case in task_card for case in ("below False", "exactly True", "above True"))
+    normalized = " ".join(task_card.lower().split())
+    assert "starts fresh at 0" in normalized or "still starts at 0" in normalized
+    assert "does not inherit" in normalized
 
 
 def test_s19_teaches_stable_sorted_copy_and_three_debug_cases() -> None:

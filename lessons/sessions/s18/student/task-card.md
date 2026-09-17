@@ -37,9 +37,25 @@ Checkpoint: teacher confirms empty-input behavior and every prediction.
 
 | Local model | Current package field | World result |
 |---|---|---|
-| record `goal` | counter `goal: 3` | M09 reaches the goal message |
-| count below goal | `when_below_goal` | M13 reader says below |
-| count exactly/above | `when_at_or_above_goal` | M13 reader says ready |
+| `wind-core` goal | counter `goal: 3` | M09 goal message after 3 Trail interactions; M13 reader says below/ready |
+| `sun-core` goal | counter `goal: 4` | M09 goal message after 4 Trail interactions |
+| `tide-core` goal | counter `goal: 5` | M09 goal message after 5 Trail interactions |
+
+**Python evidence vs. Trail evidence:** all three stations now show their own
+count-versus-goal state in the world, one counter per object. The aggregate
+values you calculate — `minimum`, `maximum`, `total`, `average`, and the IDs
+tied for maximum — summarize all three stations *at once* and have no
+matching package field, so they stay local Python evidence. Trail can only
+show one station's own goal state at a time; it never displays a summary
+across stations.
+
+**LOCAL PYTHON MODEL vs. TRAIL RUNTIME — the counts are not the same
+counts.** Your local Python records start from counts 2, 4, 4: `wind-core`
+2/3 (below goal), `sun-core` 4/4 (at goal), `tide-core` 4/5 (below goal).
+Every Trail counter, by contrast, **starts fresh at 0** when you launch the
+package — it does not inherit those local Python counts. Counting from
+zero in Trail, Wind Core reaches its goal after 3 interactions, Sun Core
+after 4, and Tide Core after 5.
 
 Python remains local. Validated YAML is the shared-runtime source of truth.
 
@@ -47,7 +63,11 @@ Python remains local. Validated YAML is the shared-runtime source of truth.
 
 Open `objects/wind-core.yaml` and author the existing M09 `goal` field from your
 local model. Keep the core value 3, or choose another valid 2–5 value and update
-all boundary predictions before launching. Do not add a field.
+all boundary predictions before launching. Do not add a field. `sun-core.yaml`
+and `tide-core.yaml` already have their `goal` fields authored from the same
+local model's goal values (4 and 5) so all three stations are visible together;
+you do not edit them. Authoring a `goal` value does not set a starting count —
+every counter, including these two, still starts at 0 when Trail launches.
 
 ```console
 explore-package validate lessons/sessions/s18/student/explorer-package
@@ -61,7 +81,12 @@ explore-package trail \
 
 Speak to Station Reader below the authored goal, interact with Wind Core until
 that exact goal, observe its M09 goal message, then speak again for the M13
-at-goal response.
+at-goal response. Then visit Sun Core and interact with it until its **4th**
+interaction triggers its own M09 goal message, and visit Tide Core and
+interact with it until its **5th** interaction triggers its own M09 goal
+message. Each Trail counter starts at 0, so these are 4 and 5 fresh
+interactions counted from zero — they do not inherit the 4/4 and 4/5 counts
+from the local Python model.
 
 ## Test and deliberate debug
 
@@ -84,7 +109,8 @@ Use one loop to return the IDs tied for maximum. Avoid classes or abstraction.
 - Empty-input contract written before code.
 - Predicted min/max/total/average/ties and three boundaries.
 - Passing normal, empty, below/exact/above checks.
-- Valid package, M09 goal message, and both M13 responses.
+- Valid package, M09 goal message for all three stations, and both M13
+  responses.
 
 ## AI receipt
 

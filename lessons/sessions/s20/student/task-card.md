@@ -69,7 +69,7 @@ Tide Chime, then speak to Mystery Keeper. Checkpoint: validator pass and M15 pay
 
 ## Test and deliberate debug
 
-Run the three prepared focused tests before optional edits:
+Run the four prepared focused tests before optional edits:
 
 ```console
 python -m pytest -q lessons/sessions/s20/student/test_pipeline.py
@@ -79,9 +79,12 @@ python -m pytest -q lessons/sessions/s20/student/test_pipeline.py
 - Boundary case: exactly three included records succeeds; predict what two does.
 - Malformed/invalid record: missing `priority` or a text coordinate fails before
   package writing.
+- Determinism: two builds from the same unchanged input produce identical
+  relative file paths and bytes.
 
-Then build twice from unchanged input and compare generated files/diff: identical
-input must produce identical relative files and bytes. Repair one field at a time.
+You can also build twice by hand and diff the two output folders yourself;
+the automated determinism test checks exactly that. Repair one field at a
+time.
 
 ## Support path
 

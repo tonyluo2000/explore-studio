@@ -7,6 +7,11 @@
 **Learning target:** Traverse a list of object dictionaries with key access,
 one `for` loop, and `enumerate` to make a numbered catalog.
 
+**What changed after S15:** S01–S15 finished the First Expedition. S16 opens
+the Builder / Systems Expedition: the same Trail and Mission mechanics, but
+now you inspect a world's records as structured data first, then build the
+visible result from what you read — not just walk room to room.
+
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
 ## Predict before running

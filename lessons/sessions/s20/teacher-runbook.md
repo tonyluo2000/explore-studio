@@ -18,7 +18,8 @@ Quick Start readiness. Use prepared scaffolding only.
   packages during class.
 - Validate the committed generated package and paste build/validate/Trail commands.
 - Prepare one `sun-compass` pipeline trace and confirm the prepared
-  `student/test_pipeline.py` normal, boundary, and malformed tests run.
+  `student/test_pipeline.py` normal, boundary, malformed, and repeat-build
+  determinism tests run.
 - Offer text/YAML diffs and one teacher Trail demonstration for low bandwidth.
 
 ## 45-minute runbook
@@ -55,6 +56,26 @@ Safe loading uses `yaml.safe_load`. Selected priorities total 6 and sort to Sun
 Compass, Whisper Stone, Tide Chime. `yaml.safe_dump(..., sort_keys=False)` writes
 schema v0.1 deterministically in prepared insertion order. The package validator
 passes and M15 completes in that three-object order.
+
+## Teacher triage
+
+Fast fixes for the likely S20 failure modes:
+
+- **Invalid source data:** `valid_record`/the package validator rejects a
+  record. Confirm `mystery-plan.yaml` was not hand-edited; restore the
+  prepared file and add type/range checks one field at a time.
+- **Wrong sort key/order:** the M15 route plays out of sequence. Confirm
+  `ordered_records` sorts by `record["priority"]`, not `id` or list position;
+  the fixed order is Sun Compass, Whisper Stone, Tide Chime.
+- **Output path/write error:** `FileNotFoundError`/`PermissionError` on
+  write. Confirm the student runs from the repository root so `OUTPUT_ROOT`
+  resolves under `lessons/sessions/s20/student/explorer-package`; delete a
+  stray partially written or read-only package directory and rerun.
+- **Generated package validation failure:** run `explore-package validate
+  lessons/sessions/s20/student/explorer-package` directly and read the
+  reported issue. It is almost always a missing or renamed contribution file
+  from an interrupted build — rerun the full pipeline rather than
+  hand-editing generated YAML.
 
 ## Bounded AI assistance
 
