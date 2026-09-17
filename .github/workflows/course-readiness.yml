@@ -9,7 +9,13 @@ on:
       - "docs/operations/s01-clean-rehearsal-*.md"
       - "docs/curriculum*.md"
       - "lessons/sessions/**"
+      - "course4teen-website/public/downloads/explore-studio-course.zip"
+      - "scripts/build_student_zip.py"
       - "scripts/provision_student_workspace.py"
+      - "scripts/sync_student_downloads.py"
+      - "scripts/verify_public_zip_provenance.py"
+      - "tests/test_public_zip_provenance_guard.py"
+      - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_lesson_materials*.py"
   push:
@@ -22,7 +28,13 @@ on:
       - "docs/operations/s01-clean-rehearsal-*.md"
       - "docs/curriculum*.md"
       - "lessons/sessions/**"
+      - "course4teen-website/public/downloads/explore-studio-course.zip"
+      - "scripts/build_student_zip.py"
       - "scripts/provision_student_workspace.py"
+      - "scripts/sync_student_downloads.py"
+      - "scripts/verify_public_zip_provenance.py"
+      - "tests/test_public_zip_provenance_guard.py"
+      - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_lesson_materials*.py"
   workflow_dispatch:
@@ -36,6 +48,10 @@ jobs:
     steps:
       - name: Check out Explore Studio
         uses: actions/checkout@v7
+        with:
+          # The committed-ZIP guard rebuilds from the artifact's declared
+          # provenance commit, which needs the full history to resolve.
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -58,3 +74,7 @@ jobs:
           tests/test_lesson_materials_s29.py
           tests/test_lesson_materials_s30.py
           tests/test_classroom_student_workspace.py
+          tests/test_student_zip.py
+          tests/test_public_zip_provenance_guard.py
+      - name: Verify the committed public ZIP matches its provenance commit
+        run: python3 scripts/verify_public_zip_provenance.py
