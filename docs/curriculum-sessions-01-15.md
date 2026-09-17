@@ -78,8 +78,14 @@ canonical missions and packages.
   own independent package and begins uncharged again. S07's own end-state
   goals stay teacher-checked only — no state-aware toggle extension is
   introduced anywhere in the storyline.
-- **S11–S15 — Locks and the secret sequence.** Switch conditions, styles, and
-  an ordered sequence of actions unlock the expedition's final secret.
+- **S11–S15 — Locks and the secret sequence.** The trail crosses three
+  independent locks that share one broad problem — a rule gate the crew must
+  reason through — while the Boolean rule changes each time: S11 requires
+  both of two conditions (`and`), S12 accepts either one (`or`), and S13
+  reverses a single condition (`not`). Each lock is its own package with its
+  own entities; nothing about a lock's outcome carries over to the next one.
+  Switch conditions, styles, and an ordered sequence of actions then unlock
+  the expedition's final secret in S14–S15.
 
 **Story beats:** Arrival field notes → Moon Compass placed → Moon Compass's
 clue → Moonlit Guide → guide conversation → expedition onward. The Storm
@@ -257,7 +263,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Python-primary.**
 
-- **Creative goal:** Build a lock that opens only when two switches are on.
+- **Creative goal:** Build the expedition's first lock — one that opens only
+  when two switches are on.
 - **Programming concept:** Boolean `and`.
 - **Python activity:** Define a two-parameter Boolean function and print its four
   truth-table cases.
@@ -271,7 +278,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Python-primary.**
 
-- **Creative goal:** Create an alternate-route lock opened by either switch.
+- **Creative goal:** Build the expedition's second lock — a different
+  mechanism than S11's vault, opened by either switch instead of both.
 - **Programming concept:** Boolean `or`.
 - **Python activity:** Reuse the two-parameter function shape with `or` and print
   all four cases.
@@ -285,7 +293,8 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Python-primary.**
 
-- **Creative goal:** Make the special response happen while a switch is off.
+- **Creative goal:** Reverse the rule on this last lock in the sequence — make
+  the special response happen while a switch is off instead of on.
 - **Programming concept:** Boolean `not`.
 - **Python activity:** Define a function that returns `not is_on` and test both
   Boolean inputs.

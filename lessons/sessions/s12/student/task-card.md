@@ -2,6 +2,11 @@
 
 **Mission:** M11 `open-with-either-switch` — Either Switch Opens It
 
+The expedition reaches its second lock. It's a new, independent package — a
+rescue-signal relay, not the Twin Star Vault again — but the same broad
+problem as S11: a rule gate the crew must reason through, this time with an
+easier rule.
+
 **Learning target:** Use Boolean `or` so any one active rescue signal can guide
 the pilot, then contrast that rule with S11 AND: any condition may be true.
 

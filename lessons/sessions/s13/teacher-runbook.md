@@ -14,6 +14,10 @@ return `not is_on`, and explain inversion separately from authored world text.
 - Validate the Moonflower Garden package and prepare an ON/OFF card.
 - Keep this session intentionally lighter; protect explanation over extra edits.
 - Prepare accessibility evidence using text labels, never color alone.
+- Frame this as the final rule change in the lock sequence: S11 required both
+  conditions, S12 accepted either one, and this session reverses a single
+  condition instead of combining two. It is its own independent package —
+  nothing from S11 or S12 carries into it.
 
 ## 45-minute runbook
 
@@ -43,9 +47,15 @@ expectation that two negatives make a stronger inversion.
 
 ## Expected output and behavior
 
-Correct rows are `False True` and `True False`. In the world the special
-moonflower response appears while the lamp is OFF; the ordinary response appears
-while ON. Both states complete M12.
+Correct rows are `False True` and `True False`: `is_on` True pairs with
+`not is_on` False, and `is_on` False pairs with `not is_on` True. In the world
+the special moonflower response appears while the lamp is OFF; the ordinary
+response appears while ON. Both states complete M12.
+
+Contrast with S08's plain toggle response: there, ON was the ordinary case and
+nothing special happened at OFF. Here the same one-toggle mechanism is reused,
+but the accepted state has flipped — OFF now produces the special response and
+ON is ordinary. Make sure students can say what changed, not just that it did.
 
 ## Bounded AI assistance
 

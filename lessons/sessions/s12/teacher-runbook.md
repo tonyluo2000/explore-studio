@@ -13,8 +13,10 @@ shape with `or`, predict all four cases, and contrast every result with S11 AND.
 
 - Prepare the S11 AND table beside a blank OR table.
 - Validate the Storm Rescue Signals package and paste the launch command in chat.
-- Use the distinct rescue-navigation story: either beacon gives the pilot a
-  route; this is not another two-key vault.
+- Frame this as the expedition's second lock: same broad problem as S11 (a
+  rule gate the crew must reason through), a new independent package, and an
+  easier rule. Use the distinct rescue-navigation story — either beacon gives
+  the pilot a route — so students read a new lock, not a vault reskin.
 - Prepare low-bandwidth evidence through text output and a teacher demo.
 
 ## 45-minute runbook
