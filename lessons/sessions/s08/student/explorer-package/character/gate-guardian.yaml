@@ -4,5 +4,5 @@ y: 260
 color: "blue"
 respond_to_toggle:
   object_id: "sky-switch"
-  when_off: "The cloud gate is sleeping."
-  when_on: "The cloud gate is open!"
+  when_off: "The cloud gate is sleeping. Wake the sky switch, then come speak with me again."
+  when_on: "The cloud gate is open! You woke it — walk on through."

@@ -175,8 +175,9 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 **Python-primary.**
 
-- **Creative goal:** Populate the world with three related objects that tell a
-  small environmental story.
+- **Creative goal:** Populate the world with three related objects, planted in
+  order as a breadcrumb trail, whose last one points toward "a gate hidden in
+  the sky" — the hand-off into S07 and S08.
 - **Programming concept:** Dictionaries, lists of data, and `for` loops.
 - **Python activity:** Represent three objects as dictionaries and loop over the
   collection to print a design inventory.
@@ -192,7 +193,10 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 ### S07 — Create a Two-State Prop
 
 - **Creative goal:** Create a switch, lamp, portal, or other object with two
-  visually distinct states.
+  visually distinct states, framed as the class's sky-gate signal for S08.
+  The engine only records that the toggle changed at least once, not its
+  final value, so any "end lit" story target is confirmed by the teacher, not
+  by the mission.
 - **Programming concept:** Boolean values and changing state.
 - **Python activity:** Assign and print `False` and `True` states with matching
   labels or colors.
@@ -204,7 +208,10 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 
 ### S08 — Build an If/Else Guardian
 
-- **Creative goal:** Make an NPC react differently to the prop's current state.
+- **Creative goal:** Make an NPC whose refusal teaches — naming the fix —
+  and whose acceptance follows once the student acts on it. There is no
+  collision system in the engine, so "blocked" is the Guardian's spoken
+  response, never a locked path.
 - **Programming concept:** `if`/`else` branching.
 - **Python activity:** Select and print one of two responses from a Boolean value.
 - **World activity:** Complete M08 by linking an NPC to the toggle and authoring

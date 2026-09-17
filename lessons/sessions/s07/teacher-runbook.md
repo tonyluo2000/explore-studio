@@ -10,6 +10,16 @@ declarative two-state prop.
 
 **Prerequisite:** S02 types and S06 object authoring.
 
+**Expedition thread:** S06's last breadcrumb marker pointed toward "a gate
+hidden in the sky." This session's lantern is the class's sky-gate signal —
+the story's target end-state is lit (ON/gold) before S08, because that is
+what the story says the guardian ahead is watching for. Say this plainly to
+students: the mission does **not** check this final state — M07 only requires
+the toggle to change at least once, not what it ends on — so a teacher who
+cares about the lit ending must confirm it by looking, not by trusting M07
+completion. Keep `when_near`/`when_interacted` state-neutral; they do not
+change with the toggle. See Critical honesty below.
+
 ## Before class
 
 - Send the task card and confirm shared Quick Start readiness.
@@ -49,6 +59,20 @@ Before repair, Python prints `False blue` and `False gold`. After repair it
 prints `False blue` and `True gold`. The package validates with one inline
 toggle. Trail state begins off and alternates on/off on each successful targeted
 interaction; M07 completes after the toggle first changes.
+
+## Critical honesty
+
+- The engine does not verify or store a final ON/OFF value — only that the
+  toggle changed at least once. Never tell students or families that M07
+  "checks" the lantern ends up lit; the target end-state is a story
+  agreement, confirmed by the teacher looking at the lantern, not by mission
+  completion.
+- `when_near` and `when_interacted` are fixed strings; they do not read the
+  toggle and must not be described as reacting to state. Only the rendered
+  color (`off_color`/`on_color`) changes.
+- Do not extend the engine for state-aware interaction text in this slice —
+  that capability belongs to S08's conditional NPC response, not to S07's
+  plain object.
 
 ## Bounded AI assistance
 

@@ -2,5 +2,5 @@ name: "Rain Bell"
 x: 380
 y: 300
 color: "blue"
-when_near: "A drop rings like a bell."
-when_interacted: "Silver rain wakes the garden!"
+when_near: "A drop rings like a bell, calling you further down the trail."
+when_interacted: "Silver rain wakes the garden and chimes you onward."
