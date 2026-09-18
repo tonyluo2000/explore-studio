@@ -1,0 +1,8 @@
+name: "Workshop Keeper"
+x: 640
+y: 220
+color: "green"
+respond_to_toggle:
+  object_id: "design-lamp"
+  when_off: "The design lamp is dark, so the workshop is still closed."
+  when_on: "The design lamp is lit — the workshop is open for building!"

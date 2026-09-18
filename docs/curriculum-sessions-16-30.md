@@ -16,16 +16,34 @@ reason about, and build systems from data." Its first mini-arc, **S16–S20
 S17 search → S18 interpret/score → S19 organize/order → S20 build a complete
 data pipeline. S20, **Milestone A**, is the arc's payoff session.
 
+Its second mini-arc, **S21–S24 (Build Quality / Systems Practice)**, raises
+ownership again and exists so that S25 is not the first time a student owns
+their own work: S21 validate → S22 debug → S23 compose → S24 optimize. The
+bridge students are told, in these words, is:
+
+> Data Fluency → Validate → Debug → Compose → Optimize → Playable Prototype.
+
+Each step hands the student one more piece of the work:
+
+| Session | Student ownership step |
+|---|---|
+| S21 | Fixes a bounded validity problem in a genuinely invalid package. |
+| S22 | Diagnoses and repairs a deterministic bug in their own file. |
+| S23 | Composes two supported mechanics into one authored system. |
+| S24 | Improves that system while proving its behavior is unchanged. |
+
 ## Second-half arc
 
 | Sessions | Arc | Emphasis |
 |---|---|---|
 | S16–S20 | Data fluency (Milestone A: S20) | Observe, search, aggregate/interpret, order, and build a complete data pipeline. |
-| S21–S24 | Software fluency | Validate, test, debug, decompose, refactor, and reason about algorithm cost. |
-| S25–S30 | Independent creation | Plan, construct, review, and present an original capstone. |
+| S21–S24 | Build quality / systems practice | Validate, debug, compose two mechanics into one system, and improve it without changing behavior. |
+| S25–S30 | Independent creation (Milestone B: S25) | Plan, construct, review, and present an original capstone. |
 
 Guided code continues through S20. Choice and partial independence begin in
-S21. S25 is the formal transition to project-primary work.
+S21 and increase every session through S24. S25, **Milestone B**, is the formal
+transition to project-primary work; by then students have already repaired,
+debugged, composed, and improved work they owned.
 
 Sessions 16–29 reuse Missions 01–15 rather than introducing a new Mission
 each week (see Mission strategy below); framed honestly, the rising
@@ -153,19 +171,23 @@ integrated outcome.
 
 ### S21 — Package Gatekeeper
 
-**Python-primary.**
+**Python-primary. Opens the S21–S24 Build Quality / Systems Practice mini-arc.**
 
 - **Creative goal:** Stop broken expedition data before it reaches the world.
 - **Primary Python concept:** Validation functions and defensive input handling.
 - **Local Python activity:** Return an ordered error list for missing fields,
   wrong types, invalid ranges, and duplicate IDs.
+- **Student ownership:** The student interprets the real validator diagnostic
+  for the deliberately invalid package, authors the missing contribution file
+  with their own field values, reruns the validator, and explains the PASS.
 - **World payoff:** Observe an invalid package fail closed, repair it, and run
   M06.
 - **Prediction:** Identify which checks fail and the expected diagnostic order.
 - **Test/debug:** Use table-driven valid and malformed cases.
 - **Bounded AI role:** Supply at most one malformed example.
 - **Git/review habit:** Commit one validation behavior with its regression test.
-- **Prerequisite:** S20 pipeline.
+- **Prerequisite:** S20 pipeline. Bridge line: "We built a pipeline; now we
+  learn how to tell whether what we built is valid."
 
 ### S22 — Traceback Detective
 
@@ -176,11 +198,15 @@ integrated outcome.
   exception types.
 - **Local Python activity:** Diagnose prepared `KeyError`, off-by-one, and
   incorrect-return failures.
+- **Student ownership:** The student finds the silent off-by-one in their own
+  `starter.py` from its printed output, writes the assertion that catches it,
+  watches it fail, makes one change, and reruns.
 - **World payoff:** Use the repairs to restore M08 or M13 behavior.
 - **Prediction:** Identify the first relevant student-code frame and likely
   cause.
-- **Test/debug:** Reproduce the failure, make one change, rerun, and add a
-  regression test.
+- **Test/debug:** Run one loop — observe, hypothesis, one change, rerun, compare
+  evidence — and distinguish syntax/input, contract/validation, and
+  logic/behavior mistakes by where each surfaces.
 - **Bounded AI role:** Give one hint at a time after the traceback is
   interpreted aloud.
 - **Git/review habit:** Write a fix commit that states the cause and protected
@@ -189,19 +215,27 @@ integrated outcome.
 
 ### S23 — Builder's Workshop
 
-**Python-primary.**
+**Python-primary. Composition rehearsal for S25.**
 
-- **Creative goal:** Make the trail builder easier to extend without changing
-  its world.
+- **Creative goal:** Make the trail builder easier to extend, then use it to
+  build one small system of your own.
 - **Primary Python concept:** Decomposition, helper functions, modules, imports,
   and refactoring.
 - **Local Python activity:** Split the S20 pipeline into data I/O, rules, and
-  build modules.
+  build modules, then run the same pipeline over a student-authored plan.
+- **Student ownership:** The student authors `my-system.yaml`, in which two
+  existing mechanics must coexist meaningfully — one named toggle style reused
+  by both objects (M14) and one character whose line depends on one of those
+  objects (`respond_to_toggle`, the M08 mechanic). The student chooses the
+  object names, style colours, keeper name and colour, which object the keeper
+  watches, and both keeper lines.
 - **World payoff:** Use M14 to connect declarative reuse with code reuse; the
-  rendered result remains unchanged.
-- **Prediction:** Draw the call and data flow between modules.
-- **Test/debug:** Compare pre-refactor and post-refactor outputs and run the
-  regression tests.
+  keeper answers differently before and after the watched lamp is toggled.
+- **Prediction:** Draw the call and data flow between modules, and say which
+  module the cross-part keeper rule belongs in.
+- **Test/debug:** Compare pre-refactor and post-refactor outputs against the
+  unchanged exact snapshot, and check the authored system structurally: one
+  shared style, a keeper pointing at an object that exists, two distinct lines.
 - **Bounded AI role:** Point out duplication only after the student identifies
   candidates.
 - **Git/review habit:** Create an isolated refactor commit with no intended
@@ -210,27 +244,40 @@ integrated outcome.
 
 ### S24 — Fast Ranger Index
 
-**Python-primary.**
+**Python-primary. Closes the S21–S24 mini-arc and hands off to S25.**
 
 - **Creative goal:** Find many clues without repeatedly searching the entire
-  catalog.
-- **Primary Python concept:** Algorithmic thinking and informal algorithm-cost
-  intuition.
+  catalog, then make the result easier to read without changing what it does.
+- **Primary Python concept:** Algorithmic thinking, informal algorithm-cost
+  intuition, and behavior-preserving improvement.
 - **Local Python activity:** Compare repeated linear scans with building an ID
   dictionary once; count record inspections instead of benchmarking time.
+- **Student ownership:** The student records a behavior signature first, names
+  one improvement — removing duplication, clearer names, simpler logic, stable
+  ordering, or better player-facing text — makes it, and proves the signature is
+  unchanged.
+- **Scope of "optimize":** clarity, maintainability, determinism, and player
+  experience. Not performance. The only cost claim the session makes is counted
+  record inspections, because nothing here is timed; unmeasured speed claims are
+  explicitly out of bounds.
 - **World payoff:** Resolve and order an M15 route with the indexed data.
 - **Prediction:** Predict inspection counts for small and larger catalogs.
-- **Test/debug:** Prove equivalent results and define duplicate-ID behavior.
+- **Test/debug:** Prove equivalent results, define duplicate-ID behavior, and
+  show a deliberately reordered route failing the signature comparison.
 - **Bounded AI role:** Ask one "what happens when the data doubles?" question.
 - **Git/review habit:** Preserve before-and-after evidence in the commit
   message.
-- **Prerequisite:** S17 search and S19 sorting.
+- **Prerequisite:** S17 search, S19 sorting, and the S23 system to improve.
 
 ### S25 — Playable Prototype
 
-**Project-primary milestone.**
+**Milestone B — project-primary milestone.**
 
 - **Creative goal:** Deliver one complete, small adventure loop.
+- **Arriving from S24:** students have already repaired an invalid package,
+  debugged their own code, composed two mechanics into one system, and improved
+  it while preserving behavior. S25 widens the scope; it is not the first time
+  they own the work.
 - **Primary Python concept:** Project scope, acceptance criteria, and vertical
   slicing.
 - **Local Python activity:** Choose a premise and implement one meaningful
@@ -472,7 +519,7 @@ The scaffolded milestone includes:
 - a playable M15 sequence; and
 - the student's explanation of one transformation and one revision.
 
-### S25 — Playable vertical slice
+### S25 — Playable vertical slice (Milestone B)
 
 The original bounded prototype includes:
 
