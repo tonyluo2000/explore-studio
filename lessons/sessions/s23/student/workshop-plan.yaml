@@ -15,3 +15,12 @@ objects:
     name: "Build Lamp"
     x: 520
     y: 380
+keeper:
+  id: "workshop-keeper"
+  name: "Workshop Keeper"
+  x: 640
+  y: 220
+  color: "green"
+  watches: "design-lamp"
+  when_off: "The design lamp is dark, so the workshop is still closed."
+  when_on: "The design lamp is lit — the workshop is open for building!"

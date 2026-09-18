@@ -1,3 +1,12 @@
+--- character/workshop-keeper.yaml ---
+name: Workshop Keeper
+x: 640
+y: 220
+color: green
+respond_to_toggle:
+  object_id: design-lamp
+  when_off: The design lamp is dark, so the workshop is still closed.
+  when_on: The design lamp is lit — the workshop is open for building!
 --- manifest.yaml ---
 schema_version: '0.2'
 package:
@@ -17,6 +26,9 @@ contributions:
 - id: build-lamp
   type: world_object
   path: objects/build-lamp.yaml
+- id: workshop-keeper
+  type: character
+  path: character/workshop-keeper.yaml
 --- objects/build-lamp.yaml ---
 name: Build Lamp
 x: 520

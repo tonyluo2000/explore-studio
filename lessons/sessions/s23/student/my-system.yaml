@@ -1,0 +1,32 @@
+# S23: your own small system. Two mechanics must work together here:
+#   1. one named toggle style reused by BOTH objects
+#   2. one keeper whose spoken line depends on one of those objects
+# Every placeholder value below is yours to replace. Keep the shape; the values
+# are your decisions. The tests fail until no placeholder is left.
+package:
+  id: "my-workshop-system"
+  display_name: "My Workshop System"
+  version: "0.1.0"
+style:
+  id: "my-glow"
+  off_color: "CHOOSE-ME"
+  on_color: "CHOOSE-ME"
+objects:
+  - id: "first-lamp"
+    name: "CHOOSE-ME"
+    x: 260
+    y: 220
+  - id: "second-lamp"
+    name: "CHOOSE-ME"
+    x: 520
+    y: 380
+keeper:
+  id: "my-keeper"
+  name: "CHOOSE-ME"
+  x: 640
+  y: 220
+  color: "CHOOSE-ME"
+  # Which object does your keeper watch? "first-lamp" or "second-lamp".
+  watches: "CHOOSE-ME"
+  when_off: "CHOOSE-ME"
+  when_on: "CHOOSE-ME"

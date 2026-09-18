@@ -1,4 +1,10 @@
-"""S24: compare repeated record scans with one ID dictionary."""
+"""S24: compare repeated record scans with one ID dictionary, then polish."""
+
+ROUTE = (
+    {"id": "signal-map", "name": "Signal Map", "position": "first"},
+    {"id": "river-token", "name": "River Token", "position": "second"},
+    {"id": "summit-bell", "name": "Summit Bell", "position": "third"},
+)
 
 
 def find_many_by_scan(records, wanted_ids):
@@ -48,11 +54,35 @@ def compare(size):
     return scan_count, index_count, [record["id"] for record in indexed]
 
 
+def route_briefing():
+    """Player-facing route briefing. Correct, and harder to read than it needs to be."""
+    out = []
+    r0 = ROUTE[0]
+    t0 = "Visit " + r0["name"] + " " + r0["position"] + "."
+    out.append(t0)
+    r1 = ROUTE[1]
+    t1 = "Visit " + r1["name"] + " " + r1["position"] + "."
+    out.append(t1)
+    r2 = ROUTE[2]
+    t2 = "Visit " + r2["name"] + " " + r2["position"] + "."
+    out.append(t2)
+    return out
+
+
+def behavior_signature():
+    """Everything that must be identical before and after your improvement."""
+    return (compare(6), compare(12), tuple(route_briefing()))
+
+
 def main():
     print("small:", compare(6))
     print("larger:", compare(12))
     assert compare(6)[:2] == (15, 6)
     # TODO: predict, then add the equivalent inspection-count assertion for 12.
+    for line in route_briefing():
+        print(line)
+    # TODO: record behavior_signature(), improve route_briefing (one loop, clearer
+    # names, no copy-paste), then prove the signature is unchanged.
 
 
 if __name__ == "__main__":

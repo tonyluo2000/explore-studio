@@ -16,3 +16,6 @@ contributions:
   - id: "build-lamp"
     type: "world_object"
     path: "objects/build-lamp.yaml"
+  - id: "workshop-keeper"
+    type: "character"
+    path: "character/workshop-keeper.yaml"
