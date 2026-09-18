@@ -32,6 +32,12 @@ reflection:
   problem_and_how_i_fixed_it: "CHOOSE-ME"
   # What would you improve with 15 more minutes?
   fifteen_more_minutes: "CHOOSE-ME"
+  # Criterion 7, first half. One design decision you made and why: a choice
+  # about the experience, such as where the second mechanic sits.
+  design_decision: "CHOOSE-ME"
+  # Criterion 7, second half. One technical decision you made and why: a choice
+  # about how you built it, such as how validate_station reports an error.
+  technical_decision: "CHOOSE-ME"
 
 # Pasted from my own terminal, not typed from memory.
 evidence:

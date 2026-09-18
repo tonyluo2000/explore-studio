@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 import yaml
 
@@ -35,6 +36,41 @@ STUDENT_PACKAGE_ROOT = STUDENT_ROOT / "explorer-package"
 RECOVERY_PACKAGE_ROOT = STUDENT_ROOT / "recovery-package"
 NOVA_ROOT = PROJECT_ROOT / "examples" / "explorer-packages" / "nova-character"
 PLACEHOLDER = "CHOOSE-ME"
+
+#: Every test the shipped milestone checker defines, in file order. A complete
+#: student must turn all of them green, and nothing else may quietly appear or
+#: vanish: :func:`_checker_test_names` holds this list to the real file.
+MILESTONE_CHECKER_TESTS = (
+    "test_plan_is_authored_before_the_build",
+    "test_catalog_choices_are_authored",
+    "test_package_text_is_authored",
+    "test_pipeline_selects_aggregates_and_orders_the_route",
+    "test_pipeline_refuses_invalid_and_absent_stations",
+    "test_package_validates",
+    "test_package_loads_and_plans_for_trail",
+    "test_route_keeper_still_owns_an_exact_three_step_sequence",
+    "test_two_supported_mechanics_are_present",
+    "test_second_mechanic_is_wired_into_the_world",
+    "test_build_is_deterministic",
+    "test_pasted_evidence_matches_this_package",
+    "test_reflection_is_complete",
+    "test_reflection_explains_one_design_and_one_technical_decision",
+)
+
+#: The checker's red-on-download set: every one of these is student-owned work,
+#: and none of them is an infrastructure failure in the shipped download.
+MILESTONE_CHECKER_RED_ON_DOWNLOAD = (
+    "test_plan_is_authored_before_the_build",
+    "test_catalog_choices_are_authored",
+    "test_package_text_is_authored",
+    "test_pipeline_selects_aggregates_and_orders_the_route",
+    "test_pipeline_refuses_invalid_and_absent_stations",
+    "test_two_supported_mechanics_are_present",
+    "test_second_mechanic_is_wired_into_the_world",
+    "test_pasted_evidence_matches_this_package",
+    "test_reflection_is_complete",
+    "test_reflection_explains_one_design_and_one_technical_decision",
+)
 
 CLOCK_ANCHORS = (
     "0:00–0:05",
@@ -129,6 +165,32 @@ def test_s25_states_the_seven_milestone_acceptance_criteria():
         assert "two examples copied side by side do not pass" in document
 
 
+def test_s25_one_milestone_contract_across_card_runbook_and_curriculum():
+    """Criteria 2 and 7 must mean the same thing in every document that states them."""
+    task = _read(STUDENT_ROOT / "task-card.md")
+    runbook = _read(S25_ROOT / "teacher-runbook.md")
+    curriculum = " ".join(_read(PROJECT_ROOT / "docs" / "curriculum-sessions-16-30.md").split())
+    checker = _read(STUDENT_ROOT / "test_milestone.py")
+
+    # Criterion 2 includes the pipeline, and the checker really enforces it.
+    assert "`starter.py` pipeline runs" in task
+    assert "`starter.py` pipeline runs" in runbook
+    assert (
+        "one meaningful algorithmic pipeline, completed and checked by the milestone checker"
+        in curriculum
+    )
+    assert "criterion 2 includes the pipeline" in _normalized(task + runbook)
+    assert "pipeline.build_preview" in checker and "pipeline.select_route" in checker
+
+    # Criterion 7 names two fields that exist, and the checker requires both.
+    for field in ("design_decision", "technical_decision"):
+        assert field in task, field
+        assert field in runbook, field
+        assert field in curriculum, field
+        assert f'"{field}"' in checker, field
+    assert "test_reflection_explains_one_design_and_one_technical_decision" in checker
+
+
 def test_s25_starter_package_is_valid_but_entirely_unauthored():
     """The download must be healthy; only the student's decisions are missing."""
     loaded = load_explorer_package(STUDENT_PACKAGE_ROOT)
@@ -211,6 +273,8 @@ def test_s25_milestone_artifact_holds_the_plan_the_reflection_and_the_evidence()
         "two_mechanics_i_combined",
         "problem_and_how_i_fixed_it",
         "fifteen_more_minutes",
+        "design_decision",
+        "technical_decision",
     }
     assert set(document["evidence"]) == {"package_validation", "build_digest", "trail_result"}
     assert all(value == PLACEHOLDER for _, value in _authored_strings(document["reflection"]))
@@ -222,12 +286,33 @@ def test_s25_milestone_artifact_holds_the_plan_the_reflection_and_the_evidence()
         "Which two mechanics did you combine?",
         "What problem did you hit and how did you fix it?",
         "What would you improve with 15 more minutes?",
+        "One design decision you made, and why?",
+        "One technical decision you made, and why?",
     ):
         assert question in task, question
 
 
-def _run_milestone_checker(checker_path: Path) -> tuple[set[str], set[str]]:
-    """Return (passed, failed) test names from one milestone-checker run."""
+class CheckerRun(NamedTuple):
+    """One milestone-checker subprocess: what passed, what did not, and the proof."""
+
+    passed: frozenset[str]
+    failed: frozenset[str]
+    returncode: int
+    output: str
+
+
+def _checker_test_names() -> tuple[str, ...]:
+    """Every test the shipped checker actually defines, in file order."""
+    tree = ast.parse(_read(STUDENT_ROOT / "test_milestone.py"))
+    return tuple(
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    )
+
+
+def _run_milestone_checker(checker_path: Path) -> CheckerRun:
+    """Run one milestone checker and report every per-test outcome it printed."""
     completed = subprocess.run(
         [
             sys.executable,
@@ -236,7 +321,7 @@ def _run_milestone_checker(checker_path: Path) -> tuple[set[str], set[str]]:
             "-p",
             "no:cacheprovider",
             "--tb=short",
-            "-q",
+            "-v",
             str(checker_path),
         ],
         cwd=PROJECT_ROOT,
@@ -244,30 +329,35 @@ def _run_milestone_checker(checker_path: Path) -> tuple[set[str], set[str]]:
         text=True,
         check=False,
     )
-    failed = set(re.findall(r"^FAILED .*::(\w+)", completed.stdout, flags=re.MULTILINE))
-    passed = set(re.findall(r"^(\w+) PASSED", completed.stdout, flags=re.MULTILINE))
-    passed |= set(re.findall(r"::(\w+) PASSED", completed.stdout))
-    return passed, failed, completed.stdout
+    # `-v` prints one `path::name OUTCOME` line per test, so a run that dies in
+    # collection reports no outcomes at all rather than looking quietly clean.
+    outcomes = dict(
+        re.findall(
+            r"::(\w+) (PASSED|FAILED|ERROR|SKIPPED|XFAIL|XPASS)",
+            completed.stdout,
+        )
+    )
+    passed = frozenset(name for name, outcome in outcomes.items() if outcome == "PASSED")
+    not_passed = frozenset(name for name, outcome in outcomes.items() if outcome != "PASSED")
+    return CheckerRun(passed, not_passed, completed.returncode, completed.stdout)
 
 
 def test_s25_milestone_checker_is_red_only_for_unmade_decisions():
     """The shipped state must fail for ownership reasons, never infrastructure ones."""
-    _, failed, output = _run_milestone_checker(STUDENT_ROOT / "test_milestone.py")
+    assert _checker_test_names() == MILESTONE_CHECKER_TESTS, _checker_test_names()
 
-    assert {
-        "test_plan_is_authored_before_the_build",
-        "test_catalog_choices_are_authored",
-        "test_package_text_is_authored",
-        "test_two_supported_mechanics_are_present",
-        "test_reflection_is_complete",
-    } <= failed, output
+    run = _run_milestone_checker(STUDENT_ROOT / "test_milestone.py")
+
+    assert run.returncode != 0, "the shipped download must start red"
+    assert run.passed | run.failed == set(MILESTONE_CHECKER_TESTS), run.output
+    assert run.failed == set(MILESTONE_CHECKER_RED_ON_DOWNLOAD), run.output
     for infrastructure in (
         "test_package_validates",
         "test_package_loads_and_plans_for_trail",
         "test_route_keeper_still_owns_an_exact_three_step_sequence",
         "test_build_is_deterministic",
     ):
-        assert infrastructure not in failed, f"{infrastructure} must be green on the download"
+        assert infrastructure in run.passed, f"{infrastructure} must be green on the download"
 
 
 def _student_workspace(tmp_path: Path) -> Path:
@@ -279,9 +369,88 @@ def _student_workspace(tmp_path: Path) -> Path:
     return root
 
 
+#: One correct completion of the four ``starter.py`` TODO bodies. The simulated
+#: student has to finish the pipeline like any other student: criterion 2
+#: includes it, so the checker cannot go green without it.
+COMPLETED_PIPELINE = '''def validate_station(station):
+    """Return errors for the prepared station shape; an empty list means valid."""
+    errors = []
+    if not isinstance(station, dict):
+        return ["station must be a dictionary"]
+    for field in REQUIRED_STATION_FIELDS:
+        if field not in station:
+            errors.append(f"{field} is missing")
+    world = station.get("world")
+    if not isinstance(world, dict):
+        return errors + ["world must be a dictionary"]
+    for field in REQUIRED_WORLD_FIELDS:
+        if field not in world:
+            errors.append(f"world.{field} is missing")
+    if errors:
+        return errors
+    if not isinstance(station["enabled"], bool):
+        errors.append("enabled must be true or false")
+    if not isinstance(station["route_order"], int) or station["route_order"] < 1:
+        errors.append("route_order must be a positive integer")
+    if not isinstance(station["signal_power"], int) or station["signal_power"] < 0:
+        errors.append("signal_power must be a nonnegative integer")
+    for axis in ("x", "y"):
+        value = world[axis]
+        if isinstance(value, bool) or not isinstance(value, int):
+            errors.append(f"{axis} must be an integer")
+        elif not 40 <= value <= 760:
+            errors.append(f"{axis} must be from 40 through 760")
+    return errors
+
+
+def select_route(catalog, required_ids):
+    """Return exactly three enabled required stations in requested-ID order."""
+    selected = []
+    enabled = [station for station in catalog_stations(catalog) if station["enabled"]]
+    for required in required_ids:
+        found = None
+        for station in enabled:
+            if station["id"] == required:
+                found = station
+                break
+        if found is None:
+            raise ValueError(f"required station {required} is not available")
+        selected.append(found)
+    if len(selected) != 3:
+        raise ValueError("exactly three required stations must be selected")
+    return selected
+
+
+def signal_total(stations):
+    """Return the sum of signal_power for the selected stations."""
+    total = 0
+    for station in stations:
+        total += station["signal_power"]
+    return total
+
+
+def ordered_route(stations):
+    """Return a stable sorted copy using route_order only."""
+    return sorted(stations, key=lambda station: station["route_order"])
+
+
+'''
+
+
+def _complete_pipeline(starter_path: Path) -> None:
+    """Replace the four TODO bodies with one working implementation."""
+    head, marker, rest = _read(starter_path).partition("def validate_station")
+    assert marker, "starter.py must still define validate_station"
+    _, marker, tail = rest.partition("def transform_preview")
+    assert marker, "starter.py must still define transform_preview"
+    starter_path.write_text(head + COMPLETED_PIPELINE + marker + tail, encoding="utf-8")
+
+
 def _author_student_copy(root: Path) -> None:
     """Do what one student does: choose a premise, a second mechanic, and words."""
     package = root / "explorer-package"
+
+    _complete_pipeline(root / "starter.py")
 
     # Catalog: the second-mechanic plan first, then the story text.
     catalog_path = root / "project_catalog.py"
@@ -368,6 +537,14 @@ def _author_student_copy(root: Path) -> None:
             "refused it; I pointed it at the third stop instead and it passed."
         ),
         "fifteen_more_minutes": "Better dusk wording at the second stop.",
+        "design_decision": (
+            "I put the counter on the last stop so one walk of the route also "
+            "charges the beacon, and the watcher has something to notice."
+        ),
+        "technical_decision": (
+            "validate_station returns every error it finds instead of the first, "
+            "so one run names all the bad fields."
+        ),
     }
     milestone["evidence"] |= {
         "package_validation": f"valid: {metadata.id} {metadata.version}",
@@ -382,8 +559,13 @@ def test_s25_milestone_checker_goes_green_for_a_complete_student(tmp_path):
     root = _student_workspace(tmp_path)
     _author_student_copy(root)
 
-    _, failed, output = _run_milestone_checker(root / "test_milestone.py")
-    assert not failed, output
+    run = _run_milestone_checker(root / "test_milestone.py")
+    # Green means the whole checker ran and every named test passed. Asserting
+    # only "nothing FAILED" would also accept a run that died in collection.
+    assert run.returncode == 0, run.output
+    assert not run.failed, run.output
+    assert run.passed == set(MILESTONE_CHECKER_TESTS), run.output
+    assert len(run.passed) == len(MILESTONE_CHECKER_TESTS), run.output
 
     planned = plan_local_classroom_trail(
         (NOVA_ROOT, root / "explorer-package"), player_qualified_id="nova-character:nova"
@@ -406,12 +588,13 @@ def test_s25_milestone_checker_names_an_invalid_package_separately(tmp_path):
     document["respond_to_counter"]["object_id"] = "first-stop"
     keeper.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
 
-    _, failed, output = _run_milestone_checker(root / "test_milestone.py")
+    run = _run_milestone_checker(root / "test_milestone.py")
 
-    assert "test_package_validates" in failed, output
-    assert "must reference a world object with counter metadata" in output
-    assert "test_reflection_is_complete" not in failed
-    assert "test_plan_is_authored_before_the_build" not in failed
+    assert run.returncode != 0, run.output
+    assert "test_package_validates" in run.failed, run.output
+    assert "must reference a world object with counter metadata" in run.output
+    assert "test_reflection_is_complete" in run.passed, run.output
+    assert "test_plan_is_authored_before_the_build" in run.passed, run.output
 
 
 def test_s25_pipeline_scaffold_stays_incomplete_and_five_cases_stay_explicit(capsys):

@@ -43,12 +43,12 @@ finish?", not "what could this become?".
 | # | Criterion | Evidence |
 |---:|---|---|
 | 1 | **Plan** — premise, two mechanics, player action, expected result | `milestone.yaml` `plan:` |
-| 2 | **Build** — sources produce the intended package deterministically | milestone checker |
+| 2 | **Build** — the `starter.py` pipeline runs and sources produce the intended package deterministically | milestone checker |
 | 3 | **Validate** — real package validation passes | `explore-package validate` |
 | 4 | **Play** — loads, plans, and launches in Trail | Trail |
 | 5 | **Compose** — two supported mechanics coexist meaningfully | milestone checker |
 | 6 | **Debug** — one concrete problem and the change that fixed it | `milestone.yaml` |
-| 7 | **Explain** — one design decision and one technical decision | `milestone.yaml` |
+| 7 | **Explain** — one design decision and one technical decision | `milestone.yaml` `reflection.design_decision` / `reflection.technical_decision` |
 
 All seven, or the milestone is incomplete. "Meaningfully" in criterion 5 means
 the two mechanics belong to one player experience: a character reads the second
@@ -118,6 +118,7 @@ Own it yourself only when the clock forces it, and say so when you do.
 | Route resets unexpectedly while playing | The player touched a route object out of turn — including a second tap on a route object that carries the counter. | This is correct M15 behavior. Use it: it is the best available "explain a design decision" moment. |
 | Checker still red after authoring | A placeholder survives somewhere. | The failure names the exact file and field. Read it rather than hunting. |
 | `test_pipeline.py` red | The four TODO functions are incomplete. | Expected until the student finishes them; not a package problem. |
+| `test_pipeline_*` red in the milestone checker | Same cause: the pipeline is not finished. | The pipeline is criterion 2. Send the student to `test_pipeline.py`, which isolates the failing stage. |
 | Pasted digest does not match | The package changed after the digest was pasted. | Re-export and paste again; the failure prints the current digest. |
 
 ## Degraded mode if Trail will not launch
@@ -138,7 +139,8 @@ acceptable Milestone B; a missing package is not.
 ## Teacher cut line
 
 Protect, in order: a valid authored prototype; two mechanics that mean something
-together; validation and build evidence; a brief reflection.
+together; the completed `starter.py` pipeline; validation and build evidence; a
+brief reflection.
 
 - At 0:25, stop adding objects and polish.
 - At 0:32, if the package is not valid, move the student to the bounded
@@ -173,12 +175,19 @@ deliberate. Red checker output at 0:00 means "decisions outstanding", not
 own docstring:
 
 - decisions not yet made (`test_plan_*`, `test_*_is_authored`, `test_reflection_*`);
+- an unfinished pipeline (`test_pipeline_*`), which runs the student's
+  `starter.py` against the fixed `fixtures.py` catalogs;
 - an invalid package (`test_package_validates`, `test_package_loads_and_plans`);
 - missing composition or build evidence (`test_two_supported_mechanics`,
   `test_second_mechanic_is_wired`, `test_build_is_deterministic`).
 
 The fixed fixtures remain the independent source for the five intentionally-red
-pipeline tests in `test_pipeline.py`.
+pipeline tests in `test_pipeline.py`, and for the milestone checker's two
+`test_pipeline_*` tests. Criterion 2 includes the pipeline: the checker cannot
+go green with an untouched `starter.py`. The checker asks only for the
+structural contract — exactly three selected in requested order, the aggregated
+power, a stable sort on `route_order`, and invalid or absent data refused before
+`transform_preview`. It never demands one particular wording or implementation.
 
 For the teacher recovery exemplar, enabled filtering followed by required-ID
 search finds exactly `harbor-drum`, `north-lantern`, and `summit-flare`. Stable
@@ -220,7 +229,8 @@ most one response mechanic, so a second mechanic needs a second character.
 Six items, all produced by work the student already did:
 
 1. `milestone.yaml` plan;
-2. authored `project_catalog.py` and `explorer-package/`;
+2. authored `project_catalog.py`, completed `starter.py`, and
+   `explorer-package/`;
 3. green `test_milestone.py` output;
 4. the `explore-package validate` PASS line;
 5. the deterministic build digest from `explore-package export`;
@@ -295,4 +305,7 @@ must be renamed together.
   plus one new character with `respond_to_counter`: one new file and one manifest
   line.
 - Reflection answers must name one design decision and one technical/debugging
-  decision. "It worked" is not a debugging decision.
+  decision. "It worked" is not a debugging decision. They live in
+  `milestone.yaml` as `reflection.design_decision` and
+  `reflection.technical_decision`, and the checker requires both to be nonblank
+  and no longer a placeholder. It does not judge the wording.

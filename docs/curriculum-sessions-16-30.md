@@ -281,7 +281,10 @@ integrated outcome.
 - **Primary Python concept:** Project scope, acceptance criteria, and vertical
   slicing.
 - **Local Python activity:** Choose a premise and implement one meaningful
-  search, filter, count, aggregate, or sort pipeline.
+  search, filter, count, aggregate, or sort pipeline. It is part of the
+  milestone contract, not optional practice: the milestone checker runs the
+  student's pipeline against the fixed fixtures and stays red until it is
+  finished.
 - **Student ownership:** The student owns the premise, every name and
   player-facing message, which second mechanic joins the M15 route, where that
   mechanic sits, one mechanic parameter or goal, and the reflection. The starter
@@ -296,8 +299,9 @@ integrated outcome.
 - **Test/debug:** Cover normal, boundary, absent, malformed, and regression
   cases, then debug one real problem. If nothing broke, one bounded fallback
   exercise supplies the debugging evidence instead of an invented bug.
-- **Milestone evidence:** plan, authored sources, green milestone checker,
-  validation PASS, deterministic build digest, and reflection.
+- **Milestone evidence:** plan, authored sources, completed pipeline, green
+  milestone checker, validation PASS, deterministic build digest, and a
+  reflection naming one design decision and one technical decision.
 - **Bounded AI role:** Challenge scope with one bounded question and never
   generate the premise.
 - **Git/review habit:** Separate plan and prototype commits; the reflection is
@@ -541,12 +545,15 @@ The original bounded prototype includes:
 - a written plan naming the premise, the two mechanics, the player action, and
   the expected observable result;
 - a documented data model and function decomposition;
-- one meaningful algorithmic pipeline;
+- one meaningful algorithmic pipeline, completed and checked by the milestone
+  checker;
 - normal, boundary, absent, malformed, and regression cases;
 - **at least two supported Trail mechanics coexisting meaningfully** in one
   package, working end to end;
 - successful package validation and a deterministic local build receipt; and
-- a short reflection naming one design decision and one technical decision.
+- a short reflection naming one design decision and one technical decision, in
+  the milestone artifact's own `design_decision` and `technical_decision`
+  fields.
 
 Milestone B is the prototype itself, finished. The capstone build plan belongs
 to S26, not here.

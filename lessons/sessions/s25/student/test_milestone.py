@@ -12,6 +12,9 @@ you which:
 * ``test_plan_*`` / ``test_*_is_authored`` / ``test_reflection_*`` — a decision
   you have not made yet. Nothing is broken; a ``CHOOSE-ME`` is still sitting
   where your words belong.
+* ``test_pipeline_*`` — the four TODO functions in ``starter.py`` are not
+  finished yet. These run your pipeline against the fixed ``fixtures.py``
+  catalogs; ``test_pipeline.py`` says the same thing in smaller pieces.
 * ``test_package_validates`` / ``test_package_loads_and_plans`` — your package
   is invalid. Read the diagnostic; it names the file and the field.
 * ``test_two_supported_mechanics`` / ``test_second_mechanic_is_wired`` /
@@ -24,7 +27,9 @@ asks whether you made the decisions and whether the result really runs.
 
 from __future__ import annotations
 
+import importlib.util
 import runpy
+import sys
 import tempfile
 from pathlib import Path
 
@@ -40,6 +45,8 @@ STUDENT_ROOT = Path(__file__).resolve().parent
 PACKAGE_ROOT = STUDENT_ROOT / "explorer-package"
 MILESTONE_PATH = STUDENT_ROOT / "milestone.yaml"
 CATALOG_PATH = STUDENT_ROOT / "project_catalog.py"
+STARTER_PATH = STUDENT_ROOT / "starter.py"
+FIXTURES_PATH = STUDENT_ROOT / "fixtures.py"
 
 
 def _nova_root() -> Path:
@@ -89,6 +96,16 @@ def catalog() -> dict:
 
 
 @pytest.fixture(scope="module")
+def pipeline():
+    return _student_module(STARTER_PATH)
+
+
+@pytest.fixture(scope="module")
+def fixtures():
+    return _student_module(FIXTURES_PATH)
+
+
+@pytest.fixture(scope="module")
 def loaded():
     return load_explorer_package(PACKAGE_ROOT)
 
@@ -98,6 +115,17 @@ def package(loaded):
     if not loaded.is_loaded:
         pytest.skip("package is not valid yet; fix test_package_validates first")
     return loaded.package
+
+
+def _student_module(path: Path):
+    """Import one of my own files by path, so this works in any course folder."""
+    if str(STUDENT_ROOT) not in sys.path:
+        sys.path.insert(0, str(STUDENT_ROOT))
+    spec = importlib.util.spec_from_file_location(path.stem, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[path.stem] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def _mechanic_families(package) -> set[str]:
@@ -161,6 +189,66 @@ def test_package_text_is_authored():
         + ", ".join(unfilled)
         + ". A visitor reads these lines; write them yourself."
     )
+
+
+# --- Did I finish the pipeline? ----------------------------------------------
+
+
+def _required_stations(fixtures) -> list[dict]:
+    """The three prepared stations REQUIRED_IDS asks for, in requested order."""
+    by_id = {
+        station["id"]: station
+        for region in fixtures.NORMAL_CATALOG["regions"]
+        for station in region["stations"]
+    }
+    return [by_id[required] for required in fixtures.REQUIRED_IDS]
+
+
+def test_pipeline_selects_aggregates_and_orders_the_route(pipeline, fixtures):
+    """The TODO functions have to really search, count, aggregate, and sort."""
+    required = _required_stations(fixtures)
+    try:
+        result = pipeline.build_preview(fixtures.NORMAL_CATALOG, fixtures.REQUIRED_IDS)
+    except ValueError as error:
+        pytest.fail(
+            "Your pipeline refused the prepared normal catalog, which is valid:\n"
+            f"  {error}\n"
+            "Finish the TODO bodies in starter.py. test_pipeline.py checks the "
+            "same stages one at a time."
+        )
+    assert result["selected_count"] == 3, "select_route must return exactly three stations"
+    assert result["signal_power"] == sum(
+        station["signal_power"] for station in required
+    ), "signal_total must add the signal_power of the selected stations"
+    assert result["preview"]["route_ids"] == [
+        station["id"] for station in sorted(required, key=lambda item: item["route_order"])
+    ], "ordered_route must return a stable sorted copy keyed on route_order only"
+    assert len(result["preview"]["objects"]) == 3
+
+
+def test_pipeline_refuses_invalid_and_absent_stations(pipeline, fixtures):
+    """Bad data has to stop the pipeline before anything is previewed."""
+    healthy = _required_stations(fixtures)[0]
+    assert (
+        pipeline.validate_station(healthy) == []
+    ), f"validate_station rejected a prepared valid station: {pipeline.validate_station(healthy)}"
+
+    malformed = [
+        station
+        for region in fixtures.MALFORMED_COORDINATE_CATALOG["regions"]
+        for station in region["stations"]
+        if not isinstance(station["world"]["x"], int)
+    ]
+    assert malformed, "fixtures.py must keep one station whose world.x is text"
+    assert pipeline.validate_station(malformed[0]), (
+        "validate_station accepted a station whose world.x is text, not an integer. "
+        "Return an error for every rule the task card lists."
+    )
+
+    with pytest.raises(ValueError):
+        pipeline.build_preview(fixtures.MALFORMED_COORDINATE_CATALOG, fixtures.REQUIRED_IDS)
+    with pytest.raises(ValueError):
+        pipeline.select_route(fixtures.ABSENT_REQUIRED_CATALOG, fixtures.REQUIRED_IDS)
 
 
 # --- Is the package real? ----------------------------------------------------
@@ -306,3 +394,20 @@ def test_reflection_is_complete(milestone):
         "Name one real problem and the one change that fixed it — "
         "what you saw, and what you changed."
     )
+
+
+def test_reflection_explains_one_design_and_one_technical_decision(milestone):
+    """Criterion 7: one decision about the experience, one about how you built it."""
+    reflection = milestone.get("reflection")
+    assert isinstance(reflection, dict), "milestone.yaml needs a `reflection:` mapping"
+    for field in ("design_decision", "technical_decision"):
+        assert field in reflection, f"milestone.yaml needs a `reflection.{field}:` line"
+        answer = reflection[field]
+        assert isinstance(answer, str) and answer.strip(), (
+            f"reflection.{field} is blank. Criterion 7 asks for one design decision "
+            "and one technical decision; one sentence each is enough."
+        )
+        assert PLACEHOLDER not in answer, (
+            f"reflection.{field} still says {PLACEHOLDER}. "
+            "Name the decision you actually made, and why."
+        )

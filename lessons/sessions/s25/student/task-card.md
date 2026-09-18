@@ -30,12 +30,12 @@ Seven acceptance criteria. All seven, or it is not done.
 | # | Criterion | How it is checked |
 |---:|---|---|
 | 1 | **Plan** — premise, two mechanics, player action, expected result | `milestone.yaml` |
-| 2 | **Build** — your sources produce the intended package, the same way twice | milestone checker |
+| 2 | **Build** — your `starter.py` pipeline runs, and your sources produce the intended package the same way twice | milestone checker |
 | 3 | **Validate** — real package validation passes | `explore-package validate` |
 | 4 | **Play** — it loads, plans, and launches in Trail | Trail |
 | 5 | **Compose** — two supported mechanics coexist *meaningfully* | milestone checker |
 | 6 | **Debug** — one concrete problem you hit, and the change that fixed it | `milestone.yaml` |
-| 7 | **Explain** — one design decision and one technical decision | `milestone.yaml` |
+| 7 | **Explain** — one design decision and one technical decision | `milestone.yaml` `reflection.design_decision` and `reflection.technical_decision` |
 
 "Meaningfully" in criterion 5 means the two mechanics belong to one experience.
 Two examples copied side by side do not pass, and the checker says so.
@@ -71,7 +71,8 @@ python -m pytest -q lessons/sessions/s25/student/test_milestone.py
 ```
 
 It starts red on purpose. Nothing is broken — it is counting the decisions you
-have not made yet, and each failure names the file and the field.
+have not made yet and the pipeline functions you have not finished, and each
+failure names the file and the field.
 
 ## Plan (0:05–0:10)
 
@@ -190,7 +191,9 @@ python -m pytest -q lessons/sessions/s25/student/test_pipeline.py
 ```
 
 These pipeline tests are expected to fail until you complete the TODO
-functions.
+functions. The milestone checker's two `test_pipeline_*` tests fail until then
+too — criterion 2 includes the pipeline, so an untouched `starter.py` is not
+done.
 
 ```console
 explore-package validate lessons/sessions/s25/student/explorer-package
@@ -267,13 +270,21 @@ Fill in the `reflection:` block of `milestone.yaml`. Short answers:
 - Which two mechanics did you combine?
 - What problem did you hit and how did you fix it?
 - What would you improve with 15 more minutes?
+- One design decision you made, and why? *(criterion 7)*
+- One technical decision you made, and why? *(criterion 7)*
+
+A design decision is about the experience — where the second mechanic sits, what
+the keeper says when the route resets. A technical decision is about how you
+built it — how `validate_station` reports an error, why `ordered_route` sorts on
+`route_order` alone. One sentence each.
 
 ### Your milestone evidence
 
 Six things, all of which you already have:
 
 1. `milestone.yaml` plan;
-2. your authored `project_catalog.py` and `explorer-package/`;
+2. your authored `project_catalog.py`, completed `starter.py`, and
+   `explorer-package/`;
 3. green `test_milestone.py` output;
 4. the `explore-package validate` PASS line;
 5. the deterministic build digest;
@@ -305,8 +316,9 @@ If time runs short, protect these in order:
 
 1. a valid authored prototype;
 2. two mechanics that mean something together;
-3. validation and build evidence;
-4. a brief reflection.
+3. the completed `starter.py` pipeline;
+4. validation and build evidence;
+5. a brief reflection.
 
 Cut polish first: fewer objects, shorter messages, put the second mechanic on a
 route object instead of adding a fourth one, and let the teacher drive the Trail
