@@ -1,0 +1,92 @@
+# S26 - My Capstone Blueprint. This one file is the whole session's work.
+#
+# S25 proved one sentence: I can independently build and explain a small
+# working system. S26 proves the next one: I can design a larger project
+# before I build it. Nothing gets built today. This file IS today's work, and
+# S27 starts from it.
+#
+# Replace every CHOOSE-ME. One or two sentences each - short is correct.
+#
+# See which mechanics exist and which pairs really connect:
+#
+#   python lessons/sessions/s26/student/mechanic_menu.py
+#
+# Ask the blueprint checker what is still undecided, as often as you like:
+#
+#   python -m pytest -q lessons/sessions/s26/student/test_blueprint.py
+
+project:
+  title: "CHOOSE-ME"
+  # Two or three sentences. What is this place, and why would a visitor come?
+  # This premise is yours. The files in examples/ are somebody else's project;
+  # they show you how big a blueprint should be, not what to make.
+  premise: "CHOOSE-ME"
+  # What is the player trying to do? Write it so somebody watching could tell
+  # the moment it happened.
+  player_goal: "CHOOSE-ME"
+
+# Two, three, or four mechanics, all from the menu. Two done well beats four
+# half-done, and four is the ceiling.
+#
+# `kind:` must be a name mechanic_menu.py prints.
+# `role_in_experience:` is one sentence on what this mechanic does FOR THE
+# PLAYER - not what it is. "A counter" is not a role. "It tracks how many
+# lanterns are lit so the keeper knows when the harbour is safe" is.
+mechanics:
+  - kind: "CHOOSE-ME"
+    role_in_experience: "CHOOSE-ME"
+  - kind: "CHOOSE-ME"
+    role_in_experience: "CHOOSE-ME"
+  # Add a third and a fourth only if you can say what each one is for.
+
+world:
+  # Two, three, or four things a visitor actually meets: objects, switches,
+  # characters. These become the files you author in S27-S30, so keep the list
+  # to what you can finish.
+  key_elements:
+    - name: "CHOOSE-ME"
+      role: "CHOOSE-ME"
+    - name: "CHOOSE-ME"
+      role: "CHOOSE-ME"
+  # Three to six steps: what the player does, in order, ending with something
+  # they can see. Use the mechanics you chose above - no magic, no steps the
+  # runtime cannot do.
+  player_flow:
+    - "CHOOSE-ME"
+    - "CHOOSE-ME"
+    - "CHOOSE-ME"
+
+integration:
+  # Name two of your `kind:` values above: one mechanic that CHANGES something,
+  # and one that NOTICES the change. The checker accepts only a pair the
+  # runtime can really connect, and mechanic_menu.py prints every legal pair.
+  connected_mechanics: ["CHOOSE-ME", "CHOOSE-ME"]
+  # One or two sentences: what does the second one notice, and when?
+  # "They are both in my package" is not a connection.
+  how_mechanics_connect: "CHOOSE-ME"
+  # How does the player know they succeeded? Name what they see or read.
+  observable_success: "CHOOSE-ME"
+
+build_plan:
+  # ONE bounded thing to build in S27 - the first slice, not the game.
+  # Good: "author the two lantern switches and the keeper who reads them."
+  # Not allowed: "build the whole game."
+  s27_target: "CHOOSE-ME"
+  # How will you know that slice is right? Name the command or the check.
+  validation_plan: "CHOOSE-ME"
+  # Who plays it, and what will you ask them?
+  play_test_plan: "CHOOSE-ME"
+
+risk:
+  # The one thing most likely to go wrong or run long. Be honest; a named risk
+  # is a risk you can plan around.
+  biggest_risk: "CHOOSE-ME"
+  # If S29 arrives and you are behind, what do you cut FIRST so the project
+  # still works? Deciding this now is a plan, not a failure.
+  fallback_if_time_runs_short: "CHOOSE-ME"
+
+reflection:
+  # Why this project, out of everything you could have chosen?
+  why_this_project: "CHOOSE-ME"
+  # Which design decision was hardest, and what did you decide?
+  hardest_design_decision: "CHOOSE-ME"

@@ -1,0 +1,78 @@
+# EXAMPLE - the teacher's Stormlight Rescue Trail, not your project.
+#
+# This is here so you can see how big a finished blueprint is, and how little
+# it says. Read it for scope, not for content: it is already somebody else's
+# premise, and a blueprint that copies it is not a capstone.
+#
+# Notice what makes it buildable. Three mechanics, three key elements, four
+# steps in the flow, and an S27 target you could genuinely finish in one
+# session. The whole design fits on one screen.
+
+project:
+  title: "Stormlight Rescue Trail"
+  premise: >-
+    A small harbour on the night of a storm. The lighthouse has gone dark and
+    the rescue boat cannot leave until the two shore lanterns are burning, so
+    the keeper waits at the end of the pier for somebody to light them.
+  player_goal: "Light both shore lanterns so the keeper releases the rescue boat."
+
+mechanics:
+  - kind: "toggle"
+    role_in_experience: >-
+      Each lantern is a switch the visitor flips, so lighting the harbour is
+      something they do rather than something they watch.
+  - kind: "respond_to_two_toggles"
+    role_in_experience: >-
+      The keeper holds the boat back until both lanterns are lit, which turns
+      two separate switches into one goal.
+  - kind: "dialogue"
+    role_in_experience: >-
+      The harbour drum tells the visitor what the storm has done, so they know
+      why the lanterns matter before they touch anything.
+
+world:
+  key_elements:
+    - name: "North Lantern"
+      role: "The first switch, easy to find at the top of the pier."
+    - name: "Harbour Lantern"
+      role: "The second switch, tucked behind the drum so it takes a look around."
+    - name: "Rescue Keeper"
+      role: "Waits at the boat and answers differently once both lanterns burn."
+
+  player_flow:
+    - "The visitor reads the harbour drum and learns the boat is stuck."
+    - "The visitor finds the North Lantern and flips it alight."
+    - "The visitor talks to the keeper, who says one lantern is not enough."
+    - "The visitor finds the Harbour Lantern behind the drum and lights it too."
+    - "The keeper's answer changes and the rescue boat leaves the harbour."
+
+integration:
+  connected_mechanics: ["toggle", "respond_to_two_toggles"]
+  how_mechanics_connect: >-
+    The keeper watches both lantern switches and only gives the release line
+    once both of them are on, so flipping a lantern changes what the keeper
+    says.
+  observable_success: "The keeper's line changes and names the boat leaving."
+
+build_plan:
+  s27_target: >-
+    Author the two lantern switch objects and the keeper who reads both of
+    them, and get that one exchange to validate and play.
+  validation_plan: "Run explore-package validate and read every diagnostic it prints."
+  play_test_plan: >-
+    Ask one classmate to reach the keeper's second line without being told
+    where the harbour lantern is.
+
+risk:
+  biggest_risk: >-
+    The second lantern is hidden well enough that a visitor gives up before
+    finding it.
+  fallback_if_time_runs_short: >-
+    Cut the harbour drum, move the second lantern into plain sight, and keep
+    the two switches and the keeper.
+
+reflection:
+  why_this_project: "A rescue that cannot start until you help is a reason to look around."
+  hardest_design_decision: >-
+    Whether the keeper should need both lanterns or either one; both makes the
+    second lantern matter, so the search is worth doing.

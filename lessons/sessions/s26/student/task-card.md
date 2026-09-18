@@ -1,214 +1,257 @@
 # S26 Task Card — Capstone Blueprint
 
-**Role:** Project-primary production lesson
+**Role:** Project-primary planning lesson
 
-**Mission:** M03 `make-your-object-respond` — one-object planning spike
+**Learning target:** Design a capstone you can actually finish — a premise of
+your own, two to four supported mechanics that work together, a player flow
+somebody could follow, and one bounded first slice for S27.
 
-**Learning target:** Turn your own S25 premise into a responsibility map, at
-least three precise function contracts, an understandable nested data model,
-and one tested source-to-playable-package proof without building the full
-capstone.
+**Where this sits:** S25 proved *I can independently build and explain a small
+working system.* Today proves the next sentence: *I can design a larger project
+before I build it.* S27 proves *I can build the first working slice of my
+design.*
+
+> Playable Prototype → **Capstone Blueprint** → Core Build → Integration →
+> Review → Premiere
+
+**Nothing is built today.** No package, no pipeline, no YAML objects. Today's
+deliverable is one file: `capstone-blueprint.yaml`. S27 opens it and starts
+building.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
-## Goal and ownership (0:00–0:04)
+## What "done" means (0:00–0:05)
 
-Carry your own S25 premise, evidence, scope, and decisions into
-`project-record.md`. The included Skyglass Observatory values are editable
-starting data. Stormlight Rescue Trail and `teacher-recovery-package/` are
-teacher examples only; neither chooses your premise.
+Nine things. The blueprint checker asks for all nine, and it will tell you
+which ones are still missing:
 
-Write three core observable acceptance criteria. Optional criteria belong under
-optional scope. Deliberately defer one decision that is not needed for today's
-one-object proof.
+| # | The gate asks | Where it lives |
+|---:|---|---|
+| 1 | Your premise is specific, and it is **yours** | `project.premise` |
+| 2 | The player goal is something you could watch happen | `project.player_goal` |
+| 3 | Two to four mechanics, all of them real | `mechanics[].kind` |
+| 4 | At least two of them are genuinely **connected** | `integration.connected_mechanics` |
+| 5 | A concrete player flow, three to six steps | `world.player_flow` |
+| 6 | Nothing needs a feature the runtime does not have | the whole file |
+| 7 | One bounded S27 first slice | `build_plan.s27_target` |
+| 8 | One named risk | `risk.biggest_risk` |
+| 9 | One fallback you decided on in advance | `risk.fallback_if_time_runs_short` |
 
-## Plan and predict (0:04–0:09)
-
-Before running Python, draw or describe:
-
-```text
-editable source data → validation → selection/rules → transformation
-→ reviewed package values → student explorer-package/ → validation → M03 play
-```
-
-Record at least three possible failure points, predict which responsibility
-detects each failure, and explain one intermediate data shape. Then predict the
-selected station ID and its final object response.
-
-## Build the blueprint (0:09–0:31)
-
-### 1. Create your responsibility map
-
-In `project-record.md`, name the code or artifact that owns every area:
-
-1. data input;
-2. validation;
-3. selection/rules;
-4. transformation;
-5. package build/output;
-6. validation/play;
-7. tests.
-
-Keep validation separate from file I/O. Keep pure rule functions file-free.
-Make package build/output explicit; do not hide it inside validation.
-
-### 2. Define at least three function contracts
-
-For each contract record all six parts:
-
-- function name;
-- inputs;
-- return shape;
-- expected error/failure behavior;
-- side effects, if any;
-- one concrete example.
-
-Do this before completing TODOs in `starter.py`. The scaffold is runnable and
-uses neutral placeholder returns; it is not the capstone implementation.
-
-### 3. Keep the nested model understandable
-
-Edit `project_data.py`, preserving:
-
-```text
-expedition
-└── zones
-    └── stations
-```
-
-A station may use `id`, `name`, `enabled`, `coordinates`, `color`,
-`route_order`, `signal_power`, and `story` messages. No classes are required.
-Keep `fixtures.py` unchanged and read-only.
-
-Run the scaffold only after recording predictions:
-
-```console
-python lessons/sessions/s26/student/starter.py
-```
-
-These tests are expected to fail until you complete the TODO functions.
+Run the gate whenever you want to know where you stand:
 
 ```console
 python -m pytest -q lessons/sessions/s26/student/test_blueprint.py
 ```
 
-The focused cases are: valid station, absent required ID, malformed nested
-shape, duplicate station ID, and deterministic/stable selection order. At least
-one acceptance test begins red and must become green during S26. Do not edit the
-fixtures or weaken the assertions.
+It starts red. Nothing is broken — it is counting the decisions you have not
+made yet, and every failure names the exact line.
 
-## Playable spike (0:31–0:38)
+## The size of a capstone
 
-Prove one small existing-mechanic path only:
+Your capstone runs from S27 to S30: four sessions, and S29 and S30 are review
+and premiere. So the real build time is closer to two.
 
-- exactly one student-owned object;
-- existing M03 `when_near` and `when_interacted` response behavior;
-- current Explorer Package contract only;
-- validation and interaction evidence.
+A capstone that finishes looks like this:
 
-Review one chosen station into your editable `explorer-package/`:
+- two to four key objects or characters you author;
+- two to four supported mechanics;
+- one coherent experience, not three small ones;
+- one package;
+- **no new engine feature.**
+
+Reuse beats novelty here. Everything impressive about your capstone will come
+from how your mechanics fit together, not from how many you used.
+
+Two examples are in `examples/`. Read both:
+
+- `right-sized-blueprint.yaml` — the teacher's Stormlight Rescue Trail, at the
+  size a finished blueprint really is. It is somebody else's premise; read it
+  for scope, not for content.
+- `too-big-blueprint.yaml` — The Sunken Archive. Every idea in it is good and
+  none of it could be finished. Your teacher will show the checker refusing it.
+  Name three things you would cut, and in what order.
+
+## Choose your premise and player goal (0:05–0:10)
+
+Open `capstone-blueprint.yaml` and fill in the `project:` block. Nothing else
+yet.
+
+The premise is yours. Not the teacher's, not the examples', not AI's. Two or
+three sentences: what is this place, and why would a visitor come?
+
+Then the player goal — and write it so somebody watching could tell the exact
+moment it happened. "Explore the observatory" is a mood. "Align all three
+mirrors so the astronomer can read the star chart" is a goal.
+
+## Choose two to four mechanics (0:10–0:18)
+
+You may choose only from mechanics the runtime already has. See the whole menu,
+what each one needs, and which pairs really connect:
 
 ```console
-explore-package validate lessons/sessions/s26/student/explorer-package
-explore-package trail \
-  examples/explorer-packages/nova-character \
-  lessons/sessions/s26/student/explorer-package \
-  --player "nova-character:nova" \
-  --mission-id "make-your-object-respond" \
-  --name "My S26 Blueprint Spike"
+python lessons/sessions/s26/student/mechanic_menu.py
 ```
 
-Approach the object, record `when_near`, interact, record `when_interacted`, and
-confirm M03 completes. Do not add objects, mechanics, package fields, runtime
-code, or automated YAML writing.
+Everything on that menu is something you have built before: responses,
+dialogue, toggles, toggle styles, counters, the characters that read a toggle,
+two toggles, either toggle, or a counter, and the three-object ordered
+sequence.
 
-The ownership chain stays:
+What is **not** there, and never will be by S30: saved progress, an inventory,
+collision or locked doors, health, currency or score, a variable you can set to
+anything, timers, a second player, a second level. If your premise seems to
+need one of those, change the wording of the premise. A toggle can mean "I have
+the key". A counter can mean "the lamp is nearly charged".
 
-```text
-student editable data → local Python reasoning/transformation
-→ reviewed package values → student explorer-package/
-→ validation → playable world
+For each mechanic, write `role_in_experience`: one sentence on what it does
+**for the player**. "A counter" is not a role.
+
+## Connect them (0:18–0:28)
+
+This is the part that makes a capstone a system instead of a pile.
+
+Name two of your mechanics in `integration.connected_mechanics`: one that
+**changes** something, and one that **notices** the change. The checker accepts
+only pairs the runtime can really connect — a counter and the character who
+compares it to its goal, a switch and the character who answers differently
+while it is on, an object and the keeper who watches it as part of an ordered
+route. `mechanic_menu.py` prints every legal pair.
+
+Then answer four questions in `how_mechanics_connect` and `observable_success`:
+
+1. What does the player **do**?
+2. What **changes** because of that?
+3. What **notices** the change?
+4. How does the player **know** they succeeded?
+
+"They are both in my package" is not a connection, and the checker says so.
+
+Not every mechanic has to touch every other one. One real connection is the
+requirement; a third mechanic is allowed to sit beside it and set the scene.
+
+## Map the player flow and the world (0:28–0:35)
+
+Write `world.player_flow`: three to six steps, in order, ending with something
+the player can see. Use the mechanics you actually chose — a step the runtime
+cannot do is not a step.
+
+A flow usually reads like this:
+
+1. the player reads or approaches something and learns what to do;
+2. the player interacts with an object;
+3. something changes;
+4. the player uses that change to continue;
+5. success is visible.
+
+Then `world.key_elements`: the two to four things a visitor meets. Every one of
+them is a file you will author later, so this list is a promise about your own
+workload.
+
+## Name the S27 first slice (0:35–0:40)
+
+The most important line in the file.
+
+`build_plan.s27_target` names **one** thing you could finish and test in a
+single session. Good targets:
+
+- author the first two world objects;
+- implement the primary mechanic pair;
+- make one interaction loop validate and play;
+- produce the first valid package slice.
+
+"Build the whole game" is not a target, and the checker refuses it. The slice
+has to be testable on its own — otherwise you will not know in S27 whether you
+are on track.
+
+Then say how you will check it (`validation_plan`) and who will play it
+(`play_test_plan`).
+
+## Name the risk and the fallback (0:40–0:44)
+
+`risk.biggest_risk` — the one thing most likely to go wrong or run long. Every
+real plan has one; naming it is not pessimism.
+
+`risk.fallback_if_time_runs_short` — what you would cut **first**. Decide it
+now, while you are calm and it is cheap. Cut in this order:
+
+1. fewer key elements;
+2. fewer mechanics — four, then three, then two;
+3. drop the optional story branches;
+4. keep one interaction loop that works end to end.
+
+Your premise survives all four. That is the point of deciding now.
+
+## Blueprint handoff (0:44–0:45)
+
+```console
+python -m pytest -q lessons/sessions/s26/student/test_blueprint.py
 ```
 
-## Mapping review
+Green means S27 can start from this file tomorrow. Read your `s27_target` out
+loud to one other person; if they could not start on it, it is not bounded yet.
 
-| Source data field | Responsible Python function/module | Resulting YAML/package field | Visible Trail effect |
-|---|---|---|---|
-| station `id` | `select_stations` / `build_package_preview` | contribution `id` and object filename | Identifies my object |
-| station `name` | `build_package_preview` | `name` | Object label |
-| `coordinates.x`, `coordinates.y` | `build_package_preview` | `x`, `y` | Object position |
-| station `color` | `build_package_preview` | `color` | Object style |
-| `story.when_near` | `build_package_preview` | `when_near` | Approach response |
-| `story.when_interacted` | `build_package_preview` | `when_interacted` | Interaction response |
-| `route_order`, `signal_power` | local rules/reasoning only | no YAML field | No direct Trail effect |
+Then fill in `reflection:` — why this project, and which design decision was
+hardest.
 
-Python stays local. Your reviewed declarative YAML drives the Trail.
-`project-record.md` is learning evidence, not runtime metadata.
+## Cut line
 
-## Test and review (0:38–0:42)
+If time runs short, protect these in order:
 
-Record focused test output, package validation/planning, near/interact evidence,
-one known risk, and one deliberately deferred decision.
+1. premise and player goal;
+2. two connected supported mechanics;
+3. a concrete player flow;
+4. the S27 first slice;
+5. the risk and the fallback.
 
-### Milestone self-review
+Cut extra mechanics first, then extra key elements, then optional story detail,
+then polish. Do **not** leave today without an S27 target — that is the one
+thing tomorrow cannot start without.
 
-- Creative choice I own: ___
-- Responsibility or contract I can explain: ___
-- Test run and result: ___
-- One decision deliberately deferred: ___
-- One future helper/function I can name without implementing: ___
+## Optional feasibility probe
+
+If you genuinely cannot tell whether a mechanic does what you think, run
+`mechanic_menu.py` and read what that mechanic needs. That is the probe. It is
+not capstone implementation, and it takes two minutes — if you find yourself
+authoring YAML today, stop: that is S27's work and you are spending your
+design time on it.
 
 ## AI receipt
 
-AI may review exactly ONE student-written acceptance criterion for ambiguity.
-AI may identify ambiguity and ask a clarifying question.
+AI may ask or answer **one bounded scope question only**, for example "Which
+part of this could be cut?" or "Is this one project or two?".
 
-AI may NOT rewrite the entire criterion, choose the premise, create the
-responsibility map, define function contracts, write implementation, generate
-the package, or provide test answers.
+AI may **not** invent your premise, choose your mechanics, write your player
+flow, decide your S27 target, or fill in any field of the blueprint.
 
-You decide whether to accept or reject the suggestion and record why:
-
-- criterion reviewed: ___
-- ambiguity identified: ___
-- clarifying question: ___
+- question asked: ___
+- answer given: ___
 - accepted/rejected: ___
 - why: ___
 
-Do not paste whole files or ask AI for a complete solution.
+Do not paste whole files or ask AI to design your capstone.
 
-## Git close (0:42–0:45)
+## Git close
 
 **ZIP path check:** Do this section only if your course folder is Git-managed (the Derived student repository path) or your class has already started the Git lesson. On the ZIP path before that lesson, skip it — see [Student Quick Start → Later: Git](../../student-quick-start.md#later-git-optional-teacher-managed).
 
-The lesson materials were supplied as three separate reviewable changes:
-blueprint/project record, initial tests, and playable spike. For your work use
-status → diff → staged diff → descriptive commit:
+Your blueprint is a change worth reviewing. Use status → diff → staged diff →
+descriptive commit:
 
 ```console
 git status --short
 git diff
-git add lessons/sessions/s26/student
+git add lessons/sessions/s26/student/capstone-blueprint.yaml
 git diff --staged
-git commit -m "Refine my capstone blueprint"
+git commit -m "Design my capstone blueprint"
 ```
 
 Interpret `M`, `??`, and no output. Use identity recovery and Control-C
-cancel/correct/retry. Stage only the files you intended to change.
+cancel/correct/retry. Stage only the blueprint; there is nothing else to stage
+today.
 
 ## Support path
 
-Use `MINIMAL_VALID_EXPEDITION`, the teacher's responsibility cards, and the one
-completed non-core contract example. If play is blocked, the teacher may use a
-text-only trace or `teacher-recovery-package/`. This reduces scope but does not
-replace your premise, map, contracts, acceptance-test work, or package.
-
-## Extension
-
-Identify one future helper/function and its responsibility. Do not implement it.
-
-## Cut line
-
-Protect your responsibility map, three core contracts, one green acceptance
-test, and one validated student-owned playable object. Defer complete module
-implementation, the full multi-object capstone, extra mechanics, and polish.
+If you are stuck on a premise, the teacher can help you narrow one you already
+have — a place you like, a thing you wish existed, one mechanic you enjoyed
+building. The teacher may help you make a project smaller. The teacher does not
+choose your premise or make your design decisions for you.
