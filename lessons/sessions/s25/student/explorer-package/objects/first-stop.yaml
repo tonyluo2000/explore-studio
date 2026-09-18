@@ -1,0 +1,7 @@
+# Stop 1 of your route. Same fields as `first-stop` in project_catalog.py.
+name: "CHOOSE-ME"
+x: 180
+y: 310
+color: "green"
+when_near: "CHOOSE-ME"
+when_interacted: "CHOOSE-ME"

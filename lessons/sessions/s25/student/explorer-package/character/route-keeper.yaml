@@ -1,0 +1,10 @@
+# Mechanic 1: the M15 ordered route (`complete-actions-in-order`).
+# The three IDs are fixed at three; the words are yours.
+name: "CHOOSE-ME"
+x: 700
+y: 210
+color: "orange"
+respond_to_sequence:
+  object_ids: ["first-stop", "second-stop", "third-stop"]
+  when_incomplete: "CHOOSE-ME"
+  when_complete: "CHOOSE-ME"

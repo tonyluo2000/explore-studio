@@ -1,47 +1,36 @@
 # My S25 Project Record
 
-This record persists the decisions and evidence for my student-owned project.
-The included Moonlit Garden values are a safe starting point; I may prepare my
-premise before class and edit the catalog and package during the project.
-
-## Premise and visitor payoff
-
-- My place and purpose: ___
-- My keeper and success message: ___
-- My three station names: ___, ___, ___
-- What the visitor can see or do at the end: ___
-
-## Acceptance criteria
-
-The first three criteria are required for the core vertical slice.
-
-1. Core: my three station records pass the completed local pipeline.
-2. Core: my reviewed package validates and plans with the existing M15 mission.
-3. Core: visiting my three objects in route order produces the keeper payoff.
-4. Optional extension: ___
-5. Optional extension: ___
+`milestone.yaml` holds the plan, the reflection, and the evidence the checker
+reads. This file holds the thinking around them: what I predicted before I ran
+anything, what I checked when I copied catalog values into YAML, and how I used
+AI.
 
 ## Predictions before running
 
+Written before any execution.
+
 - Visitor path and payoff: ___
-- Invalid-data stop point: ___
+- Invalid-data stop point (what is *not* generated): ___
 - Three selected IDs in expected order: ___
 - Expected total `signal_power`: ___
+- What my second keeper says before and after: ___
 
-## Reviewed mapping and evidence
+Which pipeline stage proves each prediction? ___
+
+## Reviewed mapping
 
 - Catalog values I reviewed before copying them to YAML: ___
-- Learner test result: ___
-- Student package validation/planning result: ___
-- M15 correct-order and wrong-member result: ___
-- One thing deliberately deferred: ___
+- Where my second mechanic sits, and why I put it there: ___
+- What that choice does to the route when the player interacts out of order: ___
 
-## Milestone self-review
+## Test and validation results
 
-- Creative choice I own: ___
-- Python change I can explain: ___
-- Test run and result: ___
-- One thing deliberately deferred to keep scope bounded: ___
+- Pipeline test result (`test_pipeline.py`): ___
+- Milestone checker result (`test_milestone.py`): ___
+- Package validation line: ___
+- Build digest: ___
+- Trail result — correct order, and wrong-member reset: ___
+- One thing deliberately deferred to keep the prototype bounded: ___
 
 ## AI receipt
 

@@ -21,7 +21,7 @@ ownership again and exists so that S25 is not the first time a student owns
 their own work: S21 validate → S22 debug → S23 compose → S24 optimize. The
 bridge students are told, in these words, is:
 
-> Data Fluency → Validate → Debug → Compose → Optimize → Playable Prototype.
+> Data Fluency → Validate → Debug → Compose → Optimize → Playable Prototype → Capstone Blueprint.
 
 Each step hands the student one more piece of the work:
 
@@ -38,7 +38,7 @@ Each step hands the student one more piece of the work:
 |---|---|---|
 | S16–S20 | Data fluency (Milestone A: S20) | Observe, search, aggregate/interpret, order, and build a complete data pipeline. |
 | S21–S24 | Build quality / systems practice | Validate, debug, compose two mechanics into one system, and improve it without changing behavior. |
-| S25–S30 | Independent creation (Milestone B: S25) | Plan, construct, review, and present an original capstone. |
+| S25–S30 | Independent creation (Milestone B: S25) | Finish one small two-mechanic prototype, then plan, construct, review, and present an original capstone. |
 
 Guided code continues through S20. Choice and partial independence begin in
 S21 and increase every session through S24. S25, **Milestone B**, is the formal
@@ -282,14 +282,29 @@ integrated outcome.
   slicing.
 - **Local Python activity:** Choose a premise and implement one meaningful
   search, filter, count, aggregate, or sort pipeline.
-- **World payoff:** Use one fitting existing mission from M07–M15.
-- **Prediction:** Trace the visitor path and one invalid-data path.
+- **Student ownership:** The student owns the premise, every name and
+  player-facing message, which second mechanic joins the M15 route, where that
+  mechanic sits, one mechanic parameter or goal, and the reflection. The starter
+  package is valid but entirely unauthored; every creative value is a
+  placeholder.
+- **World payoff:** The M15 ordered route plus one second supported mechanic —
+  a counter or a toggle and the character that reads it — in one package. Two
+  mechanics coexist *meaningfully*: a character reads the second mechanic, or it
+  sits on a route object so one player action feeds both.
+- **Prediction:** Trace the visitor path, one invalid-data path, and what the
+  second keeper says in each of its two states.
 - **Test/debug:** Cover normal, boundary, absent, malformed, and regression
-  cases.
+  cases, then debug one real problem. If nothing broke, one bounded fallback
+  exercise supplies the debugging evidence instead of an invented bug.
+- **Milestone evidence:** plan, authored sources, green milestone checker,
+  validation PASS, deterministic build digest, and reflection.
 - **Bounded AI role:** Challenge scope with one bounded question and never
   generate the premise.
-- **Git/review habit:** Separate plan and prototype commits and complete a
-  milestone self-review.
+- **Git/review habit:** Separate plan and prototype commits; the reflection is
+  part of the milestone, not the commit message.
+- **Boundary:** S25 proves "I can independently build and explain a small
+  working system." S26 begins "I can design my own larger capstone." Capstone
+  planning does not start today.
 - **Prerequisite:** S16–S24.
 
 ### S26 — Capstone Blueprint
@@ -432,7 +447,7 @@ No Missions 17–30 are presently justified.
 | S22 | M08 or M13 visible branch repair |
 | S23 | M14 declarative reuse as a parallel to code reuse |
 | S24 | M15 indexed route resolution |
-| S25 | One student-selected M07–M15 context |
+| S25 | M15 ordered route plus one student-selected second mechanic from M07–M14 |
 | S26 | M03/M05 or one existing state-mechanic spike |
 | S27 | M06/M14 generated collections or styles |
 | S28 | Existing dialogue, toggle, counter, comparison, style, or sequence mechanics |
@@ -523,12 +538,18 @@ The scaffolded milestone includes:
 
 The original bounded prototype includes:
 
-- three to five observable acceptance criteria;
+- a written plan naming the premise, the two mechanics, the player action, and
+  the expected observable result;
 - a documented data model and function decomposition;
 - one meaningful algorithmic pipeline;
 - normal, boundary, absent, malformed, and regression cases;
-- one existing Trail mechanic working end to end; and
-- a reviewed diff plus the remaining capstone build plan.
+- **at least two supported Trail mechanics coexisting meaningfully** in one
+  package, working end to end;
+- successful package validation and a deterministic local build receipt; and
+- a short reflection naming one design decision and one technical decision.
+
+Milestone B is the prototype itself, finished. The capstone build plan belongs
+to S26, not here.
 
 ### S30 — Capstone expedition
 

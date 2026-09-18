@@ -21,3 +21,6 @@ contributions:
   - id: "rescue-keeper"
     type: "character"
     path: "character/rescue-keeper.yaml"
+  - id: "flare-watcher"
+    type: "character"
+    path: "character/flare-watcher.yaml"

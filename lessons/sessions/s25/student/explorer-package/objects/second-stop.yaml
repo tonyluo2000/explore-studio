@@ -1,0 +1,7 @@
+# Stop 2 of your route.
+name: "CHOOSE-ME"
+x: 390
+y: 230
+color: "blue"
+when_near: "CHOOSE-ME"
+when_interacted: "CHOOSE-ME"

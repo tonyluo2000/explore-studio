@@ -1,0 +1,7 @@
+# Stop 3 of your route — the last stop before the keeper's payoff.
+name: "CHOOSE-ME"
+x: 610
+y: 350
+color: "purple"
+when_near: "CHOOSE-ME"
+when_interacted: "CHOOSE-ME"

@@ -4,3 +4,6 @@ y: 350
 color: "purple"
 when_near: "A violet flare waits above the clouds."
 when_interacted: "The summit signal completes the rescue route."
+counter:
+  goal: 2
+  when_goal_reached: "The summit flare burns bright enough to be seen from the harbor."
