@@ -1,0 +1,51 @@
+# S25 — Milestone B evidence. This one file is my plan and my reflection.
+#
+# Replace every CHOOSE-ME. Short answers only: one or two sentences each.
+# The milestone checker reads this file:
+#
+#   python -m pytest -q lessons/sessions/s25/student/test_milestone.py
+
+# Written BEFORE I author anything (0:05-0:10).
+plan:
+  # What is this place, and why would anyone walk the route?
+  premise: "CHOOSE-ME"
+  # The two supported mechanics I am combining. Mechanic one is the M15 ordered
+  # route. Mechanic two is my choice: counter, toggle, two_toggles, or
+  # either_toggle.
+  mechanics: ["sequence", "CHOOSE-ME"]
+  # One sentence: how does mechanic two change what the player understands
+  # about the route? "They are both in my package" is not an answer.
+  how_they_connect: "CHOOSE-ME"
+  # What does the player actually do, in order?
+  player_action: "CHOOSE-ME"
+  # What should the player see when they get it right?
+  expected_result: "CHOOSE-ME"
+
+# Written AFTER I have played it (0:42-0:45).
+reflection:
+  # What did you choose to build?
+  what_i_built: "CHOOSE-ME"
+  # Which two mechanics did you combine?
+  two_mechanics_i_combined: "CHOOSE-ME"
+  # What problem did you hit and how did you fix it? One real problem: a
+  # validation error, a wrong keeper line, a reset route, a failing test.
+  problem_and_how_i_fixed_it: "CHOOSE-ME"
+  # What would you improve with 15 more minutes?
+  fifteen_more_minutes: "CHOOSE-ME"
+  # Criterion 7, first half. One design decision you made and why: a choice
+  # about the experience, such as where the second mechanic sits.
+  design_decision: "CHOOSE-ME"
+  # Criterion 7, second half. One technical decision you made and why: a choice
+  # about how you built it, such as how validate_station reports an error.
+  technical_decision: "CHOOSE-ME"
+
+# Pasted from my own terminal, not typed from memory.
+evidence:
+  # The line printed by:
+  #   explore-package validate lessons/sessions/s25/student/explorer-package
+  package_validation: "CHOOSE-ME"
+  # The sha256 printed by `explore-package export` (the 64-character value
+  # after "sha256:"). Paste it after your package is final.
+  build_digest: "CHOOSE-ME"
+  # One sentence: what happened when you played it in Trail.
+  trail_result: "CHOOSE-ME"

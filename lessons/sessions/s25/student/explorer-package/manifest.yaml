@@ -1,23 +1,35 @@
+# S25 Milestone B — your playable prototype package.
+#
+# The IDs below (first-stop, second-stop, third-stop, route-keeper) are
+# scaffolding so the file names, the manifest, and the M15 sequence already
+# agree. The words inside each file are yours: every "CHOOSE-ME" is a decision
+# you own.
+#
+# This package ships with ONE mechanic: the M15 ordered route. Milestone B
+# needs TWO. Add your chosen second mechanic's contributions to the list below
+# (see "Choose your second mechanic" in the task card).
 schema_version: "0.1"
 
 package:
-  id: "moonlit-garden-route"
-  display_name: "Moonlit Garden Route"
+  id: "my-playable-prototype"
+  display_name: "CHOOSE-ME"
   version: "0.1.0"
 
 compatibility:
   student_api: "0.1"
 
 contributions:
-  - id: "seed-marker"
+  - id: "first-stop"
     type: "world_object"
-    path: "objects/seed-marker.yaml"
-  - id: "brook-chime"
+    path: "objects/first-stop.yaml"
+  - id: "second-stop"
     type: "world_object"
-    path: "objects/brook-chime.yaml"
-  - id: "moon-bloom"
+    path: "objects/second-stop.yaml"
+  - id: "third-stop"
     type: "world_object"
-    path: "objects/moon-bloom.yaml"
-  - id: "garden-keeper"
+    path: "objects/third-stop.yaml"
+  - id: "route-keeper"
     type: "character"
-    path: "character/garden-keeper.yaml"
+    path: "character/route-keeper.yaml"
+  # Second mechanic goes here. One new character contribution is usually enough;
+  # add a fourth world_object too if your second mechanic needs its own object.

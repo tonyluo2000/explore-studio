@@ -1,0 +1,8 @@
+name: "Flare Watcher"
+x: 140
+y: 460
+color: "pink"
+respond_to_counter:
+  object_id: "summit-flare"
+  when_below_goal: "The flare is lit, but it is still too faint for the harbor to see."
+  when_at_or_above_goal: "The harbor can see the summit now. Send the boats."
