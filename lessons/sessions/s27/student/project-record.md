@@ -1,8 +1,10 @@
 # My Persistent Capstone Project Record — S27
 
 This carries my student-owned S25/S26 premise, scope, decisions, and evidence
-forward. It is not runtime metadata. The task card points here instead of
-duplicating self-review and AI receipt blanks.
+forward. S26 handed me a capstone blueprint and one bounded first-slice target;
+the responsibility map and the function contracts below are mine to write here,
+derived from that blueprint. It is not runtime metadata. The task card points
+here instead of duplicating self-review and AI receipt blanks.
 
 ## Premise and acceptance criteria carried forward
 
@@ -16,6 +18,9 @@ duplicating self-review and AI receipt blanks.
 
 ## Responsibility map carried forward
 
+Derived here from my S26 blueprint's first slice: one job per module, and a
+reason each job belongs where I put it.
+
 | Responsibility | Owning module/artifact | Why |
 |---|---|---|
 | Data input | ___ | ___ |
@@ -28,8 +33,9 @@ duplicating self-review and AI receipt blanks.
 
 ## Accepted function contracts
 
-For every required helper, retain its input, return, failure, side effects, and
-example contract from S26. Record any accepted clarification.
+Write each helper's contract here from my blueprint's first slice: its input,
+return, failure, side effects, and one example. Record any accepted
+clarification once implementation starts.
 
 | Helper | Input shape | Output shape | Example | Failure/edge case | Side effects |
 |---|---|---|---|---|---|

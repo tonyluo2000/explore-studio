@@ -7,6 +7,10 @@
 # Notice what makes it buildable. Three mechanics, three key elements, four
 # steps in the flow, and an S27 target you could genuinely finish in one
 # session. The whole design fits on one screen.
+#
+# Notice too what the S27 target is: the modular core of ONE interaction -
+# responsibilities, contracts, and a tested helper. S27 writes Python, not
+# YAML, so the target names the core, not a file to author.
 
 project:
   title: "Stormlight Rescue Trail"
@@ -56,9 +60,12 @@ integration:
 
 build_plan:
   s27_target: >-
-    Author the two lantern switch objects and the keeper who reads both of
-    them, and get that one exchange to validate and play.
-  validation_plan: "Run explore-package validate and read every diagnostic it prints."
+    Define the modular core for the two lantern switches and the keeper who
+    reads both of them - the responsibilities, the function contracts, and one
+    tested helper that answers whether both lanterns are lit.
+  validation_plan: >-
+    Run the helper tests in S27, then run explore-package validate on the
+    package once S28 authors it and read every diagnostic it prints.
   play_test_plan: >-
     Ask one classmate to reach the keeper's second line without being told
     where the harbour lantern is.

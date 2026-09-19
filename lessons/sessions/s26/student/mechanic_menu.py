@@ -19,6 +19,12 @@ a counter and the character that compares it to its goal, a switch and the
 character that answers differently while it is on. Two mechanics that sit in
 the same folder and never look at each other are decorations, not a system.
 ``connectable_pairs`` below is the exact list the blueprint checker accepts.
+
+Sharing a look is not reading. ``toggle_style`` is one switch appearance reused
+by several switches, so a styled switch is still just a switch: the character
+who answers differently is what makes it a system. That is why ``toggle`` and
+``toggle_style`` together are **not** a connected pair, while ``toggle_style``
+and any of the characters that watch a switch are.
 """
 
 from __future__ import annotations
@@ -27,9 +33,12 @@ from __future__ import annotations
 #:
 #: * ``mission`` - where you first met it;
 #: * ``lives_on`` - whether it belongs to a world object or to a character;
-#: * ``needs`` - what you will have to author in S27-S30 to make it real;
+#: * ``needs`` - what your capstone will have to author for this mechanic to be
+#:   real. You design it in S26 and build towards it from S27; the package YAML
+#:   that carries it is authored in S28;
 #: * ``reads`` - the mechanics this one can notice. An empty tuple means this
-#:   mechanic produces something; it does not watch anything itself.
+#:   mechanic produces something; it does not watch anything itself. Reusing a
+#:   named look is not noticing, so ``toggle_style`` reads nothing.
 SUPPORTED_MECHANICS = {
     "response": {
         "mission": "M03",
@@ -56,7 +65,7 @@ SUPPORTED_MECHANICS = {
         "mission": "M14",
         "lives_on": "world object",
         "needs": "one named style reused by at least two toggle objects",
-        "reads": ("toggle",),
+        "reads": (),
         "summary": "One switch look shared by several switches.",
     },
     "counter": {
@@ -70,21 +79,21 @@ SUPPORTED_MECHANICS = {
         "mission": "M08/M12",
         "lives_on": "character",
         "needs": "one toggle object id, plus when_off and when_on lines",
-        "reads": ("toggle",),
+        "reads": ("toggle", "toggle_style"),
         "summary": "A character who answers one way while a switch is off, another while it is on.",
     },
     "respond_to_two_toggles": {
         "mission": "M10",
         "lives_on": "character",
         "needs": "exactly two toggle object ids, plus the two answers",
-        "reads": ("toggle",),
+        "reads": ("toggle", "toggle_style"),
         "summary": "A character who opens up only once BOTH switches are on.",
     },
     "respond_to_either_toggle": {
         "mission": "M11",
         "lives_on": "character",
         "needs": "exactly two toggle object ids, plus the two answers",
-        "reads": ("toggle",),
+        "reads": ("toggle", "toggle_style"),
         "summary": "A character who opens up as soon as EITHER switch is on.",
     },
     "respond_to_counter": {
@@ -98,7 +107,7 @@ SUPPORTED_MECHANICS = {
         "mission": "M15",
         "lives_on": "character",
         "needs": "exactly three world object ids in order, plus the two answers",
-        "reads": ("response", "toggle", "counter"),
+        "reads": ("response", "toggle", "toggle_style", "counter"),
         "summary": "A character who unlocks when three objects are touched in the right order.",
     },
 }

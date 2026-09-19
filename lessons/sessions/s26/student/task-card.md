@@ -15,8 +15,9 @@ design.*
 > Review → Premiere
 
 **Nothing is built today.** No package, no pipeline, no YAML objects. Today's
-deliverable is one file: `capstone-blueprint.yaml`. S27 opens it and starts
-building.
+deliverable is one file: `capstone-blueprint.yaml`. S27 opens it, turns it into
+a responsibility map and function contracts, and builds the first slice from
+those.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
@@ -152,19 +153,33 @@ workload.
 The most important line in the file.
 
 `build_plan.s27_target` names **one** thing you could finish and test in a
-single session. Good targets:
+single session.
 
-- author the first two world objects;
-- implement the primary mechanic pair;
-- make one interaction loop validate and play;
-- produce the first valid package slice.
+S27 is a Python session. It splits your first interaction into small modules
+that each do one job, writes the contract for every helper — what goes in, what
+comes out, what happens when it goes wrong — and gets those helpers tested. It
+does **not** write YAML; the package itself is authored in S28. So your target
+names the core of one interaction, not a file:
+
+- define the modular core for your primary mechanic pair;
+- write the responsibilities and function contracts for one interaction;
+- implement and test the first helper your pair needs;
+- name the data shape your first interaction passes around.
+
+A target that reads like all four of those at once is still one slice. Here is a
+whole one:
+
+> Define the modular core for the lantern-switch and keeper interaction,
+> including the responsibilities and the function contracts, then implement one
+> tested helper.
 
 "Build the whole game" is not a target, and the checker refuses it. The slice
 has to be testable on its own — otherwise you will not know in S27 whether you
 are on track.
 
 Then say how you will check it (`validation_plan`) and who will play it
-(`play_test_plan`).
+(`play_test_plan`). Those two cover the whole capstone, not just S27: your
+package is authored and validated in S28, and somebody plays it before S30.
 
 ## Name the risk and the fallback (0:40–0:44)
 
@@ -212,8 +227,8 @@ thing tomorrow cannot start without.
 If you genuinely cannot tell whether a mechanic does what you think, run
 `mechanic_menu.py` and read what that mechanic needs. That is the probe. It is
 not capstone implementation, and it takes two minutes — if you find yourself
-authoring YAML today, stop: that is S27's work and you are spending your
-design time on it.
+authoring YAML today, stop. S27 writes Python and S28 authors the package, so
+that work is early twice over and you are paying for it with your design time.
 
 ## AI receipt
 

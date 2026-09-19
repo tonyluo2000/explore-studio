@@ -48,8 +48,9 @@ python -m pytest -q lessons/sessions/s26/student/test_blueprint.py
 ```
 
 There is no package, no pipeline, and no starter code to finish. If a student is
-authoring YAML objects today, they have started S27 early and their blueprint
-will be the weakest in the room. Stop them.
+authoring YAML objects today, they are doing neither S26's work nor S27's — the
+package itself is authored in S28 — and their blueprint will be the weakest in
+the room. Stop them.
 
 ## Before class
 
@@ -143,15 +144,30 @@ Two mechanics are connected when one of them can really read the other. The
 checker accepts only these pairs, and `mechanic_menu.py` prints the same list:
 
 ```text
-counter + respond_to_counter
-counter + respond_to_sequence
-toggle  + respond_to_toggle
-toggle  + respond_to_two_toggles
-toggle  + respond_to_either_toggle
-toggle  + toggle_style
-toggle  + respond_to_sequence
-response + respond_to_sequence
+counter      + respond_to_counter
+counter      + respond_to_sequence
+response     + respond_to_sequence
+toggle       + respond_to_toggle
+toggle       + respond_to_two_toggles
+toggle       + respond_to_either_toggle
+toggle       + respond_to_sequence
+toggle_style + respond_to_toggle
+toggle_style + respond_to_two_toggles
+toggle_style + respond_to_either_toggle
+toggle_style + respond_to_sequence
 ```
+
+Every pair on that list is one producer and one reader, because that is the only
+thing the loader checks: a switch-watcher must point at a world object that
+carries toggle metadata, and a counter-watcher at one that carries a counter.
+
+`toggle + toggle_style` is **not** on the list, and this is the distinction worth
+teaching. A named style is one switch appearance reused by several switches, so
+a styled switch is still just a switch — nothing has been made to notice
+anything. `toggle_style` reaches the gate the same way a plain `toggle` does, by
+having a character who watches it; the loader fills the same toggle field from a
+named style, so every switch-watcher reads a styled switch exactly as it reads
+an inline one.
 
 `dialogue + counter` is not a connection, and neither is `toggle + counter` with
 nothing reading either one. Two characters that each read a different thing are
@@ -171,7 +187,7 @@ Show both files side by side. The contrast is the lesson, not the content.
 | Mechanics | 3 | 6 |
 | Key elements | 3 | 6 |
 | Flow steps | 5 | 9 |
-| S27 target | two switches and the keeper who reads them | "build the whole game" |
+| S27 target | the modular core for one lantern-and-keeper exchange | "build the whole game" |
 | Unsupported | none | an inventory, and pages carried between rooms |
 
 Then run the gate on the over-scoped one on the projector, so the room watches
@@ -228,7 +244,8 @@ order.
 - **"Build the whole game" as the S27 target.** Ask what they could show a
   classmate at the end of one session. That sentence is the target.
 - **No premise at all.** See degraded mode.
-- **Started authoring YAML.** Close the editor. That work is S27's, and it is
+- **Started authoring YAML.** Close the editor. S27 writes Python, not YAML, and
+  the package is authored in S28 — so that work is early twice over, and it is
   being paid for with their design time.
 
 ## Degraded mode
@@ -241,7 +258,8 @@ Only for a student who would otherwise leave with nothing:
 - if they cannot choose mechanics, hand them one connected pair from the menu
   (`toggle` + `respond_to_toggle` is the cheapest) and have them write the roles;
 - if the blueprint is still incomplete at 0:44, complete items 1, 2, 4 and 7 of
-  the cut line with them out loud and write those four lines down.
+  the blueprint completion gate — premise, player goal, the connected pair, and
+  the S27 target — with them out loud and write those four lines down.
 
 Degraded mode reduces the student's scope. It does not replace their authorship,
 and it is not the default for a quiet student.
@@ -291,11 +309,25 @@ for exactly this reason.
 
 ## S27 handoff
 
-S27 opens `capstone-blueprint.yaml` and starts on `build_plan.s27_target`. At
-0:44, have each student read that one line aloud to one other person; if the
-listener could not start on it, it is not bounded yet. The mechanics chosen
-today are the ones S27 turns into real contributions, and `mechanic_menu.py`
-already lists what each of them will require them to author.
+S26 hands S27 exactly two things: `capstone-blueprint.yaml`, and the bounded
+first slice named in `build_plan.s27_target`. That is the whole handoff. S26
+produces no responsibility map, no function contracts, and no project record —
+**S27 derives all three from the blueprint in its own opening minutes**, and its
+task card and runbook say so. Do not tell students those artefacts already exist.
+
+Because S27 is a modular-core Python session — it builds deterministic in-memory
+dictionaries and never writes YAML, which is S28's work — a usable `s27_target`
+names the modular core of one interaction, not a file to author. The shape to
+steer towards:
+
+> Define the modular core for the lantern-switch and keeper interaction,
+> including the responsibilities and the function contracts, then implement one
+> tested helper.
+
+At 0:44, have each student read that one line aloud to one other person; if the
+listener could not start on it, it is not bounded yet. The mechanics chosen today
+are the ones the capstone turns into real contributions once S28 authors the
+package, and `mechanic_menu.py` already lists what each of them will require.
 
 Collect nothing. Review the blueprint on screen with the student.
 

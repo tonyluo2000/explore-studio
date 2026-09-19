@@ -53,8 +53,12 @@ session, and students are told it in these words:
 S25, **Milestone B**, finishes something small. S26, the **Capstone Blueprint**,
 designs something larger and builds none of it — it is the course's only
 planning-primary session, and it introduces no new programming syntax. S27–S30
-build, integrate, review, and present the design S26 produced, and each of them
-starts from `s26/student/capstone-blueprint.yaml`.
+build, integrate, review, and present the design S26 produced. S27 starts
+directly from `s26/student/capstone-blueprint.yaml`, deriving its own
+responsibility map and function contracts from it; S28–S30 continue from the
+capstone implementation and artifacts that S27 onwards produce, with the
+blueprint behind them as the design of record rather than as each session's
+input.
 
 Sessions 16–29 reuse Missions 01–15 rather than introducing a new Mission
 each week (see Mission strategy below); framed honestly, the rising
@@ -334,6 +338,13 @@ integrated outcome.
 - **Primary concept:** Design planning — scoping, mechanic selection,
   composition, player flow, and risk. S26 introduces **no new programming
   syntax**.
+- **The S27 handoff:** the blueprint and the bounded `build_plan.s27_target`,
+  and nothing else. S26 produces no responsibility map, no function contracts,
+  and no project record; S27 derives those from the blueprint itself. Because
+  S27 is a modular-core Python session that writes no YAML, a usable S27 target
+  names the modular core of one interaction — its responsibilities, its function
+  contracts, and one tested helper — not a file to author. The package is
+  authored in S28.
 - **The one deliverable:** `student/capstone-blueprint.yaml` — premise, player
   goal, two to four supported mechanics with a role each, two to four key
   elements, a three-to-six-step player flow, how two mechanics connect, the

@@ -69,7 +69,11 @@ integration:
 
 build_plan:
   # ONE bounded thing to build in S27 - the first slice, not the game.
-  # Good: "author the two lantern switches and the keeper who reads them."
+  # S27 writes Python, not YAML: it splits one interaction into small modules,
+  # writes each helper's contract, and tests them. The package is authored in
+  # S28, so your target names the core of an interaction, not a file.
+  # Good: "define the modular core for the two lantern switches and the keeper
+  #        who reads them, then implement one tested helper."
   # Not allowed: "build the whole game."
   s27_target: "CHOOSE-ME"
   # How will you know that slice is right? Name the command or the check.

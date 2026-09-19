@@ -260,17 +260,64 @@ def test_s26_mechanic_menu_matches_the_current_package_contracts():
         assert set(entry["reads"]) <= SUPPORTED_KINDS, kind
 
 
+#: The producer/reader relation the package runtime really implements, checked
+#: against the loader below. A reader appears here only where the loader would
+#: accept a contribution of that kind pointed at an object of that kind.
+RUNTIME_READS = {
+    "response": (),
+    "dialogue": (),
+    "toggle": (),
+    "toggle_style": (),
+    "counter": (),
+    "respond_to_toggle": ("toggle", "toggle_style"),
+    "respond_to_two_toggles": ("toggle", "toggle_style"),
+    "respond_to_either_toggle": ("toggle", "toggle_style"),
+    "respond_to_counter": ("counter",),
+    "respond_to_sequence": ("response", "toggle", "toggle_style", "counter"),
+}
+
+
+def test_s26_menu_reads_match_the_loader_producer_reader_relation():
+    """The menu's `reads` is the loader's reference rule, not a resemblance."""
+    assert {kind: tuple(entry["reads"]) for kind, entry in MENU["SUPPORTED_MECHANICS"].items()} == {
+        kind: tuple(value) for kind, value in RUNTIME_READS.items()
+    }
+
+    loader_source = _read(PROJECT_ROOT / "explore" / "packages" / "loader.py")
+    parser_source = _read(PROJECT_ROOT / "explore" / "packages" / "contribution_parser.py")
+    # A styled switch is a switch: the parser fills the same `toggle` field from
+    # a named style, so every switch-watcher the loader gates on toggle metadata
+    # accepts a `toggle_style_id` object exactly as it accepts an inline one.
+    assert "toggle = inline_toggle if inline_toggle is not None else style_toggle" in parser_source
+    assert "must reference a world object with toggle metadata" in loader_source
+    assert "must reference a world object with counter metadata" in loader_source
+    # `toggle_style` reads nothing: reusing a named look is presentation, and
+    # the parser refuses to let it sit beside an inline toggle at all.
+    assert MENU["reads"]("toggle_style") == ()
+    assert "cannot be combined with toggle" in parser_source
+    # A sequence is gated on "a world object in this package" and nothing more.
+    assert "respond_to_sequence" in loader_source
+
+
 def test_s26_connectable_pairs_are_real_reader_and_producer_pairs():
     """A "connection" must be one mechanic that can genuinely read the other."""
     pairs = set(MENU["connectable_pairs"]())
 
+    assert pairs == {
+        tuple(sorted((reader, producer)))
+        for reader, producers in RUNTIME_READS.items()
+        for producer in producers
+    }
     for expected in (
         ("counter", "respond_to_counter"),
         ("respond_to_toggle", "toggle"),
         ("respond_to_two_toggles", "toggle"),
         ("respond_to_either_toggle", "toggle"),
         ("respond_to_sequence", "response"),
-        ("toggle", "toggle_style"),
+        # A styled switch still needs somebody who watches it.
+        ("respond_to_toggle", "toggle_style"),
+        ("respond_to_two_toggles", "toggle_style"),
+        ("respond_to_either_toggle", "toggle_style"),
     ):
         assert tuple(sorted(expected)) in pairs, expected
     # Two things that never look at each other are decorations, not a system.
@@ -279,9 +326,17 @@ def test_s26_connectable_pairs_are_real_reader_and_producer_pairs():
         ("counter", "toggle"),
         ("dialogue", "response"),
         ("respond_to_counter", "respond_to_toggle"),
+        # Sharing one named look is styling, not one mechanic reading another.
+        ("toggle", "toggle_style"),
+        # `dialogue` lives on a character, so no sequence can point at it.
+        ("dialogue", "respond_to_sequence"),
+        ("respond_to_counter", "toggle_style"),
     ):
         assert tuple(sorted(absent)) not in pairs, absent
+    assert not MENU["can_connect"]("toggle", "toggle_style")
+    assert MENU["can_connect"]("toggle_style", "respond_to_toggle")
     assert not MENU["can_connect"]("counter", "counter")
+    assert not MENU["can_connect"]("toggle_style", "toggle_style")
     assert not MENU["can_connect"]("counter", "not-a-mechanic")
 
 
@@ -441,6 +496,81 @@ def test_s26_gate_refuses_six_specific_single_faults(tmp_path):
         assert run.returncode != 0, f"{name} must be refused\n{run.output}"
         assert failing_test in run.failed, f"{name} must fail {failing_test}\n{run.output}"
         assert quoted in run.output, f"{name} must name {quoted!r} in its diagnostic\n{run.output}"
+
+
+def test_s26_gate_judges_styled_switches_by_who_watches_them(tmp_path):
+    """Sharing a look is not a connection; being watched is."""
+
+    def design(*kinds: str):
+        """One right-sized blueprint rebuilt around a named set of mechanics."""
+        roles = {
+            "toggle": "Each lantern is a switch the visitor flips to light the pier.",
+            "toggle_style": (
+                "Both lanterns share one named lantern look, so the pier reads as one harbour."
+            ),
+            "dialogue": "The harbour drum explains why the lanterns matter before anyone looks.",
+            "counter": "A tally post counts how many lanterns the visitor has already tried.",
+            "respond_to_toggle": "The keeper answers differently once the lantern is burning.",
+            "respond_to_two_toggles": "The keeper holds the boat back until both lanterns are lit.",
+            "respond_to_either_toggle": "The keeper starts loading as soon as one lantern is lit.",
+            "respond_to_counter": "A watcher compares the tally post with the goal it was given.",
+        }
+
+        def mutate(document):
+            document["mechanics"] = [
+                {"kind": kind, "role_in_experience": roles[kind]} for kind in kinds
+            ]
+            document["integration"]["connected_mechanics"] = [kinds[0], kinds[1]]
+
+        return mutate
+
+    accepted = {
+        # A styled switch is still a switch, so every switch-watcher can read it.
+        "styled_toggle_and_respond_to_toggle": design(
+            "toggle_style", "respond_to_toggle", "dialogue"
+        ),
+        "styled_toggle_and_two_toggles": design(
+            "toggle_style", "respond_to_two_toggles", "dialogue"
+        ),
+        "styled_toggle_and_either_toggle": design(
+            "toggle_style", "respond_to_either_toggle", "dialogue"
+        ),
+        # An unstyled switch with the same watcher stays accepted too.
+        "plain_toggle_and_respond_to_toggle": design("toggle", "respond_to_toggle", "dialogue"),
+    }
+    for name, mutate in accepted.items():
+        run = _run_checker(CHECKER, _variant(tmp_path, name, mutate))
+        assert run.returncode == 0, f"{name} is a real system and must pass\n{run.output}"
+        assert run.passed == set(BLUEPRINT_CHECKER_TESTS), run.output
+
+    refused = {
+        # The defect this test exists for: two switches that look alike and
+        # nobody who notices either of them is decoration, not a system.
+        "styled_toggle_with_nobody_watching": design("toggle", "toggle_style", "dialogue"),
+        # Styling must not carry an otherwise unrelated pair over the gate.
+        "styling_beside_an_unrelated_counter": design("toggle_style", "counter", "dialogue"),
+        "styling_beside_an_unrelated_watcher": design(
+            "toggle_style", "respond_to_counter", "counter"
+        ),
+        "two_watchers_that_never_meet": design(
+            "respond_to_toggle", "respond_to_counter", "dialogue"
+        ),
+    }
+    for name, mutate in refused.items():
+        run = _run_checker(CHECKER, _variant(tmp_path, name, mutate))
+        assert run.returncode != 0, f"{name} must be refused\n{run.output}"
+        assert (
+            "test_two_mechanics_are_really_connected" in run.failed
+        ), f"{name} must fail the connection gate\n{run.output}"
+        assert "cannot connect" in run.output, run.output
+    # The refusal points at the menu, and the menu now offers the right pair in
+    # place of the wrong one.
+    run = _run_checker(
+        CHECKER,
+        _variant(tmp_path, "menu_in_message", refused["styled_toggle_with_nobody_watching"]),
+    )
+    assert "respond_to_toggle + toggle_style" in run.output, run.output
+    assert ("toggle", "toggle_style") not in set(MENU["connectable_pairs"]())
 
 
 def test_s26_gate_needs_neither_the_engine_nor_trail(tmp_path):
@@ -640,13 +770,21 @@ def test_s26_names_the_nine_item_gate_and_the_bounded_s27_slice():
     ):
         assert item in normalized, item
     assert '"build the whole game" is not a target' in normalized
+    # Every offered target has to be work S27 really does: S27 is a modular-core
+    # Python session that writes no YAML, so none of these may name a file to
+    # author or a package to validate.
     for example_target in (
-        "author the first two world objects",
-        "implement the primary mechanic pair",
-        "make one interaction loop validate and play",
-        "produce the first valid package slice",
+        "define the modular core for your primary mechanic pair",
+        "write the responsibilities and function contracts for one interaction",
+        "implement and test the first helper your pair needs",
+        "name the data shape your first interaction passes around",
     ):
         assert example_target in normalized, example_target
+    for retired_target in (
+        "author the first two world objects",
+        "produce the first valid package slice",
+    ):
+        assert retired_target not in normalized, retired_target
     assert "never scores creativity" in normalized or "scores no creativity" in normalized
     assert (
         "requires\nno particular premise" in runbook
@@ -678,6 +816,60 @@ def test_s26_makes_the_s25_to_s27_bridge_explicit_in_card_runbook_and_curriculum
     assert "### S26 — Capstone Blueprint" in curriculum
     assert "**Project-primary planning session. Nothing is built.**" in curriculum
     assert "S26 introduces **no new programming syntax**" in curriculum
+
+
+def test_s26_hands_s27_only_the_blueprint_and_a_target_s27_can_really_act_on():
+    """The handoff must name what S26 produces and what S27 actually does."""
+    runbook = _read(S26_ROOT / "teacher-runbook.md")
+    task = _read(STUDENT_ROOT / "task-card.md")
+    right_sized = _read(RIGHT_SIZED)
+    s27_task = _read(MATERIALS_ROOT / "s27" / "student" / "task-card.md")
+    s27_runbook = _read(MATERIALS_ROOT / "s27" / "teacher-runbook.md")
+    s26_side = _normalized(runbook + task)
+    s27_side = _normalized(s27_task + s27_runbook)
+
+    # S26 says it hands over the blueprint and the target, and nothing more.
+    assert "s26 hands s27 exactly two things" in s26_side
+    assert (
+        "s26 produces no responsibility map, no function contracts, and no project record"
+        in s26_side
+    )
+    # S27 asks for exactly those two, and claims no inherited map or contracts.
+    assert "capstone-blueprint.yaml" in s27_side
+    assert "build_plan.s27_target" in s27_side
+    assert "accepted s26 responsibility map" not in s27_side
+    assert "your accepted s26 contracts" not in s27_side
+    for derived in ("responsibility map", "function contracts"):
+        assert derived in s27_side, derived
+    assert "the responsibility map, the function contracts, and the project record" in s27_side
+    assert "are all authored **here**" in s27_runbook
+
+    # S27 writes Python, not YAML, and both sides now say the same thing.
+    assert "s27 writes python, not yaml" in s26_side
+    assert "do not create or overwrite yaml in s27" in s27_side
+    for yaml_authoring in ("author the two lantern switch objects", "validate and play"):
+        assert yaml_authoring not in _normalized(right_sized), yaml_authoring
+    # The shipped example target is S27-shaped: a modular core, not a file.
+    target = _normalized(_load(RIGHT_SIZED)["build_plan"]["s27_target"])
+    assert "modular core" in target
+    assert "function contracts" in target
+    assert "tested helper" in target
+
+
+def test_s26_curriculum_does_not_claim_every_later_session_reopens_the_blueprint():
+    """S27 starts from the blueprint; S28–S30 continue from what came after."""
+    curriculum = _read(PROJECT_ROOT / "docs" / "curriculum-sessions-16-30.md")
+    normalized = _normalized(curriculum)
+
+    assert "each of them\nstarts from `s26/student/capstone-blueprint.yaml`" not in curriculum
+    assert "s27 starts directly from `s26/student/capstone-blueprint.yaml`" in normalized
+    assert "s28–s30 continue from the capstone implementation and artifacts" in normalized
+    assert "design of record rather than as each session's input" in normalized
+    # And it names the handoff the same way the session materials do.
+    assert "s26 produces no responsibility map, no function contracts, and no project record" in (
+        normalized
+    )
+    assert "the package is authored in s28" in normalized
 
 
 def test_s26_stays_on_the_planning_side_of_the_s27_boundary():
