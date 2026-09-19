@@ -1,0 +1,89 @@
+# EXAMPLE - a real-sounding capstone that nobody could finish. Your job is to
+# shrink it, not to build it.
+#
+# Nothing here is silly. Every one of these ideas is good. There are just far
+# too many of them for four sessions, and two of them are things the runtime
+# cannot do at all. The blueprint checker refuses it, and each refusal names
+# one thing to cut:
+#
+#   BLUEPRINT=lessons/sessions/s26/student/examples/too-big-blueprint.yaml \
+#     python -m pytest -q lessons/sessions/s26/student/test_blueprint.py
+#
+# Reduce in this order, and keep the premise:
+#   1. fewer key elements;
+#   2. fewer mechanics - four, then three, then two;
+#   3. drop the optional story branches;
+#   4. keep one interaction loop that works end to end;
+#   5. name what you would cut first if you still ran out of time.
+#
+# Six mechanics becomes two. Six key elements becomes three. Nine steps becomes
+# four. The Sunken Archive is still the Sunken Archive afterwards.
+
+project:
+  title: "The Sunken Archive"
+  premise: >-
+    A flooded library under a city, where the records of a lost expedition are
+    scattered across six reading rooms. A visitor has to restore the lights,
+    find the missing pages, and carry them back to the archivist before the
+    water rises any further.
+  player_goal: "Recover the whole expedition record and rebuild the archive."
+
+mechanics:
+  - kind: "toggle"
+    role_in_experience: "Each reading room has a lamp the visitor switches on."
+  - kind: "respond_to_two_toggles"
+    role_in_experience: "The archivist waits for two particular lamps to be lit."
+  - kind: "respond_to_either_toggle"
+    role_in_experience: "A side door opens on whichever of two lamps is lit first."
+  - kind: "counter"
+    role_in_experience: "A page press counts how many pages have been pressed flat."
+  - kind: "respond_to_sequence"
+    role_in_experience: "The water gate opens when three valves are turned in order."
+  - kind: "dialogue"
+    role_in_experience: "Six different scholars each explain one part of the story."
+
+world:
+  key_elements:
+    - name: "Reading Room Lamps"
+      role: "Six lamps, one in every room, all of which have to be lit."
+    - name: "Page Press"
+      role: "Counts pressed pages and unlocks the binding table."
+    - name: "Water Gate Valves"
+      role: "Three valves that have to be turned in the right order."
+    - name: "The Archivist"
+      role: "Wants the record rebuilt and checks two particular lamps."
+    - name: "Six Scholars"
+      role: "One in each room, each explaining a different lost chapter."
+    - name: "The Binding Table"
+      role: "Where the recovered pages are put back into one book."
+
+  player_flow:
+    - "The visitor meets the archivist and is told the record is scattered."
+    - "The visitor lights the lamp in the first reading room."
+    - "The visitor talks to the scholar there and learns about chapter one."
+    - "The visitor finds a page and adds it to their inventory."
+    - "The visitor repeats this in all six reading rooms."
+    - "The visitor turns the three water gate valves in the correct order."
+    - "The visitor presses every recovered page flat at the page press."
+    - "The visitor carries the pages to the binding table and rebuilds the book."
+    - "The archivist reads the finished record aloud and the water drains away."
+
+integration:
+  connected_mechanics: ["dialogue", "counter"]
+  how_mechanics_connect: >-
+    The scholars talk about the pages, and the page press counts the pages, so
+    they are both about pages.
+  observable_success: "The water drains out of the archive."
+
+build_plan:
+  s27_target: "Build the whole game so the rest of the sessions are just polish."
+  validation_plan: "Run the validator at the end once everything is finished."
+  play_test_plan: "Let the class play it at the premiere."
+
+risk:
+  biggest_risk: "There is a lot to build."
+  fallback_if_time_runs_short: "CHOOSE-ME"
+
+reflection:
+  why_this_project: "A drowned library is a good place for a mystery."
+  hardest_design_decision: "Deciding there should be six rooms rather than four."

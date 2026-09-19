@@ -5,19 +5,25 @@
 **World reuse:** M06 `build-an-object-collection` and M14
 `reuse-a-named-toggle-style`
 
-**Learning objective:** Students can implement their accepted S26 contracts as
-small imported helpers that validate nested project data and deterministically
+**Learning objective:** Students can turn their accepted S26 capstone blueprint
+into a responsibility map and function contracts, then implement those contracts
+as small imported helpers that validate nested project data and deterministically
 build in-memory dictionaries compatible with the current Explorer Package.
 
-**Prerequisite:** The student's S26 premise, responsibility map, function
-contracts, nested `expedition → zones → stations` plan, and project record.
+**Prerequisite:** The student's accepted S26 `capstone-blueprint.yaml` and the
+bounded S27 first slice it names in `build_plan.s27_target`. S26 is a planning
+session and hands over nothing else: the responsibility map, the function
+contracts, and the project record are all authored **here**, in the first four
+minutes, from the blueprint.
 
 ## Before class
 
 - Confirm the shared Quick Start, Python environment, package validator, Trail
   controls, Git identity, and accessibility fallback.
-- Treat the student's S26 project record and accepted contracts as canonical.
-  The included Skyglass values are editable scaffolding, not a required premise.
+- Treat the student's accepted S26 blueprint and its `build_plan.s27_target` as
+  canonical, and expect no responsibility map or contracts to arrive with them —
+  the first four minutes are where those get written. The included Skyglass
+  values are editable scaffolding, not a required premise.
 - Keep `student/fixtures.py` fixed and read-only. The learner owns the nested
   data and TODO helpers in `data_io.py`, `validation.py`, `rules.py`, and
   `builder.py`; `starter.py` remains a thin import/coordination layer.
@@ -31,7 +37,7 @@ contracts, nested `expedition → zones → stations` plan, and project record.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:04 | 4 min | Reconnect the S26 contracts to the modular-core goal. | Names the protected premise, criteria, and module owners. |
+| 0:00–0:04 | 4 min | Derive a responsibility map and function contracts from the S26 blueprint and its first-slice target. | Names the protected premise, criteria, and module owners, written today from the blueprint. |
 | 0:04–0:09 | 5 min | Gate each helper on predicted shapes and one whole-pipeline trace. | Input/output/example/edge predictions plus explicit intermediate values. |
 | 0:09–0:31 | 22 min | Implement and test validation, data access, rules, ordering, and aggregation in small steps. | Small single-purpose helpers and focused test evidence. |
 | 0:31–0:38 | 7 min | Build deterministic document dictionaries and compare with package YAML. | Exact manifest/object dictionary match; package validates and plans. |
@@ -112,10 +118,12 @@ still require real implementations.
 
 ## Project record and evidence
 
-Students continue one persistent record: premise, acceptance criteria,
-responsibility map, contracts, risks, evidence, and deferred decision. S27 adds
-implemented helpers, an intermediate-shape trace, behavior/test evidence, and
-one refactoring decision. The task card points to the record rather than
+Students open one persistent record here and continue it from S27 onward:
+premise, acceptance criteria, responsibility map, contracts, risks, evidence, and
+deferred decision. The premise and criteria are carried over from the S26
+blueprint; the responsibility map and the contracts are derived from it today,
+not copied from S26. S27 adds implemented helpers, an intermediate-shape trace,
+behavior/test evidence, and one refactoring decision. The task card points to the record rather than
 duplicating self-review or AI receipt blanks.
 
 ## AI boundary

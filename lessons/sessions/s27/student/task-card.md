@@ -6,17 +6,30 @@
 existing M06 collection and M14 named-style reuse, then compare them with your
 editable package reference.
 
-**Learning target:** Implement your accepted S26 contracts as small imported
-helpers without writing YAML or expanding runtime behavior.
+**Learning target:** Turn your accepted S26 capstone blueprint into a
+responsibility map and function contracts, then implement those contracts as
+small imported helpers without writing YAML or expanding runtime behavior.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md) and continue
 your persistent `project-record.md`.
 
 ## Goal (0:00–0:04)
 
-Retain your own S26 premise, three acceptance criteria, responsibility map,
-contracts, risks, and deferred decision. The included Skyglass Observatory data
-is editable scaffolding, not a required premise.
+Open your accepted S26 `capstone-blueprint.yaml` and the first slice it names in
+`build_plan.s27_target`. That blueprint and that one target are everything S26
+handed you — it was a planning session, so it wrote no code and no contracts.
+
+Start `project-record.md` by turning the blueprint into the three things this
+session needs:
+
+1. your premise and three acceptance criteria, carried over from the blueprint;
+2. a **responsibility map** — one job per module, derived from your first slice;
+3. **function contracts** for the helpers that slice needs: input, return,
+   failure, side effects, and one example each.
+
+Those last two are written here, today, from the blueprint. Keep your own risks
+and deferred decision in the record with them. The included Skyglass Observatory
+data is editable scaffolding, not a required premise.
 
 Your module owners are:
 
