@@ -59,13 +59,28 @@ and follow it. Keep
 [`lessons/sessions/student-quick-start.md`](lessons/sessions/student-quick-start.md)
 open beside it for controls, troubleshooting, and the accessibility route.
 
+## From Session 2: make your own world folder
+
+This course folder can be replaced with a newer copy during the year. Your own
+explorer, companion, and projects live in a separate folder that is yours:
+
+```console
+python3 make-my-world.py
+```
+
+It creates `my-explore-world` next to this folder. Running it again only adds
+missing files; it never replaces your work. Your task card for Session 2 shows
+when to do this.
+
 ## What is in this folder
 
 | Path | What it is |
 |---|---|
 | `check-my-computer.py` | The computer check from step 2. |
+| `make-my-world.py` | Makes your own `my-explore-world` folder (Session 2). |
+| `my-world-template/` | The blank starting files for your world folder. |
 | `requirements-student.txt` | The exact course tools pinned for this class. |
-| `lessons/sessions/` | Your task cards for Sessions 1–30. |
+| `lessons/sessions/` | Your task cards for Sessions 1–30, plus Python Notes. |
 | `examples/explorer-packages/` | The shared world packages lesson commands use. |
 | `docs/computer-readiness.md` | What this computer needs, in plain language. |
 | `course-materials.json` | A record of which course version you have. |

@@ -14,6 +14,7 @@ EXAMPLE_PACKAGE_IDS = (
     "crystal-lantern",
     "forest-guide",
     "nova-character",
+    "pixel-companion",
     "river-fountain",
 )
 TEMPLATE_MARKERS = (
@@ -28,6 +29,8 @@ GENERATED_PATHS = (
     "requirements-student.txt",
     "check-my-computer.py",
     "START-HERE.md",
+    "make-my-world.py",
+    "my-world-template",
     "lessons",
     "examples",
     "docs",
@@ -35,6 +38,13 @@ GENERATED_PATHS = (
 READINESS_CHECK_SOURCE = "scripts/check_computer_readiness.py"
 READINESS_CHECK_TARGET = "check-my-computer.py"
 READINESS_DOC = "computer-readiness.md"
+#: The Student Workspace bootstrap ships in the Course Kit as templates plus one
+#: no-overwrite command. The student's own ``my-explore-world`` folder is created
+#: on the student's computer, outside the kit, and is never provisioned here.
+WORKSPACE_BOOTSTRAP_SOURCE = "scripts/make_my_world.py"
+WORKSPACE_BOOTSTRAP_TARGET = "make-my-world.py"
+WORKSPACE_TEMPLATE_SOURCE = "classroom/my-world-template"
+WORKSPACE_TEMPLATE_TARGET = "my-world-template"
 COPY_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 STUDENT_GITIGNORE_RULE = "*.egg-info/"
 
@@ -73,6 +83,10 @@ def _validate_source(source_root: Path) -> None:
             raise ProvisionError(f"course source is missing {classroom_file}")
     if not (source_root / READINESS_CHECK_SOURCE).is_file():
         raise ProvisionError("course source is missing the computer readiness check")
+    if not (source_root / WORKSPACE_BOOTSTRAP_SOURCE).is_file():
+        raise ProvisionError("course source is missing the student workspace bootstrap")
+    if not (source_root / WORKSPACE_TEMPLATE_SOURCE).is_dir():
+        raise ProvisionError("course source is missing the student workspace template")
     if not (source_root / "docs" / READINESS_DOC).is_file():
         raise ProvisionError("course source is missing computer readiness guidance")
     if not (source_root / "docs" / "classroom-student-workspace.md").is_file():
@@ -150,6 +164,12 @@ def provision_student_workspace(target_root, source_root=None):
     readiness_check = target / READINESS_CHECK_TARGET
     shutil.copy2(source / READINESS_CHECK_SOURCE, readiness_check)
     readiness_check.chmod(0o755)
+    shutil.copy2(source / WORKSPACE_BOOTSTRAP_SOURCE, target / WORKSPACE_BOOTSTRAP_TARGET)
+    shutil.copytree(
+        source / WORKSPACE_TEMPLATE_SOURCE,
+        target / WORKSPACE_TEMPLATE_TARGET,
+        ignore=COPY_IGNORE,
+    )
     target_docs = target / "docs"
     target_docs.mkdir()
     for doc_name in ("classroom-student-workspace.md", READINESS_DOC):

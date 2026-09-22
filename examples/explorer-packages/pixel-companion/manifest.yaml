@@ -1,0 +1,14 @@
+schema_version: "0.1"
+
+package:
+  id: "pixel-companion"
+  display_name: "Pixel the Companion"
+  version: "1.0.0"
+
+compatibility:
+  student_api: "0.1"
+
+contributions:
+  - id: "pixel"
+    type: "character"
+    path: "character/pixel.yaml"

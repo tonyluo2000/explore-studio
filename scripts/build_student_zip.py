@@ -47,7 +47,9 @@ EXCLUDED_SUFFIXES = (".pyc", ".pyo", ".whl", ".key", ".pem", ".p12", ".egg-info"
 
 #: Paths that would mean teacher material or platform source leaked into the ZIP.
 FORBIDDEN_MEMBER_PARTS = ("teacher-runbook.md", "answer-key", "teacher/")
-FORBIDDEN_TOP_LEVEL = ("explore", "engine", "scripts", "tests", ".git")
+#: ``my-explore-world`` is a student's own workspace: it lives outside the Course
+#: Kit and must never be absorbed into, or published with, a kit build.
+FORBIDDEN_TOP_LEVEL = ("explore", "engine", "scripts", "tests", ".git", "my-explore-world")
 
 #: Fixed archive metadata. Every member uses the earliest timestamp the ZIP
 #: format can store so the same source commit always produces the same bytes.
@@ -120,6 +122,9 @@ def assert_distribution_is_student_safe(members: list[Path]) -> None:
     required = {
         "START-HERE.md",
         READINESS_CHECK_TARGET,
+        "make-my-world.py",
+        "my-world-template/explorer.py",
+        "my-world-template/companion.py",
         "requirements-student.txt",
         "course-materials.json",
         "docs/computer-readiness.md",

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import Link from "next/link";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
+import NovaPixelScene from "../../../components/NovaPixelScene";
 import { classSessions, formatSessionDate } from "../../../../lib/calendar";
 
 export const metadata: Metadata = {
@@ -12,7 +15,35 @@ export const metadata: Metadata = {
 
 const session = classSessions.find((s) => s.id === "S01")!;
 
-const slides = [
+type Slide = {
+  kicker: string;
+  heading: string;
+  body: ReactNode;
+  hero?: boolean;
+};
+
+const slides: Slide[] = [
+  {
+    kicker: "Explore Studio",
+    heading: "Learn Python. Explore Worlds. Build Your Own.",
+    hero: true,
+    body: (
+      <>
+        <NovaPixelScene />
+        <p className="slide-lede">
+          <strong>Meet Nova and Pixel.</strong> Nova is an explorer. Pixel is
+          Nova&rsquo;s companion.
+        </p>
+        <p>
+          Over this year, you&rsquo;ll create your own explorer, companion, and
+          interactive world &mdash; with Python.
+        </p>
+        <pre className="slide-code">
+          <code>{`print("Hello, world!")`}</code>
+        </pre>
+      </>
+    ),
+  },
   {
     kicker: "You've just arrived",
     heading: "Explore Every Object",
@@ -38,11 +69,18 @@ const slides = [
     kicker: "Predict before running",
     heading: "Make a call before you test it",
     body: (
-      <p>
-        Write it down: &ldquo;I think ___ visible things will increase{" "}
-        <code>Visited</code> because ___.&rdquo; Decide whether the player,
-        Fern, the lantern, and the fountain should count.
-      </p>
+      <>
+        <p>
+          <strong>Who&rsquo;s who today:</strong> you move Nova, the explorer.
+          Fern is a guide character. The Crystal Lantern and River Fountain are
+          world objects.
+        </p>
+        <p>
+          Write it down: &ldquo;I think ___ visible things will increase{" "}
+          <code>Visited</code> because ___.&rdquo; Decide whether the player,
+          Fern, the lantern, and the fountain should count.
+        </p>
+      </>
     ),
   },
   {
@@ -126,12 +164,34 @@ const slides = [
     kicker: "Close",
     heading: "Wrap up S01",
     body: (
-      <p>
-        Save your work and keep your course folder where you can find it next
-        session. Understanding what you changed matters more than finishing
-        every path during class &mdash; be ready to say which line you edited
-        and why.
-      </p>
+      <>
+        <p>
+          Save your work and keep your course folder where you can find it next
+          session. Understanding what you changed matters more than finishing
+          every path during class &mdash; be ready to say which line you edited
+          and why.
+        </p>
+        <p>
+          <Link className="text-link" href="/students/learn/s01/">
+            What we learned in Python today &rarr;
+          </Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    kicker: "Before Session 2",
+    heading: "Imagine your explorer and companion",
+    body: (
+      <>
+        <p>No code needed. Think about, or sketch:</p>
+        <ul className="slide-checks">
+          <li>your explorer&rsquo;s name, what they look like, and one personality trait;</li>
+          <li>your companion&rsquo;s name, what kind of companion it is, and one personality trait;</li>
+          <li>one thing you eventually want your companion to be able to do.</li>
+        </ul>
+        <p>Next session you&rsquo;ll share them, and start describing them with Python.</p>
+      </>
     ),
   },
 ];
@@ -155,7 +215,7 @@ export default function S01SlidesPage() {
 
         <section className="section slide-deck">
           {slides.map((slide) => (
-            <article className="slide-card" key={slide.heading}>
+            <article className={slide.hero ? "slide-card slide-hero-card" : "slide-card"} key={slide.heading}>
               <p className="kicker">{slide.kicker}</p>
               <h2>{slide.heading}</h2>
               <div className="slide-body">{slide.body}</div>

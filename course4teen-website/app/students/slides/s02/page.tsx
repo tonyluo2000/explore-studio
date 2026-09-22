@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import Link from "next/link";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
+import NovaPixelScene from "../../../components/NovaPixelScene";
+import CoordinateMap from "../../../components/CoordinateMap";
 import { classSessions, formatSessionDate } from "../../../../lib/calendar";
 
 export const metadata: Metadata = {
@@ -19,6 +23,29 @@ const bridgeRows = [
   { python: "color", field: "color", result: "The named fill color" },
 ];
 
+const roles = [
+  {
+    kind: "Explorer",
+    name: "Nova",
+    text: "The character who explores. You move Nova on the Trail.",
+  },
+  {
+    kind: "Companion",
+    name: "Pixel",
+    text: "Nova’s small, curious, careful robot friend.",
+  },
+  {
+    kind: "Tool",
+    name: "Moon Compass",
+    text: "Something an explorer uses. Today you place it.",
+  },
+  {
+    kind: "World object",
+    name: "Crystal Lantern",
+    text: "Something that is part of the world.",
+  },
+];
+
 const supportedColors = [
   "red",
   "orange",
@@ -31,10 +58,77 @@ const supportedColors = [
   "gold",
 ];
 
-const slides = [
+type Slide = {
+  kicker: string;
+  heading: string;
+  body: ReactNode;
+  hero?: boolean;
+};
+
+const slides: Slide[] = [
   {
-    kicker: "Your first expedition instrument",
-    heading: "Create Your First Object",
+    kicker: "Nova & Pixel",
+    heading: "The Adventure Continues",
+    hero: true,
+    body: (
+      <>
+        <NovaPixelScene />
+        <p className="slide-lede">
+          Today: use Python to start creating your own explorer and companion.
+        </p>
+        <pre className="slide-code">
+          <code>{`explorer_name = "Nova"
+companion_name = "Pixel"`}</code>
+        </pre>
+      </>
+    ),
+  },
+  {
+    kicker: "Share-out",
+    heading: "Who will explore your world?",
+    body: (
+      <>
+        <p>Share the explorer and companion you imagined after Session 1:</p>
+        <ul className="slide-checks">
+          <li>Your explorer&rsquo;s name, what they look like, and one personality trait.</li>
+          <li>Your companion&rsquo;s name, what kind of companion it is, and one personality trait.</li>
+          <li>
+            One thing you eventually want your companion to do: fly, scan rocks,
+            identify animals, find hidden paths, recognize constellations&hellip;
+          </li>
+        </ul>
+        <p>
+          <strong>It cannot do all of that yet.</strong> As you learn more
+          Python, you&rsquo;ll teach it how.
+        </p>
+      </>
+    ),
+  },
+  {
+    kicker: "Four kinds of things",
+    heading: "Explorer, companion, tool, world object",
+    body: (
+      <>
+        <ul className="role-grid">
+          {roles.map((role) => (
+            <li key={role.kind} className="role-card">
+              <span className="role-kind">{role.kind}</span>
+              <strong>{role.name}</strong>
+              <span>{role.text}</span>
+            </li>
+          ))}
+        </ul>
+        <p>
+          Pixel is in today&rsquo;s Trail and says hello when you press{" "}
+          <kbd>E</kbd> nearby. Pixel stays where it was placed: it does not
+          follow Nova or make its own decisions yet.
+        </p>
+      </>
+    ),
+  },
+  {
+    kicker: "Explorers need tools",
+    heading: "Your first expedition tool",
     body: (
       <>
         <p>
@@ -47,9 +141,102 @@ const slides = [
           <strong>Mission:</strong> <code>create-a-classroom-object</code>
         </p>
         <p>
-          <strong>Learning target:</strong> Store a prop&rsquo;s name, integer
-          x/y coordinates, and color in variables; predict its position; then
-          adjust one coordinate from evidence.
+          <strong>Learning target:</strong> Store names, integer x/y
+          coordinates, and a color in variables; explain which values are
+          strings and which are integers; predict an object&rsquo;s position;
+          then adjust one coordinate from evidence.
+        </p>
+      </>
+    ),
+  },
+  {
+    kicker: "Python first",
+    heading: "Variables and values",
+    body: (
+      <>
+        <pre className="slide-code">
+          <code>{`object_name = "Moon Compass"
+x = 240
+y = 180
+color = "purple"`}</code>
+        </pre>
+        <ul className="slide-checks">
+          <li>
+            <code>x = 240</code> means: store the integer value <code>240</code>{" "}
+            under the variable name <code>x</code>.
+          </li>
+          <li>
+            <strong>Assignment</strong> (<code>=</code>) stores a value under a
+            name.
+          </li>
+          <li>
+            <strong>Strings</strong> are text in quotes:{" "}
+            <code>&quot;Moon Compass&quot;</code>, <code>&quot;purple&quot;</code>.
+          </li>
+          <li>
+            <strong>Integers</strong> are whole numbers with no quotes:{" "}
+            <code>240</code>, <code>180</code>.
+          </li>
+        </ul>
+        <div className="type-compare">
+          <div>
+            <pre className="slide-code"><code>x = 240</code></pre>
+            <p>An integer. Python can calculate with it.</p>
+          </div>
+          <div>
+            <pre className="slide-code"><code>{`x = "240"`}</code></pre>
+            <p>A string. Same digits, but it is text.</p>
+          </div>
+        </div>
+      </>
+    ),
+  },
+  {
+    kicker: "Yours to keep",
+    heading: "Make your own world folder",
+    body: (
+      <>
+        <p>
+          Your explorer and companion belong to you, so they live in your own
+          folder, not inside the course folder. From the course folder, run:
+        </p>
+        <pre className="slide-code">
+          <code>python3 make-my-world.py</code>
+        </pre>
+        <p>
+          Open <code>my-explore-world/explorer.py</code> and{" "}
+          <code>companion.py</code>. Replace each <code>TODO</code> string with
+          your own choices, including one <code>future_ability</code>. Keep the
+          quotation marks.
+        </p>
+        <div className="slide-map-wrap">
+          <table className="slide-map slide-map-compact">
+            <caption className="slide-map-caption">Practice vs. yours</caption>
+            <tbody>
+              <tr>
+                <th scope="row"><code>starter.py</code></th>
+                <td>Practice today&rsquo;s Python.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>my-explore-world/</code></th>
+                <td>Your own work. Course updates never replace it.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </>
+    ),
+  },
+  {
+    kicker: "Coordinates",
+    heading: "Numbers that describe a position",
+    body: (
+      <>
+        <CoordinateMap />
+        <p>
+          <code>x</code> and <code>y</code> are integers. A bigger{" "}
+          <code>x</code> moves right. A bigger <code>y</code> moves{" "}
+          <strong>down</strong>.
         </p>
       </>
     ),
@@ -259,6 +446,53 @@ explore-package validate <your explorer package>`}</code>
     ),
   },
   {
+    kicker: "What we discovered",
+    heading: "Coordinates in our world",
+    body: (
+      <>
+        <div className="discovery-grid">
+          <div className="discovery-card discovery-fiction">
+            <p className="discovery-tag">In Nova&rsquo;s world &middot; fiction</p>
+            <p>The Moon Compass is a fictional exploration tool.</p>
+          </div>
+          <div className="discovery-card discovery-fact">
+            <p className="discovery-tag">In our world &middot; fact</p>
+            <p>
+              Maps use coordinates too: latitude and longitude. A magnetic
+              compass lines up with Earth&rsquo;s magnetic field.
+            </p>
+          </div>
+        </div>
+        <p>
+          <Link className="text-link" href="/students/learn/s02/#discovery-heading">
+            Read the full discovery &rarr;
+          </Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    kicker: "Exit check",
+    heading: "Three quick answers",
+    body: (
+      <ul className="slide-checks">
+        <li>
+          <strong>Python:</strong> What is a variable? Which values were
+          strings? Which were integers? What does changing <code>x</code> do?
+        </li>
+        <li>
+          <strong>Your world:</strong> What are your explorer and companion
+          called? Which trait did you choose? What is one future ability you
+          want to program?
+        </li>
+        <li>
+          <strong>Discovery:</strong> What do coordinates describe? How is the
+          fictional Moon Compass different from a real magnetic compass?
+        </li>
+      </ul>
+    ),
+  },
+  {
     kicker: "Looking ahead",
     heading: "A static instrument, for now",
     body: (
@@ -273,11 +507,18 @@ explore-package validate <your explorer package>`}</code>
     kicker: "Close",
     heading: "Wrap up S02",
     body: (
-      <p>
-        Save your work and keep your course folder where you can find it next
-        session. Be ready to say which value you changed and what moved because
-        of it &mdash; understanding comes before rushing.
-      </p>
+      <>
+        <p>
+          Save your work and keep your course folder where you can find it next
+          session. Be ready to say which value you changed and what moved
+          because of it &mdash; understanding comes before rushing.
+        </p>
+        <p>
+          <Link className="text-link" href="/students/learn/s02/">
+            What we learned in Python today &rarr;
+          </Link>
+        </p>
+      </>
     ),
   },
 ];
@@ -301,7 +542,7 @@ export default function S02SlidesPage() {
 
         <section className="section slide-deck">
           {slides.map((slide) => (
-            <article className="slide-card" key={slide.heading}>
+            <article className={slide.hero ? "slide-card slide-hero-card" : "slide-card"} key={slide.heading}>
               <p className="kicker">{slide.kicker}</p>
               <h2>{slide.heading}</h2>
               <div className="slide-body">{slide.body}</div>

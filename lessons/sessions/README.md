@@ -10,6 +10,8 @@ sNN/
     ├── task-card.md
     ├── starter.py
     ├── debug.py           # optional isolated debugging activity
+    ├── python-notes.md    # "What We Learned in Python" (S01–S02 so far)
+    ├── discovery.md       # optional "What We Discovered" real-world page
     └── explorer-package/  # optional validated declarative world content
 ```
 
