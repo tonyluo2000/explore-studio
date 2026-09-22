@@ -152,6 +152,41 @@ def test_s27_identity_classification_structure_and_exact_rhythm():
     assert not any((MATERIALS_ROOT / f"s{number:02d}").exists() for number in range(31, 32))
 
 
+def test_s27_prerequisite_is_the_s26_blueprint_and_s27_derives_its_own_contracts():
+    """S26 is a planning session: it hands over a blueprint, not contracts."""
+    runbook = (S27_ROOT / "teacher-runbook.md").read_text(encoding="utf-8")
+    task = (STUDENT_ROOT / "task-card.md").read_text(encoding="utf-8")
+    record = (STUDENT_ROOT / "project-record.md").read_text(encoding="utf-8")
+    normalized = " ".join((runbook + task + record).lower().split())
+
+    # The prerequisite names what S26 really produces.
+    s26_student = MATERIALS_ROOT / "s26" / "student"
+    assert (s26_student / "capstone-blueprint.yaml").is_file()
+    blueprint = yaml.safe_load((s26_student / "capstone-blueprint.yaml").read_text("utf-8"))
+    assert "s27_target" in blueprint["build_plan"]
+    assert "capstone-blueprint.yaml" in normalized
+    assert "build_plan.s27_target" in normalized
+
+    # And it no longer claims a map, contracts, or a record arrived from S26.
+    for inherited in (
+        "accepted s26 responsibility map",
+        "your accepted s26 contracts",
+        "s26 project record and accepted contracts",
+        "example contract from s26",
+    ):
+        assert inherited not in normalized, inherited
+    assert "s26 is a planning session and hands over nothing else" in normalized
+
+    # S27's own opening activity derives both, and the record says whose they are.
+    assert "a **responsibility map**" in task and "**function contracts**" in task
+    assert "those last two are written here, today, from the blueprint" in normalized
+    assert "derived here from my s26 blueprint's first slice" in normalized
+    assert "0:00–0:04" in runbook
+    opening_row = next(line for line in runbook.splitlines() if "| 0:00–0:04 |" in line)
+    assert "responsibility map" in opening_row.lower()
+    assert "function contracts" in opening_row.lower()
+
+
 def test_s27_project_primary_modules_and_required_helpers_exist():
     expected_modules = {
         "data_io.py": ("flatten_stations",),

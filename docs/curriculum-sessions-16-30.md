@@ -45,6 +45,21 @@ S21 and increase every session through S24. S25, **Milestone B**, is the formal
 transition to project-primary work; by then students have already repaired,
 debugged, composed, and improved work they owned.
 
+Its third mini-arc, **S25–S30 (Independent creation)**, runs one sentence per
+session, and students are told it in these words:
+
+> Playable Prototype → Capstone Blueprint → Core Build → Integration → Review → Premiere.
+
+S25, **Milestone B**, finishes something small. S26, the **Capstone Blueprint**,
+designs something larger and builds none of it — it is the course's only
+planning-primary session, and it introduces no new programming syntax. S27–S30
+build, integrate, review, and present the design S26 produced. S27 starts
+directly from `s26/student/capstone-blueprint.yaml`, deriving its own
+responsibility map and function contracts from it; S28–S30 continue from the
+capstone implementation and artifacts that S27 onwards produce, with the
+blueprint behind them as the design of record rather than as each session's
+input.
+
 Sessions 16–29 reuse Missions 01–15 rather than introducing a new Mission
 each week (see Mission strategy below); framed honestly, the rising
 challenge across S16–S20 is in the Python and system work a student does
@@ -313,22 +328,58 @@ integrated outcome.
 
 ### S26 — Capstone Blueprint
 
-**Project-primary.**
+**Project-primary planning session. Nothing is built.**
 
-- **Creative goal:** Turn an original adventure idea into a buildable plan.
-- **Primary Python concept:** Decomposition, function contracts, data modeling,
-  and test planning.
-- **Local Python activity:** Create sample nested data, function signatures, a
-  responsibility map, and initial tests.
-- **World payoff:** Run a small M03/M05 or state-mechanic spike.
-- **Prediction:** Trace data from source to declarative artifact and identify
-  failure points.
-- **Test/debug:** Make one acceptance test pass without building the entire
-  project.
-- **Bounded AI role:** Review one acceptance criterion for ambiguity.
-- **Git/review habit:** Commit the blueprint, tests, and spike as distinct
-  changes.
+- **Creative goal:** Turn an original idea into a capstone plan small enough to
+  finish by S30.
+- **Arriving from S25:** the student has finished one small working system and
+  can explain it. S26 asks the harder question — what is worth building next,
+  and what will you deliberately leave out?
+- **Primary concept:** Design planning — scoping, mechanic selection,
+  composition, player flow, and risk. S26 introduces **no new programming
+  syntax**.
+- **The S27 handoff:** the blueprint and the bounded `build_plan.s27_target`,
+  and nothing else. S26 produces no responsibility map, no function contracts,
+  and no project record; S27 derives those from the blueprint itself. Because
+  S27 is a modular-core Python session that writes no YAML, a usable S27 target
+  names the modular core of one interaction — its responsibilities, its function
+  contracts, and one tested helper — not a file to author. The package is
+  authored in S28.
+- **The one deliverable:** `student/capstone-blueprint.yaml` — premise, player
+  goal, two to four supported mechanics with a role each, two to four key
+  elements, a three-to-six-step player flow, how two mechanics connect, the
+  S27 first slice with a validation and play-test plan, one risk, one fallback,
+  and a short reflection.
+- **Student ownership:** the premise, the player goal, which mechanics, which
+  two are connected, the key elements, the flow, the S27 target, the risk, and
+  the fallback. The teacher may narrow scope; the teacher does not invent the
+  premise.
+- **Supported mechanics only:** the capstone selects from the existing M03–M15
+  set (`response`, `dialogue`, `toggle`, `toggle_style`, `counter`,
+  `respond_to_toggle`, `respond_to_two_toggles`, `respond_to_either_toggle`,
+  `respond_to_counter`, `respond_to_sequence`), listed by
+  `student/mechanic_menu.py`. No new engine feature, no persistence, inventory,
+  collision, score, timers, or multiplayer.
+- **Composition requirement:** at least two chosen mechanics must be a pair the
+  runtime can really connect — one that changes something, one that notices.
+  Listing mechanics without explaining the connection is refused.
+- **World payoff:** none today. Trail is not required; the single permitted
+  experiment is running the mechanic menu to confirm feasibility.
+- **Gate:** `student/test_blueprint.py` checks the nine completion items
+  structurally — placeholders, supported mechanic names, the 2–4 mechanic and
+  key-element bounds, a genuinely connected pair, a 3–6 step flow, a bounded
+  S27 target, and the risk and fallback. It scores no creativity and requires
+  no particular premise.
+- **Examples:** one right-sized blueprint and one deliberately over-scoped one
+  that the class reduces. Neither is a capstone answer a student could copy.
+- **Bounded AI role:** one bounded scope question only; AI fills in no field of
+  the blueprint.
+- **Git/review habit:** one commit, the blueprint alone.
 - **Prerequisite:** S25 prototype.
+- **Boundary:** S25 proves "I can build a small working system." S26 proves "I
+  can design a larger project before building it." S27 proves "I can build the
+  first working slice of my design." Implementation starts in S27, not today,
+  and S26 ships no starter modules, fixtures, or student package.
 
 ### S27 — Capstone Core
 
@@ -452,7 +503,7 @@ No Missions 17–30 are presently justified.
 | S23 | M14 declarative reuse as a parallel to code reuse |
 | S24 | M15 indexed route resolution |
 | S25 | M15 ordered route plus one student-selected second mechanic from M07–M14 |
-| S26 | M03/M05 or one existing state-mechanic spike |
+| S26 | None — S26 selects from the existing M03–M15 mechanics and builds none of them |
 | S27 | M06/M14 generated collections or styles |
 | S28 | Existing dialogue, toggle, counter, comparison, style, or sequence mechanics |
 | S29 | Any representative M01–M15 walkthrough |
