@@ -3,6 +3,7 @@ import Link from "next/link";
 import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import { classSessions, sessionsWithSlides } from "../../../lib/calendar";
+import { sessionsWithNotes } from "../../../lib/learn";
 
 export const metadata: Metadata = {
   title: "Student Slides | Course4Teen",
@@ -44,6 +45,11 @@ export default function StudentSlidesIndexPage() {
                         {session.title} <em>&mdash; coming soon</em>
                       </span>
                     )}
+                    {sessionsWithNotes.includes(session.id) ? (
+                      <Link className="slides-notes-link" href={`/students/learn/${session.id.toLowerCase()}/`}>
+                        Python notes
+                      </Link>
+                    ) : null}
                   </div>
                 </li>
               );

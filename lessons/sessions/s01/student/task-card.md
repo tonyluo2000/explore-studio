@@ -11,6 +11,17 @@ You're stepping into an unfamiliar place, and the first thing any explorer
 does is start a field notebook. Today's three observations are the opening
 page of yours.
 
+## Who's who
+
+Explore Studio's reference explorer is **Nova**. Today you move Nova around the
+Trail. Nova's companion, **Pixel**, joins the world later. In today's world,
+**Fern** is a guide character, and the **Crystal Lantern** and **River
+Fountain** are world objects.
+
+Over this year you'll create your own explorer, companion, and interactive
+world, with Python. Today starts with the first Python tool every explorer
+needs: `print(...)`.
+
 ## Get ready
 
 Complete the first-day checklist in the shared
@@ -96,6 +107,20 @@ account is involved.
 
 Understanding what you changed matters more than finishing every path during
 class. Be ready to say which line you edited and why.
+
+After class, reread [What We Learned in Python](python-notes.md) for this
+session.
+
+## Before Session 2: imagine your explorer and companion
+
+No code needed. Think about, or sketch:
+
+- your explorer's name, what they look like, and one personality trait;
+- your companion's name, what kind of companion it is, and one personality
+  trait;
+- one thing you eventually want your companion to be able to do.
+
+Next session you'll share them, and start describing them with Python.
 
 **Optional, only if your teacher has started the Git lesson:** record this
 session with the Git close in the

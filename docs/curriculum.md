@@ -6,6 +6,10 @@ The Explore Studio curriculum teaches programming through world-building.
 Each lesson introduces a single concept and asks students to apply it by
 modifying or extending their world.
 
+Course-wide design principles (Python first, explorer + companion, real-world
+discovery, visual north star, and the Course Kit / Student Workspace boundary)
+are defined in [Course Identity](course-identity.md).
+
 ## Curriculum Structure
 
 The target online course contains 30 sessions. Missions may be grouped into the

@@ -50,6 +50,12 @@ conditions with AND, OR, and NOT. Stable mission numbers and IDs do not change.
 
 ## Expedition storyline (S01–S15)
 
+The course-wide identity (Python first; Nova the reference explorer and Pixel
+the reference companion; each student's own explorer, companion, and world;
+real-world Discovery; Course Kit vs Student Workspace) is defined in
+[Course Identity](course-identity.md). S01–S02 implement it first; S03 onward
+adopt it incrementally.
+
 S01 and S02 open the expedition with the lightest possible touch: S01 frames
 students as arriving somewhere unfamiliar and recording field notes, and S02
 frames the existing Moon Compass object as the explorer's first instrument,
@@ -123,6 +129,10 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 - **Test/debug:** Compare predicted and observed interactions; repair one quoting
   or syntax error in the Python notes.
 - **Bounded AI role:** Explain an error only after the student predicts its cause.
+- **Course identity:** Slide 1 introduces Explore Studio, Nova, and Pixel, and
+  promises each student their own explorer, companion, and world. Homework:
+  imagine an explorer and a companion (no code). Python Notes only; no
+  Discovery page.
 - **Prerequisite:** Basic typing and file navigation.
 
 ### S02 — Place Your First Prop
@@ -136,6 +146,12 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 - **Prediction:** Sketch or describe where the coordinates will place the object.
 - **Test/debug:** Validate, run, and adjust one coordinate based on observation.
 - **Bounded AI role:** Review variable names after the student explains each one.
+- **Course identity:** Opens with the explorer/companion share-out and the
+  Explorer / Companion / Tool / World object distinction. Students create
+  their own `my-explore-world`: complete Explorer and Companion choices plus
+  one future ability as planning text, and an editable Moon Compass package in
+  `projects/moon-compass/`. Python Notes plus a short Discovery on coordinates,
+  maps, and navigation. Pixel appears as a static character.
 - **Continuity:** Ends with a light narrative handoff — next session this same
   static instrument gains a clue and reveal (S03); no runtime state carries over.
 - **Prerequisite:** S01 literals and output.

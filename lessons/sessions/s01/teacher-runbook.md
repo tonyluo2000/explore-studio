@@ -19,6 +19,15 @@ Do not steer students toward a specific "worth investigating" answer or
 mention the Moon Compass; S02 introduces it independently, and S01 must stand
 on its own as simple first-day practice.
 
+Slide 1 is the first impression of the whole course: *Explore Studio — Learn
+Python. Explore Worlds. Build Your Own.* It introduces Nova (the reference
+explorer) and Pixel (Nova's companion), and promises that over the year each
+student will create their own explorer, companion, and interactive world with
+Python. It is a promise, not a lesson: S01 teaches only running Python,
+`print(...)`, strings, quotation marks, output, and basic debugging. Do not
+introduce variables; S02 does. Pixel is not in the S01 Trail. See
+[Course Identity](../../../docs/course-identity.md).
+
 ## Before class
 
 - Complete the
@@ -44,7 +53,7 @@ on its own as simple first-day practice.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Show the local trail. Ask, “What would an explorer write down here?” | Names one sensory or story detail. |
+| 0:00–0:05 | 4–5 min | Open on slide 1 (Nova, Pixel, and the year's promise), then show the local trail. Ask, “What would an explorer write down here?” | Names one sensory or story detail. |
 | 0:05–0:12 | 6–8 min | Model a string literal and `print`. Before running, ask which visible things should count toward M01 completion. | Predicts that world objects—not the player or guide—fill the visited count. |
 | 0:12–0:24 | 11–15 min | Open `student/starter.py`. Students personalize exactly three observations, run the file after each change, then choose one detail worth investigating next. | Three readable printed lines and one self-chosen detail, with no forced answer. |
 | 0:24–0:37 | 9–13 min | Launch M01. Coach window focus, WASD/arrows, and E; compare the count with the prediction. | Both objects visited and the trail reports completion. |
@@ -114,6 +123,11 @@ the prediction; it may not write the three observations.
 
 Students save `starter.py` and keep the course folder in the same location for
 the next session. Nothing is uploaded and no student account is used.
+
+Point students to `student/python-notes.md` and set the no-code homework from
+the task card: imagine an explorer (name, look, one trait) and a companion
+(name, kind, one trait, one thing they eventually want it to do). S02 opens
+with a share-out of these.
 
 Git is optional and teacher-managed. It is not an S01 prerequisite and must not
 block this session. When the class is ready, introduce the Git close from the

@@ -50,3 +50,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# A teacher testing make_my_world.py from a source checkout
+/my-explore-world/

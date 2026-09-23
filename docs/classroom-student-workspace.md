@@ -42,23 +42,77 @@ holding:
 
 - `START-HERE.md` — the four first-day steps;
 - `check-my-computer.py` — the student-facing readiness check;
+- `make-my-world.py` and `my-world-template/` — the no-overwrite bootstrap for
+  the student's own workspace (see below);
 - `requirements-student.txt` — the exact course platform pin, fetched over
   plain HTTPS so no Git client is needed;
-- `lessons/sessions/` — S01–S30 `student/` subtrees, the session index, and the
-  Student Quick Start;
-- `examples/explorer-packages/` — the four shared example packages;
-- `docs/` — computer readiness, this page, and the S01 rehearsal record;
+- `lessons/sessions/` — S01–S30 `student/` subtrees (task cards, starters, and,
+  where written, `python-notes.md` and `discovery.md`), the session index, and
+  the Student Quick Start;
+- `examples/explorer-packages/` — the five shared example packages;
+- `docs/` — computer readiness and this page;
 - `course-materials.json` — the non-secret provenance receipt.
 
 The builder refuses to write an archive that contains `.git`, `.venv`, caches,
 compiled Python, generated package metadata, teacher runbooks, answer keys,
-`explore/`, `engine/`, `scripts/`, `tests/`, credentials, or key material. It
+`explore/`, `engine/`, `scripts/`, `tests/`, a student's `my-explore-world`,
+credentials, or key material. It
 also excludes `requirements-course.txt`, whose `git+https` pin belongs to the
 Git-managed path, so the ZIP offers one unambiguous install command.
 
 Tell students exactly where to unzip it: the home folder or Desktop on macOS,
 and the Ubuntu home directory such as `/home/student/explore-studio-course`
 under WSL — never `/mnt/c`, and never Downloads.
+
+## Course Kit and Student Workspace
+
+The ZIP folder is the **Course Kit**. It is replaceable: when course materials
+change, a teacher hands out a newer ZIP and the student replaces the old
+`explore-studio-course` folder.
+
+A student's own creations live in a separate **Student Workspace**,
+`my-explore-world`, created next to the Course Kit starting in S02:
+
+```console
+python3 make-my-world.py
+```
+
+```text
+explore-studio-course/     Course Kit: replaceable
+my-explore-world/          Student Workspace: belongs to the student
+├── README.md
+├── explorer.py
+├── companion.py
+└── projects/
+    └── moon-compass/      Editable S02 Explorer Package
+```
+
+**Course updates never overwrite student work.** This boundary is enforced in
+three places:
+
+- `make-my-world.py` copies only template files that are missing. It never
+  replaces an existing file, so running it again is always safe, and it
+  refuses to put the workspace inside a Course Kit folder;
+- the workspace lives outside the Course Kit, so replacing the kit folder does
+  not touch it;
+- the ZIP builder archives only the course overlay and refuses any
+  `my-explore-world` member, so a kit build can never absorb or publish a
+  student's work.
+
+The ownership templates contain `TODO` placeholders only, never a real
+student's choices. The Course Kit also carries a reviewed Moon Compass seed;
+bootstrap copies its package files into `projects/moon-compass/` only when the
+corresponding student-owned files are missing. Students edit, validate, and
+launch the Student Workspace copy. Rerunning bootstrap keeps every existing
+package file byte-for-byte, and replacing or re-extracting the Course Kit
+cannot reach it.
+
+Nothing in the workspace is uploaded, and it needs no Git, account, or
+network. Lesson files such as `starter.py` stay in the Course Kit as disposable
+practice for that day; replacing the kit resets them.
+
+On the Git-managed path the same command, run from the student repository
+root, creates `my-explore-world` next to that repository.
 
 ## Git-derived student repository (advanced, later)
 
@@ -72,7 +126,7 @@ The derived repository contains:
 - the template's student-owned package, tests, and Git history;
 - `lessons/sessions/s01` through `s30`, with only each `student/` subtree;
 - the shared Student Quick Start and session index;
-- the four declarative example packages used by lesson commands;
+- the five declarative example packages used by lesson commands;
 - an exact course dependency pin and a non-secret provenance receipt.
 
 It does not contain teacher runbooks, answer keys, `explore/`, or `engine/`.

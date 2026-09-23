@@ -1,0 +1,5 @@
+name: "Pixel"
+x: 480
+y: 310
+color: "blue"
+greeting: "Beep! I'm Pixel. I can't do much yet, but I'm very curious."
