@@ -25,6 +25,11 @@ assistance.
   signing, deployment, authentication, or Phase E work.
 - Review the student's access path and keep printed receipts/text walkthrough or
   teacher-operated Trail available.
+- Ask students to reread their own `my-explore-world/journey.md` and run
+  `lessons/sessions/s30/student/journey_outline.py` before class. It reads the
+  journal, never changes it, and writes `presentation-outline.md` listing their
+  dated entries under the six presentation questions. The student chooses the
+  moments to present; do not select, rank, or read journals for them.
 
 ## 45-minute runbook
 

@@ -11,9 +11,36 @@ demonstration, prove deterministic local export, and recover calmly from one
 likely demonstration failure.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md), your
-review-complete S29 capstone, `project-record.md`, and
-`premiere-checklist.md`. The included Skyglass package is a runnable comparison
-target, not a replacement for your original project.
+review-complete S29 capstone, `project-record.md`, `premiere-checklist.md`, and
+your own **My Explore Journey** (`my-explore-world/journey.md`). The included
+Skyglass package is a runnable comparison target, not a replacement for your
+original project.
+
+## Before class: prepare from your Journey
+
+Read your `journey.md` entries from the beginning of the year. Then, from the
+Course Kit folder, prepare a separate outline file next to it:
+
+```console
+python3 lessons/sessions/s30/student/journey_outline.py
+```
+
+It reads `my-explore-world/journey.md` without changing it and writes
+`my-explore-world/presentation-outline.md`. The outline lists your own dated
+entries, in the order you wrote them, under six questions:
+
+1. How did my world change from the beginning?
+2. What am I most proud of?
+3. What was a difficult problem I solved?
+4. What is one important thing I learned about Python?
+5. What was one memorable moment from my Journey?
+6. What would I build next?
+
+The helper is a small deterministic script, not AI. It copies your words and
+adds nothing; it does not pick a "best" moment. You choose which entries to
+present and fill in *My choice* and *What I will say* yourself. If the outline
+already exists, rerun with `--replace` to make a fresh copy from your journal.
+Weave your chosen answers into the premise and engineering story below.
 
 ## Freeze the reviewed starting point (0:00–0:05)
 

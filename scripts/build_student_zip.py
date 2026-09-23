@@ -125,6 +125,7 @@ def assert_distribution_is_student_safe(members: list[Path]) -> None:
         "make-my-world.py",
         "my-world-template/explorer.py",
         "my-world-template/companion.py",
+        "my-world-template/journey.md",
         "lessons/sessions/s02/student/explorer-package/manifest.yaml",
         "lessons/sessions/s02/student/explorer-package/objects/compass.yaml",
         "requirements-student.txt",

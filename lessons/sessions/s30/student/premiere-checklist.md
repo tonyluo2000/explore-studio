@@ -12,6 +12,8 @@ Use this checklist as a speaking and recovery aid, not as a mastery score.
 - [ ] Two fresh local exports have identical SHA-256 and bytes.
 - [ ] I can name every exported member and explain why the order is stable.
 - [ ] No archive, temporary output, credential, or private notification is staged.
+- [ ] I reread my `journey.md`, prepared `presentation-outline.md` from it, and
+      chose my own answers to the six Journey questions.
 
 ## My uninterrupted demonstration path
 

@@ -62,16 +62,18 @@ open beside it for controls, troubleshooting, and the accessibility route.
 ## From Session 2: make your own world folder
 
 This course folder can be replaced with a newer copy during the year. Your own
-explorer, companion, and editable Explorer Packages live in a separate folder
-that is yours:
+explorer, companion, journal (`journey.md`), and editable Explorer Packages live
+in a separate folder that is yours:
 
 ```console
 python3 make-my-world.py
 ```
 
-It creates `my-explore-world` next to this folder and seeds your S02 Moon
-Compass under `projects/moon-compass/`. Running it again only adds missing
-files; it never replaces your work. Replacing this Course Kit leaves the
+It creates `my-explore-world` next to this folder, seeds your S02 Moon
+Compass under `projects/moon-compass/`, and adds `journey.md`, your **My
+Explore Journey** journal for short after-class notes. Running it again only
+adds missing files; it never replaces your work — an existing `journey.md` is
+never touched. Replacing this Course Kit leaves the
 Student Workspace untouched. Your task card for Session 2 shows when to do
 this.
 

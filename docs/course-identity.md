@@ -115,8 +115,9 @@ Students never work in the Explore Studio source repository. They receive:
   `check-my-computer.py`, and `make-my-world.py`. It is **replaceable**: a
   teacher may hand out a newer copy at any time;
 - the **Student Workspace** (`my-explore-world`, created next to the Course
-  Kit by `make-my-world.py`): `explorer.py`, `companion.py`, and student-owned
-  projects, beginning with the editable S02 Moon Compass package under
+  Kit by `make-my-world.py`): `explorer.py`, `companion.py`, `journey.md`
+  (the student's **My Explore Journey** journal), and student-owned projects,
+  beginning with the editable S02 Moon Compass package under
   `projects/moon-compass/`. It **belongs to the student** and must survive
   every Course Kit update.
 

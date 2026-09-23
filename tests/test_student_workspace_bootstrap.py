@@ -36,11 +36,12 @@ WORKSPACE_FILES = (
     "README.md",
     "explorer.py",
     "companion.py",
+    "journey.md",
     "projects/README.md",
     "projects/moon-compass/manifest.yaml",
     "projects/moon-compass/objects/compass.yaml",
 )
-TEMPLATE_FILES = ("README.md", "explorer.py", "companion.py", "projects/README.md")
+TEMPLATE_FILES = ("README.md", "explorer.py", "companion.py", "journey.md", "projects/README.md")
 MOON_COMPASS = Path("projects/moon-compass/objects/compass.yaml")
 
 
