@@ -450,6 +450,10 @@ integrated outcome.
 - **World payoff:** Run M16 as the final guided object tour.
 - **Prediction:** Script the demo path and recovery from one likely failure.
 - **Test/debug:** Show final regression and package-validation evidence.
+- **Journey use:** Before class, reread `my-explore-world/journey.md` and run
+  the deterministic `journey_outline.py` helper, which writes a separate
+  `presentation-outline.md` from the student's own dated entries; the student
+  chooses the moments to present.
 - **Bounded AI role:** Ask rehearsal questions only; the student explains all
   accepted code.
 - **Git/review habit:** Create a final reviewed commit and optional local

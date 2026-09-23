@@ -43,7 +43,8 @@ holding:
 - `START-HERE.md` — the four first-day steps;
 - `check-my-computer.py` — the student-facing readiness check;
 - `make-my-world.py` and `my-world-template/` — the no-overwrite bootstrap for
-  the student's own workspace (see below);
+  the student's own workspace, including the `journey.md` journal seed (see
+  below);
 - `requirements-student.txt` — the exact course platform pin, fetched over
   plain HTTPS so no Git client is needed;
 - `lessons/sessions/` — S01–S30 `student/` subtrees (task cards, starters, and,
@@ -83,6 +84,7 @@ my-explore-world/          Student Workspace: belongs to the student
 ├── README.md
 ├── explorer.py
 ├── companion.py
+├── journey.md             My Explore Journey: the student's after-class journal
 └── projects/
     └── moon-compass/      Editable S02 Explorer Package
 ```
@@ -110,6 +112,43 @@ cannot reach it.
 Nothing in the workspace is uploaded, and it needs no Git, account, or
 network. Lesson files such as `starter.py` stay in the Course Kit as disposable
 practice for that day; replacing the kit resets them.
+
+### My Explore Journey (`journey.md`)
+
+`journey.md` is the student's year-long journal. It is seeded by the same
+copy-only-when-missing bootstrap as every other template file, so the same
+guarantees apply: a new workspace receives it; an existing workspace without it
+receives it on the next `make-my-world.py` run without any other file being
+touched; and once it exists, no bootstrap rerun or Course Kit replacement ever
+overwrites, truncates, or regenerates it. Students who already have
+`my-explore-world` do not recreate anything.
+
+The contract for lessons that refer to it:
+
+- **Student-owned.** Students write entries by opening the file in VS Code,
+  adding an entry, and saving. There is no database, form, login, or helper to
+  learn. Lessons from S02 onward may ask for one short entry (2–3 minutes,
+  short phrases) using the entry template inside the file.
+- **Entry fields.** `## <session or milestone>`, `Date`, `Place`, `Weather`,
+  `Explore-world location`, then `### Today I built`, `### Python I learned`,
+  `### My favorite moment`, `### A problem I solved`, `### My next idea`.
+  `Place` is where the student was in real life; `Explore-world location` is
+  where their Explorer was in the world they are building.
+- **Local-only by default.** Nothing is uploaded, synced, or collected. The
+  course never requests device location, browser geolocation, IP-derived
+  location, or a weather service, and the journal needs no network.
+- **Optional, general place and weather.** `Place` is a general place only
+  (Home, School, a city, "Grandma's house"); never a street address, school
+  name, or GPS coordinates, and `Prefer not to say` is always acceptable.
+  `Weather` is an optional observation ("Sunny", "68°F", "Don't know"), kept
+  for memory and atmosphere, not accuracy.
+- **Final-presentation use.** In S30 the student rereads the journal to prepare
+  the World Premiere. The Course Kit ships a deterministic, stdlib-only helper,
+  `lessons/sessions/s30/student/journey_outline.py`, that reads `journey.md`
+  and writes a separate `my-explore-world/presentation-outline.md` listing the
+  student's dated entries in source order under the six presentation questions.
+  It never modifies the journal, never chooses or rewrites a reflection, and
+  leaves every selection to the student.
 
 On the Git-managed path the same command, run from the student repository
 root, creates `my-explore-world` next to that repository.
