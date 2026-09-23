@@ -267,6 +267,34 @@ kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3
 .coord-origin { fill: var(--coral); }
 .coord-label { fill: #eaf2ee; font: 700 30px/1 Arial, sans-serif; }
 .coord-value { fill: var(--mint); font: 700 28px/1 monospace; }
+.trail-map-scroll { overflow-x: auto; }
+.trail-map-art { display: block; width: 100%; min-width: 600px; height: auto; }
+.tm-plate { fill: #202030; opacity: .92; }
+.tm-grid { stroke: rgba(240,240,240,.12); stroke-width: 2; }
+.tm-tick { fill: var(--ink-soft); font: 700 22px/1 monospace; }
+.tm-axis { fill: var(--coral-accessible); font: 700 26px/1 monospace; }
+.tm-hud { fill: rgba(240,240,240,.72); font: 22px/1 Arial, sans-serif; }
+.tm-zone { fill: rgba(240,240,240,.45); font: italic 18px/1 Arial, sans-serif; }
+.tm-route { fill: none; stroke: var(--mint); stroke-width: 5; stroke-dasharray: 4 14; stroke-linecap: round; }
+.tm-destination { fill: none; stroke: #f0d232; stroke-width: 3; stroke-dasharray: 10 8; opacity: .8; }
+.tm-yours { stroke: #f0f0f0; stroke-width: 3; stroke-dasharray: 8 6; }
+.tm-step-dot { fill: var(--mint); }
+.tm-step { fill: var(--ink); font: 800 24px/1 Arial, sans-serif; }
+.tm-label { fill: #f0f0f0; font: 700 24px/1 Arial, sans-serif; }
+.tm-note { fill: #cfe9df; font: 20px/1 Arial, sans-serif; }
+.tm-xy { fill: var(--mint); font: 700 20px/1 monospace; }
+.card-compare { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: .9rem; }
+.card-compare .slide-code { margin-bottom: .3rem; }
+.card-arrow { margin: 0 0 .3rem; font-size: .8rem; font-weight: 700; color: var(--coral-accessible); }
+.id-card code { background: none; padding: 0; font-size: inherit; }
+.id-card { margin: 0; padding: .8rem 1rem; background: #fff; border: 2px solid var(--ink); border-radius: .7rem; box-shadow: 4px 4px 0 var(--mint); overflow-x: auto; font-size: .82rem; line-height: 1.5; color: var(--ink); }
+.wiring-values { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .3rem; }
+.wiring-file { font-size: .8rem; color: var(--ink-soft); }
+.wiring-badge { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.wiring-trail { background: var(--ink); color: #fff; }
+.wiring-card { background: var(--cream); color: var(--ink); border: 1px solid var(--line); }
+.wiring-stored { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+.wiring-plan { background: #fff4d6; color: #6b4a00; border: 1px dashed #b08a2e; }
 
 .slide-body ul.role-grid { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .role-card { display: grid; gap: .25rem; align-content: start; background: var(--cream); border-radius: .7rem; padding: .9rem 1rem; line-height: 1.45; }

@@ -33,6 +33,29 @@ remember anything between sessions, carry items, or decide anything. Say so if
 students ask. Those are future abilities students will program, not features
 of today's runtime.
 
+**The scene and its destination.** Show `student/trail-map.svg` (or the S02
+slide map) instead of describing the scene aloud. It is drawn to the real
+960 × 640 Trail: Nova starts in the middle with Pixel beside Nova; step 1 is the
+Moon Compass, the one thing the student places; step 2 is the Crystal
+Lantern, already in the world in the bottom-left corner, which is the trail's
+destination. Visiting both world objects in any order completes M02, exactly
+as before. In the runtime every thing is a plain colored box and no names are
+drawn; the map's symbols and labels are map-only.
+
+**Four sentences carry the lesson.** Say them; do not add narration:
+
+1. "We describe our Explorer with Python." (`explorer.py`)
+2. "We describe our Companion with Python." (`companion.py`)
+3. "Coordinates decide where things live." (`x`, `y` in `compass.yaml`)
+4. "Then we use those ideas in our world." (validate, launch, walk the trail)
+
+**What each student value does today.** `explorer.py` and `companion.py` print
+an Explorer Card and a Companion Card. Those values are display-only: they
+appear on the card and do not change the Trail. `future_ability` is a plan
+only. In the Moon Compass file, `x`, `y`, and `color` change the Trail; `name`
+is stored but not drawn. Students walk as Nova, the class example, because
+S02 has no student-owned character package.
+
 The Moon Compass framing is narrative only: `object_name`/`x`/`y`/`color`
 mechanics, the package schema, and M02 completion are unchanged. The session
 ends with a light forward reference — next session the same static instrument
@@ -57,11 +80,11 @@ runtime state.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:04 | 4 min | Hook, then one sentence per student: one Explorer or Companion choice. Classify Nova, Pixel, Moon Compass, and Crystal Lantern quickly. Cut extra sharing first. | Gives one ownership choice and names at least one category. |
+| 0:00–0:04 | 4 min | Hook, then one sentence per student: one Explorer or Companion choice. Classify Nova, Pixel, Moon Compass, and Crystal Lantern quickly by pointing at the trail map. Cut extra sharing first. | Gives one ownership choice and names at least one category. |
 | 0:04–0:15 | 11 min | **Protected Python teaching:** variables, values, assignment, strings, integers, and coordinates. Model `x = 240` as "store the integer 240 under the name x"; contrast `x = "240"`; have all three students predict and change a value in `starter.py`. | Runs Python, labels a string and integer, and predicts what a coordinate change means. |
 | 0:15–0:18 | 3 min | **Hard-boxed bootstrap:** guide `python3 make-my-world.py` once. At 0:18, use the fallback below for anyone not ready; do not take time back from Python practice. | Has a Student Workspace, or moves to the fallback without waiting. |
-| 0:18–0:27 | 9 min | Students replace every ownership `TODO` in `explorer.py` and `companion.py`, then run both. Prompt for Explorer name/appearance/personality/interest and Companion name/kind/personality/specialty/future ability. | Runs both files with concrete personal choices; explains that future ability is planning text only. |
-| 0:27–0:35 | 8 min | Edit the **student-owned** `projects/moon-compass/objects/compass.yaml`, predict, validate `../my-explore-world/projects/moon-compass`, and launch M02 with that package. | Shows the Student Workspace path, a coordinate prediction, `valid: ...`, and the prop. |
+| 0:18–0:27 | 9 min | Students replace every ownership `TODO` in `explorer.py` and `companion.py`, then run both to print their Explorer Card and Companion Card. Prompt for Explorer name/appearance/personality/interest and Companion name/kind/personality/specialty/future ability. | Runs both files and shows two cards with concrete personal choices; explains that the cards do not change the Trail and future ability is planning text only. |
+| 0:27–0:35 | 8 min | Edit the **student-owned** `projects/moon-compass/objects/compass.yaml`, predict the spot on the trail map, validate `../my-explore-world/projects/moon-compass`, and launch M02 with that package. | Shows the Student Workspace path, a coordinate prediction, `valid: ...`, and the prop. |
 | 0:35–0:40 | 5 min | Change one coordinate from evidence, relaunch, use the quoted-integer bug, and complete M02. | Explains the type fix, observed movement, and mission completion. |
 | 0:40–0:43 | 3 min | **Discovery only if time remains:** coordinates, maps, navigation; fiction vs fact for the Moon Compass. | Says what coordinates describe and one real-compass fact. |
 | 0:43–0:45 | 2 min | Exit share and S03 preview. Git close is asynchronous and only for Git-managed classes. | Gives one Python answer and one ownership or movement answer. |
@@ -160,7 +183,9 @@ Point to `student/python-notes.md`, then ask a few students each:
 
 ## Expected output and behavior
 
-The sample Python output is:
+Running `explorer.py` and `companion.py` prints two cards filled with the
+student's own values (placeholders print `TODO`). The sample Python output of
+`starter.py` is:
 
 ```text
 Moon Compass
@@ -168,8 +193,8 @@ Moon Compass
 purple
 ```
 
-Validation reports `valid: moon-compass 0.1.0`. The prop appears at its declared
-coordinates. A larger x moves it right. Pixel stands near Nova's start and
+Validation reports `valid: moon-compass 0.1.0`. The prop appears as a colored
+box at its declared coordinates; its name is not drawn on screen. A larger x moves it right. Pixel stands near Nova's start and
 greets when the student presses E nearby; it does not move. The local M02 trail
 completes after both world objects (Moon Compass and Crystal Lantern) have
 been interacted with; greeting Pixel does not count toward `Visited`.

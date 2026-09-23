@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -402,3 +405,146 @@ def test_existing_slide_urls_are_preserved():
         page = _read(WEBSITE / "app" / "students" / "slides" / session / "page.tsx")
         assert f'canonical: "/students/slides/{session}/"' in page
         assert f"/students/learn/{session}/" in page
+
+
+# --- S02 scene, destination, and ownership honesty ----------------------------------------
+
+TEMPLATE = PROJECT_ROOT / "classroom" / "my-world-template"
+TRAIL_MAP_SVG = SESSIONS / "s02" / "student" / "trail-map.svg"
+TRAIL_MAP_TSX = WEBSITE / "app" / "components" / "S02TrailMap.tsx"
+S02_SLIDES = WEBSITE / "app" / "students" / "slides" / "s02" / "page.tsx"
+S02_MAP_PACKAGES = {
+    "nova": EXAMPLES / "nova-character",
+    "pixel": EXAMPLES / "pixel-companion",
+    "crystal-lantern": EXAMPLES / "crystal-lantern",
+    "moon-compass": SESSIONS / "s02" / "student" / "explorer-package",
+}
+
+
+def _package_layout() -> dict[str, tuple[int, int, str]]:
+    layout = {}
+    for map_id, root in S02_MAP_PACKAGES.items():
+        loaded = load_explorer_package(root)
+        assert loaded.is_loaded, loaded.all_issues
+        (contribution,) = loaded.package.contributions
+        layout[map_id] = (contribution.x, contribution.y, contribution.color)
+    return layout
+
+
+def test_s02_trail_maps_draw_the_real_runtime_layout():
+    layout = _package_layout()
+
+    svg = _read(TRAIL_MAP_SVG)
+    drawn = {
+        match["id"]: (int(match["x"]), int(match["y"]), match["color"])
+        for match in re.finditer(
+            r'<g id="(?P<id>[\w-]+)" data-x="(?P<x>\d+)" data-y="(?P<y>\d+)" '
+            r'data-color="(?P<color>\w+)">',
+            svg,
+        )
+    }
+    assert drawn == layout
+
+    tsx = _read(TRAIL_MAP_TSX)
+    items = {
+        match["id"]: (int(match["x"]), int(match["y"]), match["color"])
+        for match in re.finditer(
+            r'id: "(?P<id>[\w-]+)",\s+x: (?P<x>\d+),\s+y: (?P<y>\d+),\s+'
+            r'size: \[\d+, \d+\],\s+color: "(?P<color>\w+)"',
+            tsx,
+        )
+    }
+    assert items == layout
+
+
+def test_s02_maps_say_symbols_are_map_only_and_mark_the_destination():
+    for source in (_normalized(TRAIL_MAP_SVG), " ".join(_read(TRAIL_MAP_TSX).split())):
+        assert "plain colored box" in source
+        assert "Crystal Lantern · the destination" in source
+        assert "Moon Compass · YOU place it" in source
+        assert "class example" in source
+
+
+def test_s02_task_card_shows_the_map_and_distinct_object_roles():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    trail = task_card.split("## Your trail today", 1)[1].split("## Python first", 1)[0]
+    lantern = load_explorer_package(EXAMPLES / "crystal-lantern").package.world_objects[0]
+
+    assert "(trail-map.svg)" in trail
+    assert "Moon Compass (your tool)" in trail and "**your** `x` and `y`" in trail
+    assert "Crystal Lantern (the destination)" in trail
+    assert lantern.when_near in trail, "quoted lantern text must be the real runtime text"
+    assert "Names are not drawn on screen" in trail
+
+
+def test_s02_materials_never_claim_the_trail_draws_names():
+    for material in (
+        SESSIONS / "s02" / "student" / "task-card.md",
+        SESSIONS / "s02" / "teacher-runbook.md",
+        S02_SLIDES,
+    ):
+        source = _read(material).lower()
+        assert "label shown" not in source
+        assert "name appears" not in source
+
+
+def test_s02_value_table_separates_runtime_card_and_plan_fields():
+    task_card = _read(SESSIONS / "s02" / "student" / "task-card.md")
+    table = task_card.split("### What each value does today", 1)[1].split("\n\n", 2)[1]
+    rows = {row.split("|")[1].strip(): row.split("|")[4].strip() for row in table.splitlines()[2:]}
+
+    explorer_row = next(key for key in rows if key.startswith("Explorer:"))
+    companion_row = next(key for key in rows if key.startswith("Companion:") and "name" in key)
+    assert rows[explorer_row].startswith("No.")
+    assert rows[companion_row].startswith("No.")
+    assert rows["Companion: `future_ability`"] == "No. A plan for later."
+    assert rows["Moon Compass: `x`, `y`"].startswith("**Yes.**")
+    assert rows["Moon Compass: `name`"].startswith("No.")
+
+    slides = _read(S02_SLIDES)
+    assert '{ values: ["future_ability"], file: "companion.py", wiring: "plan" }' in slides
+    assert '{ values: ["x", "y", "color"], file: "compass.yaml", wiring: "trail" }' in slides
+
+
+@pytest.mark.parametrize(
+    ("name", "card", "example"),
+    (
+        ("explorer.py", "MY EXPLORER CARD", "Nova, the class example"),
+        ("companion.py", "MY COMPANION CARD", "Pixel, the class example"),
+    ),
+)
+def test_s02_ownership_files_print_an_honest_display_only_card(name, card, example):
+    completed = subprocess.run(
+        [sys.executable, str(TEMPLATE / name)], capture_output=True, text=True, check=True
+    )
+
+    assert card in completed.stdout
+    assert "They do not change the Trail yet." in completed.stdout
+    assert example in completed.stdout
+    if name == "companion.py":
+        assert "PLAN for later, not built yet:" in completed.stdout
+
+
+@pytest.mark.parametrize(
+    "path",
+    (
+        SESSIONS / "s02" / "student" / "starter.py",
+        TEMPLATE / "explorer.py",
+        TEMPLATE / "companion.py",
+    ),
+)
+def test_s02_student_python_stays_inside_approved_concepts(path: Path):
+    """Only assignment of string/integer values and print() of names or literals."""
+    for node in ast.parse(_read(path)).body:
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+            continue  # module docstring
+        if isinstance(node, ast.Assign):
+            assert isinstance(node.value, ast.Constant), ast.unparse(node)
+            assert type(node.value.value) in (str, int), ast.unparse(node)
+            continue
+        assert isinstance(node, ast.Expr) and isinstance(node.value, ast.Call), ast.unparse(node)
+        call = node.value
+        assert isinstance(call.func, ast.Name) and call.func.id == "print", ast.unparse(node)
+        assert not call.keywords, ast.unparse(node)
+        for argument in call.args:
+            assert isinstance(argument, (ast.Constant, ast.Name)), ast.unparse(node)
