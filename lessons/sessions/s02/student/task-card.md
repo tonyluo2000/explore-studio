@@ -79,9 +79,17 @@ python3 make-my-world.py
 It creates `my-explore-world` next to your course folder. If you run it again,
 it only adds missing files and never replaces your work.
 
+Already have a `my-explore-world` folder from an earlier class? Keep using it.
+Open your existing `explorer.py` and `companion.py` and edit your own values
+there — you do not need to run `make-my-world.py` again, and you do not need
+to replace your files to get today's credit.
+
 Open `my-explore-world/explorer.py` and `my-explore-world/companion.py` in your
 editor. Replace **every** `TODO` string with concrete choices for your own
-Explorer and Companion — do not leave Nova or Pixel as your answers. Choose:
+Explorer and Companion — do not leave Nova or Pixel as your answers. If you
+already personalized these files in an earlier class, there won't be any
+`TODO` left to replace — just check that your own values are still the ones
+there. Choose:
 
 - Explorer: `explorer_name`, `looks_like`, `personality`, and
   `favorite_subject`;
@@ -96,7 +104,7 @@ python ../my-explore-world/explorer.py
 python ../my-explore-world/companion.py
 ```
 
-Each file prints a card:
+If your workspace is new this year, each file prints a card:
 
 ```text
 ==========================================
@@ -107,18 +115,28 @@ Looks like:    a bright orange scarf
 ...
 ```
 
-`Comet` is a made-up sample. Your card shows **your** values.
+If you set up `explorer.py` and `companion.py` in an earlier class, running
+them prints your earlier lines instead, for example:
 
-Checkpoint: every printed value on both cards is yours, and you can say why
+```text
+Explorer: Comet
+Looks like: a bright orange scarf
+...
+```
+
+`Comet` is a made-up sample. Both outputs are correct — the format doesn't
+matter. Your output shows **your** values either way.
+
+Checkpoint: every printed value in your output is yours, and you can say why
 each one is a string.
 
 ### What each value does today
 
 | Values | Edit in | You see it | Changes the Trail? |
 |---|---|---|---|
-| Explorer: `explorer_name`, `looks_like`, `personality`, `favorite_subject` | `explorer.py` | Your Explorer Card | No. Card only. |
-| Companion: `companion_name`, `companion_kind`, `personality`, `specialty` | `companion.py` | Your Companion Card | No. Card only. |
-| Companion: `future_ability` | `companion.py` | "PLAN for later" on your card | No. A plan for later. |
+| Explorer: `explorer_name`, `looks_like`, `personality`, `favorite_subject` | `explorer.py` | Your explorer output (Card or printed lines) | No. Display only. |
+| Companion: `companion_name`, `companion_kind`, `personality`, `specialty` | `companion.py` | Your companion output (Card or printed lines) | No. Display only. |
+| Companion: `future_ability` | `companion.py` | "PLAN for later" in your output | No. A plan for later. |
 | Moon Compass: `x`, `y` | `compass.yaml` | Where the compass box sits | **Yes.** It moves. |
 | Moon Compass: `color` | `compass.yaml` | The compass box color | **Yes.** |
 | Moon Compass: `name` | `compass.yaml` | Stored in the file | No. Names are not drawn yet. |

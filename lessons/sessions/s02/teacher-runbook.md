@@ -49,12 +49,15 @@ drawn; the map's symbols and labels are map-only.
 3. "Coordinates decide where things live." (`x`, `y` in `compass.yaml`)
 4. "Then we use those ideas in our world." (validate, launch, walk the trail)
 
-**What each student value does today.** `explorer.py` and `companion.py` print
-an Explorer Card and a Companion Card. Those values are display-only: they
-appear on the card and do not change the Trail. `future_ability` is a plan
-only. In the Moon Compass file, `x`, `y`, and `color` change the Trail; `name`
-is stored but not drawn. Students walk as Nova, the class example, because
-S02 has no student-owned character package.
+**What each student value does today.** `explorer.py` and `companion.py` show
+the student's Explorer and Companion values. A newly bootstrapped workspace
+prints them as an Explorer Card and a Companion Card; a workspace bootstrapped
+before this update prints the earlier simple lines instead — both are correct
+S02 evidence. Those values are display-only: they appear in the student's own
+output and do not change the Trail. `future_ability` is a plan only. In the
+Moon Compass file, `x`, `y`, and `color` change the Trail; `name` is stored
+but not drawn. Students walk as Nova, the class example, because S02 has no
+student-owned character package.
 
 The Moon Compass framing is narrative only: `object_name`/`x`/`y`/`color`
 mechanics, the package schema, and M02 completion are unchanged. The session
@@ -83,7 +86,7 @@ runtime state.
 | 0:00–0:04 | 4 min | Hook, then one sentence per student: one Explorer or Companion choice. Classify Nova, Pixel, Moon Compass, and Crystal Lantern quickly by pointing at the trail map. Cut extra sharing first. | Gives one ownership choice and names at least one category. |
 | 0:04–0:15 | 11 min | **Protected Python teaching:** variables, values, assignment, strings, integers, and coordinates. Model `x = 240` as "store the integer 240 under the name x"; contrast `x = "240"`; have all three students predict and change a value in `starter.py`. | Runs Python, labels a string and integer, and predicts what a coordinate change means. |
 | 0:15–0:18 | 3 min | **Hard-boxed bootstrap:** guide `python3 make-my-world.py` once. At 0:18, use the fallback below for anyone not ready; do not take time back from Python practice. | Has a Student Workspace, or moves to the fallback without waiting. |
-| 0:18–0:27 | 9 min | Students replace every ownership `TODO` in `explorer.py` and `companion.py`, then run both to print their Explorer Card and Companion Card. Prompt for Explorer name/appearance/personality/interest and Companion name/kind/personality/specialty/future ability. | Runs both files and shows two cards with concrete personal choices; explains that the cards do not change the Trail and future ability is planning text only. |
+| 0:18–0:27 | 9 min | Students replace every ownership `TODO` in `explorer.py` and `companion.py` — or, for a student who already personalized these files in an earlier class, check their existing values — then run both and confirm their own values appear. Prompt for Explorer name/appearance/personality/interest and Companion name/kind/personality/specialty/future ability. | Runs both files and shows their own concrete personal choices (as a Card in a new workspace, or as printed lines in an older one); explains that the output does not change the Trail and future ability is planning text only. |
 | 0:27–0:35 | 8 min | Edit the **student-owned** `projects/moon-compass/objects/compass.yaml`, predict the spot on the trail map, validate `../my-explore-world/projects/moon-compass`, and launch M02 with that package. | Shows the Student Workspace path, a coordinate prediction, `valid: ...`, and the prop. |
 | 0:35–0:40 | 5 min | Change one coordinate from evidence, relaunch, use the quoted-integer bug, and complete M02. | Explains the type fix, observed movement, and mission completion. |
 | 0:40–0:43 | 3 min | **Discovery only if time remains:** coordinates, maps, navigation; fiction vs fact for the Moon Compass. | Says what coordinates describe and one real-compass fact. |
@@ -183,8 +186,13 @@ Point to `student/python-notes.md`, then ask a few students each:
 
 ## Expected output and behavior
 
-Running `explorer.py` and `companion.py` prints two cards filled with the
-student's own values (placeholders print `TODO`). The sample Python output of
+Running `explorer.py` and `companion.py` shows two outputs filled with the
+student's own values (placeholders print `TODO`). A newly bootstrapped
+workspace prints an Explorer Card and a Companion Card; a workspace
+bootstrapped before this update prints the earlier simple lines instead —
+both are correct. Ask each student to run both files and show that their own
+Explorer and Companion choices appear in the terminal; the format (Card vs.
+printed lines) is not something to check. The sample Python output of
 `starter.py` is:
 
 ```text

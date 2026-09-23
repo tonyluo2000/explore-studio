@@ -548,3 +548,122 @@ def test_s02_student_python_stays_inside_approved_concepts(path: Path):
         assert not call.keywords, ast.unparse(node)
         for argument in call.args:
             assert isinstance(argument, (ast.Constant, ast.Name)), ast.unparse(node)
+
+
+# --- S02 existing-workspace compatibility (Card format is not required) -------------------
+
+
+def test_s02_student_materials_accept_both_card_and_legacy_output():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    notes = _normalized(SESSIONS / "s02" / "student" / "python-notes.md")
+
+    for material in (task_card, notes):
+        assert "earlier class" in material
+        assert (
+            "both are correct" in material.lower() or "both outputs are correct" in material.lower()
+        )
+
+    # The task card shows the legacy print-line format as valid evidence too,
+    # not only the new Card format.
+    assert "Explorer: Comet" in task_card
+    assert "MY EXPLORER CARD" in task_card
+
+
+def test_s02_student_materials_do_not_force_a_file_upgrade():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    notes = _normalized(SESSIONS / "s02" / "student" / "python-notes.md")
+
+    forbidden = (
+        "rerun bootstrap",
+        "rerun the bootstrap",
+        "run make-my-world.py again to get",
+        "delete your explorer.py",
+        "delete your companion.py",
+        "replace your explorer.py",
+        "replace your companion.py",
+    )
+    for material in (task_card, notes):
+        lowered = material.lower()
+        for phrase in forbidden:
+            assert phrase not in lowered
+
+    assert "you do not need to run `make-my-world.py` again" in task_card
+    assert "you do not need" in task_card and "replace your files" in task_card
+
+
+def test_s02_ownership_value_table_is_format_neutral():
+    task_card = _read(SESSIONS / "s02" / "student" / "task-card.md")
+    table = task_card.split("### What each value does today", 1)[1].split("\n\n", 2)[1]
+    rows = {row.split("|")[1].strip(): row.split("|")[3].strip() for row in table.splitlines()[2:]}
+
+    explorer_row = next(key for key in rows if key.startswith("Explorer:"))
+    companion_row = next(key for key in rows if key.startswith("Companion:") and "name" in key)
+
+    # The "where you see it" column must not claim the Card is the only valid
+    # output; it must allow for the legacy printed-line format too.
+    assert "Card" in rows[explorer_row] and "printed lines" in rows[explorer_row]
+    assert "Card" in rows[companion_row] and "printed lines" in rows[companion_row]
+
+
+def test_s02_teacher_runbook_check_does_not_require_two_cards():
+    runbook = _normalized(SESSIONS / "s02" / "teacher-runbook.md")
+
+    assert "two cards" not in runbook.lower()
+    assert "run both files and show that their own" in runbook
+    assert "the format (card vs. printed lines) is not something to check" in runbook.lower()
+    assert "both are correct" in runbook.lower()
+
+
+def test_s02_teacher_runbook_covers_the_returning_student_path_without_new_time():
+    runbook = _read(SESSIONS / "s02" / "teacher-runbook.md")
+
+    assert "already personalized these files in an earlier class" in runbook
+    # The returning-student accommodation must live inside the existing
+    # 0:18-0:27 row, not a new clock anchor.
+    for anchor in (
+        "0:00–0:04",
+        "0:04–0:15",
+        "0:15–0:18",
+        "0:18–0:27",
+        "0:27–0:35",
+        "0:35–0:40",
+        "0:40–0:43",
+        "0:43–0:45",
+    ):
+        assert f"| {anchor} |" in runbook
+    row_0_18 = [line for line in runbook.splitlines() if line.startswith("| 0:18–0:27 |")][0]
+    assert "already personalized" in row_0_18
+
+
+def test_s02_future_ability_stays_planning_only_regardless_of_workspace_age():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    notes = _normalized(SESSIONS / "s02" / "student" / "python-notes.md")
+    runbook = _normalized(SESSIONS / "s02" / "teacher-runbook.md")
+
+    assert (
+        "only a plan written as text; it does not make the companion act by itself"
+        in task_card.lower()
+    )
+    assert "does not create autonomous behavior" in notes.lower()
+    assert "`future_ability` is a plan only" in runbook.lower()
+
+    completed = subprocess.run(
+        [sys.executable, str(TEMPLATE / "companion.py")], capture_output=True, text=True, check=True
+    )
+    assert "PLAN for later, not built yet:" in completed.stdout
+
+
+def test_s02_new_workspace_templates_still_print_the_enhanced_cards():
+    for name, card in (("explorer.py", "MY EXPLORER CARD"), ("companion.py", "MY COMPANION CARD")):
+        completed = subprocess.run(
+            [sys.executable, str(TEMPLATE / name)], capture_output=True, text=True, check=True
+        )
+        assert card in completed.stdout
+
+
+def test_s02_bootstrap_no_overwrite_invariant_is_documented_unchanged():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    readme = _read(TEMPLATE / "README.md")
+
+    assert "it only adds missing files and never replaces your work" in task_card
+    assert "never" in readme.lower() and "replace" in readme.lower()

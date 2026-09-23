@@ -322,8 +322,10 @@ PLAN for later, not built yet:
           </div>
         </div>
         <p>
-          Comet and Moss are made-up samples. Your cards show <strong>your</strong>{" "}
-          values.
+          Comet and Moss are made-up samples. This card is the new-workspace
+          look. If you set up these files in an earlier class, running them
+          prints your earlier lines instead &mdash; both are correct. Either
+          way, your output shows <strong>your</strong> values.
         </p>
         <div className="slide-map-wrap">
           <table className="slide-map slide-map-compact">
