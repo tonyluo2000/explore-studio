@@ -90,8 +90,14 @@ companion_name = "Pixel"`}</code>
       <>
         <p>Share the explorer and companion you imagined after Session 1:</p>
         <ul className="slide-checks">
-          <li>Your explorer&rsquo;s name, what they look like, and one personality trait.</li>
-          <li>Your companion&rsquo;s name, what kind of companion it is, and one personality trait.</li>
+          <li>
+            Your explorer&rsquo;s name, appearance, personality, and one interest or
+            favorite subject.
+          </li>
+          <li>
+            Your companion&rsquo;s name, kind, personality, and one specialty or
+            interest.
+          </li>
           <li>
             One thing you eventually want your companion to do: fly, scan rocks,
             identify animals, find hidden paths, recognize constellations&hellip;
@@ -205,9 +211,11 @@ color = "purple"`}</code>
         </pre>
         <p>
           Open <code>my-explore-world/explorer.py</code> and{" "}
-          <code>companion.py</code>. Replace each <code>TODO</code> string with
-          your own choices, including one <code>future_ability</code>. Keep the
-          quotation marks.
+          <code>companion.py</code>. Replace every <code>TODO</code> with concrete
+          choices for your own Explorer and Companion: name, appearance or kind,
+          personality, interest or specialty, and one <code>future_ability</code>.
+          Nova and Pixel are examples, not required answers. The future ability
+          is planning text only. Keep the quotation marks.
         </p>
         <div className="slide-map-wrap">
           <table className="slide-map slide-map-compact">
@@ -219,7 +227,10 @@ color = "purple"`}</code>
               </tr>
               <tr>
                 <th scope="row"><code>my-explore-world/</code></th>
-                <td>Your own work. Course updates never replace it.</td>
+                <td>
+                  Your characters and <code>projects/moon-compass/</code>.
+                  Course updates never replace them.
+                </td>
               </tr>
             </tbody>
           </table>
@@ -335,7 +346,8 @@ color = "purple"`}</code>
         </li>
         <li>Run the Python file and explain the type of each value.</li>
         <li>
-          Put the same values in your object file, <code>compass.yaml</code>.
+          Put the same values in your student-owned file,{" "}
+          <code>../my-explore-world/projects/moon-compass/objects/compass.yaml</code>.
         </li>
         <li>Validate your package, then launch the Trail.</li>
         <li>
@@ -360,12 +372,12 @@ color = "purple"`}</code>
     body: (
       <>
         <pre className="slide-code">
-          <code>{`python starter.py
-explore-package validate <your explorer package>`}</code>
+          <code>{`python lessons/sessions/s02/student/starter.py
+explore-package validate ../my-explore-world/projects/moon-compass`}</code>
         </pre>
         <p>Then launch the Trail for this mission:</p>
         <pre className="slide-code">
-          <code>{`explore-package trail <class packages> <your package> \\
+          <code>{`explore-package trail <class packages> ../my-explore-world/projects/moon-compass \\
   --player "nova-character:nova" \\
   --mission-id "create-a-classroom-object" \\
   --name "S02 Place Your First Prop"`}</code>
@@ -481,9 +493,10 @@ explore-package validate <your explorer package>`}</code>
           strings? Which were integers? What does changing <code>x</code> do?
         </li>
         <li>
-          <strong>Your world:</strong> What are your explorer and companion
-          called? Which trait did you choose? What is one future ability you
-          want to program?
+          <strong>Your world:</strong> What are your Explorer&rsquo;s name,
+          appearance, personality, and interest? What are your Companion&rsquo;s
+          name, kind, personality, and specialty? What future ability do you
+          want to program later?
         </li>
         <li>
           <strong>Discovery:</strong> What do coordinates describe? How is the
@@ -509,9 +522,10 @@ explore-package validate <your explorer package>`}</code>
     body: (
       <>
         <p>
-          Save your work and keep your course folder where you can find it next
-          session. Be ready to say which value you changed and what moved
-          because of it &mdash; understanding comes before rushing.
+          Save your work in <code>my-explore-world</code> and keep both folders
+          where you can find them next session. Be ready to say which value you
+          changed and what moved because of it &mdash; understanding comes before
+          rushing.
         </p>
         <p>
           <Link className="text-link" href="/students/learn/s02/">

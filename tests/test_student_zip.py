@@ -52,6 +52,8 @@ def test_zip_has_one_named_root_and_every_student_entry_point(student_zip):
     assert "course-materials.json" in paths
     assert "docs/computer-readiness.md" in paths
     assert "lessons/sessions/student-quick-start.md" in paths
+    assert "lessons/sessions/s02/student/explorer-package/manifest.yaml" in paths
+    assert "lessons/sessions/s02/student/explorer-package/objects/compass.yaml" in paths
 
 
 def test_zip_carries_every_s01_s30_student_material_and_no_s31(student_zip):
@@ -171,6 +173,8 @@ def collect_members_of_reference() -> list[Path]:
         Path("make-my-world.py"),
         Path("my-world-template/explorer.py"),
         Path("my-world-template/companion.py"),
+        Path("lessons/sessions/s02/student/explorer-package/manifest.yaml"),
+        Path("lessons/sessions/s02/student/explorer-package/objects/compass.yaml"),
         Path("course-materials.json"),
         Path("requirements-student.txt"),
         Path("docs/computer-readiness.md"),

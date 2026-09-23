@@ -29,9 +29,15 @@ And in our own world folder, `my-explore-world/explorer.py`:
 
 ```python
 explorer_name = "TODO: your explorer's name"
+looks_like = "TODO: your explorer's appearance"
 personality = "TODO: one personality trait"
+favorite_subject = "TODO: one interest or favorite subject"
 print("Explorer:", explorer_name)
 ```
+
+Your `companion.py` stores its name, kind, personality, specialty or interest,
+and one future ability. The future ability is planning text only; writing it
+does not create autonomous behavior.
 
 ## 3. What the code means
 
@@ -91,8 +97,11 @@ TypeError: can only concatenate str (not "int") to str
 Python cannot add a number to text. Remove the quotes, `x = 240`, and
 `print(x + 100)` shows `340`.
 
-The object file has the same rule: `x: "240"` fails validation because the
-package needs an integer. Write `x: 240`.
+Your student-owned object file at
+`my-explore-world/projects/moon-compass/objects/compass.yaml` has the same rule:
+`x: "240"` fails validation because the package needs an integer. Write
+`x: 240`. Edit this Student Workspace copy, not the seed inside the replaceable
+Course Kit.
 
 ## 6. Key Python words
 
@@ -111,5 +120,6 @@ package needs an integer. Write `x: 240`.
 1. Predict, then test: what moves when you change `x = 240` to `x = 340`?
 2. Add `print(type(x))` and `print(type(color))` to the starter. What does
    Python say each type is?
-3. In `my-explore-world/companion.py`, change every `TODO` string to describe
-   your own companion, then run it.
+3. In `my-explore-world/explorer.py` and `companion.py`, replace every `TODO`
+   with concrete choices for your own Explorer and Companion, then run both
+   files.

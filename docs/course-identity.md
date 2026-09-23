@@ -115,8 +115,10 @@ Students never work in the Explore Studio source repository. They receive:
   `check-my-computer.py`, and `make-my-world.py`. It is **replaceable**: a
   teacher may hand out a newer copy at any time;
 - the **Student Workspace** (`my-explore-world`, created next to the Course
-  Kit by `make-my-world.py`): `explorer.py`, `companion.py`, and `projects/`.
-  It **belongs to the student** and must survive every Course Kit update.
+  Kit by `make-my-world.py`): `explorer.py`, `companion.py`, and student-owned
+  projects, beginning with the editable S02 Moon Compass package under
+  `projects/moon-compass/`. It **belongs to the student** and must survive
+  every Course Kit update.
 
 The invariant: **course updates never overwrite student work.**
 `make-my-world.py` copies only missing template files, never replaces an
@@ -125,7 +127,7 @@ account, or network. The kit builder refuses any `my-explore-world` member, so
 a kit can never absorb or publish a student's workspace. See
 [Classroom Student Workspace](classroom-student-workspace.md#course-kit-and-student-workspace).
 
-Lesson files such as `starter.py` and each session's `explorer-package/` stay
-in the Course Kit as practice for that day. Moving longer-lived work, such as a
-student's own Explorer Package or capstone, into the Student Workspace is later
-work; S03 onward are unchanged for now.
+Lesson files such as `starter.py` stay in the Course Kit as disposable practice
+for that day. The Course Kit may contain reviewed package seeds, but student
+edits happen only in Student Workspace copies that bootstrap seeds when
+missing and never overwrites. S03 onward are unchanged for now.

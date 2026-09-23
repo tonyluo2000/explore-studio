@@ -2,7 +2,7 @@
 
 **Canonical mission:** M02 `create-a-classroom-object` — Create Your First Object
 
-**Audience and format:** Ages 10–14, online, 45 minutes
+**Audience and format:** Ages 9–13, three students online, 45 minutes
 
 **Learning objective:** Students can store names, integer x/y coordinates, and
 a color in clearly named variables, explain which values are strings and which
@@ -43,9 +43,13 @@ runtime state.
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
 - Remind students of the S01 homework: imagine an explorer and a companion.
-- Run the Python starter and validate `student/explorer-package`.
-- From a copy of the student ZIP, run `python3 make-my-world.py` once, then
-  again, and confirm the second run reports `kept` for every file.
+- Run the Python starter. From a copy of the student ZIP, run
+  `python3 make-my-world.py`, validate
+  `../my-explore-world/projects/moon-compass`, run bootstrap again, and confirm
+  the second run reports `kept` for every file.
+- Keep one already-bootstrapped Student Workspace and the Python starter open
+  for the documented setup fallback. Do not spend the protected Python block
+  diagnosing one student's computer.
 - Prepare a shared screen or sketch with left/right and up/down coordinate
   directions. Keep the activity inside the existing declarative fields.
 
@@ -53,24 +57,33 @@ runtime state.
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Welcome back. Show Nova and Pixel (slide 1). Today: use Python to start creating your own explorer and companion. | Names Nova as explorer and Pixel as companion. |
-| 0:05–0:10 | 4–5 min | Share-out of the S01 homework: explorer name, look, trait; companion name, kind, trait; one future ability. Answer every ability with the line below. | States an explorer, a companion, and one future ability. |
-| 0:10–0:15 | 4–5 min | Explorer / Companion / Tool / World object. Classify Nova, Pixel, Moon Compass, Crystal Lantern. Transition: explorers need tools. | Classifies all four correctly. |
-| 0:15–0:25 | 9–11 min | Variables, values, assignment, strings, integers. Model `x = 240` as "store the integer 240 under the name x", and contrast `x = "240"`. Students run `python3 make-my-world.py` and replace the `TODO` strings in `explorer.py` and `companion.py`. | Runs both personal files; explains why each value is a string. |
-| 0:25–0:34 | 8–10 min | Coordinates and the Moon Compass: personalize the starter, run it, copy values into `compass.yaml`, predict the position, validate, launch M02. | Labels types, predicts a position, shows `valid: ...` and the prop. |
-| 0:34–0:39 | 4–6 min | Change one coordinate from evidence and relaunch. Use the quoted-integer bug. | Explains the type fix and one observed movement. |
-| 0:39–0:42 | 2–4 min | What We Discovered: coordinates, maps, navigation. Fiction vs fact for the Moon Compass. | Says what coordinates describe and one real-compass fact. |
-| 0:42–0:45 | 3–5 min | What We Learned in Python, then the exit check. Git close only for Git-managed classes. | Brief exit-check answers. |
+| 0:00–0:04 | 4 min | Hook, then one sentence per student: one Explorer or Companion choice. Classify Nova, Pixel, Moon Compass, and Crystal Lantern quickly. Cut extra sharing first. | Gives one ownership choice and names at least one category. |
+| 0:04–0:15 | 11 min | **Protected Python teaching:** variables, values, assignment, strings, integers, and coordinates. Model `x = 240` as "store the integer 240 under the name x"; contrast `x = "240"`; have all three students predict and change a value in `starter.py`. | Runs Python, labels a string and integer, and predicts what a coordinate change means. |
+| 0:15–0:18 | 3 min | **Hard-boxed bootstrap:** guide `python3 make-my-world.py` once. At 0:18, use the fallback below for anyone not ready; do not take time back from Python practice. | Has a Student Workspace, or moves to the fallback without waiting. |
+| 0:18–0:27 | 9 min | Students replace every ownership `TODO` in `explorer.py` and `companion.py`, then run both. Prompt for Explorer name/appearance/personality/interest and Companion name/kind/personality/specialty/future ability. | Runs both files with concrete personal choices; explains that future ability is planning text only. |
+| 0:27–0:35 | 8 min | Edit the **student-owned** `projects/moon-compass/objects/compass.yaml`, predict, validate `../my-explore-world/projects/moon-compass`, and launch M02 with that package. | Shows the Student Workspace path, a coordinate prediction, `valid: ...`, and the prop. |
+| 0:35–0:40 | 5 min | Change one coordinate from evidence, relaunch, use the quoted-integer bug, and complete M02. | Explains the type fix, observed movement, and mission completion. |
+| 0:40–0:43 | 3 min | **Discovery only if time remains:** coordinates, maps, navigation; fiction vs fact for the Moon Compass. | Says what coordinates describe and one real-compass fact. |
+| 0:43–0:45 | 2 min | Exit share and S03 preview. Git close is asynchronous and only for Git-managed classes. | Gives one Python answer and one ownership or movement answer. |
 
 **Teacher response to every future ability:** "Great. It cannot do all of
 that yet. As you learn more Python, you'll teach it how." Do not promise a
 specific runtime feature.
 
-**Teacher cut line:** At 0:34, stop creative changes. Protect the variables
-explanation, one run of the student's own `explorer.py`, one valid package,
-one visible placement, and a spoken coordinate prediction. If relaunch takes
-too long, demonstrate the predicted adjustment once. Shorten Discovery to its
-fiction-vs-fact table before cutting Python. Finish Git asynchronously.
+**Teacher cut line — setup fallback and cut order:** Bootstrap stops at 0:18 whether or not every
+device is ready. A student with setup trouble continues the Python lesson in
+`lessons/sessions/s02/student/starter.py`; for the package step, they direct
+the teacher's prepared Student Workspace on the shared screen and make the
+prediction aloud. Finish their local bootstrap after class. Never consume the
+0:04–0:15 teaching block or the 0:18–0:27 Python practice block with setup
+troubleshooting.
+
+Cut in this order: Discovery first; then extra discussion, second coordinate
+changes, and extra customization; never the core Python explanation/practice.
+The opening share-out is one sentence each and categories are a quick check,
+not a discussion. Protect one Python run, both personal-file runs when setup
+works, one valid student-owned package, one visible placement, and a spoken
+prediction. Finish Git asynchronously.
 
 ## Student task and prediction
 
@@ -87,18 +100,19 @@ python ../my-explore-world/companion.py
 ```
 
 Personalize the same `object_name`, `x`, `y`, and `color` in the Python starter
-and the declarative object file. Before launching, sketch or say where `(x, y)`
-should place the prop — an explorer's first instrument belongs somewhere it
-would actually be noticed.
+and the student-owned declarative object file at
+`../my-explore-world/projects/moon-compass/objects/compass.yaml`. Before
+launching, sketch or say where `(x, y)` should place the prop — an explorer's
+first instrument belongs somewhere it would actually be noticed.
 
 ```console
 python lessons/sessions/s02/student/starter.py
-explore-package validate lessons/sessions/s02/student/explorer-package
+explore-package validate ../my-explore-world/projects/moon-compass
 explore-package trail \
   examples/explorer-packages/nova-character \
   examples/explorer-packages/pixel-companion \
   examples/explorer-packages/crystal-lantern \
-  lessons/sessions/s02/student/explorer-package \
+  ../my-explore-world/projects/moon-compass \
   --player "nova-character:nova" \
   --mission-id "create-a-classroom-object" \
   --name "S02 Place Your First Prop"
@@ -138,8 +152,9 @@ Point to `student/python-notes.md`, then ask a few students each:
 
 - **Python:** What is a variable? Which values today were strings? Which were
   integers? What does changing `x` do?
-- **Ownership:** What is your explorer called? Your companion? What trait did
-  you choose? What is one future ability you want to program?
+- **Ownership:** Name the Explorer's appearance, personality, and interest or
+  favorite subject. Name the Companion's kind, personality, specialty or
+  interest, and future ability. Why is that ability only a plan today?
 - **Discovery:** What do coordinates describe? How is Nova's fictional Moon
   Compass different from a real magnetic compass?
 
@@ -159,8 +174,10 @@ greets when the student presses E nearby; it does not move. The local M02 trail
 completes after both world objects (Moon Compass and Crystal Lantern) have
 been interacted with; greeting Pixel does not count toward `Visited`.
 
-`make-my-world.py` creates `my-explore-world` next to the course folder. On a
-second run it reports every existing file as `kept` and changes nothing.
+`make-my-world.py` creates `my-explore-world` next to the course folder and
+seeds `projects/moon-compass/`. On a second run it reports every existing file
+as `kept` and changes nothing. Replacing the Course Kit cannot touch the
+student-owned package.
 
 ## Bounded AI assistance
 
@@ -205,12 +222,13 @@ object contribution and the existing package schema.
 - Discovery answer: coordinates describe position. The Moon Compass is
   fictional; a real magnetic compass responds to Earth's magnetic field and
   points roughly toward magnetic north.
-- `starter.py` is disposable practice for today. `my-explore-world` is the
-  student's own work; `make-my-world.py` never overwrites it, and a new Course
-  Kit never contains it. If a student deletes a personal file by accident,
-  rerunning `make-my-world.py` restores only the blank template for that file.
-- Accept any explorer, companion, and future ability that fit the class's
-  norms. Do not collect them; they stay on the student's computer.
+- `starter.py` and the lesson package are disposable Course Kit seeds.
+  `my-explore-world` is the student's own work; edit, validate, and launch only
+  `projects/moon-compass/`. `make-my-world.py` never overwrites it, and a new
+  Course Kit never contains it. If a student deletes one workspace file by
+  accident, rerunning bootstrap restores only that missing seed file.
+- Accept any complete Explorer and Companion choice set that fits the class's
+  norms. Do not collect it; it stays on the student's computer.
 - The "first instrument" framing and placement question are narrative only —
   do not imply the compass is saved, persisted, or carried between sessions.
   S03 introduces its clue-and-reveal behavior as new authored content, not as

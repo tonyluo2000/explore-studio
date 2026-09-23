@@ -62,8 +62,12 @@ def test_session_runbook_uses_v2_structure_and_canonical_mission(
     assert mission_id in runbook
     assert "Clock anchor" in runbook
     assert "Range" in runbook
-    assert "0:00–0:05" in runbook
-    assert "0:42–0:45" in runbook
+    if session == "s02":
+        assert "0:00–0:04" in runbook
+        assert "0:43–0:45" in runbook
+    else:
+        assert "0:00–0:05" in runbook
+        assert "0:42–0:45" in runbook
     assert "explain intent → predict → ask one bounded question → test →" in runbook
     assert "revise → explain accepted code" in runbook
     assert all(section.lower() in runbook.lower() for section in REQUIRED_RUNBOOK_SECTIONS)
@@ -168,10 +172,11 @@ def test_session_specific_v2_support_is_present() -> None:
     s03 = (MATERIALS_ROOT / "s03" / "student" / "task-card.md").read_text(encoding="utf-8")
     s04_runbook = (MATERIALS_ROOT / "s04" / "teacher-runbook.md").read_text(encoding="utf-8")
     s05 = (MATERIALS_ROOT / "s05" / "student" / "task-card.md").read_text(encoding="utf-8")
+    normalized_s02 = " ".join(s02.split())
 
     assert "first-day" in s01.lower()
     assert "Python value" in s02 and "YAML field" in s02 and "Visible world result" in s02
-    assert "x = 80–800" in s02 and "y = 100–500" in s02
+    assert "x = 80–800" in normalized_s02 and "y = 100–500" in normalized_s02
     assert all(item in s02 for item in ("Invalid color", "YAML indentation", "Off-screen"))
     assert "edit → predict → run → restore" in s03
     assert all(

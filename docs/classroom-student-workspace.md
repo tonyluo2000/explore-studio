@@ -84,6 +84,7 @@ my-explore-world/          Student Workspace: belongs to the student
 ├── explorer.py
 ├── companion.py
 └── projects/
+    └── moon-compass/      Editable S02 Explorer Package
 ```
 
 **Course updates never overwrite student work.** This boundary is enforced in
@@ -98,9 +99,16 @@ three places:
   `my-explore-world` member, so a kit build can never absorb or publish a
   student's work.
 
-The templates contain `TODO` placeholders only, never a real student's
-choices. Nothing in the workspace is uploaded, and it needs no Git, account,
-or network. Lesson files such as `starter.py` stay in the Course Kit as
+The ownership templates contain `TODO` placeholders only, never a real
+student's choices. The Course Kit also carries a reviewed Moon Compass seed;
+bootstrap copies its package files into `projects/moon-compass/` only when the
+corresponding student-owned files are missing. Students edit, validate, and
+launch the Student Workspace copy. Rerunning bootstrap keeps every existing
+package file byte-for-byte, and replacing or re-extracting the Course Kit
+cannot reach it.
+
+Nothing in the workspace is uploaded, and it needs no Git, account, or
+network. Lesson files such as `starter.py` stay in the Course Kit as disposable
 practice for that day; replacing the kit resets them.
 
 On the Git-managed path the same command, run from the student repository

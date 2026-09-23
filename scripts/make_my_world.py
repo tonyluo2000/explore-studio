@@ -8,8 +8,9 @@ python3 make-my-world.py
 
 The Course Kit (``explore-studio-course``) is replaceable: a teacher may hand
 out a newer copy at any time. The Student Workspace this command creates
-(``my-explore-world``, next to the Course Kit by default) belongs to the
-student and must survive every Course Kit update. So this command:
+(``my-explore-world``, next to the Course Kit by default) holds the student's
+Explorer, Companion, and editable Explorer Packages. It belongs to the student
+and must survive every Course Kit update. So this command:
 
 - creates only files that are missing, and never overwrites an existing file;
 - is safe to run again, which is how a student recovers a deleted template;
@@ -27,6 +28,8 @@ from pathlib import Path
 
 WORKSPACE_NAME = "my-explore-world"
 TEMPLATE_DIR_NAME = "my-world-template"
+S02_PACKAGE_SEED = Path("lessons/sessions/s02/student/explorer-package")
+STUDENT_S02_PACKAGE = Path("projects/moon-compass")
 KIT_MARKERS = ("START-HERE.md", "course-materials.json")
 
 
@@ -48,6 +51,15 @@ def default_workspace_root() -> Path:
     return Path(__file__).resolve().parent.parent / WORKSPACE_NAME
 
 
+def default_s02_package_seed_root() -> Path:
+    """Return the S02 package seed in the Course Kit or source checkout."""
+    here = Path(__file__).resolve().parent
+    kit_seed = here / S02_PACKAGE_SEED
+    if kit_seed.is_dir():
+        return kit_seed
+    return here.parent / S02_PACKAGE_SEED
+
+
 def _find_course_kit(path: Path) -> Path | None:
     """Return the Course Kit folder that contains ``path``, if any."""
     for candidate in (path, *path.parents):
@@ -56,7 +68,7 @@ def _find_course_kit(path: Path) -> Path | None:
     return None
 
 
-def make_my_world(workspace_root=None, template_root=None) -> dict:
+def make_my_world(workspace_root=None, template_root=None, package_seed_root=None) -> dict:
     """Copy every missing template file into the workspace; keep every existing file.
 
     Returns a receipt listing the workspace path and the relative paths that
@@ -64,9 +76,14 @@ def make_my_world(workspace_root=None, template_root=None) -> dict:
     """
     workspace = Path(workspace_root).resolve() if workspace_root else default_workspace_root()
     template = Path(template_root).resolve() if template_root else default_template_root()
+    package_seed = (
+        Path(package_seed_root).resolve() if package_seed_root else default_s02_package_seed_root()
+    )
 
     if not template.is_dir():
         raise WorkspaceError(f"cannot find the {TEMPLATE_DIR_NAME} folder at {template}")
+    if not package_seed.is_dir():
+        raise WorkspaceError(f"cannot find the S02 Moon Compass seed at {package_seed}")
     if workspace.exists() and not workspace.is_dir():
         raise WorkspaceError(f"{workspace} exists and is not a folder")
     kit = _find_course_kit(workspace)
@@ -80,17 +97,19 @@ def make_my_world(workspace_root=None, template_root=None) -> dict:
 
     created: list[str] = []
     kept: list[str] = []
-    for source in sorted(path for path in template.rglob("*") if path.is_file()):
-        relative = source.relative_to(template)
-        if "__pycache__" in relative.parts or relative.name == ".DS_Store":
-            continue
-        destination = workspace / relative
-        if destination.exists() or destination.is_symlink():
-            kept.append(relative.as_posix())
-            continue
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, destination)
-        created.append(relative.as_posix())
+    sources = ((template, Path()), (package_seed, STUDENT_S02_PACKAGE))
+    for source_root, destination_root in sources:
+        for source in sorted(path for path in source_root.rglob("*") if path.is_file()):
+            relative = destination_root / source.relative_to(source_root)
+            if "__pycache__" in relative.parts or relative.name == ".DS_Store":
+                continue
+            destination = workspace / relative
+            if destination.exists() or destination.is_symlink():
+                kept.append(relative.as_posix())
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+            created.append(relative.as_posix())
     return {"workspace": workspace, "created": created, "kept": kept}
 
 
@@ -116,7 +135,9 @@ def main(argv=None) -> int:
         print(f"  created  {relative}")
     for relative in receipt["kept"]:
         print(f"  kept     {relative}  (already yours, not changed)")
-    print("Open explorer.py and companion.py there and make them your own.")
+    print(
+        "Open explorer.py, companion.py, and projects/moon-compass there " "and make them your own."
+    )
     return 0
 
 

@@ -15,9 +15,9 @@ changes or replaces a file that is already here.
 
 | File or folder | What it is |
 |---|---|
-| `explorer.py` | Who your explorer is. |
-| `companion.py` | Who your companion is, and one thing you want to teach it someday. |
-| `projects/` | Space for your own world projects later in the course. |
+| `explorer.py` | Your explorer's name, appearance, personality, and favorite subject or interest. |
+| `companion.py` | Your companion's name, kind, personality, specialty or interest, and one future ability. |
+| `projects/moon-compass/` | Your editable S02 Explorer Package. Validate and launch this copy. |
 
 Run your files from inside this folder:
 
@@ -25,6 +25,16 @@ Run your files from inside this folder:
 python explorer.py
 python companion.py
 ```
+
+The Moon Compass package is also yours. From the Course Kit folder, validate it
+with:
+
+```console
+explore-package validate ../my-explore-world/projects/moon-compass
+```
+
+Running `make-my-world.py` again never changes that package. A fresh seed is
+copied only when a file is missing.
 
 Nothing in this folder is uploaded, and no account is involved. Keep a backup
 copy if your teacher suggests one.

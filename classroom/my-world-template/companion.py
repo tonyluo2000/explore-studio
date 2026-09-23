@@ -7,6 +7,7 @@
 companion_name = "TODO: your companion's name"
 companion_kind = "TODO: what kind of companion it is"
 personality = "TODO: one personality trait"
+specialty = "TODO: one specialty or interest"
 
 # One thing you want to teach your companion later in the course.
 # Today this is only a plan. Your companion cannot do it yet:
@@ -16,4 +17,5 @@ future_ability = "TODO: one thing you want your companion to do someday"
 print("Companion:", companion_name)
 print("Kind:", companion_kind)
 print("Personality:", personality)
+print("Specialty:", specialty)
 print("Someday it will:", future_ability)

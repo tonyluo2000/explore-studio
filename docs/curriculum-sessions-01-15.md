@@ -148,8 +148,9 @@ Engine charged in S09 is judged by the Weather Reader in S10.
 - **Bounded AI role:** Review variable names after the student explains each one.
 - **Course identity:** Opens with the explorer/companion share-out and the
   Explorer / Companion / Tool / World object distinction. Students create
-  their own `my-explore-world` (`explorer.py`, `companion.py`, one future
-  ability as a string). Python Notes plus a short Discovery on coordinates,
+  their own `my-explore-world`: complete Explorer and Companion choices plus
+  one future ability as planning text, and an editable Moon Compass package in
+  `projects/moon-compass/`. Python Notes plus a short Discovery on coordinates,
   maps, and navigation. Pixel appears as a static character.
 - **Continuity:** Ends with a light narrative handoff — next session this same
   static instrument gains a clue and reveal (S03); no runtime state carries over.

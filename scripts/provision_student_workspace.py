@@ -38,9 +38,10 @@ GENERATED_PATHS = (
 READINESS_CHECK_SOURCE = "scripts/check_computer_readiness.py"
 READINESS_CHECK_TARGET = "check-my-computer.py"
 READINESS_DOC = "computer-readiness.md"
-#: The Student Workspace bootstrap ships in the Course Kit as templates plus one
-#: no-overwrite command. The student's own ``my-explore-world`` folder is created
-#: on the student's computer, outside the kit, and is never provisioned here.
+#: The Student Workspace bootstrap ships in the Course Kit as ownership
+#: templates, the reviewed S02 package seed, and one no-overwrite command. The
+#: student's own ``my-explore-world`` folder is created on the student's
+#: computer, outside the kit, and is never provisioned here.
 WORKSPACE_BOOTSTRAP_SOURCE = "scripts/make_my_world.py"
 WORKSPACE_BOOTSTRAP_TARGET = "make-my-world.py"
 WORKSPACE_TEMPLATE_SOURCE = "classroom/my-world-template"

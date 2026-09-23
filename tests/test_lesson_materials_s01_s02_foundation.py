@@ -22,6 +22,7 @@ SESSIONS = PROJECT_ROOT / "lessons" / "sessions"
 EXAMPLES = PROJECT_ROOT / "examples" / "explorer-packages"
 WEBSITE = PROJECT_ROOT / "course4teen-website"
 PIXEL_ROOT = EXAMPLES / "pixel-companion"
+STUDENT_MOON_COMPASS = "../my-explore-world/projects/moon-compass"
 
 PYTHON_NOTES_SECTIONS = (
     "## 1. Python concept",
@@ -44,7 +45,17 @@ def _normalized(path: Path) -> str:
 
 def _trail_packages(task_card: str) -> list[str]:
     command = task_card.split("explore-package trail", 1)[1].split("--player", 1)[0]
-    return re.findall(r"(?:examples/explorer-packages|lessons/sessions)/[\w/-]+", command)
+    return re.findall(
+        r"(?:examples/explorer-packages|lessons/sessions)/[\w/-]+"
+        r"|\.\./my-explore-world/projects/[\w/-]+",
+        command,
+    )
+
+
+def _source_package_path(package: str) -> Path:
+    if package == STUDENT_MOON_COMPASS:
+        return SESSIONS / "s02" / "student" / "explorer-package"
+    return PROJECT_ROOT / package
 
 
 # --- S01: course identity without teaching S02 early -------------------------------------
@@ -185,17 +196,43 @@ def test_s02_runbook_fits_45_minutes_and_protects_python():
     runbook = _read(SESSIONS / "s02" / "teacher-runbook.md")
 
     for anchor in (
-        "0:00–0:05",
-        "0:05–0:10",
-        "0:10–0:15",
-        "0:15–0:25",
-        "0:25–0:34",
-        "0:34–0:39",
-        "0:39–0:42",
-        "0:42–0:45",
+        "0:00–0:04",
+        "0:04–0:15",
+        "0:15–0:18",
+        "0:18–0:27",
+        "0:27–0:35",
+        "0:35–0:40",
+        "0:40–0:43",
+        "0:43–0:45",
     ):
         assert f"| {anchor} |" in runbook
-    assert "Shorten Discovery to its" in runbook and "before cutting Python" in runbook
+    normalized = " ".join(runbook.split())
+    assert "Protected Python teaching" in runbook
+    assert "Hard-boxed bootstrap" in runbook
+    assert "Bootstrap stops at 0:18" in normalized
+    assert "continues the Python lesson" in normalized
+    assert "Discovery first" in normalized
+    assert "extra discussion" in normalized
+    assert "never the core Python explanation/practice" in normalized
+
+
+def test_s02_requires_complete_concrete_student_ownership_choices():
+    task_card = _read(SESSIONS / "s02" / "student" / "task-card.md")
+    normalized = " ".join(task_card.split())
+
+    for field in (
+        "explorer_name",
+        "looks_like",
+        "favorite_subject",
+        "companion_name",
+        "companion_kind",
+        "specialty",
+        "future_ability",
+    ):
+        assert f"`{field}`" in task_card
+    assert "Replace **every** `TODO` string with concrete choices" in normalized
+    assert "do not leave Nova or Pixel as your answers" in normalized
+    assert "only a plan written as text" in normalized
 
 
 def test_s02_exit_check_covers_python_ownership_and_discovery():
@@ -206,15 +243,18 @@ def test_s02_exit_check_covers_python_ownership_and_discovery():
         "What is a variable?",
         "Which values today were strings?",
         "What does changing `x` do?",
-        "What is your explorer called?",
-        "one future ability",
+        "Explorer's name, appearance, personality",
+        "interest or favorite subject",
+        "Companion's name, kind, personality",
+        "specialty or interest",
+        "future ability",
         "What do coordinates describe?",
         "real magnetic compass",
     ):
         assert question in exit_check
 
 
-def test_s02_starter_and_m02_package_are_unchanged():
+def test_s02_starter_and_m02_seed_package_are_unchanged():
     package = load_explorer_package(SESSIONS / "s02" / "student" / "explorer-package")
 
     assert package.is_loaded, package.all_issues
@@ -227,6 +267,18 @@ def test_s02_starter_and_m02_package_are_unchanged():
     )
 
 
+def test_s02_validation_and_trail_use_only_the_student_owned_moon_compass():
+    for material in (
+        SESSIONS / "s02" / "student" / "task-card.md",
+        SESSIONS / "s02" / "teacher-runbook.md",
+    ):
+        source = _read(material)
+        assert f"explore-package validate {STUDENT_MOON_COMPASS}" in source
+        assert STUDENT_MOON_COMPASS in _trail_packages(source)
+        command_section = source.split("explore-package validate", 1)[1]
+        assert "lessons/sessions/s02/student/explorer-package" not in command_section
+
+
 def test_s02_trail_adds_static_pixel_without_changing_m02_completion():
     task_card = _read(SESSIONS / "s02" / "student" / "task-card.md")
     runbook = _read(SESSIONS / "s02" / "teacher-runbook.md")
@@ -237,7 +289,7 @@ def test_s02_trail_adds_static_pixel_without_changing_m02_completion():
     assert f'--mission-id "{MISSION_02_ID}"' in task_card
 
     planned = plan_local_classroom_trail(
-        tuple(PROJECT_ROOT / package for package in packages),
+        tuple(_source_package_path(package) for package in packages),
         player_qualified_id="nova-character:nova",
     )
     assert planned.is_planned, planned.issues
