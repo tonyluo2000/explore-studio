@@ -5,6 +5,7 @@ import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import NovaPixelScene from "../../../components/NovaPixelScene";
 import CoordinateMap from "../../../components/CoordinateMap";
+import S02TrailMap from "../../../components/S02TrailMap";
 import { classSessions, formatSessionDate } from "../../../../lib/calendar";
 
 export const metadata: Metadata = {
@@ -17,7 +18,11 @@ export const metadata: Metadata = {
 const session = classSessions.find((s) => s.id === "S02")!;
 
 const bridgeRows = [
-  { python: "object_name", field: "name", result: "The label shown for your prop" },
+  {
+    python: "object_name",
+    field: "name",
+    result: "Stored as your prop’s name. Names are not drawn on screen yet.",
+  },
   { python: "x", field: "x", result: "Left or right. Larger moves right." },
   { python: "y", field: "y", result: "Up or down. Larger moves down." },
   { python: "color", field: "color", result: "The named fill color" },
@@ -42,8 +47,33 @@ const roles = [
   {
     kind: "World object",
     name: "Crystal Lantern",
-    text: "Something that is part of the world.",
+    text: "Something that is part of the world. The trail’s destination.",
   },
+];
+
+type Wiring = "trail" | "card" | "plan" | "stored";
+
+const wiringLabel: Record<Wiring, string> = {
+  trail: "Changes the Trail",
+  card: "Card only",
+  plan: "Plan only",
+  stored: "Stored, not drawn",
+};
+
+const valueRows: { values: string[]; file: string; wiring: Wiring }[] = [
+  {
+    values: ["explorer_name", "looks_like", "personality", "favorite_subject"],
+    file: "explorer.py",
+    wiring: "card",
+  },
+  {
+    values: ["companion_name", "companion_kind", "personality", "specialty"],
+    file: "companion.py",
+    wiring: "card",
+  },
+  { values: ["future_ability"], file: "companion.py", wiring: "plan" },
+  { values: ["x", "y", "color"], file: "compass.yaml", wiring: "trail" },
+  { values: ["name"], file: "compass.yaml", wiring: "stored" },
 ];
 
 const supportedColors = [
@@ -75,6 +105,7 @@ const slides: Slide[] = [
         <NovaPixelScene />
         <p className="slide-lede">
           Today: use Python to start creating your own explorer and companion.
+          Nova and Pixel are the class examples.
         </p>
         <pre className="slide-code">
           <code>{`explorer_name = "Nova"
@@ -133,15 +164,21 @@ companion_name = "Pixel"`}</code>
     ),
   },
   {
+    kicker: "Your trail today",
+    heading: "Start, compass, lantern",
+    body: <S02TrailMap />,
+  },
+  {
     kicker: "Explorers need tools",
     heading: "Your first expedition tool",
     body: (
       <>
         <p>
-          The Moon Compass is the expedition&rsquo;s first instrument. Where
-          you place it is a world decision, not just a coordinate exercise
-          &mdash; put it somewhere an explorer would actually notice it and
-          want to reach.
+          The Moon Compass is the expedition&rsquo;s first instrument, and{" "}
+          <strong>you</strong> decide where it lives. The Crystal Lantern is
+          already in the world and marks the end of the trail. Put the compass
+          somewhere an explorer would actually notice it and want to reach on
+          the way.
         </p>
         <p>
           <strong>Mission:</strong> <code>create-a-classroom-object</code>
@@ -232,6 +269,93 @@ color = "purple"`}</code>
                   Course updates never replace them.
                 </td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+      </>
+    ),
+  },
+  {
+    kicker: "Designed by you",
+    heading: "These Python values describe your explorer",
+    body: (
+      <>
+        <div className="card-compare">
+          <div>
+            <pre className="slide-code">
+              <code>{`explorer_name = "Comet"
+looks_like = "a bright orange scarf"
+personality = "brave"
+favorite_subject = "volcanoes"`}</code>
+            </pre>
+            <p className="card-arrow" aria-hidden="true">
+              run it &darr;
+            </p>
+            <pre className="id-card" aria-label="Printed Explorer Card">
+              <code>{`MY EXPLORER CARD  (designed by me)
+Name:          Comet
+Looks like:    a bright orange scarf
+Personality:   brave
+Interested in: volcanoes`}</code>
+            </pre>
+          </div>
+          <div>
+            <pre className="slide-code">
+              <code>{`companion_name = "Moss"
+companion_kind = "tiny rock turtle"
+personality = "patient"
+specialty = "finding shiny stones"
+future_ability = "light up dark caves"`}</code>
+            </pre>
+            <p className="card-arrow" aria-hidden="true">
+              run it &darr;
+            </p>
+            <pre className="id-card" aria-label="Printed Companion Card">
+              <code>{`MY COMPANION CARD  (designed by me)
+Name:        Moss
+Kind:        tiny rock turtle
+Personality: patient
+Specialty:   finding shiny stones
+PLAN for later, not built yet:
+  Someday it will: light up dark caves`}</code>
+            </pre>
+          </div>
+        </div>
+        <p>
+          Comet and Moss are made-up samples. This card is the new-workspace
+          look. If you set up these files in an earlier class, running them
+          prints your earlier lines instead &mdash; both are correct. Either
+          way, your output shows <strong>your</strong> values.
+        </p>
+        <div className="slide-map-wrap">
+          <table className="slide-map slide-map-compact">
+            <caption className="slide-map-caption">What each value does today</caption>
+            <thead>
+              <tr>
+                <th scope="col">Values</th>
+                <th scope="col">Changes the Trail?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {valueRows.map((row) => (
+                <tr key={`${row.file}-${row.values.join("-")}`}>
+                  <th scope="row">
+                    <span className="wiring-values">
+                      {row.values.map((value) => (
+                        <code key={value}>{value}</code>
+                      ))}
+                    </span>
+                    <span className="wiring-file">
+                      in <code>{row.file}</code>
+                    </span>
+                  </th>
+                  <td>
+                    <span className={`wiring-badge wiring-${row.wiring}`}>
+                      {wiringLabel[row.wiring]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

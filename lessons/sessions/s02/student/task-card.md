@@ -30,9 +30,27 @@ Your companion cannot do that yet. As you learn more Python, you'll teach it.
 | Tool | Moon Compass | Something an explorer uses. Today you place it. |
 | World object | Crystal Lantern | Something that is part of the world. |
 
+Nova and Pixel are the **class examples**. Your own Explorer and Companion
+live in your own files (below).
+
 Pixel appears in today's Trail and says hello when you press E nearby. Pixel
 stays where it was placed: it does not follow Nova or make its own decisions
 yet. Those are things you'll learn to program over the year.
+
+## Your trail today
+
+![Map of the S02 Trail: Nova starts in the middle, step 1 is the Moon Compass at (240, 180), step 2 is the Crystal Lantern at (120, 460).](trail-map.svg)
+
+- **Start:** you walk as Nova, in the middle of the screen.
+- **1 — Moon Compass (your tool):** it sits wherever **your** `x` and `y`
+  put it, in **your** color.
+- **2 — Crystal Lantern (the destination):** already part of the world, in the
+  bottom-left corner. Walk near it and the screen says *The lantern glows
+  warmly.*
+- Press **E** at both. `Visited 2 / 2` completes the mission, in any order.
+
+In the Trail every thing is a plain colored box. Names are not drawn on
+screen; the labels and symbols are only on the map.
 
 ## Python first: variables and values
 
@@ -61,9 +79,17 @@ python3 make-my-world.py
 It creates `my-explore-world` next to your course folder. If you run it again,
 it only adds missing files and never replaces your work.
 
+Already have a `my-explore-world` folder from an earlier class? Keep using it.
+Open your existing `explorer.py` and `companion.py` and edit your own values
+there — you do not need to run `make-my-world.py` again, and you do not need
+to replace your files to get today's credit.
+
 Open `my-explore-world/explorer.py` and `my-explore-world/companion.py` in your
 editor. Replace **every** `TODO` string with concrete choices for your own
-Explorer and Companion — do not leave Nova or Pixel as your answers. Choose:
+Explorer and Companion — do not leave Nova or Pixel as your answers. If you
+already personalized these files in an earlier class, there won't be any
+`TODO` left to replace — just check that your own values are still the ones
+there. Choose:
 
 - Explorer: `explorer_name`, `looks_like`, `personality`, and
   `favorite_subject`;
@@ -78,8 +104,42 @@ python ../my-explore-world/explorer.py
 python ../my-explore-world/companion.py
 ```
 
-Checkpoint: every printed value is yours, and you can say why each one is a
-string.
+If your workspace is new this year, each file prints a card:
+
+```text
+==========================================
+  MY EXPLORER CARD  (designed by me)
+==========================================
+Name:          Comet
+Looks like:    a bright orange scarf
+...
+```
+
+If you set up `explorer.py` and `companion.py` in an earlier class, running
+them prints your earlier lines instead, for example:
+
+```text
+Explorer: Comet
+Looks like: a bright orange scarf
+...
+```
+
+`Comet` is a made-up sample. Both outputs are correct — the format doesn't
+matter. Your output shows **your** values either way.
+
+Checkpoint: every printed value in your output is yours, and you can say why
+each one is a string.
+
+### What each value does today
+
+| Values | Edit in | You see it | Changes the Trail? |
+|---|---|---|---|
+| Explorer: `explorer_name`, `looks_like`, `personality`, `favorite_subject` | `explorer.py` | Your explorer output (Card or printed lines) | No. Display only. |
+| Companion: `companion_name`, `companion_kind`, `personality`, `specialty` | `companion.py` | Your companion output (Card or printed lines) | No. Display only. |
+| Companion: `future_ability` | `companion.py` | "PLAN for later" in your output | No. A plan for later. |
+| Moon Compass: `x`, `y` | `compass.yaml` | Where the compass box sits | **Yes.** It moves. |
+| Moon Compass: `color` | `compass.yaml` | The compass box color | **Yes.** |
+| Moon Compass: `name` | `compass.yaml` | Stored in the file | No. Names are not drawn yet. |
 
 | File | What it is for |
 |---|---|
@@ -89,9 +149,11 @@ string.
 
 ## Your first expedition tool
 
-The Moon Compass is the expedition's first instrument. Where you place it is
-a world decision, not just a coordinate exercise: put it somewhere an
-explorer would actually notice it and want to reach.
+The Moon Compass is the expedition's first instrument, and **you** decide
+where it lives. The Crystal Lantern is already in the world and marks the end
+of the trail. Where you place the compass is a world decision, not just a
+coordinate exercise: put it somewhere an explorer would actually notice it and
+want to reach on the way.
 
 ## The bridge to the world
 
@@ -99,7 +161,7 @@ The YAML object file—not `starter.py`—drives the shared runtime.
 
 | Local Python value | Declarative YAML field | Visible world result |
 |---|---|---|
-| `object_name` | `name` | Label shown for the prop |
+| `object_name` | `name` | Stored as the prop's name (not drawn on screen yet) |
 | `x` | `x` | Left/right position; larger moves right |
 | `y` | `y` | Up/down position; larger moves down |
 | `color` | `color` | Named fill color |

@@ -32,12 +32,18 @@ explorer_name = "TODO: your explorer's name"
 looks_like = "TODO: your explorer's appearance"
 personality = "TODO: one personality trait"
 favorite_subject = "TODO: one interest or favorite subject"
-print("Explorer:", explorer_name)
+
+print("Name:         ", explorer_name)
 ```
 
-Your `companion.py` stores its name, kind, personality, specialty or interest,
-and one future ability. The future ability is planning text only; writing it
-does not create autonomous behavior.
+Running it prints your values: each `print` shows the value stored in one
+variable. A new workspace prints them as an **Explorer Card**; if you set up
+`explorer.py` in an earlier class, running it prints your earlier lines
+instead — both are correct. Your `companion.py` stores its name, kind,
+personality, specialty or interest, and one future ability, and prints them
+the same way. Your output shows your values; it does not change the Trail
+yet. The future ability is planning text only; writing it does not create
+autonomous behavior.
 
 ## 3. What the code means
 
@@ -121,5 +127,6 @@ Course Kit.
 2. Add `print(type(x))` and `print(type(color))` to the starter. What does
    Python say each type is?
 3. In `my-explore-world/explorer.py` and `companion.py`, replace every `TODO`
-   with concrete choices for your own Explorer and Companion, then run both
-   files.
+   with concrete choices for your own Explorer and Companion (or check your
+   existing values, if you set these up before), then run both files and
+   confirm your own values appear in the output.

@@ -15,8 +15,8 @@ changes or replaces a file that is already here.
 
 | File or folder | What it is |
 |---|---|
-| `explorer.py` | Your explorer's name, appearance, personality, and favorite subject or interest. |
-| `companion.py` | Your companion's name, kind, personality, specialty or interest, and one future ability. |
+| `explorer.py` | Your explorer's name, appearance, personality, and favorite subject or interest. Run it to print your Explorer Card. |
+| `companion.py` | Your companion's name, kind, personality, specialty or interest, and one future ability. Run it to print your Companion Card. |
 | `projects/moon-compass/` | Your editable S02 Explorer Package. Validate and launch this copy. |
 
 Run your files from inside this folder:
@@ -25,6 +25,10 @@ Run your files from inside this folder:
 python explorer.py
 python companion.py
 ```
+
+The cards show your values. They do not change the Trail yet: in S02 you
+walk as Nova, the class example, and your Moon Compass `x`, `y`, and `color`
+are what change the world.
 
 The Moon Compass package is also yours. From the Course Kit folder, validate it
 with:
