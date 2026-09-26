@@ -19,6 +19,7 @@ from engine.interactions._proximity import (
     _center_distance_sq,
     _validate_interaction_range,
 )
+from engine.rendering._classroom_environment import draw_classroom_backdrop
 from engine.rendering._classroom_sprites import draw_classroom_sprite
 from engine.scenes._scene import Scene
 
@@ -867,6 +868,8 @@ class ClassroomTrailScene(Scene):
 
     def render(self) -> None:
         super().render()
+        # Layers: backdrop and trail zones, world objects, NPCs, player, HUD.
+        draw_classroom_backdrop(self._renderer, self._mission.mission_id)
         for item in self._objects:
             world_object = item.world_object
             color = (
