@@ -459,7 +459,12 @@ def test_s02_trail_maps_draw_the_real_runtime_layout():
 
 def test_s02_maps_say_symbols_are_map_only_and_mark_the_destination():
     for source in (_normalized(TRAIL_MAP_SVG), " ".join(_read(TRAIL_MAP_TSX).split())):
-        assert "plain colored box" in source
+        known_entities = ("Nova", "Pixel", "Moon Compass", "Crystal Lantern")
+        assert all(name in source for name in known_entities)
+        assert "simple pictures" in source
+        assert "Names are not drawn on screen" in source
+        assert "labels and symbols are map-only" in source
+        assert "without a known picture" in source
         assert "Crystal Lantern · the destination" in source
         assert "Moon Compass · YOU place it" in source
         assert "class example" in source

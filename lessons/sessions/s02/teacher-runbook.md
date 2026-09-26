@@ -39,8 +39,10 @@ slide map) instead of describing the scene aloud. It is drawn to the real
 Moon Compass, the one thing the student places; step 2 is the Crystal
 Lantern, already in the world in the bottom-left corner, which is the trail's
 destination. Visiting both world objects in any order completes M02, exactly
-as before. In the runtime every thing is a plain colored box and no names are
-drawn; the map's symbols and labels are map-only.
+as before. In the Trail, Nova, Pixel, the Moon Compass, and Crystal Lantern
+appear as simple pictures. Names are not drawn on screen; the map's symbols and
+labels are map-only. A thing without a known picture still uses the plain
+colored-box fallback.
 
 **Four sentences carry the lesson.** Say them; do not add narration:
 
@@ -201,8 +203,9 @@ Moon Compass
 purple
 ```
 
-Validation reports `valid: moon-compass 0.1.0`. The prop appears as a colored
-box at its declared coordinates; its name is not drawn on screen. A larger x moves it right. Pixel stands near Nova's start and
+Validation reports `valid: moon-compass 0.1.0`. The prop appears as a simple
+Moon Compass picture at its declared coordinates; its name is not drawn on
+screen. A larger x moves it right. Pixel stands near Nova's start and
 greets when the student presses E nearby; it does not move. The local M02 trail
 completes after both world objects (Moon Compass and Crystal Lantern) have
 been interacted with; greeting Pixel does not count toward `Visited`.
