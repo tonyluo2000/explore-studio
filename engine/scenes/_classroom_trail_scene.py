@@ -19,6 +19,7 @@ from engine.interactions._proximity import (
     _center_distance_sq,
     _validate_interaction_range,
 )
+from engine.rendering._classroom_sprites import draw_classroom_sprite
 from engine.scenes._scene import Scene
 
 if TYPE_CHECKING:
@@ -433,6 +434,7 @@ class ClassroomTrailScene(Scene):
         *,
         mission: ClassroomTrailMission,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
+        player_qualified_id: str | None = None,
     ) -> None:
         super().__init__()
         if not isinstance(player, Character):
@@ -447,12 +449,17 @@ class ClassroomTrailScene(Scene):
             raise TypeError("npcs must contain only ClassroomTrailNPC values")
         if not isinstance(mission, ClassroomTrailMission):
             raise TypeError("mission must be a ClassroomTrailMission")
+        if player_qualified_id is not None and (
+            not isinstance(player_qualified_id, str) or not player_qualified_id.strip()
+        ):
+            raise ValueError("player_qualified_id must be a non-empty string when present")
         qualified_ids = tuple(item.qualified_id for item in (*objects, *npcs))
         if len(qualified_ids) != len(set(qualified_ids)):
             raise ValueError("objects and npcs must have unique qualified IDs")
 
         self._renderer = renderer
         self._player = player
+        self._player_qualified_id = player_qualified_id
         self._objects = tuple(sorted(objects, key=lambda item: item.qualified_id))
         self._npcs = tuple(sorted(npcs, key=lambda item: item.qualified_id))
         self._mission = mission
@@ -867,29 +874,56 @@ class ClassroomTrailScene(Scene):
                 if item.toggle is not None and item.qualified_id in self._toggle_on_qualified_ids
                 else world_object.color
             )
-            self._renderer.draw_rect(
+            if not draw_classroom_sprite(
+                self._renderer,
+                item.qualified_id,
                 world_object.x,
                 world_object.y,
                 world_object.width,
                 world_object.height,
                 color,
-            )
+            ):
+                self._renderer.draw_rect(
+                    world_object.x,
+                    world_object.y,
+                    world_object.width,
+                    world_object.height,
+                    color,
+                )
         for item in self._npcs:
             character = item.character
-            self._renderer.draw_rect(
+            if not draw_classroom_sprite(
+                self._renderer,
+                item.qualified_id,
                 character.x,
                 character.y,
                 character.width,
                 character.height,
                 character.color,
-            )
-        self._renderer.draw_rect(
+            ):
+                self._renderer.draw_rect(
+                    character.x,
+                    character.y,
+                    character.width,
+                    character.height,
+                    character.color,
+                )
+        if not draw_classroom_sprite(
+            self._renderer,
+            self._player_qualified_id,
             self._player.x,
             self._player.y,
             self._player.width,
             self._player.height,
             self._player.color,
-        )
+        ):
+            self._renderer.draw_rect(
+                self._player.x,
+                self._player.y,
+                self._player.width,
+                self._player.height,
+                self._player.color,
+            )
         self._renderer.draw_text(
             f"Visited {self.visited_count} / {self.total_objects}",
             _PROGRESS_X,

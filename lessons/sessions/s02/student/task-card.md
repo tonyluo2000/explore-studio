@@ -49,8 +49,9 @@ yet. Those are things you'll learn to program over the year.
   warmly.*
 - Press **E** at both. `Visited 2 / 2` completes the mission, in any order.
 
-In the Trail every thing is a plain colored box. Names are not drawn on
-screen; the labels and symbols are only on the map.
+In the Trail, Nova, Pixel, the Moon Compass, and Crystal Lantern appear as
+simple pictures. Names are not drawn on screen; the labels and symbols are
+map-only. A thing without a known picture still appears as a plain colored box.
 
 ## Python first: variables and values
 

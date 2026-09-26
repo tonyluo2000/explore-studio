@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -70 1120 830" width="1120" height="830" role="img" aria-labelledby="s02-map-title s02-map-desc">
   <title id="s02-map-title">S02 Trail map</title>
-  <desc id="s02-map-desc">A map of the 960 by 640 Trail screen for S02. Nova, the class example explorer, starts at (430, 270). Pixel, the class example companion, stands at (480, 310). Step 1: walk to the Moon Compass at (240, 180), the tool you place with x and y. Step 2: walk to the Crystal Lantern at (120, 460), the destination in the bottom-left corner. Visiting both world objects completes the mission. In the Trail each thing is a plain colored box; the symbols on this map are only there to help you read it.</desc>
+  <desc id="s02-map-desc">A map of the 960 by 640 Trail screen for S02. Nova, the class example explorer, starts at (430, 270). Pixel, the class example companion, stands at (480, 310). Step 1: walk to the Moon Compass at (240, 180), the tool you place with x and y. Step 2: walk to the Crystal Lantern at (120, 460), the destination in the bottom-left corner. Visiting both world objects completes the mission. In the Trail, Nova, Pixel, the Moon Compass, and Crystal Lantern appear as simple pictures. Names are not drawn on screen; the labels and symbols are map-only. A thing without a known picture still appears as a plain colored box.</desc>
   <!-- Original source-native map for Explore Studio. Boxes use the Trail's real
        sizes, positions, and named colors; symbols and labels are map-only. -->
   <style>

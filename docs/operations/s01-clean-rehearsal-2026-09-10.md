@@ -18,6 +18,13 @@ branch before the rehearsal. The temporary student checkout began at the exact
 pinned template tree; it did not reuse this repository's virtual environment or
 Python import path.
 
+## Later Course Kit platform pin
+
+On 2026-09-26, the Course Kit platform pin advanced to
+`715e6cadc3b797d538e5d988f796987d9e5be586` for the narrow S02 procedural
+sprite renderer. The original S01 rehearsal inputs and result above remain an
+unchanged historical record.
+
 ## Student flow exercised
 
 1. Fetched and detached the exact template commit into a new temporary Git

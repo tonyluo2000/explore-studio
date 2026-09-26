@@ -3,9 +3,11 @@
  * Crystal Lantern really are when M02 launches.
  *
  * Boxes use the Trail's real 960 × 640 window, positions, sizes, and named
- * colors (characters are 100 × 100, world objects 80 × 60). The small symbols
- * and labels are map-only: in the Trail each thing is a plain colored box and
- * no names are drawn. Hand-authored for this project; no third-party artwork.
+ * colors (characters are 100 × 100, world objects 80 × 60). In the Trail, the
+ * four named S02 entities appear as simple pictures and no names are drawn. The
+ * small symbols and labels are map-only; an entity without a known picture
+ * still uses the plain colored-box fallback. Hand-authored for this project;
+ * no third-party artwork.
  * The Course Kit copy is `lessons/sessions/s02/student/trail-map.svg`.
  */
 
@@ -212,8 +214,10 @@ export default function S02TrailMap() {
       <figcaption>
         Your trail today: walk from Nova to your <strong>Moon Compass</strong>{" "}
         (1), then to the <strong>Crystal Lantern</strong> (2). Visiting both, in
-        any order, completes the mission. In the Trail each thing is a plain
-        colored box; the symbols are map-only.
+        any order, completes the mission. In the Trail, Nova, Pixel, the Moon
+        Compass, and Crystal Lantern appear as simple pictures. Names are not
+        drawn on screen; the labels and symbols are map-only. A thing without a
+        known picture still appears as a plain colored box.
       </figcaption>
     </figure>
   );

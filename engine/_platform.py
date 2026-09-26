@@ -223,6 +223,48 @@ class Platform:
         rect = pygame.Rect(x, y, width, height)
         pygame.draw.rect(self._window, color, rect)
 
+    def draw_circle(
+        self,
+        center_x: int,
+        center_y: int,
+        radius: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled circle without exposing a Pygame surface or point type."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        pygame.draw.circle(self._window, color, (center_x, center_y), radius)
+
+    def draw_line(
+        self,
+        start_x: int,
+        start_y: int,
+        end_x: int,
+        end_y: int,
+        color: tuple[int, int, int],
+        width: int = 1,
+    ) -> None:
+        """Draw a line using only engine-owned scalar values."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        pygame.draw.line(
+            self._window,
+            color,
+            (start_x, start_y),
+            (end_x, end_y),
+            width,
+        )
+
+    def draw_polygon(
+        self,
+        points: tuple[tuple[int, int], ...],
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled polygon from immutable engine-owned points."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        pygame.draw.polygon(self._window, color, points)
+
     def draw_text(
         self,
         text: str,

@@ -421,6 +421,7 @@ def create_classroom_trail_scene(
         engine_objects,
         engine_npcs,
         mission=mission,
+        player_qualified_id=plan.player.qualified_id,
     )
 
 
