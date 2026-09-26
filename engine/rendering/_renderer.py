@@ -87,6 +87,36 @@ class Renderer:
         """
         self._platform.draw_rect(x, y, width, height, color)
 
+    def draw_circle(
+        self,
+        center_x: int,
+        center_y: int,
+        radius: int,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled circle through the platform boundary."""
+        self._platform.draw_circle(center_x, center_y, radius, color)
+
+    def draw_line(
+        self,
+        start_x: int,
+        start_y: int,
+        end_x: int,
+        end_y: int,
+        color: tuple[int, int, int],
+        width: int = 1,
+    ) -> None:
+        """Draw a line through the platform boundary."""
+        self._platform.draw_line(start_x, start_y, end_x, end_y, color, width)
+
+    def draw_polygon(
+        self,
+        points: tuple[tuple[int, int], ...],
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw a filled polygon through the platform boundary."""
+        self._platform.draw_polygon(points, color)
+
     def draw_text(
         self,
         text: str,
