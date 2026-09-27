@@ -24,8 +24,11 @@ On 2026-09-26, the Course Kit platform pin advanced to
 `715e6cadc3b797d538e5d988f796987d9e5be586` for the narrow S02 procedural
 sprite renderer. Later the same day it advanced to
 `107a6cd96ef797dd024ace6cd1f88551e69cdff7` for the S02 Trail visual
-composition pass (static M02 backdrop and fuller sprites). The original S01
-rehearsal inputs and result above remain an unchanged historical record.
+composition pass (static M02 backdrop and fuller sprites). On 2026-09-27 it
+advanced to `0fdd99c03393d6fdb83466d336b8e891ee7c9e80` for Nova V2 and the
+living M02 Moon Meadow (trusted sprite sheets, animation, and effects). The
+original S01 rehearsal inputs and result above remain an unchanged historical
+record.
 
 ## Student flow exercised
 
