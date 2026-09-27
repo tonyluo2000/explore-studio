@@ -462,7 +462,8 @@ def test_s02_maps_say_symbols_are_map_only_and_mark_the_destination():
         known_entities = ("Nova", "Pixel", "Moon Compass", "Crystal Lantern")
         assert all(name in source for name in known_entities)
         assert "simple pictures" in source
-        assert "Names are not drawn on screen" in source
+        assert "Names are not permanently drawn over characters or objects" in source
+        assert "[E] Talk to Pixel" in source
         assert "labels and symbols are map-only" in source
         assert "without a known picture" in source
         assert "Crystal Lantern · the destination" in source
@@ -479,7 +480,8 @@ def test_s02_task_card_shows_the_map_and_distinct_object_roles():
     assert "Moon Compass (your tool)" in trail and "**your** `x` and `y`" in trail
     assert "Crystal Lantern (the destination)" in trail
     assert lantern.when_near in trail, "quoted lantern text must be the real runtime text"
-    assert "Names are not drawn on screen" in trail
+    assert "Names are not permanently drawn over characters or objects" in trail
+    assert "`[E] Inspect Moon Compass`" in trail
 
 
 def test_s02_materials_never_claim_the_trail_draws_names():

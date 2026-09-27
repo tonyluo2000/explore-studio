@@ -1,16 +1,27 @@
-"""Original procedural sprites for the four S02 classroom examples.
+"""Original sprites for the four S02 classroom examples.
 
 This is intentionally a narrow identity allow-list, not the future generic
 Explorer Package ``asset_id`` pipeline. Unknown identities return ``False`` so
 the Trail can retain its rectangle rendering contract.
+
+Without a pose (every Trail except M02) each sprite is the static procedural
+drawing. Inside :func:`classroom_sprite_pose` (the M02 presentation layer)
+Nova, Pixel, and the Crystal Lantern draw a frame from their trusted sprite
+sheet when the renderer supports it and the entity color matches the art's
+declared accent; otherwise they draw a posed procedural fallback. A pose never
+changes the bounds a sprite is drawn into.
 """
 
 from __future__ import annotations
 
 import logging
 import math
-from collections.abc import Callable
-from typing import Protocol
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Final, Protocol
+
+from engine.animation import SpritePose
 
 Color = tuple[int, int, int]
 
@@ -40,7 +51,27 @@ class _SpriteRenderer(Protocol):
     def draw_polygon(self, points: tuple[tuple[int, int], ...], color: Color) -> None: ...
 
 
-SpriteDrawer = Callable[[_SpriteRenderer, int, int, int, int, Color], None]
+SpriteDrawer = Callable[..., None]
+
+#: Trusted sprite sheets for the course-owned examples. The Moon Compass is
+#: student-colored, so it stays procedural and tinted by the student's color.
+SPRITE_SHEET_IDS: Final = {
+    NOVA_QUALIFIED_ID: "characters/nova",
+    PIXEL_QUALIFIED_ID: "characters/pixel",
+    CRYSTAL_LANTERN_QUALIFIED_ID: "objects/crystal-lantern",
+}
+
+_ACTIVE_POSE: ContextVar[SpritePose | None] = ContextVar("classroom_sprite_pose", default=None)
+
+
+@contextmanager
+def classroom_sprite_pose(pose: SpritePose | None) -> Iterator[None]:
+    """Draw the enclosed ``draw_classroom_sprite`` call with *pose*."""
+    token = _ACTIVE_POSE.set(pose)
+    try:
+        yield
+    finally:
+        _ACTIVE_POSE.reset(token)
 
 
 _SHADOW: Color = (22, 30, 38)
@@ -75,14 +106,17 @@ def ellipse_points(
 class _Box:
     """Map whole-number percentages onto one entity's rendering bounds."""
 
-    def __init__(self, x: int, y: int, width: int, height: int) -> None:
+    def __init__(self, x: int, y: int, width: int, height: int, *, flip: bool = False) -> None:
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.small = min(width, height)
+        self.flip = flip
 
     def px(self, x_part: int) -> int:
+        if self.flip:
+            return self.x + self.width - self.width * x_part // 100
         return self.x + self.width * x_part // 100
 
     def py(self, y_part: int) -> int:
@@ -103,9 +137,10 @@ class _Box:
         bottom: int,
         color: Color,
     ) -> None:
-        x = self.px(left)
+        x = min(self.px(left), self.px(right))
         y = self.py(top)
-        renderer.draw_rect(x, y, max(1, self.px(right) - x), max(1, self.py(bottom) - y), color)
+        width = max(self.px(left), self.px(right)) - x
+        renderer.draw_rect(x, y, max(1, width), max(1, self.py(bottom) - y), color)
 
     def polygon(
         self,
@@ -155,13 +190,20 @@ def _draw_nova(
     width: int,
     height: int,
     accent: Color,
+    pose: SpritePose | None = None,
 ) -> None:
     """Draw a helmeted explorer with a backpack, filling most of its bounds.
 
     The silhouette spans 12-79% horizontally so Pixel, standing to Nova's
     right at the S02 start, stays visible beside rather than behind Nova.
+    A pose mirrors Nova, lowers the upper body by ``bob`` pixels, and lifts
+    one boot while walking; the silhouette stays inside the same bounds.
     """
-    box = _Box(x, y, width, height)
+    flip = pose is not None and pose.flip_x
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 25))
+    stride = 0 if pose is None else pose.stride
+    legs = _Box(x, y, width, height, flip=flip)
+    box = _Box(x, y + bob, width, height, flip=flip)
     outline = _mix(accent, (24, 28, 42), 0.78)
     shade = _mix(accent, (24, 28, 42), 0.35)
     highlight = _mix(accent, _WHITE, 0.45)
@@ -169,15 +211,17 @@ def _draw_nova(
     shell = (234, 238, 246)
     visor = (105, 213, 235)
 
-    box.shadow(renderer, 47, 32)
+    legs.shadow(renderer, 47, 32)
     box.rect(renderer, 12, 40, 32, 76, outline)
     box.rect(renderer, 15, 43, 30, 73, pack)
     box.rect(renderer, 17, 50, 28, 54, outline)
     renderer.draw_line(*box.point(22, 41), *box.point(33, 32), outline, _stroke(width, height) + 1)
-    box.rect(renderer, 30, 72, 47, 98, outline)
-    box.rect(renderer, 51, 72, 68, 98, outline)
-    box.rect(renderer, 32, 72, 45, 89, shade)
-    box.rect(renderer, 53, 72, 66, 89, shade)
+    left_lift = 4 if stride > 0 else 0
+    right_lift = 4 if stride < 0 else 0
+    legs.rect(renderer, 30, 72, 47, 98 - left_lift, outline)
+    legs.rect(renderer, 51, 72, 68, 98 - right_lift, outline)
+    legs.rect(renderer, 32, 72, 45, 89 - left_lift, shade)
+    legs.rect(renderer, 53, 72, 66, 89 - right_lift, shade)
     box.rect(renderer, 26, 40, 72, 79, outline)
     box.rect(renderer, 29, 43, 69, 76, accent)
     box.rect(renderer, 29, 68, 69, 72, shade)
@@ -200,13 +244,17 @@ def _draw_pixel(
     width: int,
     height: int,
     accent: Color,
+    pose: SpritePose | None = None,
 ) -> None:
     """Draw a friendly treaded robot with a screen face and bright eyes.
 
     Pixel is drawn smaller than the player and to the right of its bounds so
-    that, beside Nova at the S02 start, both silhouettes stay separate.
+    that, beside Nova at the S02 start, both silhouettes stay separate. A pose
+    may lower Pixel's head and body by ``bob`` pixels; the treads stay put.
     """
-    box = _Box(x, y, width, height)
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 25))
+    box = _Box(x, y + bob, width, height)
+    base = _Box(x, y, width, height)
     outline = _mix(accent, (18, 25, 54), 0.72)
     panel = _mix(accent, _WHITE, 0.38)
     screen = (18, 26, 52)
@@ -214,7 +262,7 @@ def _draw_pixel(
     bulb = (255, 168, 96)
     line_width = _stroke(width, height)
 
-    box.shadow(renderer, 64, 28)
+    base.shadow(renderer, 64, 28)
     renderer.draw_line(*box.point(64, 20), *box.point(64, 10), outline, line_width + 1)
     renderer.draw_circle(*box.point(64, 8), box.radius(5), bulb)
     box.rect(renderer, 34, 30, 94, 44, outline)
@@ -230,9 +278,9 @@ def _draw_pixel(
     box.rect(renderer, 43, 57, 85, 85, outline)
     box.rect(renderer, 46, 60, 82, 82, panel)
     renderer.draw_circle(*box.point(64, 70), box.radius(5), bulb)
-    box.rect(renderer, 39, 84, 89, 96, outline)
+    base.rect(renderer, 39, 84, 89, 96, outline)
     for wheel in (48, 64, 80):
-        renderer.draw_circle(*box.point(wheel, 90), box.radius(4), panel)
+        renderer.draw_circle(*base.point(wheel, 90), base.radius(4), panel)
 
 
 def _draw_moon_compass(
@@ -242,8 +290,12 @@ def _draw_moon_compass(
     width: int,
     height: int,
     accent: Color,
+    pose: SpritePose | None = None,
 ) -> None:
-    """Draw a thick student-colored ring around a legible compass face."""
+    """Draw a thick student-colored ring around a legible compass face.
+
+    A pose turns the needle by ``needle_angle`` radians around the face center.
+    """
     box = _Box(x, y, width, height)
     face = _mix(accent, _WHITE, 0.86)
     outline = _mix(accent, (24, 20, 52), 0.78)
@@ -273,20 +325,20 @@ def _draw_moon_compass(
         )
     needle = max(2, inner - tick - 1)
     half_width = max(2, radius // 6)
+    angle = 0.0 if pose is None else pose.needle_angle
+
+    def turn(dx: int, dy: int) -> tuple[int, int]:
+        if not angle:
+            return center_x + dx, center_y + dy
+        cos, sin = math.cos(angle), math.sin(angle)
+        return center_x + round(dx * cos - dy * sin), center_y + round(dx * sin + dy * cos)
+
     renderer.draw_polygon(
-        (
-            (center_x, center_y - needle),
-            (center_x + half_width, center_y),
-            (center_x - half_width, center_y),
-        ),
+        (turn(0, -needle), turn(half_width, 0), turn(-half_width, 0)),
         _NEEDLE,
     )
     renderer.draw_polygon(
-        (
-            (center_x, center_y + needle),
-            (center_x - half_width, center_y),
-            (center_x + half_width, center_y),
-        ),
+        (turn(0, needle), turn(-half_width, 0), turn(half_width, 0)),
         outline,
     )
     renderer.draw_circle(center_x, center_y, max(1, radius // 9), _WHITE)
@@ -299,8 +351,10 @@ def _draw_crystal_lantern(
     width: int,
     height: int,
     accent: Color,
+    pose: SpritePose | None = None,
 ) -> None:
     """Draw a framed lantern inside a layered glow that fills its bounds."""
+    del pose
     box = _Box(x, y, width, height)
     night = (38, 46, 60)
     frame = _mix(accent, (76, 47, 22), 0.68)
@@ -349,6 +403,36 @@ _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
 }
 
 
+def _draw_trusted_frame(
+    renderer: _SpriteRenderer,
+    qualified_id: str | None,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    color: Color,
+    pose: SpritePose,
+) -> bool:
+    """Draw the posed trusted frame; report False to request the fallback."""
+    asset_id = SPRITE_SHEET_IDS.get(qualified_id) if qualified_id is not None else None
+    draw_frame = getattr(renderer, "draw_sprite_frame", None)
+    if asset_id is None or draw_frame is None or pose.row is None or pose.column is None:
+        return False
+    return bool(
+        draw_frame(
+            asset_id,
+            pose.row,
+            pose.column,
+            x,
+            y,
+            width,
+            height,
+            flip_x=pose.flip_x,
+            accent=color,
+        )
+    )
+
+
 def draw_classroom_sprite(
     renderer: _SpriteRenderer,
     qualified_id: str | None,
@@ -362,8 +446,12 @@ def draw_classroom_sprite(
     drawer = _SPRITE_DRAWERS.get(qualified_id) if qualified_id is not None else None
     if drawer is None:
         return False
+    pose = _ACTIVE_POSE.get()
     try:
-        drawer(renderer, x, y, width, height, color)
+        if pose is None:
+            drawer(renderer, x, y, width, height, color)
+        elif not _draw_trusted_frame(renderer, qualified_id, x, y, width, height, color, pose):
+            drawer(renderer, x, y, width, height, color, pose)
     except Exception:
         _LOGGER.exception("Procedural sprite failed for %s; using rectangle fallback", qualified_id)
         return False

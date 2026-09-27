@@ -4,8 +4,9 @@
  *
  * Boxes use the Trail's real 960 × 640 window, positions, sizes, and named
  * colors (characters are 100 × 100, world objects 80 × 60). In the Trail, the
- * four named S02 entities appear as simple pictures and no names are drawn. The
- * small symbols and labels are map-only; an entity without a known picture
+ * four named S02 entities appear as simple pictures; names are not permanently
+ * drawn over them, though a nearby interaction prompt such as [E] Talk to Pixel
+ * may show one. The small symbols and labels are map-only; an entity without a known picture
  * still uses the plain colored-box fallback. Hand-authored for this project;
  * no third-party artwork.
  * The Course Kit copy is `lessons/sessions/s02/student/trail-map.svg`.
@@ -216,7 +217,10 @@ export default function S02TrailMap() {
         (1), then to the <strong>Crystal Lantern</strong> (2). Visiting both, in
         any order, completes the mission. In the Trail, Nova, Pixel, the Moon
         Compass, and Crystal Lantern appear as simple pictures. Names are not
-        drawn on screen; the labels and symbols are map-only. A thing without a
+        permanently drawn over characters or objects. When you are close enough
+        to interact, the Trail may show a short prompt such as [E] Talk to Pixel
+        or [E] Inspect Moon Compass. On the map, the labels and symbols are
+        map-only. A thing without a
         known picture still appears as a plain colored box.
       </figcaption>
     </figure>

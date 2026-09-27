@@ -20,7 +20,8 @@ from engine.interactions._proximity import (
     _validate_interaction_range,
 )
 from engine.rendering._classroom_environment import draw_classroom_backdrop
-from engine.rendering._classroom_sprites import draw_classroom_sprite
+from engine.rendering._classroom_sprites import classroom_sprite_pose, draw_classroom_sprite
+from engine.rendering._trail_presentation import TrailPresentation
 from engine.scenes._scene import Scene
 
 if TYPE_CHECKING:
@@ -487,6 +488,10 @@ class ClassroomTrailScene(Scene):
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
+        # Cosmetic only and M02-only: observes state after update, never writes it.
+        self._presentation = TrailPresentation(
+            mission.mission_id, start=(player.x_float, player.y_float)
+        )
         objects_by_id = {item.qualified_id: item for item in self._objects}
         for npc in self._npcs:
             conditional = npc.respond_to_toggle
@@ -865,11 +870,16 @@ class ClassroomTrailScene(Scene):
             self._feedback_remaining = _FEEDBACK_DURATION
         elif self._feedback_remaining > 0:
             self._feedback_remaining = max(0.0, self._feedback_remaining - dt)
+        self._presentation.observe(self, dt)
 
     def render(self) -> None:
         super().render()
-        # Layers: backdrop and trail zones, world objects, NPCs, player, HUD.
+        # Layers: backdrop and trail zones, ground life, world objects, NPCs,
+        # player, overlay effects and panels, HUD, overlay text. Everything
+        # between the backdrop and the HUD beyond the sprites is M02-only.
+        presentation = self._presentation
         draw_classroom_backdrop(self._renderer, self._mission.mission_id)
+        presentation.draw_ground(self._renderer)
         for item in self._objects:
             world_object = item.world_object
             color = (
@@ -877,56 +887,11 @@ class ClassroomTrailScene(Scene):
                 if item.toggle is not None and item.qualified_id in self._toggle_on_qualified_ids
                 else world_object.color
             )
-            if not draw_classroom_sprite(
-                self._renderer,
-                item.qualified_id,
-                world_object.x,
-                world_object.y,
-                world_object.width,
-                world_object.height,
-                color,
-            ):
-                self._renderer.draw_rect(
-                    world_object.x,
-                    world_object.y,
-                    world_object.width,
-                    world_object.height,
-                    color,
-                )
+            self._draw_entity(item.qualified_id, world_object, color)
         for item in self._npcs:
-            character = item.character
-            if not draw_classroom_sprite(
-                self._renderer,
-                item.qualified_id,
-                character.x,
-                character.y,
-                character.width,
-                character.height,
-                character.color,
-            ):
-                self._renderer.draw_rect(
-                    character.x,
-                    character.y,
-                    character.width,
-                    character.height,
-                    character.color,
-                )
-        if not draw_classroom_sprite(
-            self._renderer,
-            self._player_qualified_id,
-            self._player.x,
-            self._player.y,
-            self._player.width,
-            self._player.height,
-            self._player.color,
-        ):
-            self._renderer.draw_rect(
-                self._player.x,
-                self._player.y,
-                self._player.width,
-                self._player.height,
-                self._player.color,
-            )
+            self._draw_entity(item.qualified_id, item.character, item.character.color)
+        self._draw_entity(self._player_qualified_id, self._player, self._player.color)
+        overlay_text = presentation.draw_overlay(self._renderer, self)
         self._renderer.draw_text(
             f"Visited {self.visited_count} / {self.total_objects}",
             _PROGRESS_X,
@@ -980,6 +945,30 @@ class ClassroomTrailScene(Scene):
                 _TEXT_COLOR,
                 _FEEDBACK_FONT_SIZE,
             )
+        presentation.draw_overlay_text(self._renderer, overlay_text)
+
+    def _draw_entity(
+        self,
+        qualified_id: str | None,
+        entity: Character | WorldObject,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw one entity at its authoritative bounds, with M02 effects."""
+        presentation = self._presentation
+        presentation.draw_under(self._renderer, qualified_id, entity, color)
+        with classroom_sprite_pose(presentation.pose_for(qualified_id)):
+            drawn = draw_classroom_sprite(
+                self._renderer,
+                qualified_id,
+                entity.x,
+                entity.y,
+                entity.width,
+                entity.height,
+                color,
+            )
+        if not drawn:
+            self._renderer.draw_rect(entity.x, entity.y, entity.width, entity.height, color)
+        presentation.draw_over(self._renderer, qualified_id, entity, color)
 
     def _move_player(self, input_state: DirectionalInput, dt: float) -> None:
         displacement = _MOVEMENT_SPEED * dt

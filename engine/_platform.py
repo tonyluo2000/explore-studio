@@ -11,16 +11,22 @@ Internal module — not part of the Student API.
 
 from __future__ import annotations
 
+import io
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Final
 
 import pygame
 
 from engine._config import Config
+from engine.assets import ImageHandle
 from engine.input import DirectionalInput
 
 _LOGGER = logging.getLogger("explore-studio.platform")
+
+#: Bounds on cached effect textures and fonts; each cache is cleared when full.
+_MAX_EFFECT_TEXTURES: Final = 192
+_GLOW_LEVELS: Final = 16
 
 
 @dataclass(frozen=True)
@@ -60,6 +66,9 @@ class Platform:
         self._window: pygame.Surface | None = None
         self._clock: pygame.time.Clock | None = None
         self._initialized = False
+        self._fonts: dict[int, pygame.font.Font] = {}
+        self._glows: dict[tuple[int, tuple[int, int, int], int], pygame.Surface] = {}
+        self._shadows: dict[tuple[int, int, tuple[int, int, int], int], pygame.Surface] = {}
 
     def initialize(self) -> None:
         """Initialize Pygame and create the application window.
@@ -320,9 +329,158 @@ class Platform:
         # --- render ---
         if self._window is None:
             raise RuntimeError("Cannot draw text: platform not initialized.")
-        font = pygame.font.Font(None, font_size)
-        surface = font.render(text, True, color)
+        surface = self._font(font_size).render(text, True, color)
         self._window.blit(surface, (x, y))
+
+    def _font(self, font_size: int) -> pygame.font.Font:
+        font = self._fonts.get(font_size)
+        if font is None:
+            if len(self._fonts) >= 16:
+                self._fonts.clear()
+            font = pygame.font.Font(None, font_size)
+            self._fonts[font_size] = font
+        return font
+
+    def measure_text(self, text: str, font_size: int) -> tuple[int, int]:
+        """Return the pixel size ``draw_text`` would use for *text*."""
+        if isinstance(font_size, bool) or not isinstance(font_size, int) or font_size <= 0:
+            raise ValueError(f"font_size must be positive, got {font_size}")
+        if not pygame.font.get_init():
+            raise RuntimeError("Cannot measure text: platform not initialized.")
+        return self._font(font_size).size(text)
+
+    # ------------------------------------------------------------------
+    # Images and effects (engine-owned handles; no Pygame types escape)
+    # ------------------------------------------------------------------
+
+    def decode_image(self, data: bytes) -> ImageHandle:
+        """Decode verified PNG bytes into an opaque engine image handle."""
+        try:
+            surface = pygame.image.load(io.BytesIO(data), "sheet.png")
+        except pygame.error as exc:
+            raise ValueError(f"image could not be decoded: {exc}") from exc
+        if pygame.display.get_init() and pygame.display.get_surface() is not None:
+            surface = surface.convert_alpha()
+        return ImageHandle(surface.get_width(), surface.get_height(), surface)
+
+    def crop_image(
+        self,
+        image: ImageHandle,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        out_width: int,
+        out_height: int,
+        flip_x: bool,
+    ) -> ImageHandle:
+        """Cut one frame from *image*, optionally scaled and mirrored."""
+        source = image.native
+        if not isinstance(source, pygame.Surface):
+            raise TypeError("image is not a platform image")
+        frame = source.subsurface(pygame.Rect(x, y, width, height)).copy()
+        if (out_width, out_height) != (width, height):
+            frame = pygame.transform.smoothscale(frame, (out_width, out_height))
+        if flip_x:
+            frame = pygame.transform.flip(frame, True, False)
+        return ImageHandle(frame.get_width(), frame.get_height(), frame)
+
+    def draw_image(self, image: ImageHandle, x: int, y: int) -> None:
+        """Blit an engine image with its per-pixel transparency."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        if not isinstance(image.native, pygame.Surface):
+            raise TypeError("image is not a platform image")
+        self._window.blit(image.native, (x, y))
+
+    def draw_glow(
+        self,
+        center_x: int,
+        center_y: int,
+        radius: int,
+        color: tuple[int, int, int],
+        intensity: float,
+    ) -> None:
+        """Add a soft radial light (additive blend) from a cached texture."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        level = max(0, min(_GLOW_LEVELS, round(intensity * _GLOW_LEVELS)))
+        if radius <= 0 or level == 0:
+            return
+        key = (radius, color, level)
+        texture = self._glows.get(key)
+        if texture is None:
+            if len(self._glows) >= _MAX_EFFECT_TEXTURES:
+                self._glows.clear()
+            texture = pygame.Surface((radius * 2, radius * 2))
+            texture.fill((0, 0, 0))
+            strength = level / _GLOW_LEVELS
+            step = max(1, radius // 24)
+            for ring in range(radius, 0, -step):
+                falloff = (1 - ring / radius) ** 2 * strength
+                pygame.draw.circle(
+                    texture,
+                    tuple(round(channel * falloff) for channel in color),
+                    (radius, radius),
+                    ring,
+                )
+            self._glows[key] = texture
+        self._window.blit(
+            texture, (center_x - radius, center_y - radius), special_flags=pygame.BLEND_RGB_ADD
+        )
+
+    def draw_soft_ellipse(
+        self,
+        center_x: int,
+        center_y: int,
+        radius_x: int,
+        radius_y: int,
+        color: tuple[int, int, int],
+        alpha: int,
+    ) -> None:
+        """Blend a feathered translucent ellipse, e.g. a grounded shadow."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        if radius_x <= 0 or radius_y <= 0 or alpha <= 0:
+            return
+        alpha = min(255, alpha) // 8 * 8
+        key = (radius_x, radius_y, color, alpha)
+        texture = self._shadows.get(key)
+        if texture is None:
+            if len(self._shadows) >= _MAX_EFFECT_TEXTURES:
+                self._shadows.clear()
+            texture = pygame.Surface((radius_x * 2, radius_y * 2), pygame.SRCALPHA)
+            texture.fill((0, 0, 0, 0))
+            for step in range(6):
+                fraction = 1 - step / 6
+                rect = pygame.Rect(
+                    0, 0, round(radius_x * 2 * fraction), round(radius_y * 2 * fraction)
+                )
+                rect.center = (radius_x, radius_y)
+                pygame.draw.ellipse(texture, (*color, alpha * (step + 1) // 6), rect)
+            self._shadows[key] = texture
+        self._window.blit(texture, (center_x - radius_x, center_y - radius_y))
+
+    def draw_rounded_rect(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: tuple[int, int, int],
+        radius: int,
+        border_color: tuple[int, int, int] | None = None,
+        border_width: int = 0,
+    ) -> None:
+        """Draw a filled rounded panel with an optional border."""
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        rect = pygame.Rect(x, y, width, height)
+        if border_color is not None and border_width > 0:
+            pygame.draw.rect(self._window, border_color, rect, border_radius=radius)
+            rect = rect.inflate(-2 * border_width, -2 * border_width)
+            radius = max(0, radius - border_width)
+        pygame.draw.rect(self._window, color, rect, border_radius=radius)
 
     def present_frame(self) -> None:
         """Swap buffers / present the completed frame to the display.
@@ -370,6 +528,9 @@ class Platform:
         if self._clock is not None:
             self._clock = None
 
+        self._fonts.clear()
+        self._glows.clear()
+        self._shadows.clear()
         pygame.quit()
         self._initialized = False
 
