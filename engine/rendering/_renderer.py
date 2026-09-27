@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from engine.assets import ImageHandle, SpriteSheetLibrary
+
 if TYPE_CHECKING:
     from engine._platform import Platform
 
@@ -36,6 +38,7 @@ class Renderer:
         """
         self._platform = platform
         self._frame_count: int = 0
+        self._sprite_sheets: SpriteSheetLibrary | None = None
 
     # ------------------------------------------------------------------
     # Frame contract
@@ -138,6 +141,92 @@ class Renderer:
             font_size: Positive integer point size.
         """
         self._platform.draw_text(text, x, y, color, font_size)
+
+    def measure_text(self, text: str, font_size: int) -> tuple[int, int]:
+        """Return the pixel size of one line of text."""
+        return self._platform.measure_text(text, font_size)
+
+    # ------------------------------------------------------------------
+    # Images and effects
+    # ------------------------------------------------------------------
+
+    @property
+    def sprite_sheets(self) -> SpriteSheetLibrary:
+        """Decode-once cache of course-owned trusted sprite sheets."""
+        if self._sprite_sheets is None:
+            self._sprite_sheets = SpriteSheetLibrary(self._platform)
+        return self._sprite_sheets
+
+    def draw_image(self, image: ImageHandle, x: int, y: int) -> None:
+        """Draw an engine image with its transparency."""
+        self._platform.draw_image(image, x, y)
+
+    def draw_sprite_frame(
+        self,
+        asset_id: str,
+        row: str,
+        column: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        *,
+        flip_x: bool = False,
+        accent: tuple[int, int, int] | None = None,
+    ) -> bool:
+        """Draw one trusted sprite frame filling *width* x *height* at *(x, y)*.
+
+        Returns ``False`` without drawing when the sheet is missing, fails its
+        digest, cannot be decoded, has no such frame, or was authored for a
+        different *accent* color, so callers keep their procedural fallback.
+        """
+        library = self.sprite_sheets
+        if accent is not None and library.accent(asset_id) != accent:
+            return False
+        image = library.frame(asset_id, row, column, width, height, flip_x=flip_x)
+        if image is None:
+            return False
+        self._platform.draw_image(image, x, y)
+        return True
+
+    def draw_glow(
+        self,
+        center_x: int,
+        center_y: int,
+        radius: int,
+        color: tuple[int, int, int],
+        intensity: float,
+    ) -> None:
+        """Add a soft additive light."""
+        self._platform.draw_glow(center_x, center_y, radius, color, intensity)
+
+    def draw_soft_ellipse(
+        self,
+        center_x: int,
+        center_y: int,
+        radius_x: int,
+        radius_y: int,
+        color: tuple[int, int, int],
+        alpha: int,
+    ) -> None:
+        """Blend a feathered translucent ellipse such as a grounded shadow."""
+        self._platform.draw_soft_ellipse(center_x, center_y, radius_x, radius_y, color, alpha)
+
+    def draw_rounded_rect(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: tuple[int, int, int],
+        radius: int,
+        border_color: tuple[int, int, int] | None = None,
+        border_width: int = 0,
+    ) -> None:
+        """Draw a rounded panel with an optional border."""
+        self._platform.draw_rounded_rect(
+            x, y, width, height, color, radius, border_color, border_width
+        )
 
     def render_frame(self, background_color: tuple[int, int, int]) -> None:
         """Produce one complete frame (clear + present).

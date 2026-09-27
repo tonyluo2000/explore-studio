@@ -1,0 +1,78 @@
+{
+  "assets": {
+    "characters/nova": {
+      "accent": [
+        255,
+        200,
+        50
+      ],
+      "columns": [
+        "idle-0",
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "blink",
+        "walk-0",
+        "walk-1",
+        "walk-2",
+        "walk-3"
+      ],
+      "file": "characters/nova/nova.png",
+      "frame_height": 100,
+      "frame_width": 100,
+      "rows": [
+        "down",
+        "up",
+        "right"
+      ],
+      "sha256": "7ea7fb5f4790e462c167c390ab23a00da10405178c97911caf4df768e1d8e254"
+    },
+    "characters/pixel": {
+      "accent": [
+        50,
+        80,
+        220
+      ],
+      "columns": [
+        "idle-0",
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "blink",
+        "greet-0",
+        "greet-1",
+        "greet-2",
+        "greet-3"
+      ],
+      "file": "characters/pixel/pixel.png",
+      "frame_height": 100,
+      "frame_width": 100,
+      "rows": [
+        "idle"
+      ],
+      "sha256": "4bd105ca65350a606bfa29001b511138f080c21782c13d12b68440f4bc616dcd"
+    },
+    "objects/crystal-lantern": {
+      "accent": [
+        240,
+        210,
+        50
+      ],
+      "columns": [
+        "flicker-0",
+        "flicker-1",
+        "flicker-2",
+        "flicker-3"
+      ],
+      "file": "objects/crystal-lantern/lantern.png",
+      "frame_height": 60,
+      "frame_width": 80,
+      "rows": [
+        "glow"
+      ],
+      "sha256": "16c3e5b425d372ec993021ce6733b525cc2b8342690bb28b06fc5a517d9fa2ce"
+    }
+  },
+  "generator": "scripts/build_trusted_art.py",
+  "schema_version": 1
+}
