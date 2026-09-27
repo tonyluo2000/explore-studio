@@ -50,8 +50,11 @@ yet. Those are things you'll learn to program over the year.
 - Press **E** at both. `Visited 2 / 2` completes the mission, in any order.
 
 In the Trail, Nova, Pixel, the Moon Compass, and Crystal Lantern appear as
-simple pictures. Names are not drawn on screen; the labels and symbols are
-map-only. A thing without a known picture still appears as a plain colored box.
+simple pictures. Names are not permanently drawn over characters or objects.
+When you are close enough to interact, the Trail may show a short prompt such
+as `[E] Talk to Pixel` or `[E] Inspect Moon Compass`. On the map, the labels
+and symbols are map-only. A thing without a known picture still appears as a
+plain colored box.
 
 ## Python first: variables and values
 
@@ -140,7 +143,7 @@ each one is a string.
 | Companion: `future_ability` | `companion.py` | "PLAN for later" in your output | No. A plan for later. |
 | Moon Compass: `x`, `y` | `compass.yaml` | Where the compass box sits | **Yes.** It moves. |
 | Moon Compass: `color` | `compass.yaml` | The compass box color | **Yes.** |
-| Moon Compass: `name` | `compass.yaml` | Stored in the file | No. Names are not drawn yet. |
+| Moon Compass: `name` | `compass.yaml` | Stored in the file | No. Not a permanent label and no mission effect; a nearby `[E] Inspect` prompt may show it. |
 
 | File | What it is for |
 |---|---|
@@ -162,7 +165,7 @@ The YAML object file—not `starter.py`—drives the shared runtime.
 
 | Local Python value | Declarative YAML field | Visible world result |
 |---|---|---|
-| `object_name` | `name` | Stored as the prop's name (not drawn on screen yet) |
+| `object_name` | `name` | Stored as the prop's name (not a permanent label; a nearby `[E] Inspect` prompt may show it) |
 | `x` | `x` | Left/right position; larger moves right |
 | `y` | `y` | Up/down position; larger moves down |
 | `color` | `color` | Named fill color |

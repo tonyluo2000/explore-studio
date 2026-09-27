@@ -40,7 +40,9 @@ Moon Compass, the one thing the student places; step 2 is the Crystal
 Lantern, already in the world in the bottom-left corner, which is the trail's
 destination. Visiting both world objects in any order completes M02, exactly
 as before. In the Trail, Nova, Pixel, the Moon Compass, and Crystal Lantern
-appear as simple pictures. Names are not drawn on screen; the map's symbols and
+appear as simple pictures. Names are not permanently drawn over characters or
+objects; when Nova is close enough to interact, the Trail may show a short prompt
+such as `[E] Talk to Pixel` or `[E] Inspect Moon Compass`. The map's symbols and
 labels are map-only. A thing without a known picture still uses the plain
 colored-box fallback.
 
@@ -58,7 +60,7 @@ before this update prints the earlier simple lines instead — both are correct
 S02 evidence. Those values are display-only: they appear in the student's own
 output and do not change the Trail. `future_ability` is a plan only. In the
 Moon Compass file, `x`, `y`, and `color` change the Trail; `name` is stored
-but not drawn. Students walk as Nova, the class example, because S02 has no
+but is not a permanent label (a nearby `[E] Inspect` prompt may show it). Students walk as Nova, the class example, because S02 has no
 student-owned character package.
 
 The Moon Compass framing is narrative only: `object_name`/`x`/`y`/`color`
@@ -204,8 +206,8 @@ purple
 ```
 
 Validation reports `valid: moon-compass 0.1.0`. The prop appears as a simple
-Moon Compass picture at its declared coordinates; its name is not drawn on
-screen. A larger x moves it right. Pixel stands near Nova's start and
+Moon Compass picture at its declared coordinates; its name is stored but not a
+permanent label (a nearby `[E] Inspect` prompt may show it). A larger x moves it right. Pixel stands near Nova's start and
 greets when the student presses E nearby; it does not move. The local M02 trail
 completes after both world objects (Moon Compass and Crystal Lantern) have
 been interacted with; greeting Pixel does not count toward `Visited`.

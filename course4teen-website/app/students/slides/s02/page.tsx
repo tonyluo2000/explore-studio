@@ -21,7 +21,8 @@ const bridgeRows = [
   {
     python: "object_name",
     field: "name",
-    result: "Stored as your prop’s name. Names are not drawn on screen yet.",
+    result:
+      "Stored as your prop’s name. Not a permanent label; a nearby [E] Inspect prompt may show it.",
   },
   { python: "x", field: "x", result: "Left or right. Larger moves right." },
   { python: "y", field: "y", result: "Up or down. Larger moves down." },
@@ -57,7 +58,7 @@ const wiringLabel: Record<Wiring, string> = {
   trail: "Changes the Trail",
   card: "Card only",
   plan: "Plan only",
-  stored: "Stored, not drawn",
+  stored: "Stored, no permanent label",
 };
 
 const valueRows: { values: string[]; file: string; wiring: Wiring }[] = [
