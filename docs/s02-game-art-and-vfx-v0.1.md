@@ -172,9 +172,12 @@ every text draw.
 
 For the art pass, `scripts/capture_s02_visual_proof.py --only benchmark`
 times 600 real update + render frames of Nova walking a loop and pressing E
-every second. On the same machine the V3 art pass measured about 0.9 ms mean
+every second. On a quiet machine the V3 art pass measured about 0.9 ms mean
 and 1.0-1.4 ms p95, against about 1.2 ms mean and 1.3-1.7 ms p95 for the
 V2 base: the single opaque plate replaces hundreds of procedural draws.
+Under heavy background load (six interleaved runs each), the medians were
+2.50 ms mean and 5.39 ms p95 for V3 against 2.66 ms and 5.74 ms for V2, so
+the art pass costs no more per frame than the base did.
 
 ## Seams for the next tranche (not implemented)
 

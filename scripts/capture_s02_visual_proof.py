@@ -229,13 +229,18 @@ def write_gifs(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
         return
     for name, frames in gif_frames.items():
         images = []
-        for surface in frames[::3]:
+        for surface in frames[::4]:
             small = pygame.transform.smoothscale(surface, (480, 320))
             raw = pygame.image.tobytes(small, "RGB")
-            images.append(Image.frombytes("RGB", (480, 320), raw).quantize(colors=255))
+            images.append(Image.frombytes("RGB", (480, 320), raw).quantize(colors=128))
         path = out / f"{name}.gif"
-        images[0].save(path, save_all=True, append_images=images[1:], duration=50, loop=0)
+        images[0].save(path, save_all=True, append_images=images[1:], duration=67, loop=0)
         print(f"wrote {path}")
+    # Losslessly recompress the PNG captures (pixels are unchanged).
+    for png in sorted(out.glob("*.png")):
+        with Image.open(png) as image:
+            image.load()
+            image.save(png, optimize=True)
 
 
 def main(argv: list[str] | None = None) -> int:
