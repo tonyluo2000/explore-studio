@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 from PIL import Image
 
 from art.paint import (
@@ -76,6 +77,34 @@ NOVA_IDLE = ("idle-0", "idle-1", "idle-2", "idle-3")
 NOVA_WALK = tuple(f"walk-{index}" for index in range(8))
 NOVA_COLUMNS = (*NOVA_IDLE, "blink", *NOVA_WALK)
 IDLE_BREATH = (0.0, 0.5, 1.0, 0.5)
+
+
+def _finish(cv: Canvas) -> Canvas:
+    """Seat a cutout in the moonlit scene: soft edges, cool lower shade, rim light.
+
+    Presentation-only: the same 100 x 100 cell, the same pose, the same alpha
+    footprint to within an anti-aliased pixel. Nothing here moves a limb.
+    """
+    ss = cv.ss
+    soft = cv.blurred(0.42)
+    rgb = cv.rgb * 0.62 + soft.rgb * 0.38
+    alpha = cv.a * 0.62 + soft.a * 0.38
+    height, width = alpha.shape
+    ys = (np.arange(height, dtype=np.float32) + 0.5)[:, None] / ss
+    xs = (np.arange(width, dtype=np.float32) + 0.5)[None, :] / ss
+    # Cooler, deeper toward the feet so the figure sits on the ground.
+    low = np.clip((ys - 58) / 40, 0, 1)[..., None]
+    rgb = rgb * (1 - low * 0.16 * np.asarray((1.0, 0.75, 0.45), np.float32))
+    # Gentle moonlight from the upper right, and a soft cool bounce from below.
+    lit = np.clip(1 - np.hypot((xs - 92) / 70, (ys - 8) / 70), 0, 1)[..., None] ** 1.3
+    rgb = rgb + np.asarray((0.10, 0.13, 0.22), np.float32) * lit * alpha[..., None] * 0.55
+    # A faint rim on the moon side: where alpha falls off toward the upper right.
+    shifted = np.roll(np.roll(alpha, 2 * ss, axis=1), -ss, axis=0)
+    rim = np.clip(alpha - shifted, 0, 1)[..., None]
+    rgb = rgb + np.asarray((0.45, 0.55, 0.85), np.float32) * rim * 0.22
+    cv.rgb = np.minimum(rgb, alpha[..., None]).astype(np.float32)
+    cv.a = alpha.astype(np.float32)
+    return cv
 
 
 def _part(  # type: ignore[no-untyped-def]
@@ -441,7 +470,7 @@ def nova_frame(row: str, column: str) -> Image.Image:
                 scarf=scarf,
                 back=row == "up",
             )
-        return cv.image()
+        return _finish(cv).image()
     phase = index / 8 * math.tau
     s, c = math.sin(phase), math.cos(phase)
     scarf = 2.5 + 1.5 * math.sin(phase * 2)
@@ -463,7 +492,7 @@ def nova_frame(row: str, column: str) -> Image.Image:
             scarf=scarf * 0.6,
             back=row == "up",
         )
-    return cv.image()
+    return _finish(cv).image()
 
 
 # ---------------------------------------------------------------------------
@@ -623,4 +652,4 @@ def pixel_frame(column: str) -> Image.Image:
     cv.paint(
         Stroke([(cx - 15, top + 10), (cx - 10, top + 8)], 1.0, 0.6), WHITE, alpha=0.45, clip=screen
     )
-    return cv.image()
+    return _finish(cv).image()

@@ -222,10 +222,11 @@ class Renderer:
         radius: int,
         border_color: tuple[int, int, int] | None = None,
         border_alpha: int = 0,
+        soften: bool = False,
     ) -> None:
         """Blend one translucent panel shaped as the union of rounded *rects*."""
         self._platform.draw_translucent_panel(
-            rects, color, alpha, radius, border_color, border_alpha
+            rects, color, alpha, radius, border_color, border_alpha, soften
         )
 
     def draw_rounded_rect(

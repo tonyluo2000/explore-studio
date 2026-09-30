@@ -54,7 +54,7 @@
         "up",
         "right"
       ],
-      "sha256": "b04c87c4b22467cb12dcefb78807ba0d017f1d0b1e189339549124d93735862b"
+      "sha256": "54c31f7382e495c2a65fd5cff0309dfa4b238439452a182c63616e4cc7a296b8"
     },
     "characters/pixel": {
       "accent": [
@@ -79,7 +79,7 @@
       "rows": [
         "idle"
       ],
-      "sha256": "866e127927e22de95710fc648e50c2b51108a0736fe9dfe04184e81866e6c542"
+      "sha256": "0310c94b2a7f3ff400a300e42d0b391e77e27b1431a03ec1685c956ba159cf12"
     },
     "objects/crystal-lantern": {
       "accent": [
@@ -226,7 +226,7 @@
       "rows": [
         "night"
       ],
-      "sha256": "698c6cad694c4ac05eba9a40af943400b328f6d751d3c21915e19fa9b5e9bb86"
+      "sha256": "92ed6f10400fb605d14a9375beaecdd272b189ceb37a4ea092d5ce405f6c0c29"
     },
     "scenery/moon-meadow-foreground": {
       "accent": [
@@ -243,7 +243,7 @@
       "rows": [
         "night"
       ],
-      "sha256": "c2ccf4d329ea20ed6701d8bc0aafe66d6e9877493b289d7a62bdf9a423a1aace"
+      "sha256": "9dfe30ce588d82568d8e09bd4ac1e510a99ea1458f73d2a0dd7524315bd8497d"
     }
   },
   "generator": "scripts/build_trusted_art.py",

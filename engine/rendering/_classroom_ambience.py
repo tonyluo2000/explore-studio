@@ -248,7 +248,9 @@ _REED_BLADES: Final = ((-5.0, 14.0), (-1.5, 20.0), (2.0, 17.0), (5.5, 12.0))
 
 def reed_sway(clock: float, x: float) -> float:
     """Horizontal tip offset (pixels) of one reed clump at *clock*."""
-    return 3.2 * math.sin(clock * 1.6 + x * 0.037) + 1.1 * math.sin(clock * 3.1 + x * 0.05)
+    # A slow gust envelope makes the sway breathe instead of ticking.
+    gust = 0.75 + 0.25 * math.sin(clock * 0.37 + x * 0.011)
+    return gust * (2.7 * math.sin(clock * 1.5 + x * 0.037) + 0.9 * math.sin(clock * 2.9 + x * 0.05))
 
 
 def reed_column(sway: float) -> str:
@@ -309,9 +311,11 @@ def _draw_painted_crystal_shimmer(renderer: object, clock: float) -> None:
         color = _VIOLET_GLOW if hue else _CRYSTAL_GLOW
         pulse = 0.5 + 0.5 * math.sin(clock * 1.7 + index * 1.9)
         glow(renderer, x, y - 14 * scale, round(30 * scale), color, 0.1 + 0.14 * pulse)
-        cycle = (clock + index * 1.1) % 4.4
-        if cycle < 0.6:
-            size = 5.5 * math.sin(math.pi * cycle / 0.6)
+        period = 4.4 + 0.53 * index
+        cycle = (clock + index * 1.1) % period
+        if cycle < 0.8:
+            # An eased glint (slow in, slow out) rather than a linear blink.
+            size = 5.5 * math.sin(math.pi * cycle / 0.8) ** 2
             glow(renderer, tip_x, tip_y, 9, color, 0.5 * size / 5.5)
             sparkle(renderer, tip_x, tip_y, size, _GLINT)
 
@@ -351,8 +355,11 @@ def mote_states(clock: float) -> tuple[tuple[float, float, float], ...]:
         phase = index * 2.39
         states.append(
             (
-                x + 18 * math.sin(clock * 0.33 + phase),
-                y + 12 * math.sin(clock * 0.47 + phase * 1.7) - 4 * math.sin(clock * 0.9 + phase),
+                x + 14 * math.sin(clock * 0.33 + phase) + 4 * math.sin(clock * 0.81 + phase * 2.3),
+                y
+                + 9 * math.sin(clock * 0.47 + phase * 1.7)
+                + 3 * math.sin(clock * 0.19 + phase * 0.6)
+                - 4 * math.sin(clock * 0.9 + phase),
                 0.25 + 0.75 * max(0.0, math.sin(clock * 1.25 + phase)) ** 2,
             )
         )

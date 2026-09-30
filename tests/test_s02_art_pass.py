@@ -464,3 +464,64 @@ def test_real_trail_reads_each_sheet_once_and_caches_every_frame(platform, monke
     assert len(reads) == warmed == len(set(reads))  # each sheet read and verified once
     assert renderer.sprite_sheets.decode_count == len(set(reads))
     assert cached <= renderer.sprite_sheets.cached_frame_count < MAX_CACHED_FRAMES
+
+
+# ---------------------------------------------------------------------------
+# Visual polish pass: presentation-only occluders, organic ambience, HUD card
+# ---------------------------------------------------------------------------
+
+
+def test_foreground_occluders_are_presentation_only_and_clear_of_landmarks(platform) -> None:  # type: ignore[no-untyped-def]
+    """Occluder tufts sit in the bottom strip, never over a mission object."""
+    library = SpriteSheetLibrary(platform)
+    foreground = library.frame(*MEADOW_FOREGROUND, 960, 640)
+    assert foreground is not None
+    frame = foreground.native
+    scene = _scene(ArtRenderer())
+    boxes = [
+        (
+            item.world_object.x,
+            item.world_object.y,
+            item.world_object.width,
+            item.world_object.height,
+        )
+        for item in scene.objects
+    ]
+    boxes += [
+        (npc.character.x, npc.character.y, npc.character.width, npc.character.height)
+        for npc in scene.npcs
+    ]
+    assert boxes
+    for x, y, width, height in boxes:
+        for px in range(x, x + width, 4):
+            for py in range(y, y + height, 4):
+                assert frame.get_at((px, py)).a == 0, (px, py)
+    # The authored tufts rise from the bottom edge only (covering lower bodies).
+    assert any(frame.get_at((x, 620)).a > 0 for x in range(300, 720, 2))
+    assert all(frame.get_at((x, 556)).a == 0 for x in range(280, 740, 2))
+
+
+def test_polished_ambience_stays_bounded_deterministic_and_non_repeating() -> None:
+    from engine.rendering._classroom_ambience import (
+        MOTE_ANCHORS,
+        REED_CLUMPS,
+        mote_states,
+        reed_sway,
+    )
+
+    for clock in (0.0, 3.3, 61.0, 7200.0):
+        for (x, y, _), (ax, ay) in zip(mote_states(clock), MOTE_ANCHORS, strict=True):
+            assert abs(x - ax) <= 18.1 and abs(y - ay) <= 16.1
+        for rx, _ in REED_CLUMPS:
+            assert abs(reed_sway(clock, rx)) <= 3.7
+        assert mote_states(clock) == mote_states(clock)
+    # Two periods of the old loop no longer land on the same pose.
+    assert mote_states(0.0) != mote_states(2 * math.pi / 0.33)
+
+
+def test_soft_hud_panel_is_cached_once_per_style(platform) -> None:  # type: ignore[no-untyped-def]
+    rects = ((10, 10, 200, 40),)
+    platform.draw_translucent_panel(rects, (14, 18, 48), 168, 12, (178, 190, 255), 70, True)
+    platform.draw_translucent_panel(rects, (14, 18, 48), 168, 12, (178, 190, 255), 70, True)
+    platform.draw_translucent_panel(rects, (14, 18, 48), 168, 12, (178, 190, 255), 70, False)
+    assert len(platform._panels) == 2

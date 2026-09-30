@@ -505,8 +505,12 @@ class Platform:
         radius: int,
         border_color: tuple[int, int, int] | None = None,
         border_alpha: int = 0,
+        soften: bool = False,
     ) -> None:
         """Blend one translucent panel shaped as the union of rounded *rects*.
+
+        With ``soften``, the cached panel also gets a gentle top-to-bottom
+        lightening and a faint dark halo, so it reads as one soft card.
 
         The panel is rendered once into a cached texture, so overlapping
         rects never double their alpha and repeat frames cost one blit.
@@ -519,7 +523,7 @@ class Platform:
         top = min(rect[1] for rect in rects)
         right = max(rect[0] + rect[2] for rect in rects)
         bottom = max(rect[1] + rect[3] for rect in rects)
-        key = (rects, color, alpha, radius, border_color, border_alpha)
+        key = (rects, color, alpha, radius, border_color, border_alpha, soften)
         texture = self._panels.get(key)
         if texture is None:
             if len(self._panels) >= _MAX_EFFECT_TEXTURES:
@@ -536,6 +540,13 @@ class Platform:
                 )
             texture = pygame.Surface(size, pygame.SRCALPHA)
             texture.fill((*color, alpha))
+            if soften:
+                lift = pygame.Surface(size, pygame.SRCALPHA)
+                for row in range(size[1]):
+                    weight = max(0.0, 1 - row / max(1, size[1] - 1))
+                    tone = round(34 * weight)
+                    lift.fill((tone, tone, round(tone * 1.4), 0), (0, row, size[0], 1))
+                texture.blit(lift, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
             texture.blit(shape, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
             if border_color is not None and border_alpha > 0:
                 inner = pygame.Surface(size, pygame.SRCALPHA)

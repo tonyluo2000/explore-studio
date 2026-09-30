@@ -94,9 +94,9 @@ COMPASS_SPARKLES: Final = 4
 HUD_TEXT_X: Final = 20
 HUD_ROWS_Y: Final = (20, 55, 85, 115)
 HUD_FONT: Final = 24
-_HUD_PANEL: Final[Color] = (8, 12, 34)
-_HUD_PANEL_ALPHA: Final = 150
-_HUD_EDGE: Final[Color] = (150, 170, 255)
+_HUD_PANEL: Final[Color] = (14, 18, 48)
+_HUD_PANEL_ALPHA: Final = 168
+_HUD_EDGE: Final[Color] = (178, 190, 255)
 
 _PROMPT_FONT: Final = 22
 _BUBBLE_FONT: Final = 22
@@ -552,23 +552,49 @@ class TrailPresentation:
             if burst is not None:
                 boost = 0.5 * (1 - (self.clock - burst.start) / DISCOVERY_DURATION)
             pulse = 0.5 + 0.5 * math.sin(self.clock * 2.2)
+            radius = max(8, min(width, height))
+            # A dark moon-shadow ring first, so the light pops against the terrain.
+            soft_shadow(renderer, cx, cy + height * 0.1, radius * 11 // 10, radius * 7 // 10, 70)
+            # Outer violet aura, then the student-colored body light, then a hot core.
             glow(
                 renderer,
                 cx,
                 cy,
-                max(8, min(width, height) * 95 // 100),
+                radius * 150 // 100,
+                mix(color, (150, 110, 255), 0.55),
+                0.22 + 0.05 * pulse + boost * 0.6,
+            )
+            glow(
+                renderer,
+                cx,
+                cy,
+                radius * 95 // 100,
                 mix(color, _WHITE, 0.25),
                 0.42 + 0.2 * pulse + boost,
             )
-            # A tighter, brighter core so the hero object pops off the meadow.
             glow(
                 renderer,
                 cx,
                 cy,
-                max(6, min(width, height) * 58 // 100),
+                radius * 58 // 100,
                 mix(color, _WHITE, 0.55),
                 0.3 + 0.15 * pulse + boost,
             )
+            # A two-tier rune ring on the ground: a bright inner band, a faint outer one.
+            ring_y = y + height * 0.9
+            for tier, (scale_x, scale_y, fade) in enumerate(
+                ((0.62, 0.16, 0.2), (0.82, 0.22, 0.45))
+            ):
+                breathe = 1 + 0.03 * math.sin(self.clock * 1.6 + tier * 1.4)
+                ellipse_ring(
+                    renderer,
+                    cx,
+                    ring_y,
+                    width * scale_x * breathe,
+                    height * scale_y * breathe,
+                    mix(mix(color, _WHITE, 0.45), _GROUND, fade - 0.12 * pulse - boost * 0.5),
+                    2 if tier == 0 else 1,
+                )
         elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.52
             flicker = 0.5 + 0.3 * math.sin(self.clock * 9.1) + 0.2 * math.sin(self.clock * 23.3)
@@ -607,12 +633,19 @@ class TrailPresentation:
             cx, cy = x + width / 2, y + height * 0.45
             light = mix(color, _WHITE, 0.72)
             for index in range(COMPASS_SPARKLES):
-                angle = self.clock * 0.9 + index * math.tau / COMPASS_SPARKLES
-                twinkle = max(0.0, math.sin(self.clock * 3.0 + index * 2.1))
-                sx = cx + width * 0.62 * math.cos(angle)
-                sy = cy + height * 0.56 * math.sin(angle)
-                glow(renderer, sx, sy, 8, light, 0.45 * twinkle)
-                sparkle(renderer, sx, sy, 2 + 3.5 * twinkle, light)
+                # Slow orbits and staggered, eased twinkles read as deliberate
+                # magic instead of a metronome.
+                angle = (
+                    self.clock * 0.55
+                    + index * math.tau / COMPASS_SPARKLES
+                    + 0.35 * math.sin(self.clock * 0.7 + index)
+                )
+                phase = (self.clock / (2.3 + 0.41 * index) + index * 0.29) % 1.0
+                twinkle = math.sin(math.pi * phase) ** 3
+                sx = cx + width * 0.64 * math.cos(angle)
+                sy = cy + height * 0.58 * math.sin(angle)
+                glow(renderer, sx, sy, 8, light, 0.5 * twinkle)
+                sparkle(renderer, sx, sy, 1.5 + 4.0 * twinkle, light)
         elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
             self._draw_lantern_over(renderer, qualified_id, x, y, width, height)
 
@@ -636,9 +669,12 @@ class TrailPresentation:
                 2,
             )
         for index in range(LANTERN_SPARKS + (6 if flare > 0 else 0)):
-            speed = 0.55 if index < LANTERN_SPARKS else 1.4
-            phase = (self.clock * speed + index / LANTERN_SPARKS) % 1.0
-            sx = cx + 12 * math.sin(index * 2.1 + phase * 5)
+            speed = (0.42 + 0.07 * index) if index < LANTERN_SPARKS else 1.4
+            progress = self.clock * speed + index / LANTERN_SPARKS
+            phase = progress % 1.0
+            # Each rise drifts on its own arc, so the sparks never repeat a loop.
+            drift = math.sin(math.floor(progress) * 2.7 + index * 1.9)
+            sx = cx + 14 * drift * phase + 9 * math.sin(index * 2.1 + phase * 4.2)
             sy = cy - 6 - phase * (46 if index < LANTERN_SPARKS else 70)
             strength = math.sin(math.pi * phase)
             glow(renderer, sx, sy, 7, (255, 210, 120), 0.6 * strength)
@@ -800,7 +836,13 @@ class TrailPresentation:
         if not supports(renderer, "draw_translucent_panel", "measure_text"):
             return
         renderer.draw_translucent_panel(
-            self.hud_panel_rects(renderer, view), _HUD_PANEL, _HUD_PANEL_ALPHA, 10, _HUD_EDGE, 56
+            self.hud_panel_rects(renderer, view),
+            _HUD_PANEL,
+            _HUD_PANEL_ALPHA,
+            12,
+            _HUD_EDGE,
+            70,
+            True,
         )
 
     def _player_rect(self, view: TrailView) -> Rect:

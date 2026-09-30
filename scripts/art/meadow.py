@@ -39,6 +39,7 @@ from art.paint import (
     Segment,
     Stroke,
     Union,
+    _box3,
     blob,
     linear,
     mix,
@@ -960,14 +961,30 @@ def _crystal_cluster(cv: Canvas, x: float, y: float, scale: float, hue: float) -
     cv.glow(x, y - 16 * scale, 54 * scale, glow_color, 0.35)
     cv.glow(x, y + 2, 46 * scale, glow_color, 0.25, squash=0.35)
     cv.paint(Ellipse(x, y + 1, 22 * scale, 5 * scale), (6, 12, 24), alpha=0.5, feather=2)
-    shards = (
-        (-13, 17, -0.5, 5.0),
-        (13, 20, 0.45, 5.5),
-        (-6, 27, -0.2, 6.0),
-        (1, 34, 0.02, 7.0),
-        (8, 24, 0.25, 5.2),
-        (-18, 11, -0.8, 3.6),
-        (19, 12, 0.8, 3.6),
+    r = _prop_rng(x, y, 3)
+    flip = -1 if r.random() < 0.5 else 1
+    # The tallest shard stays put: the runtime glint lands on its tip.
+    shards = tuple(
+        (
+            (dx, h, lean, w)
+            if h == 34
+            else (
+                dx * flip + float(r.uniform(-2.5, 2.5)),
+                h * float(r.uniform(0.78, 1.18)),
+                lean * flip + float(r.uniform(-0.12, 0.12)),
+                w * float(r.uniform(0.85, 1.15)),
+            )
+        )
+        for dx, h, lean, w in (
+            (-13, 17, -0.5, 5.0),
+            (13, 20, 0.45, 5.5),
+            (-6, 27, -0.2, 6.0),
+            (1, 34, 0.02, 7.0),
+            (8, 24, 0.25, 5.2),
+            (-18, 11, -0.8, 3.6),
+            (19, 12, 0.8, 3.6),
+        )
+        if r.random() < 0.88 or h > 26
     )
     for dx, h, lean, w in shards:
         bx = x + dx * scale
@@ -1039,46 +1056,106 @@ def _rock(
         cv.paint(cap - cap.shift(0, 1.4), (130, 210, 150), alpha=0.6, clip=rock & cap)
 
 
+def _prop_rng(x: float, y: float, salt: int = 0) -> np.random.Generator:
+    """A position-seeded generator so every prop varies but rebuilds identically."""
+    return np.random.default_rng(int(x * 131 + y * 7919 + salt * 104729) & 0x7FFFFFFF)
+
+
 def _flower_bush(
     cv: Canvas, x: float, y: float, *, warm: bool = False, rng: np.random.Generator | None = None
 ) -> None:
-    leaves = blob([(x - 7, y - 4, 6), (x, y - 8, 7.5), (x + 7, y - 4, 6), (x, y - 1, 6)], smooth=3)
-    cv.paint(Ellipse(x, y + 1, 13, 3.5), (6, 12, 20), alpha=0.5, feather=1.5)
+    """A leafy bush whose size, lobes, tone, tilt, and blossoms differ per spot."""
+    del rng
+    r = _prop_rng(x, y)
+    scale = float(r.uniform(0.72, 1.3))
+    tilt = float(r.uniform(-0.12, 0.12))
+    lobes = int(r.integers(3, 6))
+    circles = []
+    for index in range(lobes):
+        t = index / max(1, lobes - 1)
+        lx = (t - 0.5) * 15 * scale + float(r.uniform(-1.5, 1.5))
+        ly = -float(r.uniform(2, 6)) * scale - 3 * math.sin(t * math.pi) * scale + tilt * lx
+        circles.append((x + lx, y + ly, float(r.uniform(4.6, 7.4)) * scale))
+    leaves = blob(circles, smooth=3.2 * scale)
+    base_tone = float(r.uniform(0, 1))
+    body = mix((34, 98, 82), (54, 128, 92), base_tone)
+    shade = mix((22, 62, 62), (30, 84, 70), base_tone)
+    cv.paint(Ellipse(x + 1, y + 1.5, 12 * scale, 3.4 * scale), (6, 12, 20), alpha=0.42, feather=2.4)
     cv.part(
         leaves,
-        (40, 112, 84),
-        line=(14, 34, 40),
-        line_width=0.9,
-        shade=(26, 74, 64),
-        shade_offset=(0, -3),
-        rim=(130, 214, 160),
-        rim_offset=(-1, 1.2),
+        body,
+        line=(20, 46, 52),
+        line_width=0.55,
+        shade=shade,
+        shade_offset=(float(r.uniform(-1, 1)), -3.2 * scale),
+        shade_feather=1.8,
+        rim=(150, 220, 170),
+        rim_offset=(-1.1, 1.3),
+        rim_alpha=0.55,
     )
+    # A few leaf strokes break the smooth blob silhouette.
+    for _ in range(int(r.integers(2, 5))):
+        bx = x + float(r.uniform(-8, 8)) * scale
+        cv.paint(
+            Stroke([(bx, y - 3 * scale), (bx + float(r.uniform(-4, 4)), y - 11 * scale)], 1.0, 0.2),
+            mix(body, GRASS_LIGHT, 0.45),
+            alpha=0.85,
+        )
     palette = ((255, 170, 110), (255, 226, 140), (255, 150, 190)) if warm else FLOWERS
-    for index, (fx, fy) in enumerate(
-        ((x - 6, y - 7), (x + 1, y - 12), (x + 6, y - 6), (x - 1, y - 4))
-    ):
-        color = palette[index % len(palette)]
-        cv.paint(Circle(fx, fy, 2.1), color)
-        cv.paint(Circle(fx - 0.5, fy - 0.5, 0.8), (255, 255, 240))
-        cv.glow(fx, fy, 6, color, 0.25)
-    del rng
+    bloom_count = int(r.choice((0, 2, 3, 3, 4)))
+    offset = int(r.integers(0, len(palette)))
+    for index in range(bloom_count):
+        fx = x + float(r.uniform(-8, 8)) * scale
+        fy = y - float(r.uniform(5, 12)) * scale
+        color = palette[(index + offset) % len(palette)]
+        size = float(r.uniform(1.4, 2.3)) * scale
+        cv.paint(Circle(fx, fy, size), color)
+        cv.paint(Circle(fx - 0.5, fy - 0.5, size * 0.38), (255, 255, 240))
+        cv.glow(fx, fy, 6 * scale, color, 0.22)
+
+
+MUSHROOM_CAPS: tuple[tuple[Color, Color, Color], ...] = (
+    ((90, 230, 220), (60, 230, 210), (230, 255, 250)),
+    ((150, 190, 255), (110, 160, 255), (232, 240, 255)),
+    ((190, 150, 255), (170, 120, 255), (242, 232, 255)),
+    ((255, 190, 150), (255, 170, 110), (255, 240, 226)),
+)
 
 
 def _mushrooms(cv: Canvas, x: float, y: float, scale: float) -> None:
-    for dx, h, r in ((-5, 9, 5.0), (3, 13, 6.5), (9, 6, 3.6)):
+    """A small glowing cluster: count, heights, leans, and cap color vary."""
+    r = _prop_rng(x, y, 2)
+    cap_color, glow_color, spark = MUSHROOM_CAPS[int(r.choice(4, p=(0.45, 0.2, 0.2, 0.15)))]
+    count = int(r.integers(2, 5))
+    scale *= float(r.uniform(0.8, 1.2))
+    for index in range(count):
+        dx = (index - (count - 1) / 2) * float(r.uniform(5.5, 8.0))
+        h = float(r.uniform(5, 14))
+        cap_r = float(r.uniform(3.2, 6.8))
+        lean = float(r.uniform(-2.2, 2.2))
         mx = x + dx * scale
-        cv.paint(Segment((mx, y), (mx, y - h * scale), 1.3 * scale), (220, 226, 236))
-        cap = Ellipse(mx, y - h * scale, r * scale, r * scale * 0.6) & Box(
-            mx - 20, y - h * scale - 20, mx + 20, y - h * scale + 1
-        )
-        cv.paint(cap.grow(0.8), INK)
-        cv.paint(cap, (90, 230, 220))
+        my = y + float(r.uniform(-1.5, 1.5))
+        top = (mx + lean * scale, my - h * scale)
         cv.paint(
-            Circle(mx - r * 0.3 * scale, y - h * scale - r * 0.3 * scale, 0.9 * scale),
-            (230, 255, 250),
+            Stroke(
+                [(mx, my), (mx + lean * 0.4 * scale, my - h * 0.5 * scale), top],
+                1.3 * scale,
+                0.9 * scale,
+            ),
+            (206, 214, 232),
         )
-        cv.glow(mx, y - h * scale, 16 * scale, (60, 230, 210), 0.35)
+        cap = Ellipse(top[0], top[1], cap_r * scale, cap_r * scale * 0.58) & Box(
+            top[0] - 20, top[1] - 20, top[0] + 20, top[1] + 1
+        )
+        cv.paint(cap.grow(0.6), (18, 40, 60), alpha=0.85)
+        cv.paint(cap, cap_color)
+        cv.paint(
+            cap - cap.shift(0, -1.4 * scale), mix(cap_color, (20, 60, 90), 0.4), alpha=0.6, clip=cap
+        )
+        cv.paint(
+            Circle(top[0] - cap_r * 0.3 * scale, top[1] - cap_r * 0.3 * scale, 0.8 * scale), spark
+        )
+        cv.glow(top[0], top[1], 15 * scale, glow_color, 0.3)
 
 
 def _tuft(
@@ -1356,6 +1433,95 @@ def paint_lighting(cv: Canvas) -> None:
     )
 
 
+def paint_focal_light(cv: Canvas) -> None:
+    """Warm shrine against cool meadow, a lit approach, and a hero Compass dais."""
+    sx, sy = SHRINE_CENTER
+
+    # Cool the surroundings so the shrine's warmth is the strongest contrast.
+    def cool(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        d = np.hypot((x - sx) / 250, (y - (sy - 20)) / 170)
+        return np.clip((d - 0.7) * 0.55, 0, 0.3)
+
+    cv.paint(None, (8, 22, 52), mode="over", mask=cool, box=(0, 0, WIDTH, HEIGHT))
+    # A warm wash climbing the trail toward the shrine, fading with distance.
+    lit = TRAIL_POINTS[-46:]
+    for index, (x, y) in enumerate(lit):
+        strength = (index / (len(lit) - 1)) ** 1.6
+        cv.glow(x, y, 24 + 16 * strength, (255, 196, 120), 0.036 * strength, squash=0.7)
+    # The Compass clearing: a violet moon-pool and a brighter dais rim.
+    cx, cy = CLEARING_CENTER
+    cy += 5
+    cv.glow(cx, cy - 6, 150, (150, 110, 255), 0.26, squash=0.55, power=1.7)
+    cv.glow(cx, cy - 26, 70, (220, 200, 255), 0.22, squash=1.0, power=2.2)
+    rim = Ellipse(cx, cy + 3, 70, 25) - Ellipse(cx, cy + 3, 68.4, 23.6)
+    cv.paint(rim, (226, 210, 255), alpha=0.6, feather=0.4)
+    outer = Ellipse(cx, cy - 3, 57, 18.5) - Ellipse(cx, cy - 3, 55.6, 17.6)
+    cv.paint(outer, (196, 170, 255), alpha=0.55)
+    for index in range(24):
+        a = index * math.tau / 24
+        length = 2.6 if index % 2 else 1.6
+        cv.paint(
+            Segment(
+                (cx + 64.5 * math.cos(a), cy - 3 + 21 * math.sin(a)),
+                (cx + (64.5 + length) * math.cos(a), cy - 3 + (21 + length * 0.34) * math.sin(a)),
+                0.45,
+            ),
+            (214, 192, 255),
+            alpha=0.6,
+        )
+
+
+def paint_atmosphere(cv: Canvas) -> None:
+    """Cool haze that thickens with distance, thinning over the landmarks."""
+    cx, cy = CLEARING_CENTER
+
+    def haze(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        base = np.clip(1 - (y - HORIZON) / 150, 0, 1) ** 1.7 * 0.3
+        near_clearing = np.exp(-(((x - cx) / 120) ** 2 + ((y - cy) / 50) ** 2))
+        return base * (1 - 0.7 * near_clearing)
+
+    cv.paint(None, (130, 146, 214), mode="over", mask=haze, box=(0, HORIZON - 30, WIDTH, 330))
+    # Value separation: a soft shadow band under the far tree line.
+    cv.paint(
+        None,
+        (10, 20, 50),
+        mask=lambda x, y: np.exp(-(((y - (HORIZON + 26)) / 16) ** 2)) * 0.22,
+        box=(0, HORIZON, WIDTH, HORIZON + 70),
+    )
+
+
+def paint_finish(cv: Canvas) -> None:
+    """Soften the hard vector edges into a painted, atmospheric plate.
+
+    Blends a slightly blurred copy over the whole plate, a wider one into the
+    distance, then adds bloom on the brightest lights, lifted blacks, and a fine
+    brush grain. Landmarks stay readable: edges soften, shapes do not move.
+    """
+    ss = cv.ss
+    sharp = cv.rgb.copy()
+    soft = _box3(sharp, max(1, round(1.0 * ss / 1.7)))
+    wide = _box3(sharp, max(1, round(3.6 * ss / 1.7)))
+    height = sharp.shape[0]
+    ys = ((np.arange(height, dtype=np.float32) + 0.5) / ss)[:, None, None]
+    far = np.clip((HORIZON + 34 - ys) / 60, 0, 1) * np.clip((ys - 70) / 40, 0, 1)
+    out = sharp * 0.68 + soft * 0.32
+    out = out * (1 - far * 0.5) + wide * far * 0.5
+    # Bloom from bright lights (moon, flames, crystals, flowers).
+    peak = np.clip(out - 0.6, 0, 1)
+    bloom = _box3(peak, max(1, round(8 * ss / 1.7)))
+    out = out + bloom * 0.9
+    # Lifted blacks keep the shadows deep indigo instead of muddy.
+    out = out * 0.955 + np.asarray((14, 16, 40), np.float32) / 255 * 0.045
+    # Brush grain at two scales, gentle enough to read as paint.
+    rng = np.random.default_rng(31)
+    fine = rng.normal(0, 1, sharp.shape[:2]).astype(np.float32)
+    grain = _box3(fine[..., None], 1)[..., 0] * 0.055
+    coarse = rng.normal(0, 1, (sharp.shape[0] // 6 + 1, sharp.shape[1] // 6 + 1)).astype(np.float32)
+    coarse = np.kron(coarse, np.ones((6, 6), np.float32))[: sharp.shape[0], : sharp.shape[1]]
+    grain = grain + _box3(coarse[..., None], 2)[..., 0] * 0.03
+    cv.rgb = np.clip(out * (1 + grain[..., None]), 0, 1.4).astype(np.float32)
+
+
 def paint_background() -> Canvas:
     rng = np.random.default_rng(20260930)
     cv = Canvas(WIDTH, HEIGHT, ss=2)
@@ -1374,7 +1540,10 @@ def paint_background() -> Canvas:
     paint_scatter(cv, rng)
     paint_trees(cv, rng)
     paint_shrine(cv)
+    paint_atmosphere(cv)
     paint_lighting(cv)
+    paint_focal_light(cv)
+    paint_finish(cv)
     return cv
 
 
@@ -1444,4 +1613,36 @@ def paint_foreground() -> Canvas:
                 FG_RIM,
                 alpha=0.6,
             )
+    # Authored occluder tufts and a pebble row: they cover only the lowest part
+    # of a character walking along the bottom, and stay clear of every landmark.
+    for cx, lift, spread in ((318, 34, 26), (452, 26, 20), (596, 38, 24), (700, 28, 22)):
+        for blade in range(7):
+            offset = (blade - 3) * spread / 3
+            sway = float(rng.uniform(-6, 6)) + (blade - 3) * 1.6
+            height = lift * float(rng.uniform(0.55, 1.0))
+            y = HEIGHT + 4
+            points = [
+                (cx + offset, y),
+                (cx + offset + sway * 0.4, y - height * 0.55),
+                (cx + offset + sway, y - height),
+            ]
+            cv.paint(Stroke(points, 1.9, 0.2), FG_DARK)
+            cv.paint(Stroke(points[1:], 0.8, 0.15), FG_RIM, alpha=0.45)
+    for px, size in ((388, 9), (512, 7), (806, 10)):
+        pebble = Ellipse(px, HEIGHT + 2, size * 1.5, size * 0.8)
+        cv.paint(pebble.grow(0.9), (4, 10, 16))
+        cv.paint(pebble, (26, 40, 56))
+        cv.paint(pebble - pebble.shift(-1.5, 1.6), FG_RIM, alpha=0.5, feather=0.8, clip=pebble)
+    # A soft near-ground shade deepens the bottom of the frame (value separation).
+    cv.paint(
+        None,
+        (4, 12, 18),
+        alpha=0.3,
+        mask=lambda x, y: np.clip((y - 572) / 68, 0, 1) ** 1.5,
+        box=(0, 560, WIDTH, HEIGHT),
+    )
+    # Soften the silhouettes a touch so the frame sits in the painting.
+    soft = cv.blurred(0.7)
+    cv.rgb = cv.rgb * 0.6 + soft.rgb * 0.4
+    cv.a = cv.a * 0.6 + soft.a * 0.4
     return cv

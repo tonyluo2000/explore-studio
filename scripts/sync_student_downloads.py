@@ -40,7 +40,9 @@ def sync_student_downloads(repo_root: Path | None = None) -> dict:
 
     Returns the builder's receipt for the ZIP that was published.
     """
-    root = Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[1]
+    root = (
+        Path(repo_root).resolve() if repo_root is not None else Path(__file__).resolve().parents[1]
+    )
     downloads_dir = root / DOWNLOADS_DIR
     downloads_dir.mkdir(parents=True, exist_ok=True)
 
