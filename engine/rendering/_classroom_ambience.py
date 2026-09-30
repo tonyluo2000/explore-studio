@@ -1,10 +1,15 @@
 """Living-world ambience for the S02 Moon Meadow.
 
 Everything here is a pure function of an injected clock: ants on two fixed
-looping trails, drifting firefly motes, swaying reeds, crystal glints, and
-twinkling stars. Nothing reads or writes entity state, nothing collides, and
-every count is a fixed constant, so the Trail's gameplay is untouched and the
-per-frame cost is bounded.
+looping trails, drifting firefly motes, swaying reeds, crystal glints,
+twinkling stars, and the shrine braziers' flicker. Nothing reads or writes
+entity state, nothing collides, and every count is a fixed constant, so the
+Trail's gameplay is untouched and the per-frame cost is bounded.
+
+Over the illustrated meadow plate, the effects animate the painted scenery's
+own positions (``_meadow_layout``) and the reeds are trusted sprite frames;
+over the procedural fallback backdrop they use that backdrop's positions and
+procedural shapes, exactly as before.
 
 Internal module — not part of the Student API.
 """
@@ -17,6 +22,12 @@ from typing import Final
 
 from engine.rendering._classroom_environment import _CRYSTAL_CLUSTERS, _STARS
 from engine.rendering._effects import Color, glow, mix, sparkle
+from engine.rendering._meadow_layout import (
+    BRIGHT_STARS,
+    CRYSTAL_CLUSTERS,
+    SHRINE_FLAMES,
+    crystal_tip,
+)
 
 Point = tuple[float, float]
 
@@ -215,24 +226,51 @@ def _draw_ant_hill(renderer: object, x: float, y: float) -> None:
     renderer.draw_circle(round(x), round(y - 3), 2, _ANT_HOLE)  # type: ignore[attr-defined]
 
 
-#: Reed clumps that sway on open ground (the backdrop's own tufts stay still).
+#: Reed clumps (x, ground y) that sway: around the pond and on open ground.
 REED_CLUMPS: Final = (
-    (178.0, 612.0),
-    (412.0, 604.0),
-    (704.0, 452.0),
-    (904.0, 612.0),
-    (22.0, 300.0),
-    (604.0, 296.0),
-    (262.0, 414.0),
-    (936.0, 470.0),
-    (372.0, 170.0),
+    (26.0, 318.0),
+    (142.0, 316.0),
+    (112.0, 284.0),
+    (262.0, 420.0),
+    (704.0, 456.0),
+    (178.0, 604.0),
+    (604.0, 300.0),
+    (452.0, 240.0),
+    (942.0, 478.0),
 )
+REED_SHEET: Final = "ambient/reeds"
+REED_FRAME: Final = (32, 44)
+REED_SWAY_FRAMES: Final = 9
+#: Largest ``reed_sway`` magnitude; maps onto the outermost sway frames.
+_REED_SWAY_RANGE: Final = 4.3
 _REED_BLADES: Final = ((-5.0, 14.0), (-1.5, 20.0), (2.0, 17.0), (5.5, 12.0))
 
 
 def reed_sway(clock: float, x: float) -> float:
     """Horizontal tip offset (pixels) of one reed clump at *clock*."""
-    return 3.2 * math.sin(clock * 1.6 + x * 0.037) + 1.1 * math.sin(clock * 3.1 + x * 0.05)
+    # A slow gust envelope makes the sway breathe instead of ticking.
+    gust = 0.75 + 0.25 * math.sin(clock * 0.37 + x * 0.011)
+    return gust * (2.7 * math.sin(clock * 1.5 + x * 0.037) + 0.9 * math.sin(clock * 2.9 + x * 0.05))
+
+
+def reed_column(sway: float) -> str:
+    """The trusted reed frame whose lean is nearest to *sway* pixels."""
+    t = max(-1.0, min(1.0, sway / _REED_SWAY_RANGE))
+    return f"sway-{round((t + 1) / 2 * (REED_SWAY_FRAMES - 1))}"
+
+
+def _draw_reed_sprites(renderer: object, clock: float) -> bool:
+    draw_frame = getattr(renderer, "draw_sprite_frame", None)
+    if draw_frame is None:
+        return False
+    width, height = REED_FRAME
+    for x, y in REED_CLUMPS:
+        column = reed_column(reed_sway(clock, x))
+        if not draw_frame(
+            REED_SHEET, "sway", column, round(x - width / 2), round(y - height + 2), width, height
+        ):
+            return False
+    return True
 
 
 def _draw_reeds(renderer: object, clock: float) -> None:
@@ -261,6 +299,39 @@ def _draw_crystal_shimmer(renderer: object, clock: float) -> None:
             sparkle(renderer, x + 1, y - 21, size, _GLINT)
 
 
+_VIOLET_GLOW: Final[Color] = (170, 120, 255)
+_FLAME: Final[Color] = (255, 170, 80)
+
+
+def _draw_painted_crystal_shimmer(renderer: object, clock: float) -> None:
+    """Breathe light into the painted crystals and glint their tallest tips."""
+    for index, cluster in enumerate(CRYSTAL_CLUSTERS):
+        x, y, scale, hue = cluster
+        tip_x, tip_y = crystal_tip(cluster)
+        color = _VIOLET_GLOW if hue else _CRYSTAL_GLOW
+        pulse = 0.5 + 0.5 * math.sin(clock * 1.7 + index * 1.9)
+        glow(renderer, x, y - 14 * scale, round(30 * scale), color, 0.1 + 0.14 * pulse)
+        period = 4.4 + 0.53 * index
+        cycle = (clock + index * 1.1) % period
+        if cycle < 0.8:
+            # An eased glint (slow in, slow out) rather than a linear blink.
+            size = 5.5 * math.sin(math.pi * cycle / 0.8) ** 2
+            glow(renderer, tip_x, tip_y, 9, color, 0.5 * size / 5.5)
+            sparkle(renderer, tip_x, tip_y, size, _GLINT)
+
+
+def shrine_flame_flicker(clock: float, index: int) -> float:
+    """Brightness (0.5-1.0) of one painted shrine brazier at *clock*."""
+    flicker = 0.5 + 0.3 * math.sin(clock * 8.3 + index * 2.1) + 0.2 * math.sin(clock * 19.7 + index)
+    return 0.5 + 0.5 * max(0.0, min(1.0, flicker))
+
+
+def _draw_shrine_flames(renderer: object, clock: float) -> None:
+    for index, (x, y) in enumerate(SHRINE_FLAMES):
+        strength = shrine_flame_flicker(clock, index)
+        glow(renderer, x, y - 6, 20, _FLAME, 0.35 * strength)
+
+
 #: Firefly-like motes: fixed anchors, bounded drift, gentle twinkle.
 MOTE_ANCHORS: Final = (
     (118.0, 300.0),
@@ -284,8 +355,11 @@ def mote_states(clock: float) -> tuple[tuple[float, float, float], ...]:
         phase = index * 2.39
         states.append(
             (
-                x + 18 * math.sin(clock * 0.33 + phase),
-                y + 12 * math.sin(clock * 0.47 + phase * 1.7) - 4 * math.sin(clock * 0.9 + phase),
+                x + 14 * math.sin(clock * 0.33 + phase) + 4 * math.sin(clock * 0.81 + phase * 2.3),
+                y
+                + 9 * math.sin(clock * 0.47 + phase * 1.7)
+                + 3 * math.sin(clock * 0.19 + phase * 0.6)
+                - 4 * math.sin(clock * 0.9 + phase),
                 0.25 + 0.75 * max(0.0, math.sin(clock * 1.25 + phase)) ** 2,
             )
         )
@@ -296,20 +370,32 @@ def mote_states(clock: float) -> tuple[tuple[float, float, float], ...]:
 TWINKLING_STARS: Final = tuple(star for index, star in enumerate(_STARS) if index % 7 == 0)[:8]
 
 
-def _draw_twinkles(renderer: object, clock: float) -> None:
-    for index, (x, y) in enumerate(TWINKLING_STARS):
+def _draw_twinkles(renderer: object, clock: float, stars: tuple[tuple[float, float], ...]) -> None:
+    for index, (x, y) in enumerate(stars):
         strength = max(0.0, math.sin(clock * 0.9 + index * 2.3))
         if strength > 0.55:
             sparkle(renderer, x, y, 1 + 3 * (strength - 0.55) / 0.45, _STAR)
 
 
-def draw_ground_life(renderer: object, clock: float) -> None:
-    """Ground-level ambience drawn above the backdrop, below every entity."""
-    _draw_twinkles(renderer, clock)
-    _draw_crystal_shimmer(renderer, clock)
-    _draw_reeds(renderer, clock)
-    for trail in ANT_TRAILS:
-        _draw_ant_hill(renderer, *trail.hill)
+def draw_ground_life(renderer: object, clock: float, *, illustrated: bool = False) -> None:
+    """Ground-level ambience drawn above the backdrop, below every entity.
+
+    *illustrated* says the painted meadow plate is the backdrop, so effects
+    follow its scenery (its anthills are painted); otherwise they follow the
+    procedural backdrop.
+    """
+    if illustrated:
+        _draw_twinkles(renderer, clock, BRIGHT_STARS)
+        _draw_painted_crystal_shimmer(renderer, clock)
+        _draw_shrine_flames(renderer, clock)
+    else:
+        _draw_twinkles(renderer, clock, TWINKLING_STARS)
+        _draw_crystal_shimmer(renderer, clock)
+    if not _draw_reed_sprites(renderer, clock):
+        _draw_reeds(renderer, clock)
+    if not illustrated:
+        for trail in ANT_TRAILS:
+            _draw_ant_hill(renderer, *trail.hill)
     for ant in ant_states(clock):
         _draw_ant(renderer, ant)
 

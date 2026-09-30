@@ -8,8 +8,11 @@ Without a pose (every Trail except M02) each sprite is the static procedural
 drawing. Inside :func:`classroom_sprite_pose` (the M02 presentation layer)
 Nova, Pixel, and the Crystal Lantern draw a frame from their trusted sprite
 sheet when the renderer supports it and the entity color matches the art's
-declared accent; otherwise they draw a posed procedural fallback. A pose never
-changes the bounds a sprite is drawn into.
+declared accent; otherwise they draw a posed procedural fallback. The Moon
+Compass is student-colored, so its trusted art is layered: a neutral rune ring
+tinted by the student's color, an untinted body, a pre-rotated needle, and a
+glass sheen, all drawn inside the Compass's own box. A pose never changes the
+bounds a sprite is drawn into.
 """
 
 from __future__ import annotations
@@ -53,13 +56,25 @@ class _SpriteRenderer(Protocol):
 
 SpriteDrawer = Callable[..., None]
 
-#: Trusted sprite sheets for the course-owned examples. The Moon Compass is
-#: student-colored, so it stays procedural and tinted by the student's color.
+#: Trusted sprite sheets drawn only for their declared accent color.
 SPRITE_SHEET_IDS: Final = {
     NOVA_QUALIFIED_ID: "characters/nova",
     PIXEL_QUALIFIED_ID: "characters/pixel",
     CRYSTAL_LANTERN_QUALIFIED_ID: "objects/crystal-lantern",
 }
+#: The student-colored Moon Compass: neutral layers tinted at draw time.
+COMPASS_SHEET_ID: Final = "objects/moon-compass"
+COMPASS_NEEDLE_SHEET_ID: Final = "objects/moon-compass-needle"
+COMPASS_NEEDLE_ANGLES: Final = 64
+
+
+def compass_needle_column(angle: float) -> str:
+    """The pre-rotated needle frame nearest to *angle* (radians, clockwise)."""
+    if not math.isfinite(angle):
+        angle = 0.0
+    index = round(angle / math.tau * COMPASS_NEEDLE_ANGLES) % COMPASS_NEEDLE_ANGLES
+    return f"angle-{index:02d}"
+
 
 _ACTIVE_POSE: ContextVar[SpritePose | None] = ContextVar("classroom_sprite_pose", default=None)
 
@@ -433,6 +448,36 @@ def _draw_trusted_frame(
     )
 
 
+def _draw_trusted_compass(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    color: Color,
+    pose: SpritePose,
+) -> bool:
+    """Draw the layered Compass art at the Compass's own box, tinted by *color*."""
+    draw_frame = getattr(renderer, "draw_sprite_frame", None)
+    if draw_frame is None or pose.column is None:
+        return False
+    top = y + max(0, min(pose.bob, height // 20))
+    if not draw_frame(COMPASS_SHEET_ID, "ring", pose.column, x, top, width, height, tint=color):
+        return False
+    draw_frame(COMPASS_SHEET_ID, "body", pose.column, x, top, width, height)
+    draw_frame(
+        COMPASS_NEEDLE_SHEET_ID,
+        "needle",
+        compass_needle_column(pose.needle_angle),
+        x,
+        top,
+        width,
+        height,
+    )
+    draw_frame(COMPASS_SHEET_ID, "glass", pose.column, x, top, width, height)
+    return True
+
+
 def draw_classroom_sprite(
     renderer: _SpriteRenderer,
     qualified_id: str | None,
@@ -450,6 +495,9 @@ def draw_classroom_sprite(
     try:
         if pose is None:
             drawer(renderer, x, y, width, height, color)
+        elif qualified_id == MOON_COMPASS_QUALIFIED_ID:
+            if not _draw_trusted_compass(renderer, x, y, width, height, color, pose):
+                drawer(renderer, x, y, width, height, color, pose)
         elif not _draw_trusted_frame(renderer, qualified_id, x, y, width, height, color, pose):
             drawer(renderer, x, y, width, height, color, pose)
     except Exception:

@@ -69,6 +69,7 @@ class Platform:
         self._fonts: dict[int, pygame.font.Font] = {}
         self._glows: dict[tuple[int, tuple[int, int, int], int], pygame.Surface] = {}
         self._shadows: dict[tuple[int, int, tuple[int, int, int], int], pygame.Surface] = {}
+        self._panels: dict[tuple[object, ...], pygame.Surface] = {}
 
     def initialize(self) -> None:
         """Initialize Pygame and create the application window.
@@ -360,7 +361,9 @@ class Platform:
         except pygame.error as exc:
             raise ValueError(f"image could not be decoded: {exc}") from exc
         if pygame.display.get_init() and pygame.display.get_surface() is not None:
-            surface = surface.convert_alpha()
+            # Opaque plates (no alpha channel) blit much faster without one.
+            opaque = not surface.get_flags() & pygame.SRCALPHA and surface.get_alpha() is None
+            surface = surface.convert() if opaque else surface.convert_alpha()
         return ImageHandle(surface.get_width(), surface.get_height(), surface)
 
     def crop_image(
@@ -378,12 +381,24 @@ class Platform:
         source = image.native
         if not isinstance(source, pygame.Surface):
             raise TypeError("image is not a platform image")
-        frame = source.subsurface(pygame.Rect(x, y, width, height)).copy()
+        if (x, y, width, height) == (0, 0, source.get_width(), source.get_height()):
+            frame = source
+        else:
+            frame = source.subsurface(pygame.Rect(x, y, width, height)).copy()
         if (out_width, out_height) != (width, height):
             frame = pygame.transform.smoothscale(frame, (out_width, out_height))
         if flip_x:
             frame = pygame.transform.flip(frame, True, False)
         return ImageHandle(frame.get_width(), frame.get_height(), frame)
+
+    def tint_image(self, image: ImageHandle, color: tuple[int, int, int]) -> ImageHandle:
+        """Return a copy of *image* with its color multiplied by *color*."""
+        source = image.native
+        if not isinstance(source, pygame.Surface):
+            raise TypeError("image is not a platform image")
+        tinted = source.copy()
+        tinted.fill((*color, 255), special_flags=pygame.BLEND_RGBA_MULT)
+        return ImageHandle(tinted.get_width(), tinted.get_height(), tinted)
 
     def draw_image(self, image: ImageHandle, x: int, y: int) -> None:
         """Blit an engine image with its per-pixel transparency."""
@@ -481,6 +496,78 @@ class Platform:
             rect = rect.inflate(-2 * border_width, -2 * border_width)
             radius = max(0, radius - border_width)
         pygame.draw.rect(self._window, color, rect, border_radius=radius)
+
+    def draw_translucent_panel(
+        self,
+        rects: tuple[tuple[int, int, int, int], ...],
+        color: tuple[int, int, int],
+        alpha: int,
+        radius: int,
+        border_color: tuple[int, int, int] | None = None,
+        border_alpha: int = 0,
+        soften: bool = False,
+    ) -> None:
+        """Blend one translucent panel shaped as the union of rounded *rects*.
+
+        With ``soften``, the cached panel also gets a gentle top-to-bottom
+        lightening and a faint dark halo, so it reads as one soft card.
+
+        The panel is rendered once into a cached texture, so overlapping
+        rects never double their alpha and repeat frames cost one blit.
+        """
+        if self._window is None:
+            raise RuntimeError("Cannot draw: platform not initialized.")
+        if not rects or alpha <= 0:
+            return
+        left = min(rect[0] for rect in rects)
+        top = min(rect[1] for rect in rects)
+        right = max(rect[0] + rect[2] for rect in rects)
+        bottom = max(rect[1] + rect[3] for rect in rects)
+        key = (rects, color, alpha, radius, border_color, border_alpha, soften)
+        texture = self._panels.get(key)
+        if texture is None:
+            if len(self._panels) >= _MAX_EFFECT_TEXTURES:
+                self._panels.clear()
+            size = (right - left, bottom - top)
+            shape = pygame.Surface(size, pygame.SRCALPHA)
+            shape.fill((0, 0, 0, 0))
+            for x, y, width, height in rects:
+                pygame.draw.rect(
+                    shape,
+                    (255, 255, 255, 255),
+                    (x - left, y - top, width, height),
+                    border_radius=radius,
+                )
+            texture = pygame.Surface(size, pygame.SRCALPHA)
+            texture.fill((*color, alpha))
+            if soften:
+                lift = pygame.Surface(size, pygame.SRCALPHA)
+                for row in range(size[1]):
+                    weight = max(0.0, 1 - row / max(1, size[1] - 1))
+                    tone = round(34 * weight)
+                    lift.fill((tone, tone, round(tone * 1.4), 0), (0, row, size[0], 1))
+                texture.blit(lift, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+            texture.blit(shape, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            if border_color is not None and border_alpha > 0:
+                inner = pygame.Surface(size, pygame.SRCALPHA)
+                inner.fill((0, 0, 0, 0))
+                for x, y, width, height in rects:
+                    pygame.draw.rect(
+                        inner,
+                        (255, 255, 255, 255),
+                        (x - left + 1, y - top + 1, width - 2, height - 2),
+                        border_radius=max(0, radius - 1),
+                    )
+                ring = pygame.mask.from_surface(shape)
+                ring.erase(pygame.mask.from_surface(inner), (0, 0))
+                texture.blit(
+                    ring.to_surface(
+                        setcolor=(*border_color, border_alpha), unsetcolor=(0, 0, 0, 0)
+                    ),
+                    (0, 0),
+                )
+            self._panels[key] = texture
+        self._window.blit(texture, (left, top))
 
     def present_frame(self) -> None:
         """Swap buffers / present the completed frame to the display.

@@ -1,4 +1,4 @@
-"""Original procedural backdrop for the S02 Classroom Trail.
+"""Backdrop for the S02 Classroom Trail: the illustrated Moon Meadow.
 
 Like the S02 sprites, this is a narrow allow-list rather than a world or tile
 engine: only the M02 mission receives the backdrop, and every other Trail keeps
@@ -6,6 +6,11 @@ its plain cleared frame. The backdrop is static scenery. It reads no entity
 state, so it can never move, resize, or hide the authoritative x/y of any
 entity; it only decorates the canonical S02 start, discovery clearing, and
 Lantern shrine and connects them with one visible trail.
+
+When the renderer can draw trusted art, the backdrop is the course-owned
+illustrated plate ``scenery/moon-meadow`` (see ``scripts/build_trusted_art.py``),
+drawn with one opaque blit. If that plate is missing, fails its digest, or
+cannot be decoded, the original procedural backdrop below is drawn instead.
 """
 
 from __future__ import annotations
@@ -316,11 +321,43 @@ def _draw_backdrop(renderer: _SpriteRenderer) -> None:
     _draw_chevrons(renderer)
 
 
+#: Trusted scenery plates: the opaque background and the framing foreground.
+MEADOW_BACKDROP: Final = ("scenery/moon-meadow", "night", "backdrop")
+MEADOW_FOREGROUND: Final = ("scenery/moon-meadow-foreground", "night", "frame")
+
+
+def draw_scenery_plate(renderer: object, plate: tuple[str, str, str]) -> bool:
+    """Draw one full-screen trusted plate; report False when it is unavailable."""
+    draw_frame = getattr(renderer, "draw_sprite_frame", None)
+    if draw_frame is None:
+        return False
+    return bool(draw_frame(*plate, 0, 0, _WIDTH, _HEIGHT))
+
+
+def illustrated_backdrop_available(renderer: object) -> bool:
+    """True when the renderer's trusted library can serve the illustrated plate.
+
+    Ambient effects use this to animate the painted scenery's positions, and
+    fall back to the procedural backdrop's positions otherwise. The frame
+    lookup is cached by the library, so asking every frame costs a dict read.
+    """
+    library = getattr(renderer, "sprite_sheets", None)
+    frame = getattr(library, "frame", None)
+    if frame is None:
+        return False
+    try:
+        return frame(*MEADOW_BACKDROP, _WIDTH, _HEIGHT) is not None
+    except Exception:
+        return False
+
+
 def draw_classroom_backdrop(renderer: _SpriteRenderer, mission_id: str) -> bool:
     """Draw the S02 scenery behind entities; report whether it completed."""
     if mission_id != S02_MISSION_ID:
         return False
     try:
+        if draw_scenery_plate(renderer, MEADOW_BACKDROP):
+            return True
         _draw_backdrop(renderer)
     except Exception:
         _LOGGER.exception("Classroom backdrop failed for %s; using plain frame", mission_id)

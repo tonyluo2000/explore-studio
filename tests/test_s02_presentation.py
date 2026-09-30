@@ -29,6 +29,8 @@ from engine.rendering._classroom_ambience import (
     reed_sway,
 )
 from engine.rendering._classroom_sprites import (
+    COMPASS_NEEDLE_SHEET_ID,
+    COMPASS_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
     MOON_COMPASS_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
@@ -42,6 +44,7 @@ from engine.rendering._trail_presentation import (
     CELEBRATION_DURATION,
     HUD_BOTTOM,
     MAX_BURSTS,
+    NOVA_STRIDE,
     NOVA_WALK,
     TrailPresentation,
     nova_visible_rect,
@@ -180,16 +183,25 @@ class FakeDecoder:
         self.decoded += 1
         if self.fail:
             raise ValueError("corrupt image")
-        return ImageHandle(900, 300, data)
+        return ImageHandle(8192, 8192, data)
 
     def crop_image(self, image, x, y, width, height, out_width, out_height, flip_x):  # type: ignore[no-untyped-def]
         self.crops.append((x, y, width, height, out_width, out_height, flip_x))
         return ImageHandle(out_width, out_height, (x, y, flip_x))
 
 
+TRUSTED_SCENERY_IDS = {
+    "scenery/moon-meadow",
+    "scenery/moon-meadow-foreground",
+    COMPASS_SHEET_ID,
+    COMPASS_NEEDLE_SHEET_ID,
+    "ambient/reeds",
+}
+
+
 def test_manifest_lists_every_trusted_sheet_with_matching_digests() -> None:
     manifest = json.loads((TRUSTED_ART_ROOT / "manifest.json").read_text())
-    assert set(manifest["assets"]) == set(SPRITE_SHEET_IDS.values())
+    assert set(manifest["assets"]) == set(SPRITE_SHEET_IDS.values()) | TRUSTED_SCENERY_IDS
     for entry in manifest["assets"].values():
         data = (TRUSTED_ART_ROOT / entry["file"]).read_bytes()
         assert hashlib.sha256(data).hexdigest() == entry["sha256"]
@@ -374,14 +386,18 @@ def test_clip_frame_selection_is_deterministic() -> None:
     once = AnimationClip("greet", ("a", "b"), 0.2, loop=False)
     assert once.frame_at(5.0) == "b"
     assert clip.frame_at(float("nan")) == "a"
-    assert [NOVA_WALK.frame_at_distance(d, 15) for d in (0, 14, 15, 31, 46, 60)] == [
+    assert len(NOVA_WALK.frames) == 8
+    assert [NOVA_WALK.frame_at_distance(d, 7.5) for d in (0, 7, 7.5, 16, 23, 60, 61)] == [
         "walk-0",
         "walk-0",
         "walk-1",
         "walk-2",
         "walk-3",
         "walk-0",
+        "walk-0",
     ]
+    # Eight frames per 60 px cycle: the same pace over the ground as before.
+    assert NOVA_STRIDE * len(NOVA_WALK.frames) == 60
 
 
 def test_facing_follows_the_dominant_motion_and_holds_when_still() -> None:
@@ -415,7 +431,7 @@ def test_nova_faces_its_movement_and_walks_with_changing_frames(directions, row,
         nova = renderer.sprites()["characters/nova"]
         assert nova[1] == row and nova[-1]["flip_x"] is flip
         columns.add(nova[2])
-    assert columns == {"walk-0", "walk-1", "walk-2", "walk-3"}  # animates, not slides
+    assert columns == set(NOVA_WALK.frames)  # animates, not slides
 
     _run(scene, 1.0)
     renderer.operations.clear()
@@ -690,10 +706,15 @@ def test_compass_effects_travel_exactly_with_student_coordinates() -> None:
     canonical = _compass_effects(GameRenderer(), 240, 180, clock=4.2)
     moved = _compass_effects(GameRenderer(), 690, 360, clock=4.2)
     kinds = {kind for kind, _ in canonical}
-    assert {"glow", "shadow", "polygon", "circle"} <= kinds
+    assert {"glow", "shadow", "polygon"} <= kinds
     assert len(canonical) == len(moved)
+    assert "sprite" in kinds  # the layered trusted Compass art
     for (kind, before), (_, after) in zip(canonical, moved, strict=True):
-        if kind == "polygon":
+        if kind == "sprite":
+            assert after[:3] == before[:3]  # same sheet, row, and frame
+            assert after[3:5] == (before[3] + 450, before[4] + 180)  # type: ignore[operator]
+            assert after[5:] == before[5:]
+        elif kind == "polygon":
             assert after[0] == _shift(before[0], 450, 180)
         elif kind == "line":
             assert after[:4] == (before[0] + 450, before[1] + 180, before[2] + 450, before[3] + 180)
@@ -884,9 +905,25 @@ def test_render_order_keeps_hud_text_first_after_all_shapes() -> None:
         "Mission state: Incomplete",
     ]
     sprite_order = [values[0] for kind, values in renderer.operations if kind == "sprite"]
-    assert sprite_order == ["objects/crystal-lantern", "characters/pixel", "characters/nova"]
-    first_sprite = kinds.index("sprite")
-    assert kinds.index("shadow") < first_sprite  # ground and shadows beneath entities
+    # The illustrated plate is first, the framing foreground comes after Nova.
+    assert sprite_order[0] == "scenery/moon-meadow"
+    assert sprite_order[-1] == "scenery/moon-meadow-foreground"
+    entities = [asset for asset in sprite_order if asset.startswith(("objects/", "characters/"))]
+    assert entities == [
+        "objects/crystal-lantern",
+        COMPASS_SHEET_ID,
+        COMPASS_SHEET_ID,
+        COMPASS_NEEDLE_SHEET_ID,
+        COMPASS_SHEET_ID,
+        "characters/pixel",
+        "characters/nova",
+    ]
+    first_entity = next(
+        index
+        for index, (kind, values) in enumerate(renderer.operations)
+        if kind == "sprite" and str(values[0]).startswith(("objects/", "characters/"))
+    )
+    assert 0 < kinds.index("shadow") < first_entity  # ground and shadows beneath entities
 
 
 def test_other_missions_are_untouched_by_the_presentation_layer() -> None:

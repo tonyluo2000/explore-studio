@@ -1,5 +1,30 @@
 {
   "assets": {
+    "ambient/reeds": {
+      "accent": [
+        70,
+        110,
+        94
+      ],
+      "columns": [
+        "sway-0",
+        "sway-1",
+        "sway-2",
+        "sway-3",
+        "sway-4",
+        "sway-5",
+        "sway-6",
+        "sway-7",
+        "sway-8"
+      ],
+      "file": "ambient/reeds/reeds.png",
+      "frame_height": 44,
+      "frame_width": 32,
+      "rows": [
+        "sway"
+      ],
+      "sha256": "3c7e6c031d0b98d675d52945be1aeaa03f184d317e5d842346a9f5af15888cfd"
+    },
     "characters/nova": {
       "accent": [
         255,
@@ -15,7 +40,11 @@
         "walk-0",
         "walk-1",
         "walk-2",
-        "walk-3"
+        "walk-3",
+        "walk-4",
+        "walk-5",
+        "walk-6",
+        "walk-7"
       ],
       "file": "characters/nova/nova.png",
       "frame_height": 100,
@@ -25,7 +54,7 @@
         "up",
         "right"
       ],
-      "sha256": "7ea7fb5f4790e462c167c390ab23a00da10405178c97911caf4df768e1d8e254"
+      "sha256": "54c31f7382e495c2a65fd5cff0309dfa4b238439452a182c63616e4cc7a296b8"
     },
     "characters/pixel": {
       "accent": [
@@ -50,7 +79,7 @@
       "rows": [
         "idle"
       ],
-      "sha256": "4bd105ca65350a606bfa29001b511138f080c21782c13d12b68440f4bc616dcd"
+      "sha256": "0310c94b2a7f3ff400a300e42d0b391e77e27b1431a03ec1685c956ba159cf12"
     },
     "objects/crystal-lantern": {
       "accent": [
@@ -70,7 +99,151 @@
       "rows": [
         "glow"
       ],
-      "sha256": "16c3e5b425d372ec993021ce6733b525cc2b8342690bb28b06fc5a517d9fa2ce"
+      "sha256": "b812d86caee244d3d3eb6877296d52cfb70e0115771dd010dc7b4daac8a62535"
+    },
+    "objects/moon-compass": {
+      "accent": [
+        255,
+        255,
+        255
+      ],
+      "columns": [
+        "spin-00",
+        "spin-01",
+        "spin-02",
+        "spin-03",
+        "spin-04",
+        "spin-05",
+        "spin-06",
+        "spin-07",
+        "spin-08",
+        "spin-09",
+        "spin-10",
+        "spin-11"
+      ],
+      "file": "objects/moon-compass/compass.png",
+      "frame_height": 60,
+      "frame_width": 80,
+      "rows": [
+        "ring",
+        "body",
+        "glass"
+      ],
+      "sha256": "781f3106f751039670b11f4d2aff79ce852d0e63a028568d2316de9605418a82"
+    },
+    "objects/moon-compass-needle": {
+      "accent": [
+        255,
+        255,
+        255
+      ],
+      "columns": [
+        "angle-00",
+        "angle-01",
+        "angle-02",
+        "angle-03",
+        "angle-04",
+        "angle-05",
+        "angle-06",
+        "angle-07",
+        "angle-08",
+        "angle-09",
+        "angle-10",
+        "angle-11",
+        "angle-12",
+        "angle-13",
+        "angle-14",
+        "angle-15",
+        "angle-16",
+        "angle-17",
+        "angle-18",
+        "angle-19",
+        "angle-20",
+        "angle-21",
+        "angle-22",
+        "angle-23",
+        "angle-24",
+        "angle-25",
+        "angle-26",
+        "angle-27",
+        "angle-28",
+        "angle-29",
+        "angle-30",
+        "angle-31",
+        "angle-32",
+        "angle-33",
+        "angle-34",
+        "angle-35",
+        "angle-36",
+        "angle-37",
+        "angle-38",
+        "angle-39",
+        "angle-40",
+        "angle-41",
+        "angle-42",
+        "angle-43",
+        "angle-44",
+        "angle-45",
+        "angle-46",
+        "angle-47",
+        "angle-48",
+        "angle-49",
+        "angle-50",
+        "angle-51",
+        "angle-52",
+        "angle-53",
+        "angle-54",
+        "angle-55",
+        "angle-56",
+        "angle-57",
+        "angle-58",
+        "angle-59",
+        "angle-60",
+        "angle-61",
+        "angle-62",
+        "angle-63"
+      ],
+      "file": "objects/moon-compass/needle.png",
+      "frame_height": 60,
+      "frame_width": 80,
+      "rows": [
+        "needle"
+      ],
+      "sha256": "210a063e0a91cf520c6e61677d858c027041969825a32230a8c9dbeb6f3af7e7"
+    },
+    "scenery/moon-meadow": {
+      "accent": [
+        40,
+        100,
+        94
+      ],
+      "columns": [
+        "backdrop"
+      ],
+      "file": "scenery/moon-meadow/background.png",
+      "frame_height": 640,
+      "frame_width": 960,
+      "rows": [
+        "night"
+      ],
+      "sha256": "92ed6f10400fb605d14a9375beaecdd272b189ceb37a4ea092d5ce405f6c0c29"
+    },
+    "scenery/moon-meadow-foreground": {
+      "accent": [
+        8,
+        20,
+        28
+      ],
+      "columns": [
+        "frame"
+      ],
+      "file": "scenery/moon-meadow/foreground.png",
+      "frame_height": 640,
+      "frame_width": 960,
+      "rows": [
+        "night"
+      ],
+      "sha256": "9dfe30ce588d82568d8e09bd4ac1e510a99ea1458f73d2a0dd7524315bd8497d"
     }
   },
   "generator": "scripts/build_trusted_art.py",

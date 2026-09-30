@@ -30,7 +30,12 @@ from typing import Final, Protocol
 
 from engine.animation import AnimationClip, Facing, SpritePose, facing_from_motion, is_blinking
 from engine.rendering._classroom_ambience import draw_air_life, draw_ground_life
-from engine.rendering._classroom_environment import S02_MISSION_ID
+from engine.rendering._classroom_environment import (
+    MEADOW_FOREGROUND,
+    S02_MISSION_ID,
+    draw_scenery_plate,
+    illustrated_backdrop_available,
+)
 from engine.rendering._classroom_sprites import (
     CRYSTAL_LANTERN_QUALIFIED_ID,
     MOON_COMPASS_QUALIFIED_ID,
@@ -56,9 +61,12 @@ SCREEN_HEIGHT: Final = 640
 HUD_BOTTOM: Final = 150
 
 NOVA_IDLE: Final = AnimationClip("idle", ("idle-0", "idle-1", "idle-2", "idle-3"), 0.34)
-NOVA_WALK: Final = AnimationClip("walk", ("walk-0", "walk-1", "walk-2", "walk-3"), 0.1)
-#: Pixels travelled per walk frame, so steps keep pace with the ground.
-NOVA_STRIDE: Final = 15.0
+NOVA_WALK: Final = AnimationClip("walk", tuple(f"walk-{index}" for index in range(8)), 0.05)
+#: Pixels travelled per walk frame, so steps keep pace with the ground: eight
+#: frames per 60 px cycle (two 30 px steps), the same pace as Nova V2.
+NOVA_STRIDE: Final = 7.5
+#: The Compass's rune ring turns 45 degrees (one rune) per loop.
+COMPASS_SPIN: Final = AnimationClip("spin", tuple(f"spin-{index:02d}" for index in range(12)), 0.11)
 PIXEL_IDLE: Final = AnimationClip("idle", ("idle-0", "idle-1", "idle-2", "idle-3"), 0.36)
 PIXEL_GREET: Final = AnimationClip(
     "greet", ("greet-0", "greet-1", "greet-2", "greet-1", "greet-2", "greet-3"), 0.2, loop=False
@@ -79,6 +87,16 @@ MAX_BURSTS: Final = 4
 BURST_PARTICLES: Final = 14
 CONFETTI_PIECES: Final = 36
 LANTERN_SPARKS: Final = 5
+COMPASS_SPARKLES: Final = 4
+
+#: Mirrors the Trail HUD layout in ``_classroom_trail_scene`` (a test keeps
+#: them equal). The panel only sits behind that text; the text is unchanged.
+HUD_TEXT_X: Final = 20
+HUD_ROWS_Y: Final = (20, 55, 85, 115)
+HUD_FONT: Final = 24
+_HUD_PANEL: Final[Color] = (14, 18, 48)
+_HUD_PANEL_ALPHA: Final = 168
+_HUD_EDGE: Final[Color] = (178, 190, 255)
 
 _PROMPT_FONT: Final = 22
 _BUBBLE_FONT: Final = 22
@@ -155,8 +173,25 @@ class _TrailNPC(Protocol):
     def conversation_lines(self) -> tuple[str, ...]: ...
 
 
+class _Mission(Protocol):
+    @property
+    def title(self) -> str: ...
+
+    @property
+    def instructions(self) -> str: ...
+
+
 class TrailView(Protocol):
     """The read-only scene state this layer observes."""
+
+    @property
+    def mission(self) -> _Mission: ...
+
+    @property
+    def visited_count(self) -> int: ...
+
+    @property
+    def total_objects(self) -> int: ...
 
     @property
     def player(self) -> _Player: ...
@@ -387,7 +422,12 @@ class TrailPresentation:
         if qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
             return SpritePose(row="glow", column=LANTERN_FLICKER.frame_at(self.clock))
         if qualified_id == MOON_COMPASS_QUALIFIED_ID:
-            return SpritePose(needle_angle=self.needle_angle(qualified_id))
+            return SpritePose(
+                row="ring",
+                column=COMPASS_SPIN.frame_at(self.clock),
+                needle_angle=self.needle_angle(qualified_id),
+                bob=round(1 + math.sin(self.clock * 1.8)),
+            )
         return None
 
     def _nova_pose(self) -> SpritePose:
@@ -396,12 +436,14 @@ class TrailPresentation:
         if self.moving:
             column = NOVA_WALK.frame_at_distance(self.walk_distance, NOVA_STRIDE)
             index = NOVA_WALK.frames.index(column)
+            # Fallback hints for the procedural sprite: dip on each contact,
+            # lift the left boot then the right one across the cycle.
             return SpritePose(
                 row=row,
                 column=column,
                 flip_x=flip,
-                bob=(1, 0, 1, 0)[index],
-                stride=(1, 0, -1, 0)[index],
+                bob=(1, 0, 0, 0, 1, 0, 0, 0)[index],
+                stride=(0, 1, 1, 1, 0, -1, -1, -1)[index],
             )
         if is_blinking(self.clock, period=3.8, duration=0.14, offset=0.9):
             return SpritePose(row=row, column="blink", flip_x=flip, blink=True)
@@ -457,7 +499,11 @@ class TrailPresentation:
     def draw_ground(self, renderer: object) -> None:
         """Ambient ground life: above the backdrop, below every entity."""
         if self.active:
-            self._guard("ground", draw_ground_life, renderer, self.clock)
+            self._guard("ground", self._draw_ground, renderer)
+
+    def _draw_ground(self, renderer: object) -> None:
+        illustrated = illustrated_backdrop_available(renderer)
+        draw_ground_life(renderer, self.clock, illustrated=illustrated)
 
     def draw_under(
         self, renderer: object, qualified_id: str | None, entity: _Positioned, color: Color
@@ -506,14 +552,49 @@ class TrailPresentation:
             if burst is not None:
                 boost = 0.5 * (1 - (self.clock - burst.start) / DISCOVERY_DURATION)
             pulse = 0.5 + 0.5 * math.sin(self.clock * 2.2)
+            radius = max(8, min(width, height))
+            # A dark moon-shadow ring first, so the light pops against the terrain.
+            soft_shadow(renderer, cx, cy + height * 0.1, radius * 11 // 10, radius * 7 // 10, 70)
+            # Outer violet aura, then the student-colored body light, then a hot core.
             glow(
                 renderer,
                 cx,
                 cy,
-                max(8, min(width, height) * 95 // 100),
-                mix(color, _WHITE, 0.25),
-                0.32 + 0.18 * pulse + boost,
+                radius * 150 // 100,
+                mix(color, (150, 110, 255), 0.55),
+                0.22 + 0.05 * pulse + boost * 0.6,
             )
+            glow(
+                renderer,
+                cx,
+                cy,
+                radius * 95 // 100,
+                mix(color, _WHITE, 0.25),
+                0.42 + 0.2 * pulse + boost,
+            )
+            glow(
+                renderer,
+                cx,
+                cy,
+                radius * 58 // 100,
+                mix(color, _WHITE, 0.55),
+                0.3 + 0.15 * pulse + boost,
+            )
+            # A two-tier rune ring on the ground: a bright inner band, a faint outer one.
+            ring_y = y + height * 0.9
+            for tier, (scale_x, scale_y, fade) in enumerate(
+                ((0.62, 0.16, 0.2), (0.82, 0.22, 0.45))
+            ):
+                breathe = 1 + 0.03 * math.sin(self.clock * 1.6 + tier * 1.4)
+                ellipse_ring(
+                    renderer,
+                    cx,
+                    ring_y,
+                    width * scale_x * breathe,
+                    height * scale_y * breathe,
+                    mix(mix(color, _WHITE, 0.45), _GROUND, fade - 0.12 * pulse - boost * 0.5),
+                    2 if tier == 0 else 1,
+                )
         elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.52
             flicker = 0.5 + 0.3 * math.sin(self.clock * 9.1) + 0.2 * math.sin(self.clock * 23.3)
@@ -551,16 +632,20 @@ class TrailPresentation:
         if qualified_id == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
             light = mix(color, _WHITE, 0.72)
-            for index in range(3):
-                angle = self.clock * 0.9 + index * math.tau / 3
-                twinkle = max(0.0, math.sin(self.clock * 3.0 + index * 2.1))
-                sparkle(
-                    renderer,
-                    cx + width * 0.6 * math.cos(angle),
-                    cy + height * 0.55 * math.sin(angle),
-                    2 + 3 * twinkle,
-                    light,
+            for index in range(COMPASS_SPARKLES):
+                # Slow orbits and staggered, eased twinkles read as deliberate
+                # magic instead of a metronome.
+                angle = (
+                    self.clock * 0.55
+                    + index * math.tau / COMPASS_SPARKLES
+                    + 0.35 * math.sin(self.clock * 0.7 + index)
                 )
+                phase = (self.clock / (2.3 + 0.41 * index) + index * 0.29) % 1.0
+                twinkle = math.sin(math.pi * phase) ** 3
+                sx = cx + width * 0.64 * math.cos(angle)
+                sy = cy + height * 0.58 * math.sin(angle)
+                glow(renderer, sx, sy, 8, light, 0.5 * twinkle)
+                sparkle(renderer, sx, sy, 1.5 + 4.0 * twinkle, light)
         elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
             self._draw_lantern_over(renderer, qualified_id, x, y, width, height)
 
@@ -584,9 +669,12 @@ class TrailPresentation:
                 2,
             )
         for index in range(LANTERN_SPARKS + (6 if flare > 0 else 0)):
-            speed = 0.55 if index < LANTERN_SPARKS else 1.4
-            phase = (self.clock * speed + index / LANTERN_SPARKS) % 1.0
-            sx = cx + 12 * math.sin(index * 2.1 + phase * 5)
+            speed = (0.42 + 0.07 * index) if index < LANTERN_SPARKS else 1.4
+            progress = self.clock * speed + index / LANTERN_SPARKS
+            phase = progress % 1.0
+            # Each rise drifts on its own arc, so the sparks never repeat a loop.
+            drift = math.sin(math.floor(progress) * 2.7 + index * 1.9)
+            sx = cx + 14 * drift * phase + 9 * math.sin(index * 2.1 + phase * 4.2)
             sy = cy - 6 - phase * (46 if index < LANTERN_SPARKS else 70)
             strength = math.sin(math.pi * phase)
             glow(renderer, sx, sy, 7, (255, 210, 120), 0.6 * strength)
@@ -634,11 +722,13 @@ class TrailPresentation:
         """Draw overlay shapes; return overlay text to draw after the HUD."""
         if not self.active:
             return ()
+        self._guard("foreground", draw_scenery_plate, renderer, MEADOW_FOREGROUND)
         self._guard("air", draw_air_life, renderer, self.clock)
         self._guard("bursts", self._draw_bursts, renderer, view)
         self._guard("celebration", self._draw_confetti, renderer)
         if not supports(renderer, "draw_rounded_rect", "measure_text", "draw_text"):
             return ()
+        self._guard("hud-panel", self._draw_hud_panel, renderer, view)
         texts: list[TextOp] = []
         for layer, draw in (
             ("prompt", self._draw_prompt),
@@ -723,6 +813,38 @@ class TrailPresentation:
                 color,
             )
 
+    def hud_panel_rects(self, renderer, view: TrailView) -> tuple[Rect, ...]:  # type: ignore[no-untyped-def]
+        """Two rounded rects hugging the HUD rows: the short rows and the long one."""
+        state = "Complete" if view.mission_is_complete else "Incomplete"
+        rows = (
+            f"Visited {view.visited_count} / {view.total_objects}",
+            f"Mission: {view.mission.title}",
+            view.mission.instructions,
+            f"Mission state: {state}",
+        )
+        widths = [renderer.measure_text(text, HUD_FONT)[0] for text in rows]
+        row_height = renderer.measure_text("Ag", HUD_FONT)[1]
+        pad = 10
+        short = max(widths[0], widths[1], widths[3])
+        top = HUD_ROWS_Y[0] - 8
+        return (
+            (HUD_TEXT_X - pad, top, short + 2 * pad, HUD_ROWS_Y[3] + row_height + 8 - top),
+            (HUD_TEXT_X - pad, HUD_ROWS_Y[2] - 6, widths[2] + 2 * pad, row_height + 12),
+        )
+
+    def _draw_hud_panel(self, renderer, view: TrailView) -> None:  # type: ignore[no-untyped-def]
+        if not supports(renderer, "draw_translucent_panel", "measure_text"):
+            return
+        renderer.draw_translucent_panel(
+            self.hud_panel_rects(renderer, view),
+            _HUD_PANEL,
+            _HUD_PANEL_ALPHA,
+            12,
+            _HUD_EDGE,
+            70,
+            True,
+        )
+
     def _player_rect(self, view: TrailView) -> Rect:
         return nova_visible_rect(view.player)
 
@@ -776,7 +898,10 @@ class TrailPresentation:
             (self._player_rect(view),),
         )
         px, py, _, _ = rect
-        renderer.draw_rounded_rect(px, py, width, height, _PANEL, 8, _GOLD, 2)
+        if supports(renderer, "draw_translucent_panel"):
+            renderer.draw_translucent_panel(((px, py, width, height),), _PANEL, 222, 9, _GOLD, 235)
+        else:
+            renderer.draw_rounded_rect(px, py, width, height, _PANEL, 8, _GOLD, 2)
         key_x, key_y = px + 8, py + (height - key) // 2
         renderer.draw_rounded_rect(key_x, key_y, key, key, _KEY, 5, _INK, 1)
         key_width, key_height = renderer.measure_text("E", _PROMPT_FONT)
