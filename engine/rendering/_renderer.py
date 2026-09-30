@@ -173,17 +173,19 @@ class Renderer:
         *,
         flip_x: bool = False,
         accent: tuple[int, int, int] | None = None,
+        tint: tuple[int, int, int] | None = None,
     ) -> bool:
         """Draw one trusted sprite frame filling *width* x *height* at *(x, y)*.
 
         Returns ``False`` without drawing when the sheet is missing, fails its
         digest, cannot be decoded, has no such frame, or was authored for a
         different *accent* color, so callers keep their procedural fallback.
+        A *tint* multiplies neutral art by a color (see ``SpriteSheetLibrary``).
         """
         library = self.sprite_sheets
         if accent is not None and library.accent(asset_id) != accent:
             return False
-        image = library.frame(asset_id, row, column, width, height, flip_x=flip_x)
+        image = library.frame(asset_id, row, column, width, height, flip_x=flip_x, tint=tint)
         if image is None:
             return False
         self._platform.draw_image(image, x, y)
@@ -211,6 +213,20 @@ class Renderer:
     ) -> None:
         """Blend a feathered translucent ellipse such as a grounded shadow."""
         self._platform.draw_soft_ellipse(center_x, center_y, radius_x, radius_y, color, alpha)
+
+    def draw_translucent_panel(
+        self,
+        rects: tuple[tuple[int, int, int, int], ...],
+        color: tuple[int, int, int],
+        alpha: int,
+        radius: int,
+        border_color: tuple[int, int, int] | None = None,
+        border_alpha: int = 0,
+    ) -> None:
+        """Blend one translucent panel shaped as the union of rounded *rects*."""
+        self._platform.draw_translucent_panel(
+            rects, color, alpha, radius, border_color, border_alpha
+        )
 
     def draw_rounded_rect(
         self,

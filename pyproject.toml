@@ -41,6 +41,12 @@ dev = [
     "pytest-cov>=5.0",
     "pre-commit>=3.0",
 ]
+# Build-time only: repaints the trusted art (scripts/build_trusted_art.py).
+# The runtime never imports numpy or Pillow.
+art = [
+    "numpy>=1.26",
+    "Pillow>=10.0",
+]
 
 [tool.black]
 line-length = 100

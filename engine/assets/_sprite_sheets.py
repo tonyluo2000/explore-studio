@@ -18,8 +18,9 @@ from engine.assets._trusted_art import Color, SpriteSheetSpec, TrustedArtCatalog
 
 _LOGGER = logging.getLogger("explore-studio.assets.sprite-sheets")
 
-#: Upper bound on cached frames; the S02 Trail uses well under this.
-MAX_CACHED_FRAMES: Final = 256
+#: Upper bound on cached frames; the S02 Trail uses well under this (about
+#: 170: every Nova, Pixel, Lantern, reed, Compass ring, and needle frame).
+MAX_CACHED_FRAMES: Final = 384
 
 
 @dataclass(frozen=True, eq=False)
@@ -47,7 +48,7 @@ class ImageDecoder(Protocol):
     ) -> ImageHandle: ...
 
 
-FrameKey = tuple[str, str, str, int, int, bool]
+FrameKey = tuple[str, str, str, int, int, bool, Color | None]
 
 
 class SpriteSheetLibrary:
@@ -104,11 +105,16 @@ class SpriteSheetLibrary:
         height: int,
         *,
         flip_x: bool = False,
+        tint: Color | None = None,
     ) -> ImageHandle | None:
-        """Return one frame scaled to *width* x *height*, or ``None``."""
+        """Return one frame scaled to *width* x *height*, or ``None``.
+
+        A *tint* multiplies the frame's color (for neutral art such as the
+        student-colored Moon Compass ring); the tinted frame is cached too.
+        """
         if width <= 0 or height <= 0:
             return None
-        key: FrameKey = (asset_id, row, column, width, height, flip_x)
+        key: FrameKey = (asset_id, row, column, width, height, flip_x, tint)
         if key in self._frames:
             return self._frames[key]
         spec = self._catalog.spec(asset_id)
@@ -128,6 +134,10 @@ class SpriteSheetLibrary:
                         height,
                         flip_x,
                     )
+                    if tint is not None:
+                        # Optional decoder capability; without it, no tinted art.
+                        tinter = getattr(self._decoder, "tint_image", None)
+                        image = None if tinter is None else tinter(image, tint)
                 except Exception:
                     _LOGGER.exception("Trusted art %s frame %s/%s failed", asset_id, row, column)
                     image = None
