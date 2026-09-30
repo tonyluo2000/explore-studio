@@ -28,7 +28,9 @@ composition pass (static M02 backdrop and fuller sprites). On 2026-09-27 it
 advanced to `0fdd99c03393d6fdb83466d336b8e891ee7c9e80` for Nova V2 and the
 living M02 Moon Meadow (trusted sprite sheets, animation, and effects). On
 2026-09-30 it advanced to `6a6c664596cfd6f5b5f7219e227b30495e5d4fc9` for the
-S02 art-first pass (illustrated Moon Meadow, Nova V3, and Pixel V3). The
+S02 art-first pass (illustrated Moon Meadow, Nova V3, and Pixel V3), and
+later the same day to `4a36ade89f78b3c2cfdf64cea5eb0d7736e6d6a6` for the S02
+visual polish pass (painterly plate, varied props, focal lighting). The
 original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
