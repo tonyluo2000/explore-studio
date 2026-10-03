@@ -1,11 +1,12 @@
-"""Backdrop for the S02 Classroom Trail: the illustrated Moon Meadow.
+"""Backdrop for the S02/S03 Classroom Trail: the illustrated Moon Meadow.
 
-Like the S02 sprites, this is a narrow allow-list rather than a world or tile
-engine: only the M02 mission receives the backdrop, and every other Trail keeps
-its plain cleared frame. The backdrop is static scenery. It reads no entity
-state, so it can never move, resize, or hide the authoritative x/y of any
-entity; it only decorates the canonical S02 start, discovery clearing, and
-Lantern shrine and connects them with one visible trail.
+Like the classroom sprites, this is a narrow allow-list rather than a world or
+tile engine: only the missions in ``_mission_presentation`` (M02 and M03)
+receive the backdrop, and every other Trail keeps its plain cleared frame. The
+backdrop is static scenery. It reads no entity state, so it can never move,
+resize, or hide the authoritative x/y of any entity; it only decorates the
+canonical S02 start, discovery clearing, and Lantern shrine and connects them
+with one visible trail.
 
 When the renderer can draw trusted art, the backdrop is the course-owned
 illustrated plate ``scenery/moon-meadow`` (see ``scripts/build_trusted_art.py``),
@@ -20,12 +21,10 @@ import math
 from typing import Final
 
 from engine.rendering._classroom_sprites import Color, _SpriteRenderer, ellipse_points
+from engine.rendering._mission_presentation import S02_MISSION_ID as S02_MISSION_ID
+from engine.rendering._mission_presentation import mission_presentation
 
 _LOGGER = logging.getLogger("explore-studio.rendering.classroom-environment")
-
-#: Matches ``explore.curriculum.MISSION_02_ID`` without importing the course
-#: layer into the engine.
-S02_MISSION_ID: Final = "create-a-classroom-object"
 
 _WIDTH: Final = 960
 _HEIGHT: Final = 640
@@ -352,8 +351,8 @@ def illustrated_backdrop_available(renderer: object) -> bool:
 
 
 def draw_classroom_backdrop(renderer: _SpriteRenderer, mission_id: str) -> bool:
-    """Draw the S02 scenery behind entities; report whether it completed."""
-    if mission_id != S02_MISSION_ID:
+    """Draw the Moon Meadow behind entities; report whether it completed."""
+    if mission_presentation(mission_id) is None:
         return False
     try:
         if draw_scenery_plate(renderer, MEADOW_BACKDROP):

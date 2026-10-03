@@ -27,9 +27,20 @@ Unchanged:
 - the S02 curriculum
 - the HUD text and its positions
 
-Everything new is cosmetic, is allow-listed to the M02 mission id, and is
-inert for every other Trail, so S01 and S03+ draw exactly what they drew
-before.
+Everything new is cosmetic, is allow-listed by mission id, and is inert for
+every other Trail, so S01 and S04+ draw exactly what they drew before.
+
+The allow-list is the explicit policy in
+`engine/rendering/_mission_presentation.py`:
+
+| Mission | Presentation |
+|---|---|
+| M02 `create-a-classroom-object` | Moon Meadow, every shared layer, plus the M02-only Compass "discovered!" label and the mission-complete confetti and banner. |
+| M03 `make-your-object-respond` | Moon Meadow and the shared layers only: plate and foreground, ambient life, Nova V3, trusted Compass art, entity effects, HUD panel, and the `E` prompt. The canonical S03 Compass (`moon-compass-response:compass`) is aliased onto the trusted Moon Compass art. The student's own `when_near` clue and `when_interacted` reveal carry the story, so the M02 label and celebration stay out. |
+| Every other mission | Unchanged plain Trail. |
+
+Proof frames for M03 come from `scripts/capture_s03_visual_proof.py`; see
+`docs/visual-proof/s03-moon-meadow/`.
 
 ## Layers
 
