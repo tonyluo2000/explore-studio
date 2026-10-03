@@ -20,6 +20,11 @@ introduced. Students still author only the two existing declarative fields.
 ## Before class
 
 - Send `student/task-card.md` and confirm the shared Quick Start preflight.
+- Confirm each student has the current Course Kit and course tools: from the
+  course folder with `(.venv)` active, `python -m pip freeze | grep explore-studio`
+  must show the same commit as `requirements-student.txt`. A plain dark Trail
+  with a rectangle Compass means a stale install — download the current Course
+  Kit, then rerun `python -m pip install -r requirements-student.txt`.
 - Run the starter and validate the package.
 - Be ready to demonstrate "move near" separately from "press interact." Avoid
   introducing general event systems; use the two existing declarative fields.

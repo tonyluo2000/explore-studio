@@ -79,7 +79,10 @@ def test_s03_slides_do_not_borrow_the_m02_only_visual_polish():
     slides = _read(SLIDES)
     assert "NovaPixelScene" not in slides
     assert "S02TrailMap" not in slides
-    assert "standard Trail view, not the painted Moon" in slides
+    # S03 shares the Moon Meadow (engine/rendering/_mission_presentation.py),
+    # but none of M02's discovery label or celebration.
+    assert "standard Trail view" not in slides
+    assert "same painted Moon Meadow as S02" in slides
 
 
 def test_s03_notes_name_their_real_course_kit_source():
