@@ -375,7 +375,7 @@ def test_website_learn_route_is_data_driven_for_written_sessions_only():
 
     assert route.is_file()
     assert "generateStaticParams" in _read(route)
-    assert re.findall(r'^\s+id: "(S\d\d)"', learn_data, re.MULTILINE) == ["S01", "S02"]
+    assert re.findall(r'^\s+id: "(S\d\d)"', learn_data, re.MULTILINE) == ["S01", "S02", "S03"]
     for heading in (
         "Python concept",
         "Code we wrote",
@@ -401,7 +401,7 @@ def test_website_notes_mirror_the_student_notes_code():
 
 
 def test_existing_slide_urls_are_preserved():
-    for session in ("s01", "s02"):
+    for session in ("s01", "s02", "s03"):
         page = _read(WEBSITE / "app" / "students" / "slides" / session / "page.tsx")
         assert f'canonical: "/students/slides/{session}/"' in page
         assert f"/students/learn/{session}/" in page
