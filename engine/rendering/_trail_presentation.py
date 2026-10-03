@@ -1,4 +1,4 @@
-"""Cosmetic presentation layer for the S02 (M02) Classroom Trail.
+"""Cosmetic presentation layer for the S02/S03 (M02/M03) Classroom Trail.
 
 The scene owns gameplay. This layer only *observes* the scene after each
 update (player position, current target, interaction pulse, visited set,
@@ -13,9 +13,12 @@ mission completion) and turns that into animation poses and short effects:
 * Proximity prompts, Pixel's speech bubble, a discovery label, and a brief
   mission-complete celebration.
 
-It is allow-listed to the M02 mission id. For every other Trail it is inert,
-so S01 and S03+ rendering is unchanged. It never mutates the scene, never
-raises into gameplay, and bounds every effect count.
+It is allow-listed by ``_mission_presentation``: M02 gets every layer, M03
+gets the shared ones (no discovery label or celebration, since the student's
+own clue and reveal tell that story) and draws its canonical Compass with the
+same trusted art. For every other Trail it is inert, so S01 and S04+ rendering
+is unchanged. It never mutates the scene, never raises into gameplay, and
+bounds every effect count.
 
 Internal module — not part of the Student API.
 """
@@ -32,7 +35,6 @@ from engine.animation import AnimationClip, Facing, SpritePose, facing_from_moti
 from engine.rendering._classroom_ambience import draw_air_life, draw_ground_life
 from engine.rendering._classroom_environment import (
     MEADOW_FOREGROUND,
-    S02_MISSION_ID,
     draw_scenery_plate,
     illustrated_backdrop_available,
 )
@@ -52,6 +54,7 @@ from engine.rendering._effects import (
     sparkle,
     supports,
 )
+from engine.rendering._mission_presentation import MissionPresentation, mission_presentation
 
 _LOGGER = logging.getLogger("explore-studio.rendering.trail-presentation")
 
@@ -322,10 +325,13 @@ def wrap_text(
 
 
 class TrailPresentation:
-    """Observe one Trail scene and draw its M02-only cosmetic layer."""
+    """Observe one Trail scene and draw its mission-gated cosmetic layer."""
 
     def __init__(self, mission_id: str, start: tuple[float, float] | None = None) -> None:
-        self.active = mission_id == S02_MISSION_ID
+        policy = mission_presentation(mission_id)
+        self.active = policy is not None
+        #: Inactive missions get the empty policy: no extras and no aliases.
+        self.policy = policy or MissionPresentation()
         self.clock = 0.0
         self.facing = Facing.DOWN
         self.moving = False
@@ -378,7 +384,7 @@ class TrailPresentation:
             self._react_to_interaction(view, target_id)
 
         complete = view.mission_is_complete
-        if self._previous_complete is False and complete:
+        if self._previous_complete is False and complete and self.policy.celebration:
             self.celebration_start = self.clock
         self._previous_complete = complete
         self._visited = view.visited_qualified_ids
@@ -387,12 +393,13 @@ class TrailPresentation:
         trail_object = next((item for item in view.objects if item.qualified_id == target_id), None)
         if trail_object is not None:
             newly_visited = target_id not in self._visited
+            role = self.sprite_identity(target_id)
             kind = {
                 MOON_COMPASS_QUALIFIED_ID: "discovery",
                 CRYSTAL_LANTERN_QUALIFIED_ID: "flare",
-            }.get(target_id, "pulse")
+            }.get(role, "pulse")
             self.bursts = (*self.bursts, Burst(kind, target_id, self.clock))[-MAX_BURSTS:]
-            if newly_visited and target_id == MOON_COMPASS_QUALIFIED_ID:
+            if newly_visited and role == MOON_COMPASS_QUALIFIED_ID and self.policy.discovery_label:
                 self.label = Label(
                     target_id, f"{trail_object.world_object.name} discovered!", self.clock
                 )
@@ -411,17 +418,28 @@ class TrailPresentation:
     # Poses
     # ------------------------------------------------------------------
 
+    def sprite_identity(self, qualified_id: str | None) -> str | None:
+        """The trusted-art identity *qualified_id* is drawn as in this mission.
+
+        Only an active mission's explicit aliases apply, so every other Trail
+        keeps its exact package identities (and their rectangle fallback).
+        """
+        if qualified_id is None:
+            return None
+        return self.policy.sprite_aliases.get(qualified_id, qualified_id)
+
     def pose_for(self, qualified_id: str | None) -> SpritePose | None:
-        """Return this frame's cosmetic pose, or ``None`` outside M02."""
+        """Return this frame's cosmetic pose, or ``None`` outside M02/M03."""
         if not self.active or qualified_id is None:
             return None
-        if qualified_id == NOVA_QUALIFIED_ID:
+        role = self.sprite_identity(qualified_id)
+        if role == NOVA_QUALIFIED_ID:
             return self._nova_pose()
-        if qualified_id == PIXEL_QUALIFIED_ID:
+        if role == PIXEL_QUALIFIED_ID:
             return self._pixel_pose(qualified_id)
-        if qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
+        if role == CRYSTAL_LANTERN_QUALIFIED_ID:
             return SpritePose(row="glow", column=LANTERN_FLICKER.frame_at(self.clock))
-        if qualified_id == MOON_COMPASS_QUALIFIED_ID:
+        if role == MOON_COMPASS_QUALIFIED_ID:
             return SpritePose(
                 row="ring",
                 column=COMPASS_SPIN.frame_at(self.clock),
@@ -523,7 +541,8 @@ class TrailPresentation:
         self, renderer: object, qualified_id: str, entity: _Positioned, color: Color
     ) -> None:
         x, y, width, height = _rect_of(entity)
-        if qualified_id == NOVA_QUALIFIED_ID:
+        role = self.sprite_identity(qualified_id)
+        if role == NOVA_QUALIFIED_ID:
             pose = self._nova_pose()
             soft_shadow(
                 renderer,
@@ -533,7 +552,7 @@ class TrailPresentation:
                 max(2, height * 5 // 100),
                 120,
             )
-        elif qualified_id == PIXEL_QUALIFIED_ID:
+        elif role == PIXEL_QUALIFIED_ID:
             soft_shadow(
                 renderer,
                 x + width * 0.64,
@@ -542,7 +561,7 @@ class TrailPresentation:
                 max(2, height * 5 // 100),
                 120,
             )
-        elif qualified_id == MOON_COMPASS_QUALIFIED_ID:
+        elif role == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
             soft_shadow(
                 renderer, cx, y + height * 0.95, width * 30 // 100, max(2, height * 7 // 100), 110
@@ -595,7 +614,7 @@ class TrailPresentation:
                     mix(mix(color, _WHITE, 0.45), _GROUND, fade - 0.12 * pulse - boost * 0.5),
                     2 if tier == 0 else 1,
                 )
-        elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
+        elif role == CRYSTAL_LANTERN_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.52
             flicker = 0.5 + 0.3 * math.sin(self.clock * 9.1) + 0.2 * math.sin(self.clock * 23.3)
             flare = self._flare_strength(qualified_id)
@@ -629,7 +648,8 @@ class TrailPresentation:
         self, renderer: object, qualified_id: str, entity: _Positioned, color: Color
     ) -> None:
         x, y, width, height = _rect_of(entity)
-        if qualified_id == MOON_COMPASS_QUALIFIED_ID:
+        role = self.sprite_identity(qualified_id)
+        if role == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
             light = mix(color, _WHITE, 0.72)
             for index in range(COMPASS_SPARKLES):
@@ -646,7 +666,7 @@ class TrailPresentation:
                 sy = cy + height * 0.58 * math.sin(angle)
                 glow(renderer, sx, sy, 8, light, 0.5 * twinkle)
                 sparkle(renderer, sx, sy, 1.5 + 4.0 * twinkle, light)
-        elif qualified_id == CRYSTAL_LANTERN_QUALIFIED_ID:
+        elif role == CRYSTAL_LANTERN_QUALIFIED_ID:
             self._draw_lantern_over(renderer, qualified_id, x, y, width, height)
 
     def _draw_lantern_over(
@@ -884,7 +904,7 @@ class TrailPresentation:
         width = 8 + key + 8 + text_width + 10
         height = max(key, text_height) + 10
         x, y, w, h = _rect_of(entity)
-        if target_id == PIXEL_QUALIFIED_ID:
+        if self.sprite_identity(target_id) == PIXEL_QUALIFIED_ID:
             x, y, w, h = pixel_visible_rect(entity)
         cx = x + w // 2
         rect = place_panel(
@@ -939,7 +959,7 @@ class TrailPresentation:
         width, height = text_width + 24, line_height * len(lines) + 18
         sx, sy, sw, sh = (
             pixel_visible_rect(speaker)
-            if bubble.qualified_id == PIXEL_QUALIFIED_ID
+            if self.sprite_identity(bubble.qualified_id) == PIXEL_QUALIFIED_ID
             else _rect_of(speaker)
         )
         head_y = sy + sh * 30 // 100
