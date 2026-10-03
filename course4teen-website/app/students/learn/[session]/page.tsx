@@ -72,9 +72,19 @@ export default async function LearnPage({ params }: { params: Promise<Params> })
           </p>
           <h1>What we learned in Python</h1>
           <p className="calendar-lede">
-            The Python from session {session.id}, one idea at a time. The same
-            notes are in your course folder as{" "}
-            <code>lessons/sessions/{slug}/student/python-notes.md</code>.
+            The Python from session {session.id}, one idea at a time.{" "}
+            {learning.sourceFile ? (
+              <>
+                These notes follow{" "}
+                <code>lessons/sessions/{slug}/student/{learning.sourceFile}</code>{" "}
+                in your course folder.
+              </>
+            ) : (
+              <>
+                The same notes are in your course folder as{" "}
+                <code>lessons/sessions/{slug}/student/python-notes.md</code>.
+              </>
+            )}
           </p>
           {hasSlides ? (
             <p className="calendar-lede">

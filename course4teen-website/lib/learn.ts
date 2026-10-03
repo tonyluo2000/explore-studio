@@ -4,7 +4,8 @@
  *
  * Every entry follows the same seven-part Python Notes pattern as the
  * student Course Kit's `lessons/sessions/sNN/student/python-notes.md`, and
- * mirrors that file. Discovery is optional and only exists where a session has
+ * mirrors that file (or, where `sourceFile` is set, is grounded in that
+ * student file instead). Discovery is optional and only exists where a session has
  * an honest real-world connection. Add a session here when its notes are
  * written; do not add empty placeholders.
  */
@@ -14,6 +15,12 @@ export type TermMeaning = { term: string; meaning: string };
 export type SessionLearning = {
   /** Session id, e.g. "S02". Must exist in `classSessions`. */
   id: string;
+  /**
+   * Course Kit file these notes follow, inside `lessons/sessions/sNN/student/`.
+   * Defaults to `python-notes.md`; set it for sessions whose notes are grounded
+   * in another student file because no `python-notes.md` exists yet.
+   */
+  sourceFile?: string;
   /** 1. Python concept */
   concepts: TermMeaning[];
   /** 2. Code we wrote */
@@ -183,6 +190,89 @@ print(x + 100)  # 340`,
       question:
         "What do coordinates describe? How is Nova's Moon Compass different from a real magnetic compass?",
     },
+  },
+  {
+    id: "S03",
+    sourceFile: "task-card.md",
+    concepts: [
+      {
+        term: "f-string",
+        meaning: "A string with an f right before the opening quote. Python fills in variables placed inside it.",
+      },
+      {
+        term: "braces { }",
+        meaning: "Curly braces inside an f-string mark where a variable's value goes.",
+      },
+      {
+        term: "substitution",
+        meaning: "Python replaces {object_name} with the value stored in object_name: Moon Compass.",
+      },
+      {
+        term: "near vs. interacted",
+        meaning:
+          "near_message is the clue that appears when the player approaches. interacted_message is the reveal that appears after E is pressed nearby.",
+      },
+    ],
+    code: `object_name = "Moon Compass"
+near_message = f"The {object_name} needle trembles toward the dark trees."
+interacted_message = f"The {object_name} points past the trees to a guide's lantern!"
+
+print(near_message)
+print(interacted_message)`,
+    runCommand: "python lessons/sessions/s03/student/starter.py",
+    output: `The Moon Compass needle trembles toward the dark trees.
+The Moon Compass points past the trees to a guide's lantern!`,
+    meanings: [
+      {
+        term: "near_message = f\"{object_name}\"",
+        meaning:
+          "The starter's unfinished line. Before you add a clue, the starter prints only Moon Compass on its first line.",
+      },
+      {
+        term: "f\"The {object_name} needle trembles toward the dark trees.\"",
+        meaning:
+          "The f makes this an f-string. {object_name} becomes Moon Compass; the rest is your clue text.",
+      },
+      {
+        term: "interacted_message = f\"...\"",
+        meaning: "The reveal line, built the same way. It is the second line printed.",
+      },
+      {
+        term: "print(near_message)",
+        meaning: "Shows the finished clue, with the object name already filled in.",
+      },
+      {
+        term: "when_near / when_interacted",
+        meaning:
+          "The YAML fields in objects/compass.yaml. Copy near_message's text into when_near and interacted_message's text into when_interacted. YAML gets plain text, with no braces.",
+      },
+    ],
+    why: [
+      "f-strings build a message from values you already have. Change object_name once and every message that uses it follows.",
+      "They keep text readable: you see the whole sentence, with each variable right where its value will appear.",
+      "Outside Explore Studio: an app greeting \"Welcome back, Sam!\", a score line in a game, or a weather report that fills in today's temperature are all built the same way.",
+    ],
+    debugged: {
+      broken: `near_message = f"The {object_name needle begins to shimmer."`,
+      error: "SyntaxError: invalid syntax. Perhaps you forgot a comma?",
+      explanation:
+        "The closing } after object_name is missing, so Python reads the rest of the line as code instead of text, and that code makes no sense. The error above is from Python 3.13; other versions may word the message differently, but it is always a SyntaxError on the f-string line.",
+      fixed: `near_message = f"The {object_name} needle begins to shimmer."`,
+    },
+    keyWords: [
+      { term: "f-string", meaning: "A string starting with f\" that can contain {variables}." },
+      { term: "braces", meaning: "The curly brackets { and }. Every opening { needs a closing }." },
+      { term: "substitution", meaning: "Replacing a variable name with its value." },
+      { term: "when_near", meaning: "The YAML field shown when the player approaches." },
+      { term: "when_interacted", meaning: "The YAML field shown after E is pressed nearby." },
+      { term: "SyntaxError", meaning: "Python cannot read the code because it breaks a writing rule." },
+    ],
+    tryIt: [
+      "Predict, then test: change object_name to \"Star Map\". What changes in both printed lines?",
+      "Remove the f before the opening quote, run the file, and compare the output. What happens to the braces?",
+      "If the two YAML message values were swapped, what would a player see when moving near? When pressing E?",
+      "Write a second, harder clue that hints at the same reveal with less detail.",
+    ],
   },
 ];
 
