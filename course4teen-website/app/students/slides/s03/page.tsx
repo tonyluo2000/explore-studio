@@ -351,9 +351,10 @@ when_interacted: "The Moon Compass points past the trees to a guide's lantern!"`
           <li>M03 completes after you interact with every world object.</li>
         </ol>
         <p>
-          Today&rsquo;s Trail uses the standard Trail view, not the painted Moon
-          Meadow scenery from S02. What changes today is the text your compass
-          shows.
+          Today&rsquo;s Trail is the same painted Moon Meadow as S02. What
+          changes today is the text your compass shows. If you see a plain dark
+          Trail with a rectangle Compass, your course tools are out of date
+          &mdash; tell your teacher.
         </p>
       </>
     ),
