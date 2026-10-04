@@ -59,3 +59,31 @@ bubble. `comparison-start.png` shows the same pair at the canonical start.
   scripted M05 run is identical with and without presentation.
 - **No new art, cue, or animation system.** The art is the frozen Moon
   Meadow: the plate, Nova, the Moonlit Guide, and the Lantern.
+
+## Fresh install from the candidate Course Kit
+
+The Course Kit ZIP is `e2db77d8c9e3b1265b58221f52367eb7cf9ee5a8d49d88ade761ad849965ccd6`
+(253 members, provenance commit `8bc6317`, course tools `b70c8a9`). It was
+unpacked into a clean `HOME`, given a fresh `.venv` (Python 3.13.7), and
+installed with `pip install -r requirements-student.txt`. The pinned archive
+`b70c8a9` resolved from GitHub.
+
+- `python3 check-my-computer.py`: **READY FOR EXPLORE STUDIO**, course tools
+  `b70c8a9 (current)`, Course Kit `8bc6317`.
+- The S01-S05 starters run (S05 prints `2`). `python3 make-my-world.py` makes
+  the S02 world. `nova-character`, `crystal-lantern`, `pixel-companion`, the
+  student `moon-compass`, `moon-compass-response`, `moonlit-guide`, and
+  `moonlit-conversation` all validate.
+- Each canonical task-card `explore-package trail` command was driven through
+  the installed CLI by an autopilot. The autopilot replaces only input
+  polling (dummy video and audio drivers) and observes the scene and the
+  audio requests:
+
+| Run | Presentation | Mixer | Result | Audio cues (no steps or glints) |
+|---|---|---|---|---|
+| S01 | Moon Meadow | never opened | `Visited 1 / 1`, complete | none |
+| S02 (after `make-my-world.py`) | Moon Meadow | opened | `Visited 2 / 2`, complete | Compass, Lantern, completion |
+| S03 | Moon Meadow | opened | `Visited 1 / 1`, complete | Compass, completion |
+| S04 | Moon Meadow | opened | Guide spoken to, complete; whole greeting in the bubble | moon bell, completion |
+| S05 | Moon Meadow | opened | Incomplete, Incomplete, then complete on line three. The fourth `E` wraps to line one. Each line is in the bubble, in order. | moon bell, completion, moon bell (the restart) |
+| S05 packages, no `--mission-id` | plain Trail | no audio layer | M01 rules (`Visited 1 / 1`) | none |
