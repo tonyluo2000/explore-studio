@@ -1,4 +1,4 @@
-# Journey snapshots: S02–S04 (review evidence)
+# Journey snapshots: S01–S04 (review evidence)
 
 Review-only evidence for the published Journey snapshots. The published files
 live in `course4teen-website/public/journey/sNN/`, and their provenance lives
@@ -20,6 +20,7 @@ every required entity, and no art or entity from a later session.
 
 | Session | Moment | Kind | File | 960w | 480w |
 | --- | --- | --- | --- | ---: | ---: |
+| S01 | `S01_ARRIVAL` | HERO | `journey/s01/hero.webp` | 79,574 B | 30,094 B |
 | S02 | `S02_COMPASS_PROMPT` | HERO | `journey/s02/hero.webp` | 93,166 B | 33,918 B |
 | S02 | `S02_MOVED_COMPASS` | LEARNING_MOMENT | `journey/s02/moved-compass.webp` | 93,546 B | 34,374 B |
 | S03 | `S03_REVEAL` | HERO | `journey/s03/hero.webp` | 93,946 B | 34,392 B |
@@ -28,6 +29,16 @@ every required entity, and no art or entity from a later session.
 
 What each check verifies:
 
+- **S01 HERO:** the arrival in Moon Meadow, not completion. Nova walks a few
+  paces onto the Landing Site (`walk_to 340, 262`), turns to face the camera
+  (one real `down` frame), and settles (2.0 s); the frame is accepted only
+  with Nova at (342, 265), nothing targeted (so no prompt is drawn), nothing
+  visited, and M01 incomplete. The Moon Meadow backdrop is drawn, and Nova,
+  Pixel, and the Crystal Lantern are drawn in trusted art; the empty stone
+  circle is scenery. There is no Moon Compass, no Moonlit Guide, and no retired
+  Fern (`forest-guide:guide`) or River Fountain (`river-fountain:fountain`).
+  The frame is pixel-identical to the reviewed Phase B hero,
+  `docs/visual-proof/s01-moon-meadow-arrival/s01-arrival.png`.
 - **S02 HERO:** Nova is beside the Moon Compass and `Inspect Moon Compass` is
   drawn. Nova, Pixel, the Compass, and the Lantern are drawn in trusted art.
   There is no Guide and no S03 Compass.
@@ -45,8 +56,10 @@ What each check verifies:
 
 ## Provenance
 
+- Base: `main` at `8847e66d3188b9b941aa89d772006b772da15be8` (#114, the S01
+  Moon Meadow arrival), merged into this branch.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `05843ffd7e257a3120a671b009f45fcae33f7391`. The harness refuses to publish
+  `3038cf44dc556a6e878141b8e1fbb6c580095aa4`. The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from
   git to confirm this.
@@ -55,10 +68,20 @@ What each check verifies:
   implementation fingerprint, so its entries were recaptured, not relabelled.
   The S02–S04 source frames and all ten WebP files came out byte-identical to
   the version 1 capture.
-- Presentation fingerprints, per moment: `S02_COMPASS_PROMPT` `527b3bc108b7…`,
-  `S02_MOVED_COMPASS` `260f32bcc720…`, `S03_REVEAL` `633a3b1acff9…`,
-  `S03_NEAR_CLUE` `d81d2414554b…`, `S04_DIALOGUE` `b58791b818be…`. The full
-  values are in the manifest.
+- S01 hashes: source frame `sourceRgbSha256`
+  `7aed2bd8fa53ecb851de1370b8338be1712bb410a2ad662a7f05b8e640b3453b`;
+  `hero.webp` `d651f128a98319a27b8f6d764470a697ec6c567006f847dc0f89c1b0edf9d6c6`;
+  `hero-480.webp` `65d2552b81500777773a29e9aa1ae77d9e4c01f8dbadf8cdf09bb93e1571fe74`.
+- S02–S04 after the move to the `3038cf4` pin: every source frame and all ten
+  WebP files are byte-identical to the captures at the previous pin
+  (`05843ff`). Only their `runtimeCommit` and fingerprints changed: `runtime`
+  (the pinned runtime moved), `captureRecipe` (the `untargeted` expectation
+  added for S01), and `captureImplementation` (the harness edits). Their
+  `packages` parts are unchanged.
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `8c041828b795…`,
+  `S02_COMPASS_PROMPT` `13a4fb2552c8…`, `S02_MOVED_COMPASS` `a270ad98e890…`,
+  `S03_REVEAL` `7b11540a2975…`, `S03_NEAR_CLUE` `e6880f1c9bd7…`, `S04_DIALOGUE`
+  `ee3ae6d34a81…`. The full values are in the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
@@ -134,47 +157,39 @@ What each check verifies:
 
 ## Regenerate
 
+The committed files were produced by exactly these commands, in order:
+
 ```bash
 python scripts/capture_journey_snapshots.py --all-published
-python scripts/capture_journey_snapshots.py --session S03
+python scripts/capture_journey_snapshots.py --contact-sheet docs/journey-proof/snapshots/contact-sheet.png
 python scripts/capture_journey_snapshots.py --check
 python scripts/capture_journey_snapshots.py --all-published --dry-run
-python scripts/capture_journey_snapshots.py --session S02 --preview /tmp/journey-preview
-python scripts/capture_journey_snapshots.py --contact-sheet docs/journey-proof/snapshots/contact-sheet.png
+```
+
+One session, or a look without publishing:
+
+```bash
+python scripts/capture_journey_snapshots.py --session S01
+python scripts/capture_journey_snapshots.py --session S01 --preview /tmp/journey-preview
 ```
 
 Snapshot encoding needs Pillow, from `pip install -e ".[dev,art]"`.
 
-## S01 is deferred
+## Publication boundary
 
-S01 is deliberately not captured. Phase B is bringing S01 into Moon Meadow,
-and the current runtime still gives M01 the standard Trail. The S01 row in
-`scripts/journey_snapshots.py` has a `deferred` reason. While that reason is
-set:
+`public/journey/` holds exactly `s01/`–`s04/`: the twelve files the manifest
+lists, nothing else. The manifest's `deferred` list is empty. `--check` and the
+tests reject a file or manifest entry for an unpublished session (S05+), a
+deferred row, a moment the table does not have, a duplicate entry, and any
+stray file, including one inside `s01/`.
 
-- the harness refuses to publish S01;
-- `--check` and the tests reject any `public/journey/s01/` file and any S01
-  manifest entry.
+A row can still be deferred (`deferred=` in `scripts/journey_snapshots.py`);
+the harness then refuses to publish it, and `--check` rejects its files and
+entries. No row is deferred now.
 
-The row already states the post-Phase B contract, so nothing has to be
-remembered when the deferral is lifted:
-
-- presentation: `moon-meadow` (the Moon Meadow backdrop must be drawn);
-- `must_show`: Nova, Pixel, and the Crystal Lantern, each drawn in trusted art;
-- `must_not_show`: both Moon Compasses, the Moonlit Guide, and the retired
-  Fern (`forest-guide:guide`) and River Fountain (`river-fountain:fountain`).
-
-Today's S01 card still names Fern and the Fountain, so even with the reason
-removed the plain Trail cannot pass. A test proves that today's S01 frame is
-rejected.
-
-After Phase B (#114) lands and this branch is updated onto it:
-
-1. Delete the `deferred=` line from the S01 row.
-2. Run `python scripts/capture_journey_snapshots.py --all-published`. Editing
-   `journey_snapshots.py` changes the capture implementation fingerprint, so
-   S02–S04 are recaptured too.
-3. Regenerate the contact sheet.
-
-Before then, `--session S01 --preview DIR` shows the frame without publishing
-it.
+The S01 negative cases are real captures in
+`tests/test_journey_snapshot_determinism.py`: with M01's Moon Meadow
+presentation removed the frame is rejected (standard Trail), the retired cast
+is rejected (no Pixel; Fern and the Fountain in the scene), and the exact
+canonical start is rejected because Pixel is in range and the `Talk to Pixel`
+prompt is drawn.
