@@ -67,7 +67,9 @@ def test_s03_slides_show_the_real_starter_and_its_unfinished_output():
 
 
 def test_s03_website_yaml_and_notes_match_the_package():
-    compass = yaml.safe_load(_read(S03 / "student" / "explorer-package" / "objects" / "compass.yaml"))
+    compass = yaml.safe_load(
+        _read(S03 / "student" / "explorer-package" / "objects" / "compass.yaml")
+    )
     slides = _read(SLIDES)
     notes = _s03_learn_entry()
     for field in ("when_near", "when_interacted"):
@@ -89,9 +91,9 @@ def test_s03_notes_name_their_real_course_kit_source():
     notes = _s03_learn_entry()
     assert 'sourceFile: "task-card.md"' in notes
     assert (S03 / "student" / "task-card.md").is_file()
-    assert not (S03 / "student" / "python-notes.md").exists(), (
-        "S03 now has python-notes.md; drop sourceFile so the Learn page points at it"
-    )
+    assert not (
+        S03 / "student" / "python-notes.md"
+    ).exists(), "S03 now has python-notes.md; drop sourceFile so the Learn page points at it"
     for required in (
         "f-string",
         "braces",
