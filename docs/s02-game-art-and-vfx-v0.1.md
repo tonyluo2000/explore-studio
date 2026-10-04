@@ -11,6 +11,11 @@ framing foreground, Nova V3 with an eight-frame walk, Pixel V3, a layered
 Compass tinted by the student's color, a new Lantern, and authored reeds.
 It did not change the engine design, gameplay, or any contract below.
 
+The **final polish pass** (see [below](#final-polish-pass)) repainted the
+plate's lighting and depth, gave Nova a face and a stronger silhouette, set
+the Compass in a brass crescent with a tinted ground halo, and integrated the
+prompt, dialogue, and feedback surfaces, again on the same runtime systems.
+
 Student Explorers and Companions are **not** implemented here. They are the
 next tranche: "Nova has been upgraded. Yours is next."
 
@@ -130,6 +135,7 @@ existing call site or monkeypatch changes shape.
 | `characters/pixel` | 100 × 100 | `idle` | `idle-0..3`, `blink`, `greet-0..3` |
 | `objects/moon-compass` | 80 × 60 | `ring` (tinted), `body`, `glass` | `spin-00..11` |
 | `objects/moon-compass-needle` | 80 × 60 | `needle` | `angle-00..63` |
+| `objects/moon-compass-halo` | 144 × 36 (tinted) | `halo` | `spin-00..15` |
 | `objects/crystal-lantern` | 80 × 60 | `glow` | `flicker-0..3` |
 | `ambient/reeds` | 32 × 44 | `sway` | `sway-0..8` |
 
@@ -171,6 +177,14 @@ Every effect count is fixed:
 | Active bursts | at most 4 |
 | Confetti pieces | 36, for 3.2 s only |
 | Lantern sparks | 5, plus 6 during a flare |
+| Lantern rays | 8, only during a flare |
+| Landing-pad chase lights | 2 glows |
+| Trail chevron pulse | 1 glow |
+| Lander beacon | 1 glow, 0.3 s of every 1.8 s |
+| Pond shimmer | 1 glow, up to 5 glints |
+| Shooting star | 3 lines and 1 glow, 0.8 s of every 13 s |
+| Nova step dust | 1 soft puff |
+| Pixel screen light | 1 glow |
 
 Glow and shadow textures, translucent panels, and fonts are cached with size
 caps. Each trusted sheet is read, digest-checked, and decoded once; each frame
@@ -208,3 +222,66 @@ the art pass costs no more per frame than the base did.
 - **Accent rule.** Art declares the color it was drawn for, and a mismatch
   falls back to procedural drawing. Student recoloring can later swap in a
   tinted variant or palette mask without touching gameplay.
+
+## Final polish pass
+
+The last visual pass for the course. Same contract as above: no gameplay,
+geometry, schema, mission, or HUD-text change, and every layer stays
+allow-listed to M02/M03.
+
+- **Plate lighting and depth.** Authored ground swells are lit by the moon
+  (lit backs, cool fronts) instead of an even speckle of bright grass tips.
+  Each landmark tints its own ground: violet at the Compass clearing, teal at
+  the camp, and warm at the shrine. The meadow between them settles darker, so
+  the eye moves from pool to pool. Low moon-mist wisps and faint moon rays add
+  atmospheric depth, and the vignette frames the trail.
+- **Grounded props.** Tall props cast long, soft moon shadows away from the
+  moon. Grass grows over the base of every prop and over the front rims of
+  the pad and dais, and moss ages both platforms. Flower beds are smaller and
+  glow less, so landmarks win the eye. The shrine's warm wash up the path is
+  now a gentle invitation rather than a hot stripe.
+- **Ant colonies.** The ants follow a faint worn path from a sandy hill to a
+  fallen moon crystal, and carry glowing crumbs home. The painted raised
+  "highway" is gone.
+- **Foreground.** Out-of-focus broad leaves, with a few glowing buds, rise up
+  both side edges. They stay inside the tested clear zone, so the playable
+  middle is still fully transparent.
+- **Nova.** Nova now has a hair fringe, big glossy eyes with brows, an open
+  smile, and a true glass visor (sky-tinted top, crisp edge, moon glint). A
+  heavier outer silhouette line keeps Nova readable at half scale.
+  Contact shade seats the helmet on the suit. The walk has a bigger arm swing,
+  a springier bob, and a forward lean in profile. The art stays inside the
+  same 100 × 100 box: its alpha footprint moved by at most one pixel.
+- **Pixel.** Pixel shares the silhouette line. Its screen spills a soft cyan
+  light that brightens while it greets.
+- **Moon Compass.** The body layer adds a brass crescent-moon cradle with two
+  star tips inside the Compass's own 80 × 60 box, so it reads as a treasure.
+  The ring is still the student's color. The line-drawn ground rings are
+  replaced by the trusted `objects/moon-compass-halo` rune circle. It is
+  tinted with a fixed mix of the student's color, so tinted frames cache once
+  per color. It is drawn from the Compass's own `x`/`y` and turns one rune
+  every 3.5 s. Without the sheet, the two-tier line ring is drawn as before.
+- **Crystal Lantern.** The resting Lantern no longer has line rays; rays
+  burst only when it is inspected. The bouncing triangle is now a floating,
+  faceted gold waypoint gem that points down at the Lantern until it is
+  visited. Its warm light is slightly calmer.
+- **Living world.** These are drawn over the plate only, as pure functions of
+  the presentation clock:
+  - a light chases around the landing pad's painted rim lights;
+  - the trail chevrons pulse from the pad toward the Compass;
+  - the lander's beacon blinks;
+  - the pond's moon reflection shimmers;
+  - a shooting star crosses the open sky between the HUD rows and the moon
+    for 0.8 s of every 13 s;
+  - Nova kicks up a soft dust puff at each foot contact.
+
+  The positions live in `_meadow_layout` beside the painted scenery.
+- **HUD and dialogue.** A soft translucent card sits behind the bottom
+  feedback line (and behind "Trail complete!"). It is measured from the
+  scene's read-only `feedback_message`, the exact line the HUD draws, so text,
+  font, and position are unchanged. Prompts gain a drop shadow and a pointer
+  tab toward their target. Speech bubbles gain a drop shadow and a speaker
+  name tag.
+
+Proof frames, side-by-side comparisons, and the written evaluation live in
+`docs/visual-proof/moon-meadow-final/`.

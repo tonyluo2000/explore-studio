@@ -39,6 +39,8 @@ from engine.rendering._classroom_environment import (
     illustrated_backdrop_available,
 )
 from engine.rendering._classroom_sprites import (
+    COMPASS_HALO_FRAME,
+    COMPASS_HALO_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
     MOON_COMPASS_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
@@ -70,6 +72,8 @@ NOVA_WALK: Final = AnimationClip("walk", tuple(f"walk-{index}" for index in rang
 NOVA_STRIDE: Final = 7.5
 #: The Compass's rune ring turns 45 degrees (one rune) per loop.
 COMPASS_SPIN: Final = AnimationClip("spin", tuple(f"spin-{index:02d}" for index in range(12)), 0.11)
+#: The ground rune circle turns one rune (30 degrees) every 3.5 seconds.
+COMPASS_HALO: Final = AnimationClip("halo", tuple(f"spin-{index:02d}" for index in range(16)), 0.22)
 PIXEL_IDLE: Final = AnimationClip("idle", ("idle-0", "idle-1", "idle-2", "idle-3"), 0.36)
 PIXEL_GREET: Final = AnimationClip(
     "greet", ("greet-0", "greet-1", "greet-2", "greet-1", "greet-2", "greet-3"), 0.2, loop=False
@@ -97,6 +101,11 @@ COMPASS_SPARKLES: Final = 4
 HUD_TEXT_X: Final = 20
 HUD_ROWS_Y: Final = (20, 55, 85, 115)
 HUD_FONT: Final = 24
+#: The bottom feedback line and the "Trail complete!" line (also mirrored).
+FEEDBACK_TEXT_X: Final = 360
+FEEDBACK_TEXT_Y: Final = 560
+COMPLETE_TEXT_Y: Final = 520
+FEEDBACK_FONT: Final = 28
 _HUD_PANEL: Final[Color] = (14, 18, 48)
 _HUD_PANEL_ALPHA: Final = 168
 _HUD_EDGE: Final[Color] = (178, 190, 255)
@@ -121,6 +130,17 @@ _BANNER_TEXT: Final[Color] = (255, 232, 146)
 _WHITE: Final[Color] = (255, 255, 255)
 _GROUND: Final[Color] = (40, 57, 66)
 _LANTERN_LIGHT: Final[Color] = (255, 196, 104)
+_SHADOW_INK: Final[Color] = (4, 6, 16)
+_DUST: Final[Color] = (160, 180, 186)
+_SCREEN_LIGHT: Final[Color] = (90, 230, 230)
+#: Distance between Nova's foot contacts (two per 60 px walk cycle).
+STEP_LENGTH: Final = NOVA_STRIDE * 4
+_WAYPOINT: Final[Color] = (255, 204, 84)
+_WAYPOINT_LIGHT: Final[Color] = (255, 242, 186)
+_WAYPOINT_SHADE: Final[Color] = (206, 128, 44)
+_NAME_TAG: Final[Color] = (58, 86, 214)
+_NAME_FONT: Final = 20
+_FEEDBACK_PANEL: Final[Color] = (10, 14, 34)
 _CONFETTI: Final[tuple[Color, ...]] = (
     (255, 208, 80),
     (120, 220, 255),
@@ -552,6 +572,8 @@ class TrailPresentation:
                 max(2, height * 5 // 100),
                 120,
             )
+            if self.moving:
+                self._draw_step_dust(renderer, x + width * 0.48, y + height * 0.95)
         elif role == PIXEL_QUALIFIED_ID:
             soft_shadow(
                 renderer,
@@ -560,6 +582,21 @@ class TrailPresentation:
                 width * 29 // 100,
                 max(2, height * 5 // 100),
                 120,
+            )
+            # Pixel's screen spills a little cyan light, brighter while it greets.
+            greet = self.greet_start.get(qualified_id)
+            cheer = (
+                1 - (self.clock - greet) / PIXEL_GREET.duration
+                if greet is not None and 0 <= self.clock - greet < PIXEL_GREET.duration
+                else 0.0
+            )
+            glow(
+                renderer,
+                x + width * 0.65,
+                y + height * 0.36,
+                max(8, width * 42 // 100),
+                _SCREEN_LIGHT,
+                0.12 + 0.03 * math.sin(self.clock * 1.7) + 0.2 * cheer,
             )
         elif role == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
@@ -599,8 +636,11 @@ class TrailPresentation:
                 mix(color, _WHITE, 0.55),
                 0.3 + 0.15 * pulse + boost,
             )
-            # A two-tier rune ring on the ground: a bright inner band, a faint outer one.
+            # The trusted rune circle on the ground, in the student's color; the
+            # line-drawn two-tier ring is its fallback.
             ring_y = y + height * 0.9
+            if self._draw_compass_halo(renderer, cx, ring_y, color):
+                return
             for tier, (scale_x, scale_y, fade) in enumerate(
                 ((0.62, 0.16, 0.2), (0.82, 0.22, 0.45))
             ):
@@ -627,7 +667,7 @@ class TrailPresentation:
                 cy,
                 max(width, height) * 115 // 100,
                 _LANTERN_LIGHT,
-                0.46 + 0.1 * flicker + 0.4 * flare,
+                0.4 + 0.08 * flicker + 0.4 * flare,
             )
             glow(
                 renderer,
@@ -637,6 +677,45 @@ class TrailPresentation:
                 mix(color, _WHITE, 0.4),
                 0.42 + 0.1 * flicker + 0.4 * flare,
             )
+
+    def _draw_step_dust(self, renderer: object, foot_x: float, foot_y: float) -> None:
+        """One soft puff kicked up behind Nova at each foot contact."""
+        if not supports(renderer, "draw_soft_ellipse"):
+            return
+        age = (self.walk_distance % STEP_LENGTH) / STEP_LENGTH
+        if age >= 0.6:
+            return
+        behind = {Facing.LEFT: 1, Facing.RIGHT: -1}.get(self.facing, 0)
+        renderer.draw_soft_ellipse(  # type: ignore[attr-defined]
+            round(foot_x + behind * (8 + 10 * age)),
+            round(foot_y - 2 - 5 * age),
+            round(4 + 6 * age),
+            round(2 + 3 * age),
+            _DUST,
+            round(72 * (1 - age / 0.6)),
+        )
+
+    def _draw_compass_halo(
+        self, renderer: object, cx: float, ground_y: float, color: Color
+    ) -> bool:
+        """Lay the tinted rune circle under the Compass; ``False`` when unavailable."""
+        draw_frame = getattr(renderer, "draw_sprite_frame", None)
+        if draw_frame is None:
+            return False
+        width, height = COMPASS_HALO_FRAME
+        return bool(
+            draw_frame(
+                COMPASS_HALO_SHEET_ID,
+                "halo",
+                COMPASS_HALO.frame_at(self.clock),
+                round(cx - width / 2),
+                round(ground_y - height / 2),
+                width,
+                height,
+                # A fixed tint per student color, so the tinted frames cache once.
+                tint=mix(color, _WHITE, 0.4),
+            )
+        )
 
     def _flare_strength(self, qualified_id: str) -> float:
         burst = self._latest_burst(qualified_id, "flare", FLARE_DURATION)
@@ -674,20 +753,22 @@ class TrailPresentation:
     ) -> None:
         cx, cy = x + width / 2, y + height * 0.5
         flare = self._flare_strength(qualified_id)
-        ray = mix((255, 226, 150), _GROUND, 0.35 - 0.3 * flare)
-        reach = height * 0.62
-        for index in range(8):
-            angle = self.clock * 0.25 + index * math.tau / 8
-            length = 8 + 4 * math.sin(self.clock * 2.3 + index * 1.3) + 14 * flare
-            inner = reach + 2
-            renderer.draw_line(  # type: ignore[attr-defined]
-                round(cx + inner * math.cos(angle)),
-                round(cy + inner * 0.8 * math.sin(angle)),
-                round(cx + (inner + length) * math.cos(angle)),
-                round(cy + (inner + length) * 0.8 * math.sin(angle)),
-                ray,
-                2,
-            )
+        if flare > 0:
+            # Light bursts outward only when the Lantern is inspected.
+            ray = mix((255, 226, 150), _GROUND, 0.75 - 0.7 * flare)
+            reach = height * 0.62
+            for index in range(8):
+                angle = index * math.tau / 8 + 0.2
+                length = 6 + 20 * ease_out(1 - flare)
+                inner = reach + 2 + 10 * ease_out(1 - flare)
+                renderer.draw_line(  # type: ignore[attr-defined]
+                    round(cx + inner * math.cos(angle)),
+                    round(cy + inner * 0.8 * math.sin(angle)),
+                    round(cx + (inner + length) * math.cos(angle)),
+                    round(cy + (inner + length) * 0.8 * math.sin(angle)),
+                    ray,
+                    2,
+                )
         for index in range(LANTERN_SPARKS + (6 if flare > 0 else 0)):
             speed = (0.42 + 0.07 * index) if index < LANTERN_SPARKS else 1.4
             progress = self.clock * speed + index / LANTERN_SPARKS
@@ -713,26 +794,32 @@ class TrailPresentation:
                 mix((255, 226, 150), _GROUND, progress),
             )
         if qualified_id not in self._visited:
-            # Destination marker: a bouncing arrow until the Lantern is visited.
-            bob = 4 * abs(math.sin(self.clock * 3.0))
-            tip = y - 4 - bob
-            glow(renderer, cx, tip - 8, 14, (255, 210, 110), 0.45)
-            renderer.draw_polygon(  # type: ignore[attr-defined]
-                (
-                    (round(cx - 9), round(tip - 13)),
-                    (round(cx + 9), round(tip - 13)),
-                    (round(cx), round(tip + 1)),
-                ),
-                _INK,
+            self._draw_waypoint(renderer, cx, y - 4)
+
+    def _draw_waypoint(self, renderer: object, cx: float, tip_y: float) -> None:
+        """Destination marker: a floating gold gem pointing down at the Lantern."""
+        float_y = 3.0 * math.sin(self.clock * 2.4)
+        tip = tip_y - 2 + float_y
+        top, mid, half = tip - 26, tip - 18, 9.0
+        glow(renderer, cx, mid, 20, (255, 206, 110), 0.38 + 0.08 * math.sin(self.clock * 2.4))
+        draw_polygon = renderer.draw_polygon  # type: ignore[attr-defined]
+
+        def kite(inset: float) -> tuple[tuple[int, int], ...]:
+            return (
+                (round(cx), round(top + inset)),
+                (round(cx + half - inset), round(mid)),
+                (round(cx), round(tip - inset * 1.4)),
+                (round(cx - half + inset), round(mid)),
             )
-            renderer.draw_polygon(  # type: ignore[attr-defined]
-                (
-                    (round(cx - 6), round(tip - 11)),
-                    (round(cx + 6), round(tip - 11)),
-                    (round(cx), round(tip - 2)),
-                ),
-                (255, 214, 96),
-            )
+
+        draw_polygon(kite(0), _INK)
+        draw_polygon(kite(2), _WAYPOINT)
+        lit = kite(2)
+        # Moonlit upper-right facet and a shaded lower-left one give it volume.
+        draw_polygon((lit[0], lit[1], (round(cx), round(mid))), _WAYPOINT_LIGHT)
+        draw_polygon(((round(cx), round(mid)), lit[3], lit[2]), _WAYPOINT_SHADE)
+        twinkle = 0.5 + 0.5 * math.sin(self.clock * 3.1)
+        sparkle(renderer, cx + 2, top + 6, 1.5 + 2.0 * twinkle, _WHITE)
 
     # ------------------------------------------------------------------
     # Overlay: air life, bursts, celebration, prompts, bubble, labels
@@ -749,6 +836,7 @@ class TrailPresentation:
         if not supports(renderer, "draw_rounded_rect", "measure_text", "draw_text"):
             return ()
         self._guard("hud-panel", self._draw_hud_panel, renderer, view)
+        self._guard("feedback-panel", self._draw_feedback_panel, renderer, view)
         texts: list[TextOp] = []
         for layer, draw in (
             ("prompt", self._draw_prompt),
@@ -865,6 +953,35 @@ class TrailPresentation:
             True,
         )
 
+    def feedback_panel_rect(self, renderer, view: TrailView) -> Rect | None:  # type: ignore[no-untyped-def]
+        """A soft card hugging the HUD's bottom feedback lines, if any are shown."""
+        lines: list[tuple[str, int, int]] = []
+        if getattr(view, "is_complete", False):
+            lines.append(("Trail complete!", FEEDBACK_TEXT_X, COMPLETE_TEXT_Y))
+        message = getattr(view, "feedback_message", None)
+        if isinstance(message, str) and message.strip():
+            lines.append((message, FEEDBACK_TEXT_X, FEEDBACK_TEXT_Y))
+        if not lines:
+            return None
+        pad_x, pad_y = 14, 8
+        right = 0
+        top, bottom = SCREEN_HEIGHT, 0
+        for text, x, y in lines:
+            width, height = renderer.measure_text(text, FEEDBACK_FONT)
+            right = max(right, x + width)
+            top, bottom = min(top, y), max(bottom, y + height)
+        left = FEEDBACK_TEXT_X - pad_x
+        right = min(SCREEN_WIDTH - 2, right + pad_x)
+        return (left, top - pad_y, right - left, bottom - top + 2 * pad_y)
+
+    def _draw_feedback_panel(self, renderer, view: TrailView) -> None:  # type: ignore[no-untyped-def]
+        if not supports(renderer, "draw_translucent_panel", "measure_text"):
+            return
+        rect = self.feedback_panel_rect(renderer, view)
+        if rect is None:
+            return
+        renderer.draw_translucent_panel((rect,), _FEEDBACK_PANEL, 150, 14, _HUD_EDGE, 46, True)
+
     def _player_rect(self, view: TrailView) -> Rect:
         return nova_visible_rect(view.player)
 
@@ -919,9 +1036,11 @@ class TrailPresentation:
         )
         px, py, _, _ = rect
         if supports(renderer, "draw_translucent_panel"):
-            renderer.draw_translucent_panel(((px, py, width, height),), _PANEL, 222, 9, _GOLD, 235)
+            renderer.draw_translucent_panel(((px + 2, py + 4, width, height),), _SHADOW_INK, 96, 10)
+            renderer.draw_translucent_panel(((px, py, width, height),), _PANEL, 226, 9, _GOLD, 235)
         else:
             renderer.draw_rounded_rect(px, py, width, height, _PANEL, 8, _GOLD, 2)
+        self._draw_pointer(renderer, (px, py, width, height), (x, y, w, h))
         key_x, key_y = px + 8, py + (height - key) // 2
         renderer.draw_rounded_rect(key_x, key_y, key, key, _KEY, 5, _INK, 1)
         key_width, key_height = renderer.measure_text("E", _PROMPT_FONT)
@@ -941,6 +1060,29 @@ class TrailPresentation:
                 _PROMPT_FONT,
             ),
         )
+
+    def _draw_pointer(self, renderer: object, panel: Rect, target: Rect) -> None:
+        """A small tab on the prompt panel pointing at the thing it names."""
+        px, py, pw, ph = panel
+        tx, ty, tw, th = target
+        center = max(px + 14, min(px + pw - 14, tx + tw // 2))
+        middle = max(py + 8, min(py + ph - 8, ty + th // 2))
+        if py + ph <= ty:
+            outer = ((center - 7, py + ph - 1), (center + 7, py + ph - 1), (center, py + ph + 7))
+            inner = ((center - 5, py + ph - 3), (center + 5, py + ph - 3), (center, py + ph + 4))
+        elif py >= ty + th:
+            outer = ((center - 7, py + 1), (center + 7, py + 1), (center, py - 7))
+            inner = ((center - 5, py + 3), (center + 5, py + 3), (center, py - 4))
+        elif px >= tx + tw:
+            outer = ((px + 1, middle - 7), (px + 1, middle + 7), (px - 7, middle))
+            inner = ((px + 3, middle - 5), (px + 3, middle + 5), (px - 4, middle))
+        elif px + pw <= tx:
+            outer = ((px + pw - 1, middle - 7), (px + pw - 1, middle + 7), (px + pw + 7, middle))
+            inner = ((px + pw - 3, middle - 5), (px + pw - 3, middle + 5), (px + pw + 4, middle))
+        else:
+            return
+        renderer.draw_polygon(outer, _GOLD)  # type: ignore[attr-defined]
+        renderer.draw_polygon(inner, _PANEL)  # type: ignore[attr-defined]
 
     def _draw_bubble(self, renderer, view: TrailView) -> tuple[TextOp, ...]:  # type: ignore[no-untyped-def]
         bubble = self.bubble
@@ -997,6 +1139,8 @@ class TrailPresentation:
             )
         else:
             tail = ((anchor_x - 7, by + 2), (anchor_x + 7, by + 2), (anchor_x, sy + sh + 2))
+        if supports(renderer, "draw_translucent_panel"):
+            renderer.draw_translucent_panel(((bx + 3, by + 5, width, height),), _SHADOW_INK, 90, 13)
         renderer.draw_polygon(tail, _INK)
         renderer.draw_rounded_rect(bx, by, width, height, _BUBBLE, 12, _INK, 2)
         inner_tail = tuple(
@@ -1007,10 +1151,19 @@ class TrailPresentation:
             for px, py in tail
         )
         renderer.draw_polygon(inner_tail, _BUBBLE)
-        return tuple(
+        texts = [
             (line, bx + 12, by + 10 + index * line_height, _BUBBLE_TEXT, _BUBBLE_FONT)
             for index, line in enumerate(lines)
-        )
+        ]
+        # A small name tag on the bubble's top edge says who is talking.
+        name = getattr(speaker, "name", None)
+        if isinstance(name, str) and name.strip():
+            name_width, name_height = renderer.measure_text(name, _NAME_FONT)
+            tag_w, tag_h = name_width + 16, name_height + 6
+            tag_x, tag_y = bx + 10, max(HUD_BOTTOM - 4, by - tag_h + 6)
+            renderer.draw_rounded_rect(tag_x, tag_y, tag_w, tag_h, _NAME_TAG, 8, _INK, 2)
+            texts.append((name, tag_x + 8, tag_y + 4, _WHITE, _NAME_FONT))
+        return tuple(texts)
 
     def _draw_label(self, renderer, view: TrailView) -> tuple[TextOp, ...]:  # type: ignore[no-untyped-def]
         label = self.label

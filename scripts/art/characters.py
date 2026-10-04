@@ -71,6 +71,17 @@ GLOVE: Color = (246, 246, 252)
 GLOVE_SHADE: Color = (180, 188, 214)
 BEACON: Color = (255, 96, 86)
 BELT: Color = (104, 70, 58)
+HAIR: Color = (124, 70, 60)
+HAIR_SHADE: Color = (78, 42, 48)
+HAIR_LIGHT: Color = (196, 126, 96)
+IRIS: Color = (82, 96, 196)
+BROW: Color = (92, 52, 50)
+MOUTH: Color = (140, 52, 72)
+TONGUE: Color = (250, 128, 140)
+GLASS_EDGE: Color = (150, 214, 250)
+#: The silhouette line: a touch heavier than interior lines so Nova reads
+#: cleanly against the busy meadow, even at half scale.
+SILHOUETTE: Color = (18, 14, 40)
 
 NOVA_ROWS = ("down", "up", "right")
 NOVA_IDLE = ("idle-0", "idle-1", "idle-2", "idle-3")
@@ -86,6 +97,12 @@ def _finish(cv: Canvas) -> Canvas:
     footprint to within an anti-aliased pixel. Nothing here moves a limb.
     """
     ss = cv.ss
+    # A heavier outer silhouette than the interior lines (thick-outside, thin-
+    # inside), the classic game-sprite read.
+    ring = _dilate(cv.a, max(1, round(0.7 * ss)))
+    behind = (ring * (1 - cv.a))[..., None]
+    cv.rgb = cv.rgb + np.asarray(SILHOUETTE, np.float32) / 255 * behind
+    cv.a = cv.a + behind[..., 0]
     soft = cv.blurred(0.42)
     rgb = cv.rgb * 0.62 + soft.rgb * 0.38
     alpha = cv.a * 0.62 + soft.a * 0.38
@@ -105,6 +122,21 @@ def _finish(cv: Canvas) -> Canvas:
     cv.rgb = np.minimum(rgb, alpha[..., None]).astype(np.float32)
     cv.a = alpha.astype(np.float32)
     return cv
+
+
+def _dilate(alpha: np.ndarray, radius: int) -> np.ndarray:
+    """Grow an alpha mask by *radius* samples with a round kernel."""
+    height, width = alpha.shape
+    padded = np.pad(alpha, radius)
+    grown = alpha.copy()
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            if dx * dx + dy * dy <= radius * radius:
+                window = padded[
+                    radius + dy : radius + dy + height, radius + dx : radius + dx + width
+                ]
+                grown = np.maximum(grown, window)
+    return grown
 
 
 def _part(  # type: ignore[no-untyped-def]
@@ -195,31 +227,8 @@ def _nova_helmet(cv: Canvas, cx: float, cy: float, *, face: str, blink: bool) ->
         cv.paint(visor.grow(1.3), LINE)
         cv.paint(visor, radial(cx, cy + 6, 18, ((0, SKIN), (1, SKIN_SHADE))))
         cv.paint(visor - visor.shift(1.5, 3), (190, 120, 110), alpha=0.35, feather=1.2, clip=visor)
-        for ex in (cx - 7, cx + 7):
-            if blink:
-                cv.paint(
-                    Stroke([(ex - 3, cy + 2.4), (ex, cy + 3.8), (ex + 3, cy + 2.4)], 0.95), EYE
-                )
-            else:
-                eye = Ellipse(ex, cy + 2, 2.9, 3.9)
-                cv.paint(eye, EYE)
-                cv.paint(Ellipse(ex, cy + 3.8, 2.1, 1.6), (86, 90, 170), clip=eye)
-                cv.paint(Circle(ex + 0.9, cy + 0.4, 1.25), WHITE)
-                cv.paint(Circle(ex - 1.0, cy + 3.8, 0.55), WHITE, alpha=0.9)
-            cv.paint(
-                Ellipse(ex + (-2.5 if ex < cx else 2.5), cy + 8.2, 2.7, 1.5), CHEEK, alpha=0.75
-            )
-        cv.paint(
-            Stroke([(cx - 2.2, cy + 9.4), (cx, cy + 10.6), (cx + 2.2, cy + 9.4)], 0.7),
-            (150, 70, 80),
-        )
-        # Glass tint and reflections over the face.
-        cv.paint(visor, VISOR_GLASS, alpha=0.16)
-        cv.paint(visor - visor.shift(-2, 2.5), (200, 236, 255), alpha=0.55, feather=0.6, clip=visor)
-        cv.paint(
-            Stroke([(cx - 12, cy - 3), (cx - 8, cy - 8.5)], 1.4, 0.9), WHITE, alpha=0.75, clip=visor
-        )
-        cv.paint(Circle(cx - 13, cy + 1.5, 0.9), WHITE, alpha=0.7, clip=visor)
+        _nova_face(cv, cx, cy, visor, blink=blink)
+        _nova_glass(cv, visor, cx, cy)
         # Gold collar ring.
         collar = Ellipse(cx, cy + r - 1.5, 14, 3.8)
         _part(cv, collar, SUIT, shade=SUIT_SHADE, line=1.0)
@@ -231,24 +240,8 @@ def _nova_helmet(cv: Canvas, cx: float, cy: float, *, face: str, blink: bool) ->
         cv.paint(visor.grow(1.3) & shell.grow(1.4), LINE)
         visor_in = visor & shell
         cv.paint(visor_in, radial(cx + 12, cy + 6, 16, ((0, SKIN), (1, SKIN_SHADE))))
-        ex = cx + 14.5
-        if blink:
-            cv.paint(
-                Stroke([(ex - 2.6, cy + 2.4), (ex, cy + 3.7), (ex + 2.2, cy + 2.4)], 0.95), EYE
-            )
-        else:
-            eye = Ellipse(ex, cy + 2, 2.5, 3.8)
-            cv.paint(eye, EYE)
-            cv.paint(Ellipse(ex, cy + 3.8, 1.8, 1.5), (86, 90, 170), clip=eye)
-            cv.paint(Circle(ex + 0.8, cy + 0.4, 1.15), WHITE)
-        cv.paint(Ellipse(ex - 2.5, cy + 8.2, 2.6, 1.5), CHEEK, alpha=0.75)
-        cv.paint(
-            Stroke([(ex + 3.5, cy + 9.4), (ex + 5.2, cy + 10.2)], 0.7), (150, 70, 80), clip=visor_in
-        )
-        cv.paint(visor_in, VISOR_GLASS, alpha=0.16)
-        cv.paint(
-            Stroke([(cx + 5, cy - 3), (cx + 8, cy - 8)], 1.3, 0.8), WHITE, alpha=0.75, clip=visor_in
-        )
+        _nova_side_face(cv, cx, cy, visor_in, blink=blink)
+        _nova_glass(cv, visor_in, cx + 8, cy)
         collar = Ellipse(cx + 1, cy + r - 1.5, 12.5, 3.6)
         _part(cv, collar, SUIT, shade=SUIT_SHADE, line=1.0)
     else:
@@ -263,6 +256,118 @@ def _nova_helmet(cv: Canvas, cx: float, cy: float, *, face: str, blink: bool) ->
             cv.paint(Circle(cx - 9, rivet_y, 1.0), HELMET_SHADE, clip=shell)
         collar = Ellipse(cx, cy + r - 1.5, 14, 3.8)
         _part(cv, collar, SUIT, shade=SUIT_SHADE, line=1.0)
+
+
+def _eye(cv: Canvas, ex: float, ey: float, rx: float, ry: float, *, blink: bool) -> None:
+    """A big, glossy cartoon eye (or a happy closed arc when blinking)."""
+    if blink:
+        cv.paint(Stroke([(ex - rx - 0.4, ey), (ex, ey + 1.6), (ex + rx + 0.4, ey)], 0.95), EYE)
+        return
+    eye = Ellipse(ex, ey, rx, ry)
+    cv.paint(eye, EYE)
+    cv.paint(Ellipse(ex, ey + ry * 0.42, rx * 0.8, ry * 0.5), IRIS, clip=eye)
+    cv.paint(Ellipse(ex, ey + ry * 0.62, rx * 0.5, ry * 0.26), (150, 170, 255), clip=eye)
+    cv.paint(Circle(ex + rx * 0.3, ey - ry * 0.38, rx * 0.44), WHITE)
+    cv.paint(Circle(ex - rx * 0.36, ey + ry * 0.42, rx * 0.2), WHITE, alpha=0.9)
+
+
+def _hair(cv: Canvas, visor: Shape, points: list[tuple[float, float]], top: float) -> None:
+    """A soft fringe of bangs inside the visor: Nova's own personality."""
+    fringe = Union(
+        Box(points[0][0] - 4, top - 12, points[-1][0] + 4, top + 1.5, 2),
+        Poly(points),
+        smooth=1.2,
+    )
+    hair = fringe & visor
+    cv.paint(hair.grow(0.55) & visor, HAIR_SHADE)
+    cv.paint(hair, HAIR)
+    cv.paint(hair - hair.shift(-1.2, -1.6), HAIR_SHADE, alpha=0.75, feather=0.4, clip=hair)
+    cv.paint(
+        Stroke([(points[0][0] + 4, top - 1.5), (points[-1][0] - 6, top - 3.4)], 0.9, 0.4),
+        HAIR_LIGHT,
+        alpha=0.8,
+        clip=hair,
+    )
+
+
+def _nova_face(cv: Canvas, cx: float, cy: float, visor: Shape, *, blink: bool) -> None:
+    top = cy - 6.5
+    _hair(
+        cv,
+        visor,
+        [
+            (cx - 17, top),
+            (cx - 12, top + 4.6),
+            (cx - 9, top + 0.8),
+            (cx - 4.5, top + 5.6),
+            (cx - 1, top + 1.0),
+            (cx + 4, top + 4.4),
+            (cx + 7, top + 0.6),
+            (cx + 11.5, top + 3.8),
+            (cx + 17, top - 1),
+        ],
+        top,
+    )
+    for side in (-1, 1):
+        ex = cx + side * 6.8
+        # Soft, raised arches: curious and friendly.
+        cv.paint(
+            Stroke([(ex - 2.5, cy - 1.9), (ex - 0.2 * side, cy - 3.1), (ex + 2.5, cy - 2.0)], 0.6),
+            BROW,
+            alpha=0.85,
+        )
+        _eye(cv, ex, cy + 3.0, 3.1, 4.2, blink=blink)
+        cv.paint(Ellipse(ex + side * 2.6, cy + 8.6, 2.8, 1.5), CHEEK, alpha=0.7)
+    mouth = Ellipse(cx, cy + 9.6, 2.7, 2.2) & Box(cx - 4, cy + 9.4, cx + 4, cy + 13)
+    cv.paint(mouth.grow(0.45), MOUTH)
+    cv.paint(mouth, (110, 34, 56))
+    cv.paint(Ellipse(cx, cy + 11.2, 1.7, 0.9), TONGUE, clip=mouth)
+
+
+def _nova_side_face(cv: Canvas, cx: float, cy: float, visor: Shape, *, blink: bool) -> None:
+    top = cy - 6.5
+    _hair(
+        cv,
+        visor,
+        [
+            (cx - 2, top - 2),
+            (cx + 5, top + 4.6),
+            (cx + 8.5, top + 0.6),
+            (cx + 12.5, top + 5.2),
+            (cx + 16, top + 1.2),
+            (cx + 21, top + 3.2),
+            (cx + 24, top - 2),
+        ],
+        top,
+    )
+    ex = cx + 15.0
+    cv.paint(
+        Stroke([(ex - 2.3, cy - 1.9), (ex, cy - 3.0), (ex + 2.2, cy - 2.1)], 0.6), BROW, alpha=0.85
+    )
+    _eye(cv, ex, cy + 3.0, 2.6, 4.1, blink=blink)
+    cv.paint(Ellipse(ex - 3.2, cy + 8.6, 2.6, 1.5), CHEEK, alpha=0.7)
+    mouth = Ellipse(ex + 3.6, cy + 9.6, 1.8, 1.7) & Box(ex, cy + 9.4, ex + 8, cy + 13)
+    cv.paint(mouth.grow(0.45) & visor, MOUTH)
+    cv.paint(mouth & visor, (110, 34, 56))
+
+
+def _nova_glass(cv: Canvas, visor: Shape, cx: float, cy: float) -> None:
+    """Glass over the face: a sky-tinted top, a crisp edge, and moon glints."""
+    cv.paint(visor, VISOR_GLASS, alpha=0.12)
+    cv.paint(
+        visor & Box(cx - 30, cy - 30, cx + 30, cy - 4),
+        (190, 228, 255),
+        alpha=0.16,
+        feather=2.5,
+    )
+    cv.paint(visor - visor.grow(-1.1), GLASS_EDGE, alpha=0.55, clip=visor)
+    cv.paint(visor - visor.shift(-2, 2.5), (210, 240, 255), alpha=0.5, feather=0.6, clip=visor)
+    cv.paint(
+        Stroke([(cx - 12, cy - 2), (cx - 8.5, cy - 8)], 1.5, 0.9), WHITE, alpha=0.8, clip=visor
+    )
+    cv.paint(Circle(cx - 13, cy + 2.2, 0.95), WHITE, alpha=0.7, clip=visor)
+    # The moon's small reflection on the upper right of the glass.
+    cv.paint(Ellipse(cx + 10.5, cy - 4.5, 1.9, 1.3), WHITE, alpha=0.85, clip=visor)
 
 
 def _scarf_front(cv: Canvas, cx: float, top: float, sway: float, *, back: bool) -> None:
@@ -324,6 +429,8 @@ def _nova_front(
         line=1.3,
         shade=SUIT_SHADE,
     )
+    # Contact shade under the helmet and above the belt seats the parts together.
+    cv.paint(Ellipse(cx, body + 1.5, 13, 4.5), LINE, alpha=0.32, feather=1.6, clip=torso)
     belt = Box(cx - 14, hips - 5, cx + 14, hips - 0.5, 1.5) & torso
     cv.paint(belt, BELT)
     if back:
@@ -350,8 +457,9 @@ def _nova_front(
     else:
         for strap in (-7.5, 7.5):
             cv.paint(
-                Segment((cx + strap, body + 0.5), (cx + strap * 1.05, hips - 5), 1.4),
+                Segment((cx + strap, body + 0.5), (cx + strap * 1.05, hips - 5), 1.2),
                 PACK_SHADE,
+                alpha=0.6,
                 clip=torso,
             )
         _star_badge(cv, cx, body + 11, 4.4)
@@ -370,8 +478,12 @@ def _nova_side(
     arm: float,
     blink: bool,
     scarf: float,
+    lean: float = 0.0,
 ) -> None:
-    """Side view facing right. ``near``/``far`` are (foot x, lift, knee push)."""
+    """Side view facing right. ``near``/``far`` are (foot x, lift, knee push).
+
+    ``lean`` tips the upper body forward (pixels at the helmet) while walking.
+    """
     cx = 50
     body = 57 + bob
     hips = body + 22
@@ -424,6 +536,7 @@ def _nova_side(
         line=1.3,
         shade=SUIT_SHADE,
     )
+    cv.paint(Ellipse(cx + 1, body + 1.5, 11, 4.2), LINE, alpha=0.32, feather=1.6, clip=torso)
     cv.paint(Box(cx - 11, hips - 5, cx + 12, hips - 0.5, 1.5) & torso, BELT)
     cv.paint(Segment((cx - 5, body + 1), (cx - 4, hips - 5), 1.4), PACK_SHADE, clip=torso)
     _star_badge(cv, cx + 5, body + 10, 3.4)
@@ -439,7 +552,7 @@ def _nova_side(
     elbow = (shoulder[0] + 6 * math.sin(arm) + 1.5, shoulder[1] + 6.5 * math.cos(arm))
     _limb(cv, shoulder, near_hand, 3.6, knee=elbow)
     _glove(cv, *near_hand)
-    _nova_helmet(cv, cx + 1, 33 + bob, face="side", blink=blink)
+    _nova_helmet(cv, cx + 1 + lean, 33 + bob, face="side", blink=blink)
 
 
 def nova_frame(row: str, column: str) -> Image.Image:
@@ -473,21 +586,24 @@ def nova_frame(row: str, column: str) -> Image.Image:
         return _finish(cv).image()
     phase = index / 8 * math.tau
     s, c = math.sin(phase), math.cos(phase)
-    scarf = 2.5 + 1.5 * math.sin(phase * 2)
+    scarf = 3.0 + 2.0 * math.sin(phase * 2)
     if row == "right":
-        bob = 1.6 * abs(s)
-        near = (50 + 11 * s, 4.0 * max(0.0, c), 2.5 + 3.0 * max(0.0, c))
-        far = (50 - 11 * s, 4.0 * max(0.0, -c), 2.5 + 3.0 * max(0.0, -c))
-        _nova_side(cv, bob=bob, near=near, far=far, arm=-0.6 * s, blink=False, scarf=scarf)
+        # Up on the passing pose, down on contact: a springy, eager step.
+        bob = 2.0 * abs(s) - 0.4
+        near = (50 + 12 * s, 4.6 * max(0.0, c), 2.5 + 3.4 * max(0.0, c))
+        far = (50 - 12 * s, 4.6 * max(0.0, -c), 2.5 + 3.4 * max(0.0, -c))
+        _nova_side(
+            cv, bob=bob, near=near, far=far, arm=-0.82 * s, blink=False, scarf=scarf, lean=1.6
+        )
     else:
-        bob = 1.5 * (1 - abs(s))
-        lift = (4.0 * max(0.0, s), 4.0 * max(0.0, -s))
+        bob = 1.8 * (1 - abs(s)) - 0.3
+        lift = (4.8 * max(0.0, s), 4.8 * max(0.0, -s))
         _nova_front(
             cv,
             bob=bob,
             lift=lift,
-            swing=2.8 * s,
-            sway_x=0.8 * s,
+            swing=4.0 * s,
+            sway_x=1.0 * s,
             blink=False,
             scarf=scarf * 0.6,
             back=row == "up",

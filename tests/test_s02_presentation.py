@@ -29,6 +29,7 @@ from engine.rendering._classroom_ambience import (
     reed_sway,
 )
 from engine.rendering._classroom_sprites import (
+    COMPASS_HALO_SHEET_ID,
     COMPASS_NEEDLE_SHEET_ID,
     COMPASS_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
@@ -195,6 +196,7 @@ TRUSTED_SCENERY_IDS = {
     "scenery/moon-meadow-foreground",
     COMPASS_SHEET_ID,
     COMPASS_NEEDLE_SHEET_ID,
+    COMPASS_HALO_SHEET_ID,
     "ambient/reeds",
 }
 
@@ -569,9 +571,12 @@ def test_pixel_greeting_appears_in_a_speech_bubble_and_the_unchanged_hud() -> No
 
     assert f"Pixel: {PIXEL_GREETING}" in renderer.text  # HUD line unchanged
     bubble_text = " ".join(
-        text for text in renderer.text if text in PIXEL_GREETING and text != PIXEL_GREETING
+        text
+        for text in renderer.text
+        if text in PIXEL_GREETING and text not in (PIXEL_GREETING, "Pixel")
     )
     assert bubble_text == PIXEL_GREETING
+    assert "Pixel" in renderer.text  # the bubble's speaker name tag
     panels = [values for kind, values in renderer.operations if kind == "panel"]
     bubble = next(values for values in panels if values[4] == (250, 248, 236))
     rect = bubble[:4]
@@ -911,6 +916,7 @@ def test_render_order_keeps_hud_text_first_after_all_shapes() -> None:
     entities = [asset for asset in sprite_order if asset.startswith(("objects/", "characters/"))]
     assert entities == [
         "objects/crystal-lantern",
+        COMPASS_HALO_SHEET_ID,
         COMPASS_SHEET_ID,
         COMPASS_SHEET_ID,
         COMPASS_NEEDLE_SHEET_ID,

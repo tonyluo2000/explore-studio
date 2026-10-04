@@ -112,15 +112,26 @@ def capture_before(out: Path) -> None:
 
 
 def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
-    # ART_PASS_IDLE and LIVING_WORLD_5S: Nova untouched.
+    # ART_PASS_IDLE and LIVING_WORLD_5S: Nova untouched. The strip tiles five
+    # moments of the same idle second-by-second, so ambient life is visible
+    # in one still.
     trail = Trail()
-    trail.hold(1.2)
-    trail.save(out / "art-pass-idle.png")
-    trail.hold(3.8)
+    strip: list[pygame.Surface] = []
+    for moment in range(5):
+        trail.hold(1.2 if moment == 0 else 1.0)
+        if moment == 0:
+            trail.save(out / "art-pass-idle.png")
+        strip.append(pygame.display.get_surface().copy())
+    trail.hold(0.8)
     trail.save(out / "living-world-5s.png")
     trail.hold(0.5)
     trail.save(out / "living-world-5.5s.png")
     trail.close()
+    sheet = pygame.Surface((480 * len(strip), 320))
+    for index, frame in enumerate(strip):
+        sheet.blit(pygame.transform.smoothscale(frame, (480, 320)), (480 * index, 0))
+    pygame.image.save(sheet, str(out / "living-world-strip.png"))
+    print(f"wrote {out / 'living-world-strip.png'}")
 
     # PIXEL_GREETING: Nova starts within range of Pixel; press E.
     trail = Trail()

@@ -54,7 +54,7 @@
         "up",
         "right"
       ],
-      "sha256": "54c31f7382e495c2a65fd5cff0309dfa4b238439452a182c63616e4cc7a296b8"
+      "sha256": "c4a16969eba0d751423a4efd599935c32715f0eaf974603c10845a8ce080144b"
     },
     "characters/pixel": {
       "accent": [
@@ -79,7 +79,7 @@
       "rows": [
         "idle"
       ],
-      "sha256": "0310c94b2a7f3ff400a300e42d0b391e77e27b1431a03ec1685c956ba159cf12"
+      "sha256": "51ff4eef959b2ab213cdf1606df038398e3ff372b198ebce3d190278b079c120"
     },
     "objects/crystal-lantern": {
       "accent": [
@@ -129,7 +129,39 @@
         "body",
         "glass"
       ],
-      "sha256": "781f3106f751039670b11f4d2aff79ce852d0e63a028568d2316de9605418a82"
+      "sha256": "e954f636d311418d8f45610a9d7ca26d05ead3b319fb5990f90f13a18f4e86fe"
+    },
+    "objects/moon-compass-halo": {
+      "accent": [
+        255,
+        255,
+        255
+      ],
+      "columns": [
+        "spin-00",
+        "spin-01",
+        "spin-02",
+        "spin-03",
+        "spin-04",
+        "spin-05",
+        "spin-06",
+        "spin-07",
+        "spin-08",
+        "spin-09",
+        "spin-10",
+        "spin-11",
+        "spin-12",
+        "spin-13",
+        "spin-14",
+        "spin-15"
+      ],
+      "file": "objects/moon-compass/halo.png",
+      "frame_height": 36,
+      "frame_width": 144,
+      "rows": [
+        "halo"
+      ],
+      "sha256": "5ab477116558007b65a5c84a042d5abf0987a9d169c9a495144a28e35fc642d0"
     },
     "objects/moon-compass-needle": {
       "accent": [
@@ -226,7 +258,7 @@
       "rows": [
         "night"
       ],
-      "sha256": "92ed6f10400fb605d14a9375beaecdd272b189ceb37a4ea092d5ce405f6c0c29"
+      "sha256": "2b8295c80eecd1d1d6d549a6b2dd0f6604b914ae5a9d2cd0c4ed9ca3a721cd4f"
     },
     "scenery/moon-meadow-foreground": {
       "accent": [
@@ -243,7 +275,7 @@
       "rows": [
         "night"
       ],
-      "sha256": "9dfe30ce588d82568d8e09bd4ac1e510a99ea1458f73d2a0dd7524315bd8497d"
+      "sha256": "bd106564f3307e629ec354743ea31b40f4dc10a7aa00908700e9022540888985"
     }
   },
   "generator": "scripts/build_trusted_art.py",

@@ -17,6 +17,7 @@ Sheets:
 * ``characters/pixel`` — Pixel V3: idle, blink, and a greeting wave.
 * ``objects/moon-compass`` — ring (tinted by the student's color), body, glass.
 * ``objects/moon-compass-needle`` — the needle at 64 pre-rotated angles.
+* ``objects/moon-compass-halo`` — the ground rune circle (tinted by the student's color).
 * ``objects/crystal-lantern`` — the lantern and its flickering crystal flame.
 * ``ambient/reeds`` — a cattail clump at nine sway angles.
 
@@ -127,6 +128,15 @@ SHEETS: tuple[SheetSpec, ...] = (
         objects.NEEDLE_COLUMNS,
         objects.COMPASS_ACCENT,
         lambda _row, column: objects.needle_frame(column),
+    ),
+    SheetSpec(
+        "objects/moon-compass-halo",
+        "objects/moon-compass/halo.png",
+        objects.HALO_FRAME,
+        ("halo",),
+        objects.HALO_COLUMNS,
+        objects.COMPASS_ACCENT,
+        lambda _row, column: objects.halo_frame(column),
     ),
     SheetSpec(
         "objects/crystal-lantern",

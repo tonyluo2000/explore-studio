@@ -675,6 +675,17 @@ class ClassroomTrailScene(Scene):
         raise AssertionError("unsupported mission completion rule")
 
     @property
+    def feedback_message(self) -> str | None:
+        """The HUD feedback line drawn this frame, or ``None`` when there is none."""
+        if self._feedback_remaining > 0 and self._feedback_message is not None:
+            return self._feedback_message
+        if isinstance(self._target, ClassroomTrailObject):
+            return self._target.when_near or _DEFAULT_NEAR_MESSAGE
+        if self._target is not None:
+            return _DEFAULT_NEAR_MESSAGE
+        return None
+
+    @property
     def target_qualified_id(self) -> str | None:
         return None if self._target is None else self._target.qualified_id
 
@@ -929,14 +940,7 @@ class ClassroomTrailScene(Scene):
                 _TEXT_COLOR,
                 _FEEDBACK_FONT_SIZE,
             )
-        if self._feedback_remaining > 0 and self._feedback_message is not None:
-            message = self._feedback_message
-        elif isinstance(self._target, ClassroomTrailObject):
-            message = self._target.when_near or _DEFAULT_NEAR_MESSAGE
-        elif self._target is not None:
-            message = _DEFAULT_NEAR_MESSAGE
-        else:
-            message = None
+        message = self.feedback_message
         if message is not None:
             self._renderer.draw_text(
                 message,
