@@ -12,8 +12,9 @@ ordering or indexing mistake.
 
 ## Expedition context
 
-S05 continues the Moonlit expedition: the guide who asked for help in S04 now
-gives a full briefing. The conversation's three lines are, in order, the
+S05 continues the Moonlit expedition at the same spot as S04: in Moon Meadow,
+below Moonlit Ridge, the Moonlit Guide who asked for help in S04 now gives a
+full briefing. The conversation's three lines are, in order, the
 situation (the trail problem), a clue (what to look for), and an actionable
 task — the final line, `dialogue[-1]`, hands the student off into S06's
 object collection. The order carries the meaning: swapping any two lines
@@ -64,8 +65,13 @@ explore-package trail \
   --name "S05 Script a Conversation"
 ```
 
-Interact with the NPC once per line. Verify its final line and then interact one
-more time to test the restart prediction.
+Interact with the Moonlit Guide once per line. The Trail is the same painted
+Moon Meadow as S04: the prompt reads **Talk to Moonlit Guide**, each line
+appears whole in the guide's speech bubble (the bottom HUD line repeats it),
+and the small floating speech cue stays over the guide until its final line has
+been shown. Verify the final line and then interact one more time to test the
+restart prediction. The Crystal Lantern still glows in the meadow, but M05 does
+not need it.
 
 ## Deliberate debugging exercise
 

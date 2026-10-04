@@ -83,6 +83,14 @@ LANTERN: Final = "crystal-lantern:lantern"
 S02_COMPASS: Final = "moon-compass:compass"
 S03_COMPASS: Final = "moon-compass-response:compass"
 GUIDE: Final = "moonlit-guide:guide"
+#: S05's package ships the same Moonlit Guide under its own id.
+S05_GUIDE: Final = "moonlit-conversation:guide"
+#: S06's themed collection: unpublished, so only ever excluded.
+S06_OBJECTS: Final = (
+    "starlight-garden:sun-seed",
+    "starlight-garden:rain-bell",
+    "starlight-garden:wind-flower",
+)
 #: The pre-Moon Meadow S01 cast, retired by Phase B.
 FERN: Final = "forest-guide:guide"
 FOUNTAIN: Final = "river-fountain:fountain"
@@ -90,6 +98,7 @@ FOUNTAIN: Final = "river-fountain:fountain"
 S02_PACKAGE: Final = "../my-explore-world/projects/moon-compass"
 S03_PACKAGE: Final = "lessons/sessions/s03/student/explorer-package"
 S04_PACKAGE: Final = "lessons/sessions/s04/student/explorer-package"
+S05_PACKAGE: Final = "lessons/sessions/s05/student/explorer-package"
 
 #: The presentation runtime: everything between the task-card package files and
 #: the drawn frame, in groups an auditor can read. ``tests/test_journey_snapshots.py``
@@ -192,6 +201,7 @@ class PackageText:
 
     ``joined`` text may wrap over several drawn lines (a speech bubble);
     otherwise one ``draw_text`` call must draw exactly ``prefix + value``.
+    ``index`` picks one item of a list value (a conversation line).
     """
 
     package: str
@@ -199,6 +209,7 @@ class PackageText:
     key: str
     prefix: str = ""
     joined: bool = False
+    index: int | None = None
 
 
 @dataclass(frozen=True)
@@ -229,9 +240,9 @@ class Moment:
 
     ``steps`` are ``("hold", seconds)``, ``("walk_to", x, y)`` (walk with real
     input until there), ``("tap", direction)`` (one frame of that arrow key,
-    which turns the player), and ``("press",)`` (one ``E`` frame). Holds only
-    let cosmetic animation settle; :class:`Expect` decides whether the moment
-    was reached.
+    which turns the player), and ``("press",)`` (one ``E`` frame), each with
+    exactly the operands :data:`STEP_OPERANDS` lists. Holds only let cosmetic
+    animation settle; :class:`Expect` decides whether the moment was reached.
     """
 
     name: str
@@ -240,6 +251,11 @@ class Moment:
     steps: tuple[tuple[object, ...], ...]
     expect: Expect
     fixture: Fixture | None = None
+
+
+#: Each step action and the operands it takes, exactly.
+STEP_OPERANDS: Final[Mapping[str, int]] = {"hold": 1, "walk_to": 2, "tap": 1, "press": 0}
+TAP_DIRECTIONS: Final = ("left", "right", "up", "down")
 
 
 @dataclass(frozen=True)
@@ -268,7 +284,7 @@ class Session:
 
 #: Where Nova stands on arrival (S01): a few paces onto the Landing Site beside
 #: Pixel, out of Pixel's interaction range; beside the Moon Compass (S02/S03);
-#: and beside the Guide (S04).
+#: and beside the Guide (S04/S05).
 AT_LANDING_SITE: Final = ("walk_to", 340, 262)
 BESIDE_COMPASS: Final = ("walk_to", 250, 230)
 BESIDE_GUIDE: Final = ("walk_to", 455, 262)
@@ -282,7 +298,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # The arrival cast, each in trusted art, in Moon Meadow; never the
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
-        must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE, FERN, FOUNTAIN),
+        must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE, S05_GUIDE, FERN, FOUNTAIN),
         moments=(
             # The learning world, not completion: Nova facing the camera beside
             # Pixel, the Lantern shrine and the empty stone circle in view, and
@@ -302,7 +318,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
-        must_not_show=(S03_COMPASS, GUIDE),
+        must_not_show=(S03_COMPASS, GUIDE, S05_GUIDE),
         moments=(
             Moment(
                 name="S02_COMPASS_PROMPT",
@@ -330,7 +346,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
-        must_not_show=(PIXEL, LANTERN, S02_COMPASS, GUIDE),
+        must_not_show=(PIXEL, LANTERN, S02_COMPASS, GUIDE, S05_GUIDE),
         moments=(
             Moment(
                 name="S03_REVEAL",
@@ -365,7 +381,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
-        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS),
+        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, S05_GUIDE),
         moments=(
             Moment(
                 name="S04_DIALOGUE",
@@ -378,6 +394,58 @@ SESSIONS: Final[tuple[Session, ...]] = (
                     texts=(
                         PackageText(S04_PACKAGE, "character/guide.yaml", "name"),
                         PackageText(S04_PACKAGE, "character/guide.yaml", "greeting", joined=True),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Session(
+        session="S05",
+        mission_id="write-a-short-conversation",
+        player=NOVA,
+        presentation=MOON_MEADOW,
+        # The same spot as S04: Nova, the lit Lantern, and the S05 package's
+        # Moonlit Guide in trusted art. Never S04's greeting package (one
+        # Guide only), an earlier session's Compass or Pixel, or S06's
+        # collection.
+        must_show=(NOVA, LANTERN, S05_GUIDE),
+        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, GUIDE, *S06_OBJECTS),
+        moments=(
+            # The conversation in progress, not completion: the middle line
+            # (dialogue[1]) in the Guide's bubble and the HUD echo, so the
+            # frame is the second of the ordered lines and M05 is incomplete.
+            Moment(
+                name="S05_CONVERSATION",
+                kind=HERO,
+                slug="hero",
+                steps=(
+                    ("hold", 0.3),
+                    BESIDE_GUIDE,
+                    ("hold", 0.5),
+                    ("press",),
+                    ("hold", 0.6),
+                    ("press",),
+                    ("hold", 0.6),
+                ),
+                expect=Expect(
+                    target=S05_GUIDE,
+                    complete=False,
+                    texts=(
+                        PackageText(S05_PACKAGE, "character/guide.yaml", "name"),
+                        PackageText(
+                            S05_PACKAGE,
+                            "character/guide.yaml",
+                            "conversation",
+                            index=1,
+                            joined=True,
+                        ),
+                        PackageText(
+                            S05_PACKAGE,
+                            "character/guide.yaml",
+                            "conversation",
+                            prefix="Moonlit Guide: ",
+                            index=1,
+                        ),
                     ),
                 ),
             ),

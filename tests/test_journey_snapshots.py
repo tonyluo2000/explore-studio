@@ -140,6 +140,94 @@ def test_s04_lantern_is_present_without_a_destination_marker() -> None:
 
 
 # ---------------------------------------------------------------------------
+# S05 is the conversation in progress at the S04 spot
+# ---------------------------------------------------------------------------
+
+
+def test_s05_row_states_the_conversation_contract() -> None:
+    s05 = SESSIONS_BY_ID["S05"]
+    assert not s05.deferred and s05.presentation == MOON_MEADOW
+    assert s05.mission_id == "write-a-short-conversation"
+    # The same spot as S04, with the S05 package's own Guide and no other Guide.
+    assert set(s05.must_show) == {journey.NOVA, journey.LANTERN, journey.S05_GUIDE}
+    assert {journey.GUIDE, journey.PIXEL, journey.S02_COMPASS, journey.S03_COMPASS} <= set(
+        s05.must_not_show
+    )
+    assert set(journey.S06_OBJECTS) <= set(s05.must_not_show)
+    assert _package_id("lessons/sessions/s06/student/explorer-package") == "starlight-garden"
+    s06_card = journey.canonical_command("S06")
+    assert s06_card is not None and journey.S05_PACKAGE not in s06_card.packages
+    assert [moment.kind for moment in s05.moments] == [HERO]
+    hero = s05.hero
+    assert hero.name == "S05_CONVERSATION" and hero.fixture is None
+    # A learning moment, not completion: the Guide is the target, the middle
+    # line (dialogue[1]) is on screen, and M05 is still incomplete.
+    expect = hero.expect
+    assert expect.target == journey.S05_GUIDE and not expect.complete
+    assert expect.visited == ()
+    assert [step for step in hero.steps if step == ("press",)] == [("press",)] * 2
+    lines = yaml.safe_load(
+        (journey.package_root(journey.S05_PACKAGE) / "character/guide.yaml").read_text("utf-8")
+    )["conversation"]
+    assert len(lines) == 3, "two presses must stop before the final line"
+    texts = [spec for spec in expect.texts if isinstance(spec, journey.PackageText)]
+    indexed = [spec for spec in texts if spec.index is not None]
+    assert {(spec.key, spec.index, spec.joined) for spec in indexed} == {
+        ("conversation", 1, True),
+        ("conversation", 1, False),
+    }
+
+
+def test_s05_hero_shows_no_completion_or_later_content() -> None:
+    [entry] = [entry for entry in ENTRIES if entry["session"] == "S05"]
+    assert (entry["moment"], entry["kind"]) == ("S05_CONVERSATION", HERO)
+    assert entry["presentation"] == MOON_MEADOW and entry["fixture"] is None
+    text = json.dumps(entry).lower()
+    for word in ("s06", "starlight", "sun-seed", "rain-bell", "wind-flower", "collection"):
+        assert word not in text, word
+    assert sorted(path.name for path in (PUBLIC_JOURNEY / "s05").iterdir()) == [
+        "hero-480.webp",
+        "hero.webp",
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Step recipes are checked before anything is driven
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("step", "message"),
+    [
+        (("tap",), "takes 1 operand"),
+        (("tap", "down", "up"), "takes 1 operand"),
+        (("tap", "sideways"), "not a tap direction"),
+        (("hold",), "takes 1 operand"),
+        (("hold", 0.3, 0.4), "takes 1 operand"),
+        (("walk_to", 455), "takes 2 operand"),
+        (("press", 1), "takes 0 operand"),
+        (("jump",), "unknown step"),
+    ],
+)
+def test_malformed_steps_are_a_clear_capture_error(step, message) -> None:  # type: ignore[no-untyped-def]
+    import dataclasses
+
+    from scripts.capture_journey_snapshots import CaptureError, check_steps
+
+    moment = dataclasses.replace(S01.hero, steps=(step,))
+    with pytest.raises(CaptureError, match=message):
+        check_steps(moment)
+
+
+def test_every_table_recipe_is_well_formed() -> None:
+    from scripts.capture_journey_snapshots import check_steps
+
+    for row in SESSIONS:
+        for moment in row.moments:
+            check_steps(moment)
+
+
+# ---------------------------------------------------------------------------
 # S01 is the Moon Meadow arrival, and only that
 # ---------------------------------------------------------------------------
 
@@ -168,6 +256,7 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
         journey.S02_COMPASS,
         journey.S03_COMPASS,
         journey.GUIDE,
+        journey.S05_GUIDE,
         journey.FERN,
         journey.FOUNTAIN,
     }
@@ -205,7 +294,7 @@ def test_harness_refuses_deferred_and_unpublished_sessions(
     with pytest.raises(CaptureError, match="S01 is deferred"):
         publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
-        publish(["S05"])
+        publish(["S06"])
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +335,7 @@ def test_published_snapshot_set_is_the_reviewed_one() -> None:
         "S02": [(HERO, "S02_COMPASS_PROMPT"), ("LEARNING_MOMENT", "S02_MOVED_COMPASS")],
         "S03": [(HERO, "S03_REVEAL"), ("LEARNING_MOMENT", "S03_NEAR_CLUE")],
         "S04": [(HERO, "S04_DIALOGUE")],
+        "S05": [(HERO, "S05_CONVERSATION")],
     }
 
 

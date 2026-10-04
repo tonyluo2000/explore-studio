@@ -49,7 +49,7 @@ from engine.rendering._trail_presentation import (
     HUD_TEXT_X,
     TrailPresentation,
 )
-from explore.curriculum import MISSION_02_ID, MISSION_05_ID
+from explore.curriculum import MISSION_02_ID, MISSION_06_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -312,7 +312,7 @@ def test_m02_backdrop_is_one_trusted_plate_with_procedural_fallback() -> None:
     assert "polygon" in fallback.kinds() and "sprite" not in fallback.kinds()
 
     other = ArtRenderer()
-    assert not draw_classroom_backdrop(other, MISSION_05_ID)  # type: ignore[arg-type]
+    assert not draw_classroom_backdrop(other, MISSION_06_ID)  # type: ignore[arg-type]
     assert not draw_classroom_backdrop(other, None)  # type: ignore[arg-type]
     assert other.operations == []
 
@@ -424,7 +424,7 @@ def test_hud_panel_sits_behind_every_hud_row_and_is_drawn_before_text() -> None:
         ), point
 
 
-@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+@pytest.mark.parametrize("mission_id", (MISSION_06_ID, None))
 def test_other_missions_get_no_hud_panel_or_scenery(mission_id: str | None) -> None:
     renderer = ArtRenderer()
     scene = _scene(renderer, mission_id=mission_id)

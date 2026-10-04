@@ -1,4 +1,4 @@
-"""Moon Meadow audio for the S02-S04 (M02-M04) Classroom Trail.
+"""Moon Meadow audio for the S02-S05 (M02-M05) Classroom Trail.
 
 Like ``TrailPresentation``, this layer only *observes* the scene after each
 update and never writes to it. It turns real state transitions into semantic
@@ -12,12 +12,13 @@ cues for an :class:`~engine.audio._manager.AudioManager`:
   visited or spoken to, re-armed per target only after ``NEAR_REARM`` s away;
 * on an actual interaction: the Compass's shimmer, the Lantern's chime,
   Pixel's chirp, the Moonlit Guide's (or any NPC's) moon bell when a
-  conversation starts, or a soft tock for any other object;
+  conversation starts (a greeting, or line one of an S05 conversation), or a
+  soft tock for any other object;
 * the mission-complete motif once, on the incomplete -> complete transition,
   a beat after the interaction that caused it.
 
 Audio is allow-listed by the mission presentation policy (``meadow_audio``):
-M02-M04 only, so S01 and S05+ stay silent. Every cue has a visual twin, so a
+M02-M05 only, so S01 and S06+ stay silent. Every cue has a visual twin, so a
 muted or soundless Trail loses nothing. A small "Audio" indicator (M to
 toggle) is drawn only while a mixer is actually open.
 

@@ -45,11 +45,11 @@ def _js_string(source: str, key: str) -> str:
     return match.group(1)
 
 
-def test_s04_is_published_and_s05_is_not():
-    assert _slides_published() == ["S01", "S02", "S03", "S04"]
+def test_s04_is_published():
+    # S05 joined deliberately (tests/test_lesson_materials_s05_website.py).
+    assert _slides_published()[:4] == ["S01", "S02", "S03", "S04"]
     learn_ids = re.findall(r'^\s+id: "(S\d\d)"', _read(LEARN), re.MULTILINE)
-    assert learn_ids == ["S01", "S02", "S03", "S04"]
-    assert not (WEBSITE / "app" / "students" / "slides" / "s05").exists()
+    assert learn_ids[:4] == ["S01", "S02", "S03", "S04"]
     slides = _read(SLIDES)
     assert 'canonical: "/students/slides/s04/"' in slides
     assert "/students/learn/s04/" in slides

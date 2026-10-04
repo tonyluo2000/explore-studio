@@ -53,7 +53,7 @@ from engine.rendering._trail_presentation import (
     wrap_text,
 )
 from engine.scenes import ClassroomTrailObject
-from explore.curriculum import MISSION_02_ID, MISSION_05_ID
+from explore.curriculum import MISSION_02_ID, MISSION_06_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -932,7 +932,7 @@ def test_render_order_keeps_hud_text_first_after_all_shapes() -> None:
     assert 0 < kinds.index("shadow") < first_entity  # ground and shadows beneath entities
 
 
-@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+@pytest.mark.parametrize("mission_id", (MISSION_06_ID, None))
 def test_other_missions_are_untouched_by_the_presentation_layer(mission_id: str | None) -> None:
     # None is a Trail launched without --mission-id: M01 rules, plain Trail.
     renderer = GameRenderer()

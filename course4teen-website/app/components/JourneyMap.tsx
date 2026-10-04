@@ -231,14 +231,27 @@ function Guide({ landmark, soft }: { landmark: LandmarkView; soft: string }) {
       </g>
     );
   }
+  const briefing = landmark.detail === "briefing";
   return (
     <g className="jm-guide">
-      <circle cx={x} cy={y - 26} r={52} className="jm-pool-blue" filter={soft} />
+      <circle cx={x} cy={y - 26} r={52} className={briefing ? "jm-pool-blue jm-pool-strong" : "jm-pool-blue"} filter={soft} />
       <path d={`M${x + 20} ${y + 2}V${y - 46}`} className="jm-guide-staff" />
       <path d={`M${x + 26} ${y - 58}a8 8 0 1 1-10-4a6 6 0 1 0 10 4Z`} className="jm-guide-moon" />
       <path d={`M${x - 18} ${y + 2}Q${x - 14} ${y - 30} ${x} ${y - 52}Q${x + 14} ${y - 30} ${x + 18} ${y + 2}Z`} className="jm-guide-robe" />
       <circle cx={x} cy={y - 30} r={6} className="jm-guide-face" />
       <path d={`M${x - 6} ${y - 27}q6 16 12 0Z`} className="jm-guide-beard" />
+      {/* Briefing: the Trail's cream speech bubble, its lines in order, beside the Guide. */}
+      {briefing ? (
+        <g className="jm-briefing">
+          <path
+            d={`M${x - 92} ${y - 96}h56a8 8 0 0 1 8 8v24a8 8 0 0 1-8 8h-14l14 16l-30-16h-26a8 8 0 0 1-8-8v-24a8 8 0 0 1 8-8Z`}
+            className="jm-briefing-bubble"
+          />
+          {[40, 32, 24].map((length, index) => (
+            <path key={length} d={`M${x - 84} ${y - 84 + index * 8}h${length}`} className="jm-briefing-line" />
+          ))}
+        </g>
+      ) : null}
     </g>
   );
 }
