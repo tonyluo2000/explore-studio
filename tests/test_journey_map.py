@@ -438,6 +438,358 @@ def test_validation_rejects_duplicated_titles_dates_and_extra_frontiers() -> Non
 
 
 # ---------------------------------------------------------------------------
+# Frontier: exactly one generic fog bank, failing closed
+# ---------------------------------------------------------------------------
+
+
+def _frontier_index(data: dict) -> int:  # type: ignore[type-arg]
+    (index,) = [i for i, region in enumerate(data["regions"]) if region.get("frontier")]
+    return index
+
+
+def _no_frontier(data: dict) -> None:  # type: ignore[type-arg]
+    del data["regions"][_frontier_index(data)]
+
+
+def _two_frontiers(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"].append({**data["regions"][_frontier_index(data)], "id": "beyond-two"})
+
+
+def _same_frontier_twice(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"].append(copy.deepcopy(data["regions"][_frontier_index(data)]))
+
+
+def _named_frontier(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["name"] = "Far Ridge"
+
+
+def _empty_named_frontier(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["name"] = ""
+
+
+def _frontier_too_early(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["reveal"] = [{"from": "S03", "state": "fogged"}]
+
+
+def _frontier_revealed(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["reveal"].append({"from": "S04", "state": "revealed"})
+
+
+def _frontier_detail(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["reveal"][0]["detail"] = "a tower"
+
+
+def _frontier_hint_field(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["hint"] = "A tower glows beyond the ridge"
+
+
+def _frontier_object_field(data: dict) -> None:  # type: ignore[type-arg]
+    data["frontier"]["destination"] = "A tower beyond the ridge"
+
+
+def _frontier_future_teaser(data: dict) -> None:  # type: ignore[type-arg]
+    data["frontier"]["teaser"] = "A tower of stars waits beyond the ridge."
+
+
+def _frontier_empty_teaser(data: dict) -> None:  # type: ignore[type-arg]
+    data["frontier"]["teaser"] = " "
+
+
+def _frontier_flag_not_true(data: dict) -> None:  # type: ignore[type-arg]
+    data["regions"][_frontier_index(data)]["frontier"] = "yes"
+
+
+def _landmark_in_frontier(data: dict) -> None:  # type: ignore[type-arg]
+    data["landmarks"][3]["region"] = data["regions"][_frontier_index(data)]["id"]
+
+
+FRONTIER_MUTATIONS = {
+    "zero": (_no_frontier, "exactly one generic fog frontier is required; found 0"),
+    "two": (_two_frontiers, "exactly one generic fog frontier is required; found 2"),
+    "duplicate": (_same_frontier_twice, "exactly one generic fog frontier is required; found 2"),
+    "named": (_named_frontier, "must stay unnamed"),
+    "empty-name": (_empty_named_frontier, "must stay unnamed"),
+    "too-early": (_frontier_too_early, "must appear once, fogged, at the current stop S04"),
+    "revealed": (_frontier_revealed, "must appear once, fogged, at the current stop S04"),
+    "detail": (_frontier_detail, "may carry no reveal detail"),
+    "hint-field": (_frontier_hint_field, "has unknown key hint"),
+    "object-field": (_frontier_object_field, "journey.frontier has unknown key destination"),
+    "future-teaser": (_frontier_future_teaser, "teaser must only echo the current stop's published story"),
+    "empty-teaser": (_frontier_empty_teaser, "teaser must only echo the current stop's published story"),
+    "flag-not-true": (_frontier_flag_not_true, "frontier must be true when present"),
+    "holds-landmark": (_landmark_in_frontier, "cannot sit in the unnamed frontier"),
+}
+
+
+@needs_node
+@pytest.mark.parametrize("case", sorted(FRONTIER_MUTATIONS))
+def test_validation_fails_closed_on_frontier_mutations(case: str) -> None:
+    change, message = FRONTIER_MUTATIONS[case]
+    errors = _errors(journey=_mutated(change))
+    assert any(message in error for error in errors), errors
+
+
+@needs_node
+def test_frontier_is_visible_only_at_the_current_published_stop(journey_run) -> None:  # type: ignore[no-untyped-def]
+    for through in THROUGH:
+        frontiers = [r for r in journey_run["states"][through]["regions"] if r["frontier"]]
+        if through == "S04":
+            assert [(r["id"], r["name"], r["state"]) for r in frontiers] == [
+                ("beyond-ridge", None, "fogged")
+            ]
+        else:
+            assert frontiers == [], through
+
+
+# ---------------------------------------------------------------------------
+# Path endpoints exist, at an allowed visibility, whenever the line is shown
+# ---------------------------------------------------------------------------
+
+
+def _path(data: dict, path_id: str) -> dict:  # type: ignore[type-arg]
+    (path,) = [path for path in data["paths"] if path["id"] == path_id]
+    return path
+
+
+def _landmark(data: dict, landmark_id: str) -> dict:  # type: ignore[type-arg]
+    (landmark,) = [item for item in data["landmarks"] if item["id"] == landmark_id]
+    return landmark
+
+
+def _typo_endpoint(data: dict) -> None:  # type: ignore[type-arg]
+    _path(data, "trail-landing-clearing")["to"] = "compass-clearng"
+
+
+def _future_endpoint(data: dict) -> None:  # type: ignore[type-arg]
+    data["landmarks"].append(
+        {**_landmark(data, "landing-site"), "id": "far-camp", "name": "Far Camp",
+         "reveal": [{"from": "S05", "state": "revealed"}]}
+    )
+    _path(data, "bearing-clearing-guide")["to"] = "far-camp"
+
+
+def _hidden_endpoint(data: dict) -> None:  # type: ignore[type-arg]
+    # The Guide is no longer hinted in S03, yet the S03 bearing still points at it.
+    _landmark(data, "moonlit-guide")["reveal"] = [{"from": "S04", "state": "revealed"}]
+
+
+def _line_before_endpoint(data: dict) -> None:  # type: ignore[type-arg]
+    _path(data, "bearing-clearing-guide")["reveal"][0]["from"] = "S02"
+
+
+def _revealed_bearing_to_hint(data: dict) -> None:  # type: ignore[type-arg]
+    _path(data, "bearing-clearing-guide")["reveal"] = [{"from": "S03", "state": "revealed"}]
+
+
+def _line_between_hints(data: dict) -> None:  # type: ignore[type-arg]
+    data["paths"].append(
+        {**_path(data, "trail-landing-clearing"), "id": "trail-unanchored",
+         "from": "compass-clearing", "to": "moonlit-guide",
+         "reveal": [{"from": "S01", "state": "hinted"}, {"from": "S04", "state": "revealed"}]}
+    )
+    _landmark(data, "moonlit-guide")["reveal"] = [
+        {"from": "S01", "state": "hinted"}, {"from": "S04", "state": "revealed"}
+    ]
+
+
+PATH_MUTATIONS = {
+    "unknown-endpoint": (_typo_endpoint, "path trail-landing-clearing names unknown landmark compass-clearng"),
+    "future-endpoint": (_future_endpoint, "its end far-camp is hidden there"),
+    "hidden-endpoint": (_hidden_endpoint, "bearing-clearing-guide is hinted in S03, but its end moonlit-guide is hidden there"),
+    "line-before-endpoint": (_line_before_endpoint, "bearing-clearing-guide is hinted in S02, but its end moonlit-guide is hidden there"),
+    "revealed-bearing-to-hint": (_revealed_bearing_to_hint, "bearing bearing-clearing-guide is revealed in S03, but its end moonlit-guide is only hinted"),
+    "unanchored-line": (_line_between_hints, "trail-unanchored is hinted in S01, but neither end is revealed there"),
+}
+
+
+@needs_node
+@pytest.mark.parametrize("case", sorted(PATH_MUTATIONS))
+def test_validation_fails_closed_on_path_endpoint_mutations(case: str) -> None:
+    change, message = PATH_MUTATIONS[case]
+    errors = _errors(journey=_mutated(change))
+    assert any(message in error for error in errors), errors
+
+
+@needs_node
+@pytest.mark.parametrize("through", THROUGH)
+def test_every_shown_path_ends_at_landmarks_shown_in_the_same_state(journey_run, through) -> None:  # type: ignore[no-untyped-def]
+    state = journey_run["states"][through]
+    landmarks = {item["id"]: item["state"] for item in state["landmarks"]}
+    for path in state["paths"]:
+        ends = [landmarks.get(path["from"]), landmarks.get(path["to"])]
+        assert all(end in {"hinted", "revealed", "current"} for end in ends), (through, path["id"], ends)
+        assert any(end in {"revealed", "current"} for end in ends), (through, path["id"], ends)
+        if path["kind"] == "bearing" and path["state"] == "revealed":
+            assert all(end in {"revealed", "current"} for end in ends), (through, path["id"], ends)
+
+
+# ---------------------------------------------------------------------------
+# Canonical fields are derived, never owned: rejected at any depth
+# ---------------------------------------------------------------------------
+
+
+def _nest(where, key: str, value: object):  # type: ignore[no-untyped-def]
+    def change(data: dict) -> None:  # type: ignore[type-arg]
+        where(data)["meta"] = {key: value}
+
+    return change
+
+
+NESTED_HOSTS = {
+    "stop": lambda data: data["stops"][0],
+    "landmark": lambda data: data["landmarks"][2],
+    "region": lambda data: data["regions"][1],
+    "reveal-step": lambda data: data["landmarks"][2]["reveal"][1],
+    "frontier-object": lambda data: data["frontier"],
+    "frontier-region": lambda data: data["regions"][_frontier_index(data)],
+    "path": lambda data: data["paths"][2],
+    "map": lambda data: data["map"],
+    "label": lambda data: data["regions"][0]["label"],
+}
+
+NESTED_FIELDS = {
+    "title": "Place Your First Prop",
+    "date": "2026-09-26",
+    "published": True,
+    "publicationState": "published",
+    "slidesUrl": "/students/slides/s02/",
+    "notesHref": "/students/learn/s02/",
+    "learnUrl": "/students/learn/s02/",
+    "heroSrc": "/journey/s02/hero.webp",
+    "snapshot": "S02_COMPASS_PROMPT",
+}
+
+
+@needs_node
+@pytest.mark.parametrize("host", sorted(NESTED_HOSTS))
+@pytest.mark.parametrize("field", sorted(NESTED_FIELDS))
+def test_validation_rejects_nested_canonical_fields(host: str, field: str) -> None:
+    errors = _errors(journey=_mutated(_nest(NESTED_HOSTS[host], field, NESTED_FIELDS[field])))
+    assert any(f"has canonical field {field}, which journey.json must not own" in e for e in errors), errors
+
+
+@needs_node
+def test_validation_rejects_canonical_fields_buried_deeper_or_in_scalars() -> None:
+    def deep(data: dict) -> None:  # type: ignore[type-arg]
+        data["stops"][1]["extra"] = {"layers": [{"session": {"title": "Place Your First Prop"}}]}
+
+    def direct(data: dict) -> None:  # type: ignore[type-arg]
+        data["paths"][0]["url"] = "/students/slides/s01/"
+
+    def in_scalar(data: dict) -> None:  # type: ignore[type-arg]
+        data["landmarks"][0]["icon"] = {"image": {"src": "/journey/s01/hero.webp"}}
+
+    def image_list(data: dict) -> None:  # type: ignore[type-arg]
+        data["stops"][0]["images"] = [{"src": "/journey/s01/hero-480.webp"}]
+
+    assert any(
+        "journey.stops[1].extra.layers[0].session has canonical field title" in e
+        for e in _errors(journey=_mutated(deep))
+    )
+    assert any("journey.paths[0] has canonical field url" in e for e in _errors(journey=_mutated(direct)))
+    errors = _errors(journey=_mutated(in_scalar))
+    assert any("journey.landmarks[0].icon must be a string" in e for e in errors), errors
+    assert any("icon has canonical field image" in e for e in errors), errors
+    assert any("has canonical field src" in e for e in errors), errors
+    errors = _errors(journey=_mutated(image_list))
+    assert any("journey.stops[0] has canonical field images" in e for e in errors), errors
+
+
+@needs_node
+def test_validation_rejects_canonical_values_inside_owned_text() -> None:
+    def dated(data: dict) -> None:  # type: ignore[type-arg]
+        data["stops"][0]["story"] = "On 2026-09-19 Nova lands in Moon Meadow."
+
+    def titled(data: dict) -> None:  # type: ignore[type-arg]
+        data["landmarks"][0]["hint"] = "Explorer's Field Notes"
+
+    def linked(data: dict) -> None:  # type: ignore[type-arg]
+        data["stops"][2]["snapshotAlt"] = "See /journey/s03/hero.webp"
+
+    def slides_link(data: dict) -> None:  # type: ignore[type-arg]
+        data["note"] = "Slides live at https://example.org/s01"
+
+    assert any("carries a date" in e for e in _errors(journey=_mutated(dated)))
+    assert any("repeats the calendar title of S01" in e for e in _errors(journey=_mutated(titled)))
+    assert any("carries a URL or image path" in e for e in _errors(journey=_mutated(linked)))
+    assert any("carries a URL or image path" in e for e in _errors(journey=_mutated(slides_link)))
+
+
+@needs_node
+def test_descriptive_prose_with_ordinary_words_still_validates() -> None:
+    def prose(data: dict) -> None:  # type: ignore[type-arg]
+        data["stops"][0]["story"] = "Nova notes the date and a title on the slides of a published map."
+
+    assert _errors(journey=_mutated(prose)) == []
+
+
+# ---------------------------------------------------------------------------
+# SVG ids are scoped per map instance
+# ---------------------------------------------------------------------------
+
+SVG_ID = re.compile(r'\sid="([^"]+)"')
+SVG_REFS = (
+    re.compile(r'url\(#([^)"\']+)\)'),
+    re.compile(r'(?:xlink:)?href="#([^"]+)"'),
+)
+
+
+def _svg_refs(svg: str) -> set[str]:
+    refs = {ref for pattern in SVG_REFS for ref in pattern.findall(svg)}
+    for labels in re.findall(r'aria-labelledby="([^"]+)"', svg):
+        refs.update(labels.split())
+    return refs
+
+
+def _check_svg_instances(html: str, count: int) -> None:
+    svgs = re.findall(r"<svg\b.*?</svg>", html, flags=re.S)
+    assert len(svgs) == count
+    all_ids = SVG_ID.findall(html)
+    assert len(all_ids) == len(set(all_ids)), sorted(i for i in all_ids if all_ids.count(i) > 1)
+    owned = [set(SVG_ID.findall(svg)) for svg in svgs]
+    for index, svg in enumerate(svgs):
+        refs = _svg_refs(svg)
+        assert refs, index
+        # Every local reference resolves inside its own map, never a sibling's.
+        assert refs <= owned[index], (index, refs - owned[index])
+        for other, ids in enumerate(owned):
+            if other != index:
+                assert not refs & ids, (index, other)
+
+
+@needs_node
+def test_two_map_instances_in_one_document_never_share_svg_ids() -> None:
+    if not (WEBSITE / "node_modules" / "react-dom").is_dir():
+        pytest.skip("needs the website's node_modules (npm ci) to server-render JourneyMap")
+    rendered = probe(render=[{"through": "S04"}, {"through": "S04"}, {"through": "S01"}])["rendered"]
+    assert rendered.startswith("<main>")
+    _check_svg_instances(rendered, 3)
+    for paint in ("sky", "meadow", "vignette", "blur", "soft", "frame"):
+        assert len(re.findall(rf'id="[^"]+-{paint}"', rendered)) == 3, paint
+
+
+@needs_node
+def test_explicit_id_prefixes_scope_svg_ids_too() -> None:
+    if not (WEBSITE / "node_modules" / "react-dom").is_dir():
+        pytest.skip("needs the website's node_modules (npm ci) to server-render JourneyMap")
+    rendered = probe(render=[{"through": "S04", "idPrefix": "map-a"}, {"through": "S04", "idPrefix": "map:b"}])[
+        "rendered"
+    ]
+    _check_svg_instances(rendered, 2)
+    assert 'id="map-a-sky"' in rendered and 'id="mapb-sky"' in rendered
+
+
+def test_map_ids_come_from_a_server_safe_per_instance_source() -> None:
+    journey_map = _read(MAP)
+    assert 'import { useId } from "react";' in journey_map
+    assert '"use client"' not in journey_map
+    assert 'idPrefix = "jm"' not in journey_map
+    # No hard-coded paint ids: every id and url(#...) goes through `ids`.
+    assert not re.search(r'id="[^"]*"', journey_map)
+    assert not re.search(r"url\(#[a-z]", journey_map)
+
+
+# ---------------------------------------------------------------------------
 # Snapshots, links, and canonical metadata
 # ---------------------------------------------------------------------------
 
@@ -620,6 +972,11 @@ def test_rendered_journey_page_shows_s04_and_nothing_later() -> None:
         if any(term in title for title in future_titles):
             continue
         assert term not in text, term
+
+
+@needs_site
+def test_rendered_journey_page_svg_ids_are_unique_and_resolve() -> None:
+    _check_svg_instances(_html("students/journey"), 1)
 
 
 @needs_site

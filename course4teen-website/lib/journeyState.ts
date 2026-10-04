@@ -99,17 +99,177 @@ const LANDMARK_STATES = new Set(["hinted", "revealed"]);
 const REGION_STATES = new Set(["fogged", "revealed"]);
 const PATH_STATES = new Set(["hinted", "revealed"]);
 
-const ALLOWED_KEYS: Record<string, readonly string[]> = {
-  root: ["schema", "note", "map", "regions", "landmarks", "paths", "frontier", "stops"],
-  region: ["id", "name", "frontier", "label", "shape", "reveal"],
-  landmark: ["id", "name", "hint", "region", "icon", "x", "y", "reveal"],
-  path: ["id", "kind", "from", "to", "d", "reveal"],
-  stop: ["session", "kind", "landmark", "headline", "story", "snapshot", "snapshotAlt"],
-  step: ["from", "state", "detail"],
-};
+/** The JSON shape journey.json may take. Every field it owns is listed here. */
+type Shape =
+  | { type: "string" | "number" | "true" }
+  | { type: "enum"; values: readonly string[] }
+  | { type: "array"; items: Shape }
+  | { type: "object"; fields: Record<string, Shape>; optional: readonly string[] };
 
-function extraKeys(value: object, kind: string): string[] {
-  return Object.keys(value).filter((key) => !ALLOWED_KEYS[kind].includes(key));
+const STRING: Shape = { type: "string" };
+const NUMBER: Shape = { type: "number" };
+const oneOf = (...values: string[]): Shape => ({ type: "enum", values });
+const list = (items: Shape): Shape => ({ type: "array", items });
+const record = (fields: Record<string, Shape>, optional: readonly string[] = []): Shape => ({
+  type: "object",
+  fields,
+  optional,
+});
+
+const STEP_SHAPE = record({ from: STRING, state: oneOf("fogged", "hinted", "revealed"), detail: STRING }, ["detail"]);
+const REVEAL_SHAPE = list(STEP_SHAPE);
+const JOURNEY_SHAPE = record(
+  {
+    schema: STRING,
+    note: STRING,
+    map: record({ width: NUMBER, height: NUMBER, plateOffsetY: NUMBER }),
+    regions: list(
+      record(
+        {
+          id: STRING,
+          name: STRING,
+          frontier: { type: "true" },
+          label: record({ x: NUMBER, y: NUMBER }),
+          shape: STRING,
+          reveal: REVEAL_SHAPE,
+        },
+        ["name", "frontier"],
+      ),
+    ),
+    landmarks: list(
+      record(
+        { id: STRING, name: STRING, hint: STRING, region: STRING, icon: STRING, x: NUMBER, y: NUMBER, reveal: REVEAL_SHAPE },
+        ["hint"],
+      ),
+    ),
+    paths: list(
+      record({ id: STRING, kind: oneOf("trail", "bearing"), from: STRING, to: STRING, d: STRING, reveal: REVEAL_SHAPE }),
+    ),
+    frontier: record({ teaser: STRING }),
+    stops: list(
+      record({
+        session: STRING,
+        kind: oneOf("arrive", "reveal", "deepen"),
+        landmark: STRING,
+        headline: oneOf("landmark", "region"),
+        story: STRING,
+        snapshot: STRING,
+        snapshotAlt: STRING,
+      }),
+    ),
+  },
+  ["note"],
+);
+
+/**
+ * Field names for facts the Journey derives instead of owning: titles and
+ * dates (calendar), publication (sessionsWithSlides), Slides and Notes URLs
+ * (the session id), and HERO images (the snapshot manifest). Compared after
+ * lower-casing and dropping punctuation, so `slides_url` is `slidesurl`.
+ * Only the schema above may use one of these names, and only where it says.
+ */
+const CANONICAL_FIELDS = new Set([
+  "title", "sessiontitle", "date", "dates", "sessiondate", "number", "sessionnumber", "totalsessions", "nextsession",
+  "published", "publication", "publicationstate", "publishedat", "ispublished", "unpublished",
+  "slides", "slidesurl", "slideshref", "slideslink", "slidespath",
+  "notes", "notesurl", "noteshref", "noteslink", "learn", "learnurl", "learnhref", "learnlink",
+  "href", "url", "link", "path", "src", "srcset",
+  "image", "images", "img", "hero", "herourl", "herosrc", "heroimage", "snapshot", "snapshots",
+  "snapshoturl", "snapshotsrc", "snapshotimage",
+]);
+
+function isCanonicalField(key: string): boolean {
+  return CANONICAL_FIELDS.has(key.toLowerCase().replace(/[^a-z0-9]/g, ""));
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/** Any canonical field name anywhere inside a subtree the schema does not own. */
+function scanUnowned(value: unknown, where: string, errors: string[]): void {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => scanUnowned(item, `${where}[${index}]`, errors));
+  } else if (isPlainObject(value)) {
+    for (const [key, child] of Object.entries(value)) {
+      if (isCanonicalField(key)) errors.push(`${where} has canonical field ${key}, which journey.json must not own`);
+      scanUnowned(child, `${where}.${key}`, errors);
+    }
+  }
+}
+
+/**
+ * Journey-owned text may describe the map but never restate a canonical
+ * fact: no calendar title or date, and no Slides, Notes, or image URL.
+ */
+function checkOwnedText(text: string, where: string, sessions: readonly CalendarSession[], errors: string[]): void {
+  if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) errors.push(`${where} carries a date; dates come from the calendar`);
+  if (/(https?:)?\/\/|\/students\/|\/journey\/|\.(webp|png|jpe?g|gif|avif)\b/i.test(text)) {
+    errors.push(`${where} carries a URL or image path; Slides, Notes, and HERO images are derived`);
+  }
+  const lower = text.toLowerCase();
+  for (const session of sessions) {
+    if (lower.includes(session.title.toLowerCase())) {
+      errors.push(`${where} repeats the calendar title of ${session.id}`);
+    }
+  }
+}
+
+/** Walk `value` against `shape`: wrong types, missing fields, and unknown keys at any depth. */
+function checkShape(
+  value: unknown,
+  shape: Shape,
+  where: string,
+  sessions: readonly CalendarSession[],
+  errors: string[],
+): void {
+  // A scalar field holding an object or list is wrong, and may hide a copy.
+  if (shape.type !== "object" && shape.type !== "array" && typeof value === "object" && value !== null) {
+    scanUnowned(value, where, errors);
+  }
+  switch (shape.type) {
+    case "string":
+      if (typeof value !== "string") errors.push(`${where} must be a string`);
+      else checkOwnedText(value, where, sessions, errors);
+      return;
+    case "number":
+      if (typeof value !== "number" || !Number.isFinite(value)) errors.push(`${where} must be a number`);
+      return;
+    case "true":
+      if (value !== true) errors.push(`${where} must be true when present`);
+      return;
+    case "enum":
+      if (typeof value !== "string" || !shape.values.includes(value)) {
+        errors.push(`${where} must be one of ${shape.values.join(", ")}`);
+      }
+      return;
+    case "array":
+      if (!Array.isArray(value)) errors.push(`${where} must be a list`);
+      else value.forEach((item, index) => checkShape(item, shape.items, `${where}[${index}]`, sessions, errors));
+      return;
+    case "object":
+      if (!isPlainObject(value)) {
+        errors.push(`${where} must be an object`);
+        return;
+      }
+      for (const [key, child] of Object.entries(value)) {
+        const field = shape.fields[key];
+        if (field) {
+          checkShape(child, field, `${where}.${key}`, sessions, errors);
+          continue;
+        }
+        errors.push(`${where} has unknown key ${key}`);
+        if (isCanonicalField(key)) errors.push(`${where} has canonical field ${key}, which journey.json must not own`);
+        scanUnowned(child, `${where}.${key}`, errors);
+      }
+      for (const key of Object.keys(shape.fields)) {
+        if (!(key in value) && !shape.optional.includes(key)) errors.push(`${where} is missing ${key}`);
+      }
+  }
+}
+
+/** Lower-case words only, so a teaser can be matched inside the story it echoes. */
+function words(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9']+/g, " ").trim();
 }
 
 /**
@@ -119,15 +279,21 @@ function extraKeys(value: object, kind: string): string[] {
 export function validateJourney(inputs: JourneyInputs): string[] {
   const { journey, sessions, published, snapshots } = inputs;
   const errors: string[] = [];
-  const order = new Map(sessions.map((session, index) => [session.id, index]));
 
+  // Shape first, recursively: nothing outside the schema, so no nested copy
+  // of a title, date, publication flag, URL, or image can ride along. The
+  // checks below assume the shape, so a malformed file stops here.
+  checkShape(journey, JOURNEY_SHAPE, "journey", sessions, errors);
+  if (errors.length > 0) return errors;
+
+  const order = new Map(sessions.map((session, index) => [session.id, index]));
   if (journey.schema !== JOURNEY_SCHEMA) errors.push(`schema must be ${JOURNEY_SCHEMA}`);
-  for (const key of extraKeys(journey, "root")) errors.push(`unknown top-level key ${key}`);
 
   // Publication: the published sessions are S01..Sn in course order.
   published.forEach((id, index) => {
     if (sessions[index]?.id !== id) errors.push(`published sessions must run S01 onward in order; found ${id}`);
   });
+  const latest = published.at(-1);
 
   // Exactly one stop per published session, and nothing for unpublished ones.
   const stopIds = journey.stops.map((stop) => stop.session);
@@ -137,7 +303,7 @@ export function validateJourney(inputs: JourneyInputs): string[] {
   const stopSessions = new Set(stopIds);
 
   const regionIds = new Set(journey.regions.map((region) => region.id));
-  const landmarkIds = new Set(journey.landmarks.map((landmark) => landmark.id));
+  const landmarksById = new Map(journey.landmarks.map((landmark) => [landmark.id, landmark]));
   const ids = [...journey.regions, ...journey.landmarks, ...journey.paths].map((item) => item.id);
   for (const id of ids.filter((id, index) => ids.indexOf(id) !== index)) errors.push(`duplicate id ${id}`);
 
@@ -146,7 +312,6 @@ export function validateJourney(inputs: JourneyInputs): string[] {
     let previousIndex = -1;
     let previousRank = 0;
     for (const step of steps) {
-      for (const key of extraKeys(step, "step")) errors.push(`${owner} reveal step has unknown key ${key}`);
       if (!stopSessions.has(step.from)) {
         errors.push(`${owner} reveals in ${step.from}, which has no published Journey stop`);
       }
@@ -164,14 +329,22 @@ export function validateJourney(inputs: JourneyInputs): string[] {
     }
   };
 
-  const frontiers = journey.regions.filter((region) => region.frontier);
-  if (frontiers.length > 1) errors.push("only one generic fog frontier is allowed");
+  // The frontier: exactly one generic, unnamed fog bank. It appears, fogged,
+  // only at the current (latest published) stop, carries no detail, holds no
+  // landmark, and its teaser only echoes that stop's published story.
+  const frontiers = journey.regions.filter((region) => region.frontier === true);
+  if (frontiers.length !== 1) {
+    errors.push(`exactly one generic fog frontier is required; found ${frontiers.length}`);
+  }
   for (const region of journey.regions) {
-    for (const key of extraKeys(region, "region")) errors.push(`region ${region.id} has unknown key ${key}`);
     if (region.frontier) {
-      if (region.name) errors.push(`frontier ${region.id} must stay unnamed`);
-      if (region.reveal.some((step) => step.state !== "fogged")) {
-        errors.push(`frontier ${region.id} may only ever be fogged`);
+      if (region.name !== undefined) errors.push(`frontier ${region.id} must stay unnamed`);
+      const [step, ...more] = region.reveal;
+      if (more.length > 0 || step?.state !== "fogged" || step.from !== latest) {
+        errors.push(`frontier ${region.id} must appear once, fogged, at the current stop ${latest}`);
+      }
+      if (region.reveal.some((item) => item.detail !== undefined)) {
+        errors.push(`frontier ${region.id} may carry no reveal detail`);
       }
       checkSteps(`region ${region.id}`, region.reveal, REGION_STATES, false);
     } else {
@@ -179,38 +352,71 @@ export function validateJourney(inputs: JourneyInputs): string[] {
       checkSteps(`region ${region.id}`, region.reveal, REGION_STATES, true);
     }
   }
+  const teaser = words(journey.frontier.teaser);
+  const currentStory = words(journey.stops.find((stop) => stop.session === latest)?.story ?? "");
+  if (!teaser || teaser.length > STORY_MAX_CHARS || !` ${currentStory} `.includes(` ${teaser} `)) {
+    errors.push(`frontier teaser must only echo the current stop's published story`);
+  }
+
   for (const landmark of journey.landmarks) {
-    for (const key of extraKeys(landmark, "landmark")) errors.push(`landmark ${landmark.id} has unknown key ${key}`);
     if (!regionIds.has(landmark.region)) errors.push(`landmark ${landmark.id} names unknown region ${landmark.region}`);
+    if (frontiers.some((region) => region.id === landmark.region)) {
+      errors.push(`landmark ${landmark.id} cannot sit in the unnamed frontier`);
+    }
     if (landmark.reveal.some((step) => step.state === "hinted") && !landmark.hint) {
       errors.push(`landmark ${landmark.id} is hinted but has no unnamed hint text`);
     }
     checkSteps(`landmark ${landmark.id}`, landmark.reveal, LANDMARK_STATES, true);
   }
+
+  // Path endpoints, at every step of every path, in the state that step
+  // computes (the same stepAt the map uses):
+  // - both ends exist and are on the map (hinted or revealed), never hidden;
+  // - at least one end is revealed, so a line always starts from charted ground;
+  // - a revealed bearing points at a revealed landmark at both ends.
+  // A revealed trail may still reach a hinted landmark: in S01 the meadow
+  // trails lead to the unnamed stone circle.
   for (const path of journey.paths) {
-    for (const key of extraKeys(path, "path")) errors.push(`path ${path.id} has unknown key ${key}`);
     for (const end of [path.from, path.to]) {
-      if (!landmarkIds.has(end)) errors.push(`path ${path.id} names unknown landmark ${end}`);
+      if (!landmarksById.has(end)) errors.push(`path ${path.id} names unknown landmark ${end}`);
     }
     checkSteps(`path ${path.id}`, path.reveal, PATH_STATES, true);
+    for (const step of path.reveal) {
+      const index = order.get(step.from);
+      if (index === undefined) continue;
+      const ends = [path.from, path.to].flatMap((end) => {
+        const landmark = landmarksById.get(end);
+        const state: RevealState = stepAt(landmark?.reveal ?? [], index, order)?.state ?? "hidden";
+        return landmark ? [{ end, state }] : [];
+      });
+      for (const { end, state } of ends) {
+        if (RANK[state] < RANK.hinted) {
+          errors.push(`path ${path.id} is ${step.state} in ${step.from}, but its end ${end} is ${state} there`);
+        } else if (path.kind === "bearing" && step.state === "revealed" && state !== "revealed") {
+          errors.push(`bearing ${path.id} is revealed in ${step.from}, but its end ${end} is only ${state} there`);
+        }
+      }
+      if (ends.length === 2 && !ends.some(({ state }) => state === "revealed")) {
+        errors.push(`path ${path.id} is ${step.state} in ${step.from}, but neither end is revealed there`);
+      }
+    }
   }
 
   journey.stops.forEach((stop, index) => {
     const owner = `stop ${stop.session}`;
-    for (const key of extraKeys(stop, "stop")) errors.push(`${owner} has unknown key ${key}`);
     if (stop.story.length > STORY_MAX_CHARS) errors.push(`${owner} story is over ${STORY_MAX_CHARS} characters`);
-    const landmark = journey.landmarks.find((item) => item.id === stop.landmark);
+    const landmark = landmarksById.get(stop.landmark);
     if (!landmark) {
       errors.push(`${owner} names unknown landmark ${stop.landmark}`);
       return;
     }
-    const stepAt = landmark.reveal.find((step) => step.from === stop.session);
+    const stepAtStop = landmark.reveal.find((step) => step.from === stop.session);
     const before = landmark.reveal.filter((step) => (order.get(step.from) ?? 0) < (order.get(stop.session) ?? 0));
     if (stop.kind === "arrive" && index !== 0) errors.push(`${owner} can only arrive at the first stop`);
-    if ((stop.kind === "arrive" || stop.kind === "reveal") && stepAt?.state !== "revealed") {
+    if ((stop.kind === "arrive" || stop.kind === "reveal") && stepAtStop?.state !== "revealed") {
       errors.push(`${owner} must reveal ${landmark.id} in that session`);
     }
-    if (stop.kind === "deepen" && (before.at(-1)?.state !== "revealed" || !stepAt?.detail)) {
+    if (stop.kind === "deepen" && (before.at(-1)?.state !== "revealed" || !stepAtStop?.detail)) {
       errors.push(`${owner} must deepen an already revealed ${landmark.id} with a new detail`);
     }
     const hero = snapshots.find((entry) => entry.moment === stop.snapshot);
@@ -240,7 +446,7 @@ export type LandmarkView = {
   state: RevealState;
   detail: string | null;
 };
-export type PathView = { id: string; kind: "trail" | "bearing"; d: string; state: RevealState };
+export type PathView = { id: string; kind: "trail" | "bearing"; from: string; to: string; d: string; state: RevealState };
 
 export type StopView = {
   session: CalendarSession;
@@ -356,7 +562,7 @@ export function journeyState(inputs: JourneyInputs, through: string): JourneySta
   const paths: PathView[] = [];
   for (const path of journey.paths) {
     const step = stepAt(path.reveal, limit, order);
-    if (step) paths.push({ id: path.id, kind: path.kind, d: path.d, state: step.state });
+    if (step) paths.push({ id: path.id, kind: path.kind, from: path.from, to: path.to, d: path.d, state: step.state });
   }
 
   const stopViews = stops.map((stop) => stopView(inputs, stop));

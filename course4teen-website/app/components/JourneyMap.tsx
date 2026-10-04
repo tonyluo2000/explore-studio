@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { JourneyState, LandmarkView, PathView, RegionView } from "../../lib/journey";
 
 /**
@@ -290,9 +291,20 @@ export function landmarkNumbers(state: JourneyState): Map<string, number> {
 
 type Ids = Record<"title" | "desc" | "sky" | "meadow" | "vignette" | "blur" | "soft" | "frame", string>;
 
-export default function JourneyMap({ state, width, height, idPrefix = "jm" }: Props) {
+/** Keep an id to characters that are safe in `url(#...)` and `aria-labelledby`. */
+function safeId(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, "");
+}
+
+export default function JourneyMap({ state, width, height, idPrefix }: Props) {
+  // Every gradient, filter, clip, title, and desc id is scoped to this
+  // instance, so two maps in one document never resolve each other's paint.
+  // useId runs during the server render (no client JS) and is deterministic
+  // for a given tree, so the static export does not drift between builds.
+  const instanceId = useId();
+  const prefix = idPrefix ? safeId(idPrefix) : `jm-${safeId(instanceId)}`;
   const ids = Object.fromEntries(
-    ["title", "desc", "sky", "meadow", "vignette", "blur", "soft", "frame"].map((key) => [key, `${idPrefix}-${key}`]),
+    ["title", "desc", "sky", "meadow", "vignette", "blur", "soft", "frame"].map((key) => [key, `${prefix}-${key}`]),
   ) as Ids;
   const numbers = landmarkNumbers(state);
   const current = state.landmarks.find((landmark) => landmark.state === "current");
