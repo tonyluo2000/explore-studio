@@ -404,11 +404,11 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     (
         "unknown-moment-entry",
         lambda root: _edit_manifest(root, _copy_entry_as("S01")),
-        "manifest entry S01 S04_DIALOGUE: no such moment in the table",
+        "manifest entry S01 S05_CONVERSATION: no such moment in the table",
     ),
     (
         "duplicate-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S04")),
+        lambda root: _edit_manifest(root, _copy_entry_as("S05")),
         "is listed twice",
     ),
     # 15. Unsupported, unknown, and missing manifest schemas.

@@ -368,6 +368,109 @@ Welcome to Moonlit Trail, Sam!`,
       "Rewrite the guide's YAML greeting in one sentence using your three voice words, then read it in the speech bubble.",
     ],
   },
+  {
+    id: "S05",
+    sourceFile: "task-card.md",
+    concepts: [
+      {
+        term: "list",
+        meaning: "One value that holds several items in order, written inside square brackets [ ] with commas between the items.",
+      },
+      {
+        term: "index",
+        meaning: "An item's position number. Python counts from 0, so the first item is [0] and the second is [1].",
+      },
+      {
+        term: "[-1]",
+        meaning: "A negative index counts from the end. dialogue[-1] is always the final item, however long the list is.",
+      },
+      {
+        term: "len(...)",
+        meaning: "Counts the items in a list. A three-line conversation has len(dialogue) equal to 3.",
+      },
+      {
+        term: "Python to the world",
+        meaning:
+          "The dialogue list runs on your computer. The guide's lines in the Trail are plain text in the YAML conversation field, in the same order.",
+      },
+    ],
+    code: `dialogue = [
+    "Guide: The dark stretch past the ridge won't clear.",
+    "Guide: Three old marker-lights never burned out.",
+    "Guide: Find those three lights and lead me home.",
+]
+
+print(dialogue[0])
+print(dialogue[-1])
+print(len(dialogue))`,
+    runCommand: "python lessons/sessions/s05/student/starter.py",
+    output: `Guide: The dark stretch past the ridge won't clear.
+Guide: Find those three lights and lead me home.
+3`,
+    meanings: [
+      {
+        term: "dialogue = [",
+        meaning: "Starts a list named dialogue. Everything up to the closing ] is one value: the whole conversation.",
+      },
+      {
+        term: "\"Guide: The dark stretch past the ridge won't clear.\",",
+        meaning:
+          "Item 0, the situation. Each line is a string, and a comma separates it from the next item. In the starter it says \"TODO: write an opening line\" until you write your own.",
+      },
+      {
+        term: "\"Guide: Three old marker-lights never burned out.\",",
+        meaning: "Item 1, the optional middle clue. A two-line conversation leaves it out.",
+      },
+      {
+        term: "\"Guide: Find those three lights and lead me home.\",",
+        meaning: "The final item, the task: what the explorer should do next.",
+      },
+      {
+        term: "print(dialogue[0])",
+        meaning: "Shows the first line. The square brackets after a list name pick one item by its index.",
+      },
+      {
+        term: "print(dialogue[-1])",
+        meaning: "Shows the final line. -1 still works if the list has two lines instead of three.",
+      },
+      {
+        term: "print(len(dialogue))",
+        meaning: "Shows how many lines the list holds. The starter already prints this, so before your changes it prints 2.",
+      },
+      {
+        term: "conversation:",
+        meaning:
+          "The YAML field in character/guide.yaml: the same 2–3 spoken lines, in the same order, without the \"Guide: \" label. Press E beside the Moonlit Guide once per line to see each one in the speech bubble.",
+      },
+    ],
+    why: [
+      "Lists keep related values together and in order, so one name can hold a whole conversation instead of three separate variables.",
+      "Indexes let you reach any position directly, and [-1] always reaches the end, even when the list grows or shrinks.",
+      "Outside Explore Studio: a music playlist, the messages in a group chat, and the lines a game character says are all ordered lists. Play them in a different order and the meaning changes.",
+    ],
+    debugged: {
+      broken: `print(dialogue[3])`,
+      error: "IndexError: list index out of range",
+      explanation:
+        "A three-line list has items at positions 0, 1, and 2. There is no position 3, so Python stops with an IndexError. Read the final traceback line for the error type, then move upward to the line naming starter.py. Use dialogue[-1] for the final line: it is correct for two lines or three.",
+      fixed: `print(dialogue[-1])`,
+    },
+    keyWords: [
+      { term: "list", meaning: "An ordered collection of items inside square brackets." },
+      { term: "item", meaning: "One value stored in a list." },
+      { term: "index", meaning: "An item's position number, starting at 0." },
+      { term: "zero-based", meaning: "Counting positions from 0, not 1." },
+      { term: "negative index", meaning: "A position counted from the end: -1 is the final item." },
+      { term: "len", meaning: "The function that counts a list's items." },
+      { term: "IndexError", meaning: "Python's error for asking for a position the list does not have." },
+    ],
+    tryIt: [
+      "Predict, then test: what does print(dialogue[1]) show for your conversation?",
+      "Swap two lines, predict how the story changes, run it, then restore the situation → clue → task order.",
+      "Remove the middle line. What does len(dialogue) print now, and does dialogue[-1] still show your final line?",
+      "In the Trail, press E once more after the final line. Which line comes next, and does M05 stay complete?",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);
