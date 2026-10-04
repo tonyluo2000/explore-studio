@@ -291,9 +291,25 @@ export function landmarkNumbers(state: JourneyState): Map<string, number> {
 
 type Ids = Record<"title" | "desc" | "sky" | "meadow" | "vignette" | "blur" | "soft" | "frame", string>;
 
-/** Keep an id to characters that are safe in `url(#...)` and `aria-labelledby`. */
-function safeId(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/g, "");
+/**
+ * The id namespace for one map: `<hint>-<instance>`. The instance part is the
+ * React useId, so it is always present and is the only source of uniqueness;
+ * the caller's idPrefix is a readable hint and never replaces it.
+ *
+ * The hint keeps only `[A-Za-z0-9_-]` (empty falls back to "jm"). The instance
+ * part keeps `[A-Za-z0-9]` and writes every other character as `_<hex>_`, an
+ * injective encoding with no "-". So the last "-" of the namespace always
+ * splits hint from instance, and two distinct useIds can never meet in one
+ * namespace whatever hints the callers pass (equal, empty, or sanitizing to
+ * the same text). Every character left is safe in `url(#...)`, `href="#..."`,
+ * and `aria-labelledby`.
+ */
+export function svgIdNamespace(instanceId: string, idPrefix?: string): string {
+  const hint = (idPrefix ?? "").replace(/[^A-Za-z0-9_-]/g, "") || "jm";
+  const instance = Array.from(instanceId, (char) =>
+    /[A-Za-z0-9]/.test(char) ? char : `_${char.codePointAt(0)!.toString(16)}_`,
+  ).join("");
+  return `${hint}-${instance}`;
 }
 
 export default function JourneyMap({ state, width, height, idPrefix }: Props) {
@@ -301,8 +317,7 @@ export default function JourneyMap({ state, width, height, idPrefix }: Props) {
   // instance, so two maps in one document never resolve each other's paint.
   // useId runs during the server render (no client JS) and is deterministic
   // for a given tree, so the static export does not drift between builds.
-  const instanceId = useId();
-  const prefix = idPrefix ? safeId(idPrefix) : `jm-${safeId(instanceId)}`;
+  const prefix = svgIdNamespace(useId(), idPrefix);
   const ids = Object.fromEntries(
     ["title", "desc", "sky", "meadow", "vignette", "blur", "soft", "frame"].map((key) => [key, `${prefix}-${key}`]),
   ) as Ids;

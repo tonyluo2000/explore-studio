@@ -757,10 +757,29 @@ def _check_svg_instances(html: str, count: int) -> None:
                 assert not refs & ids, (index, other)
 
 
+SAFE_SVG_ID = re.compile(r"[A-Za-z0-9_-]+")
+needs_react = pytest.mark.skipif(
+    not (WEBSITE / "node_modules" / "react-dom").is_dir(),
+    reason="needs the website's node_modules (npm ci) to server-render JourneyMap",
+)
+
+
+def _render_maps(*id_prefixes: str | None, identifier_prefix: str | None = None) -> str:
+    entries = [{"through": "S04"} if prefix is None else {"through": "S04", "idPrefix": prefix} for prefix in id_prefixes]
+    request: dict[str, object] = {"render": entries}
+    if identifier_prefix is not None:
+        request["identifierPrefix"] = identifier_prefix
+    rendered = probe(**request)["rendered"]
+    assert rendered.startswith("<main")
+    _check_svg_instances(rendered, len(id_prefixes))
+    for svg_id in SVG_ID.findall(rendered):
+        assert SAFE_SVG_ID.fullmatch(svg_id), svg_id
+    return rendered
+
+
 @needs_node
+@needs_react
 def test_two_map_instances_in_one_document_never_share_svg_ids() -> None:
-    if not (WEBSITE / "node_modules" / "react-dom").is_dir():
-        pytest.skip("needs the website's node_modules (npm ci) to server-render JourneyMap")
     rendered = probe(render=[{"through": "S04"}, {"through": "S04"}, {"through": "S01"}])["rendered"]
     assert rendered.startswith("<main>")
     _check_svg_instances(rendered, 3)
@@ -769,14 +788,77 @@ def test_two_map_instances_in_one_document_never_share_svg_ids() -> None:
 
 
 @needs_node
-def test_explicit_id_prefixes_scope_svg_ids_too() -> None:
-    if not (WEBSITE / "node_modules" / "react-dom").is_dir():
-        pytest.skip("needs the website's node_modules (npm ci) to server-render JourneyMap")
-    rendered = probe(render=[{"through": "S04", "idPrefix": "map-a"}, {"through": "S04", "idPrefix": "map:b"}])[
-        "rendered"
-    ]
-    _check_svg_instances(rendered, 2)
-    assert 'id="map-a-sky"' in rendered and 'id="mapb-sky"' in rendered
+@needs_react
+def test_default_instances_get_distinct_namespaces() -> None:
+    rendered = _render_maps(None, None)
+    skies = re.findall(r'id="(jm-[A-Za-z0-9_]+)-sky"', rendered)
+    assert len(skies) == 2 and skies[0] != skies[1], skies
+
+
+@needs_node
+@needs_react
+def test_identical_id_prefixes_still_get_distinct_namespaces() -> None:
+    rendered = _render_maps("same", "same", "same")
+    skies = re.findall(r'id="(same-[A-Za-z0-9_]+)-sky"', rendered)
+    assert len(set(skies)) == 3, skies
+
+
+@needs_node
+@needs_react
+def test_sanitization_equivalent_id_prefixes_still_get_distinct_namespaces() -> None:
+    rendered = _render_maps("map:b", "mapb", "m a p b")
+    skies = re.findall(r'id="(mapb-[A-Za-z0-9_]+)-sky"', rendered)
+    assert len(set(skies)) == 3, skies
+
+
+@needs_node
+@needs_react
+def test_empty_id_prefixes_fall_back_to_a_unique_namespace() -> None:
+    # "" and a prefix that sanitizes to nothing both fall back to "jm", beside a default map.
+    rendered = _render_maps("", ":::", None)
+    skies = re.findall(r'id="(jm-[A-Za-z0-9_]+)-sky"', rendered)
+    assert len(set(skies)) == 3, skies
+
+
+@needs_node
+@needs_react
+def test_unusual_punctuation_prefixes_give_safe_unique_ids() -> None:
+    rendered = _render_maps("  <x\"y'>#(z) é-1 ", 'url(#a)"', "x\"y'z(1)", "-_-")
+    assert 'id="xyz-1-' in rendered and 'id="urla-' in rendered and 'id="xyz1-' in rendered
+    assert 'id="-_--' in rendered
+
+
+@needs_node
+@needs_react
+def test_react_ids_with_unusual_characters_stay_safe_and_unique() -> None:
+    # useId carries React's identifierPrefix, so its characters are encoded, not dropped.
+    _render_maps("same", "same", None, identifier_prefix="a:b-«c» d")
+
+
+@needs_node
+@needs_react
+def test_explicit_id_prefix_stays_visible_in_ids() -> None:
+    rendered = _render_maps("map-a")
+    ids = SVG_ID.findall(rendered)
+    assert ids and all(svg_id.startswith("map-a-") for svg_id in ids), ids
+    assert re.search(r'id="map-a-[A-Za-z0-9_]+-sky"', rendered)
+
+
+@needs_node
+def test_svg_id_namespace_is_injective_over_instances() -> None:
+    # Distinct useIds never share a namespace, whatever hints the callers pass,
+    # including ids that only differ in characters a strip would drop.
+    instances = ["_R_1_", "_R_2_", "R1", ":R1:", "«R1»", "R:1", "R_1", "_52_1", "a-b", "ab", "a_2d_b", ""]
+    hints = [None, "", ":::", "jm", "same", "map:b", "mapb", "x-y", "x", "-", "_"]
+    pairs = [[instance, hint] for instance in instances for hint in hints]
+    namespaces = probe(namespaces=pairs)["namespaces"]
+    by_namespace: dict[str, set[str]] = {}
+    for (instance, _), namespace in zip(pairs, namespaces):
+        assert SAFE_SVG_ID.fullmatch(namespace), namespace
+        by_namespace.setdefault(namespace, set()).add(instance)
+    assert all(len(owners) == 1 for owners in by_namespace.values()), by_namespace
+    assert namespaces[pairs.index(["_R_1_", "same"])] == "same-_5f_R_5f_1_5f_"
+    assert namespaces[pairs.index(["_R_1_", None])].startswith("jm-")
 
 
 def test_map_ids_come_from_a_server_safe_per_instance_source() -> None:
@@ -784,6 +866,14 @@ def test_map_ids_come_from_a_server_safe_per_instance_source() -> None:
     assert 'import { useId } from "react";' in journey_map
     assert '"use client"' not in journey_map
     assert 'idPrefix = "jm"' not in journey_map
+    # The useId part is always in the namespace; idPrefix is only a hint.
+    assert "const prefix = svgIdNamespace(useId(), idPrefix);" in journey_map
+    assert "return `${hint}-${instance}`;" in journey_map
+    # The component body reads idPrefix exactly once, and only to pass it as the hint.
+    body = journey_map[journey_map.index("export default function JourneyMap") :]
+    assert body.count("idPrefix") == 2, body.count("idPrefix")
+    for nondeterministic in ("Math.random", "Date.now", "new Date", "crypto", "performance.now"):
+        assert nondeterministic not in journey_map, nondeterministic
     # No hard-coded paint ids: every id and url(#...) goes through `ids`.
     assert not re.search(r'id="[^"]*"', journey_map)
     assert not re.search(r"url\(#[a-z]", journey_map)

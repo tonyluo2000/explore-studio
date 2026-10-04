@@ -1,11 +1,14 @@
 // Runs the website's real Journey logic (course4teen-website/lib/journeyState.ts)
 // under Node's TypeScript type stripping, for tests/test_journey_map.py.
 //
-// stdin: JSON { journey?, published?, through?: string[], contexts?: string[], render?: [{ through, idPrefix? }] }
+// stdin: JSON { journey?, published?, through?: string[], contexts?: string[],
+//               render?: [{ through, idPrefix? }], identifierPrefix?, namespaces?: [[instanceId, idPrefix?]] }
 //   journey / published override the committed data, so tests can mutate it.
 //   render server-renders one app/components/JourneyMap.tsx per entry, side by
-//   side in one document (TypeScript's own JSX transform, react-dom/server).
-// stdout: JSON { errors, current, states: {id: state}, contexts: {id: view|null}, rendered: html|null }
+//   side in one document (TypeScript's own JSX transform, react-dom/server);
+//   identifierPrefix is passed to React so useId carries unusual characters.
+//   namespaces calls JourneyMap's svgIdNamespace directly on each pair.
+// stdout: JSON { errors, current, states: {id: state}, contexts: {id: view|null}, rendered: html|null, namespaces }
 
 import { readFileSync } from "node:fs";
 import { createRequire, Module } from "node:module";
@@ -31,7 +34,7 @@ const inputs = {
 };
 
 const errors = logic.validateJourney(inputs);
-const result = { errors, current: null, states: {}, contexts: {}, rendered: null };
+const result = { errors, current: null, states: {}, contexts: {}, rendered: null, namespaces: null };
 if (errors.length === 0) {
   result.current = logic.currentSessionId(inputs);
   for (const through of request.through ?? []) {
@@ -42,7 +45,11 @@ if (errors.length === 0) {
     }
   }
   for (const id of request.contexts ?? []) result.contexts[id] = logic.journeyContextFor(inputs, id);
-  if (request.render) result.rendered = renderMaps(request.render);
+  if (request.render) result.rendered = renderMaps(request.render, request.identifierPrefix);
+}
+if (request.namespaces) {
+  const { svgIdNamespace } = loadTsx("app/components/JourneyMap.tsx");
+  result.namespaces = request.namespaces.map(([instanceId, idPrefix]) => svgIdNamespace(instanceId, idPrefix ?? undefined));
 }
 process.stdout.write(JSON.stringify(result));
 
@@ -62,7 +69,7 @@ function loadTsx(relative) {
   return module.exports;
 }
 
-function renderMaps(entries) {
+function renderMaps(entries, identifierPrefix) {
   const requireSite = createRequire(join(website, "package.json"));
   const { createElement } = requireSite("react");
   const { renderToStaticMarkup } = requireSite("react-dom/server");
@@ -71,5 +78,5 @@ function renderMaps(entries) {
   const maps = entries.map(({ through, idPrefix }, index) =>
     createElement(JourneyMap, { key: index, state: logic.journeyState(inputs, through), width, height, idPrefix }),
   );
-  return renderToStaticMarkup(createElement("main", null, ...maps));
+  return renderToStaticMarkup(createElement("main", null, ...maps), identifierPrefix ? { identifierPrefix } : undefined);
 }
