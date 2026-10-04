@@ -40,10 +40,68 @@ class FrameEvents:
         quit_requested: ``True`` if a quit event was received.
         interaction_pressed: ``True`` if the E key was newly pressed
             (``KEYDOWN``).  Held-key repeats do not set this.
+        audio_toggle_pressed: ``True`` if the M key was newly pressed.
+            It only mutes or unmutes Trail audio; gameplay never sees it.
     """
 
     quit_requested: bool = False
     interaction_pressed: bool = False
+    audio_toggle_pressed: bool = False
+
+
+class PygameAudioBackend:
+    """The Pygame mixer behind ``engine.audio.AudioBackend``; no Pygame type escapes.
+
+    Channels are all reserved and addressed by number, so Pygame never picks
+    or adds one. Any mixer error propagates to ``AudioManager``, which turns
+    it into silence.
+    """
+
+    def __init__(self) -> None:
+        self._channels: list[pygame.mixer.Channel] = []
+
+    def open(self, channel_count: int) -> bool:
+        if not pygame.mixer.get_init():
+            if pygame.get_init():
+                # pygame.init() already tried the audio device and it failed
+                # (no sound card, WSL without audio, ...): don't retry and
+                # repeat the driver's errors; stay silent.
+                return False
+            pygame.mixer.init()
+        if not pygame.mixer.get_init():
+            return False
+        pygame.mixer.set_num_channels(channel_count)
+        pygame.mixer.set_reserved(channel_count)
+        self._channels = [pygame.mixer.Channel(index) for index in range(channel_count)]
+        _LOGGER.info("Audio mixer ready: %s", pygame.mixer.get_init())
+        return True
+
+    def load(self, data: bytes, volume: float) -> object:
+        sound = pygame.mixer.Sound(file=io.BytesIO(data))
+        sound.set_volume(volume)
+        return sound
+
+    def play(self, channel: int, sound: object, *, loop: bool = False) -> None:
+        if not isinstance(sound, pygame.mixer.Sound):
+            raise TypeError("sound is not a platform sound")
+        self._channels[channel].play(sound, loops=-1 if loop else 0)
+
+    def is_busy(self, channel: int) -> bool:
+        return bool(self._channels[channel].get_busy())
+
+    def set_volume(self, channel: int, volume: float) -> None:
+        self._channels[channel].set_volume(volume)
+
+    def stop(self, channel: int, fade_ms: int = 0) -> None:
+        if fade_ms > 0:
+            self._channels[channel].fadeout(fade_ms)
+        else:
+            self._channels[channel].stop()
+
+    def close(self) -> None:
+        for channel in self._channels:
+            channel.stop()
+        self._channels = []
 
 
 class Platform:
@@ -125,6 +183,7 @@ class Platform:
 
         * ``pygame.QUIT`` → ``FrameEvents.quit_requested = True``
         * ``pygame.KEYDOWN`` (E key) → ``FrameEvents.interaction_pressed = True``
+        * ``pygame.KEYDOWN`` (M key) → ``FrameEvents.audio_toggle_pressed = True``
 
         Other events are consumed but ignored.  Raw Pygame types never
         leave this method.
@@ -134,15 +193,23 @@ class Platform:
         """
         quit_requested = False
         interaction_pressed = False
+        audio_toggle_pressed = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_requested = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_e:
                 interaction_pressed = True
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                audio_toggle_pressed = True
         return FrameEvents(
             quit_requested=quit_requested,
             interaction_pressed=interaction_pressed,
+            audio_toggle_pressed=audio_toggle_pressed,
         )
+
+    def audio_backend(self) -> PygameAudioBackend:
+        """Return the mixer adapter; the mixer itself opens only on first use."""
+        return PygameAudioBackend()
 
     def poll_events(self) -> list[dict[str, Any]]:
         """Collect pending platform events.

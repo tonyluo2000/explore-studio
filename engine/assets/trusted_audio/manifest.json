@@ -1,0 +1,106 @@
+{
+  "assets": {
+    "ambient/moon-meadow": {
+      "channels": 1,
+      "file": "ambient/moon-meadow.wav",
+      "frames": 220500,
+      "loop": true,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "a19893fe4233805de6b6810cfc33b0b2e2c95402a6ad81114ed3194ba773d75e"
+    },
+    "sfx/compass-magic": {
+      "channels": 1,
+      "file": "sfx/compass-magic.wav",
+      "frames": 25357,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "1592375a685b5a8b4b07c27086bf654b0eacaa4e80b43bd1dba5ed5f97980481"
+    },
+    "sfx/footstep-grass-a": {
+      "channels": 1,
+      "file": "sfx/footstep-grass-a.wav",
+      "frames": 1874,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "bcc2c56d61f050a1307006692f6ff9d84a652b98e06bc1a6095bfd5d367dd2e0"
+    },
+    "sfx/footstep-grass-b": {
+      "channels": 1,
+      "file": "sfx/footstep-grass-b.wav",
+      "frames": 1874,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "41fcc37ff036325f65568027dbd9e3545d00b883ea0592e8d7a1bf43f7a6a18f"
+    },
+    "sfx/lantern-chime": {
+      "channels": 1,
+      "file": "sfx/lantern-chime.wav",
+      "frames": 23152,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "072d041573e7fbaee94aab0206658c67fc669a76bdf8115e2be852ebc1e3ada7"
+    },
+    "sfx/mission-complete": {
+      "channels": 1,
+      "file": "sfx/mission-complete.wav",
+      "frames": 37485,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "250c50c18cde474b4c1f0b4cd551a84dcd9ee81b13b9038364626bb7ac5f9e89"
+    },
+    "sfx/npc-talk": {
+      "channels": 1,
+      "file": "sfx/npc-talk.wav",
+      "frames": 30870,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "1257112df8f05b96364728d35ddd40f33650ce92a6e1397b263b296b928a7682"
+    },
+    "sfx/object-interact": {
+      "channels": 1,
+      "file": "sfx/object-interact.wav",
+      "frames": 7497,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "cc1573cfa6e879391b8697d4d2a465ba36e49719db756cd5614daa31e31957e8"
+    },
+    "sfx/object-near": {
+      "channels": 1,
+      "file": "sfx/object-near.wav",
+      "frames": 9922,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "d2bee6e9148364f9a31a661b0cbcd1b62d2a9166a71a2160b5e9972ebf6d6e0e"
+    },
+    "sfx/pixel-greeting": {
+      "channels": 1,
+      "file": "sfx/pixel-greeting.wav",
+      "frames": 7497,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "5e864367ec912941babe7a3c94228f3f8b637a0369179651c6afb429b58ee297"
+    },
+    "sfx/ui-mute-toggle": {
+      "channels": 1,
+      "file": "sfx/ui-mute-toggle.wav",
+      "frames": 1764,
+      "loop": false,
+      "sample_rate": 22050,
+      "sample_width": 2,
+      "sha256": "ab46a1795384f519b818ef6a60bbffac843c8dc9e2c21a02299a82eea6bbf20b"
+    }
+  },
+  "generator": "scripts/build_trail_audio.py",
+  "license": "Original, synthesized in-repo; ships under the repository LICENSE.",
+  "schema_version": 1
+}

@@ -2,7 +2,8 @@
 
 This is the single, explicit mission boundary for every cosmetic layer: the
 illustrated backdrop and foreground, ambient life, trusted sprites and their
-poses, entity effects, the HUD panel, and proximity prompts. A mission absent
+poses, entity effects, the HUD panel, proximity prompts, and the Moon Meadow
+audio. A mission absent
 from :data:`MISSION_PRESENTATIONS` keeps the plain cleared frame and the static
 procedural sprites, exactly as before.
 
@@ -55,6 +56,9 @@ class MissionPresentation:
     #: Dialogue is the lesson: a larger, longer-lived speech bubble sized to the
     #: whole greeting, placed clear of the HUD, and an on-screen HUD echo.
     dialogue_focus: bool = False
+    #: The Moon Meadow ambience and its interaction, step, and completion cues
+    #: (``engine.audio``). Off unless a mission opts in; never gameplay.
+    meadow_audio: bool = False
     #: Package qualified id -> the trusted-art identity it is drawn and posed as.
     sprite_aliases: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -62,12 +66,13 @@ class MissionPresentation:
 MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyType(
     {
         S02_MISSION_ID: MissionPresentation(
-            discovery_label=True, celebration=True, lantern_waypoint=True
+            discovery_label=True, celebration=True, lantern_waypoint=True, meadow_audio=True
         ),
         # S03's own clue and reveal text are the story, so M02's discovery
         # label and celebration stay out of it.
         S03_MISSION_ID: MissionPresentation(
             lantern_waypoint=True,
+            meadow_audio=True,
             sprite_aliases=MappingProxyType(
                 {S03_MOON_COMPASS_QUALIFIED_ID: MOON_COMPASS_QUALIFIED_ID}
             ),
@@ -76,7 +81,7 @@ MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyTy
         # the cue and the dialogue is the focus. The Lantern stays a lit world
         # object without a destination marker, and M02's discovery label and
         # celebration stay out of it.
-        S04_MISSION_ID: MissionPresentation(talk_cue=True, dialogue_focus=True),
+        S04_MISSION_ID: MissionPresentation(talk_cue=True, dialogue_focus=True, meadow_audio=True),
     }
 )
 

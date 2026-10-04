@@ -1,4 +1,5 @@
-"""S04 student website: slides and Python Notes stay grounded in the canonical lesson and runtime."""
+"""S04 student website: slides and Python Notes stay grounded in the canonical lesson
+and runtime."""
 
 from __future__ import annotations
 
@@ -55,12 +56,17 @@ def test_s04_is_published_and_s05_is_not():
 
 
 def test_s04_title_and_mission_match_the_curriculum():
-    assert '{ id: "S04", number: 4, date: "2026-10-10", title: "Introduce a Character" }' in _read(CALENDAR)
+    assert '{ id: "S04", number: 4, date: "2026-10-10", title: "Introduce a Character" }' in _read(
+        CALENDAR
+    )
     assert "# S04 Task Card — Introduce a Character" in _read(S04 / "student" / "task-card.md")
     slides = _read(SLIDES)
     assert 'title: "S04 Slides · Introduce a Character | Course4Teen"' in slides
     assert MISSION_04_ID == "introduce-your-character"
-    assert MISSION_04.completion_rule is ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO
+    assert (
+        MISSION_04.completion_rule
+        is ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO
+    )
     for required in (
         f"<code>{MISSION_04_ID}</code>",
         f"M04 · {MISSION_04.title}",
@@ -91,7 +97,13 @@ def test_s04_slides_teach_function_parameter_argument_and_call_in_order():
     ]
     positions = [slides.index(heading) for heading in ordered]
     assert positions == sorted(positions)
-    for concept in ("parameter", "argument", "four spaces", "<strong>call</strong>", "<strong>define</strong>"):
+    for concept in (
+        "parameter",
+        "argument",
+        "four spaces",
+        "<strong>call</strong>",
+        "<strong>define</strong>",
+    ):
         assert concept in slides, concept
 
 
@@ -112,7 +124,9 @@ def test_s04_slides_show_the_real_starter_and_its_unfinished_output():
 def test_s04_notes_code_prints_exactly_the_published_output():
     notes = _s04_learn_entry()
     code, output = _js_string(notes, "code"), _js_string(notes, "output")
-    ran = subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True).stdout
+    ran = subprocess.run(
+        [sys.executable, "-c", code], check=True, capture_output=True, text=True
+    ).stdout
     assert ran.strip() == output
     assert output in _read(SLIDES)
 
@@ -120,7 +134,7 @@ def test_s04_notes_code_prints_exactly_the_published_output():
 def test_s04_debugging_traceback_is_the_real_error():
     notes = _s04_learn_entry()
     result = subprocess.run(
-        [sys.executable, "-c", 'def greet(name):\n    print(name)\n\ngreet()'],
+        [sys.executable, "-c", "def greet(name):\n    print(name)\n\ngreet()"],
         capture_output=True,
         text=True,
     )
@@ -162,7 +176,15 @@ def test_s04_guide_wording_matches_the_runtime():
 
 def test_s04_slides_do_not_describe_retired_or_unshipped_visuals():
     slides = _read(SLIDES).lower()
-    for absent in ("rectangle", "plain trail", "plain dark", "standard trail", "confetti", "discovered!", "pixel"):
+    for absent in (
+        "rectangle",
+        "plain trail",
+        "plain dark",
+        "standard trail",
+        "confetti",
+        "discovered!",
+        "pixel",
+    ):
         assert absent not in slides, absent
     assert "NovaPixelScene" not in _read(SLIDES)
     assert "S02TrailMap" not in _read(SLIDES)
@@ -172,9 +194,9 @@ def test_s04_notes_name_their_real_course_kit_source_and_concepts():
     notes = _s04_learn_entry()
     assert 'sourceFile: "task-card.md"' in notes
     assert (S04 / "student" / "task-card.md").is_file()
-    assert not (S04 / "student" / "python-notes.md").exists(), (
-        "S04 now has python-notes.md; drop sourceFile so the Learn page points at it"
-    )
+    assert not (
+        S04 / "student" / "python-notes.md"
+    ).exists(), "S04 now has python-notes.md; drop sourceFile so the Learn page points at it"
     for required in (
         'term: "function"',
         'term: "def"',

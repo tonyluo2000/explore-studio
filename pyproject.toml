@@ -85,5 +85,11 @@ markers = [
 include = ["explore*", "engine*"]
 
 [tool.setuptools.package-data]
-# Course-owned trusted art (see scripts/build_trusted_art.py) ships with the runtime.
-engine = ["assets/trusted/manifest.json", "assets/trusted/**/*.png"]
+# Course-owned trusted art (see scripts/build_trusted_art.py) and trusted audio
+# (scripts/build_trail_audio.py) ship with the runtime.
+engine = [
+    "assets/trusted/manifest.json",
+    "assets/trusted/**/*.png",
+    "assets/trusted_audio/manifest.json",
+    "assets/trusted_audio/**/*.wav",
+]

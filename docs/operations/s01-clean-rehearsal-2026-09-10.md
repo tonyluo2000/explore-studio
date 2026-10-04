@@ -38,7 +38,9 @@ polished Moon Meadow to S03 (M03). On 2026-10-04 it advanced to
 ground halo, and integrated prompts and dialogue). Later on 2026-10-04 it
 advanced to `d8f23818c6bde5692a4b4a914b260d6e8be22777` to bring S04 (M04) into the frozen
 Moon Meadow (the trusted Moonlit Guide, its talk cue, and the dialogue-focus
-bubble). The
+bubble). Later on 2026-10-04 it advanced to
+`05843ffd7e257a3120a671b009f45fcae33f7391` for the quiet, optional Moon Meadow audio
+(ambience, interaction cues, and the M mute key) in S02-S04 (M02-M04). The
 original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 

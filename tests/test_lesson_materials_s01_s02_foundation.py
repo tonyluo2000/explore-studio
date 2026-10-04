@@ -375,7 +375,12 @@ def test_website_learn_route_is_data_driven_for_written_sessions_only():
 
     assert route.is_file()
     assert "generateStaticParams" in _read(route)
-    assert re.findall(r'^\s+id: "(S\d\d)"', learn_data, re.MULTILINE) == ["S01", "S02", "S03", "S04"]
+    assert re.findall(r'^\s+id: "(S\d\d)"', learn_data, re.MULTILINE) == [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+    ]
     for heading in (
         "Python concept",
         "Code we wrote",

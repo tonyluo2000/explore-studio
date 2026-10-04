@@ -13,6 +13,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from engine.audio._trail_audio import AudioSink, TrailAudio
 from engine.entities import Bounds, Character, WorldObject
 from engine.input import DirectionalInput, InteractionInput
 from engine.interactions._proximity import (
@@ -437,6 +438,7 @@ class ClassroomTrailScene(Scene):
         mission: ClassroomTrailMission,
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
         player_qualified_id: str | None = None,
+        audio: AudioSink | None = None,
     ) -> None:
         super().__init__()
         if not isinstance(player, Character):
@@ -492,6 +494,9 @@ class ClassroomTrailScene(Scene):
         self._presentation = TrailPresentation(
             mission.mission_id, start=(player.x_float, player.y_float)
         )
+        # Audio only, M02-M04-only, and only with a manager: observes the same
+        # transitions as the presentation and never writes state either.
+        self._audio = TrailAudio(mission.mission_id, audio, start=(player.x_float, player.y_float))
         objects_by_id = {item.qualified_id: item for item in self._objects}
         for npc in self._npcs:
             conditional = npc.respond_to_toggle
@@ -576,6 +581,21 @@ class ClassroomTrailScene(Scene):
                         "respond_to_sequence must reference exactly three same-package "
                         "world objects"
                     )
+
+    def enter(self) -> None:
+        super().enter()
+        self._audio.start()
+
+    def exit(self) -> None:
+        self._audio.stop()
+        super().exit()
+
+    def toggle_audio_mute(self) -> bool | None:
+        """Mute or unmute this Trail's audio (the M key); never touches gameplay.
+
+        Returns the new muted state, or ``None`` when this Trail has no audio.
+        """
+        return self._audio.toggle_mute()
 
     @property
     def player(self) -> Character:
@@ -882,6 +902,7 @@ class ClassroomTrailScene(Scene):
         elif self._feedback_remaining > 0:
             self._feedback_remaining = max(0.0, self._feedback_remaining - dt)
         self._presentation.observe(self, dt)
+        self._audio.observe(self, dt)
 
     def render(self) -> None:
         super().render()
@@ -952,6 +973,7 @@ class ClassroomTrailScene(Scene):
                 _FEEDBACK_FONT_SIZE,
             )
         presentation.draw_overlay_text(self._renderer, overlay_text)
+        self._audio.draw_indicator(self._renderer)
 
     def _draw_entity(
         self,
