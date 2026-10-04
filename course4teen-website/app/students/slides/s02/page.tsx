@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
+import JourneyContext from "../../../components/JourneyContext";
 import NovaPixelScene from "../../../components/NovaPixelScene";
 import CoordinateMap from "../../../components/CoordinateMap";
 import S02TrailMap from "../../../components/S02TrailMap";
@@ -677,6 +678,7 @@ export default function S02SlidesPage() {
             Student slides for session {session.id}. Use these to follow
             along in class or to recap what to try before next time.
           </p>
+          <JourneyContext session={session.id} />
         </section>
 
         <section className="section slide-deck">

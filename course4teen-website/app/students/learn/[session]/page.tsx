@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
+import JourneyContext from "../../../components/JourneyContext";
 import { classSessions, sessionsWithSlides } from "../../../../lib/calendar";
 import { learnSessions, type TermMeaning } from "../../../../lib/learn";
 
@@ -93,6 +94,7 @@ export default async function LearnPage({ params }: { params: Promise<Params> })
               </Link>
             </p>
           ) : null}
+          <JourneyContext session={session.id} />
         </section>
 
         <section className="section slide-deck">
