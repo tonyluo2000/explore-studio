@@ -87,16 +87,57 @@
       "scripts/trail_driver.py"
     ]
   },
-  "deferred": [
+  "deferred": [],
+  "snapshots": [
     {
       "session": "S01",
       "moment": "S01_ARRIVAL",
       "kind": "HERO",
-      "reason": "Phase B is bringing S01 into Moon Meadow; the current runtime still gives M01 the standard Trail, so an S01 HERO captured now would be stale.",
+      "missionId": "visit-all-classroom-objects",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "examples/explorer-packages/pixel-companion",
+        "examples/explorer-packages/crystal-lantern"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": null,
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:8c041828b795c2cc354032b0bc88ad85129df4772d76bf45e4a3199277c9c884",
+      "fingerprintParts": {
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
+        "packages": "0c842405a3b976f419196e5a11b3bcc9f83b02c268222a288238acedbeb547c8",
+        "captureRecipe": "2e80cb8059318e6eb683151738727d3335df9e55f5964b15e1b39044aae69d4d",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
+      },
+      "sourceRgbSha256": "7aed2bd8fa53ecb851de1370b8338be1712bb410a2ad662a7f05b8e640b3453b",
+      "images": {
+        "960": {
+          "src": "/journey/s01/hero.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 79574,
+          "sha256": "d651f128a98319a27b8f6d764470a697ec6c567006f847dc0f89c1b0edf9d6c6"
+        },
+        "480": {
+          "src": "/journey/s01/hero-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 30094,
+          "sha256": "65d2552b81500777773a29e9aa1ae77d9e4c01f8dbadf8cdf09bb93e1571fe74"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S01"
-    }
-  ],
-  "snapshots": [
+    },
     {
       "session": "S02",
       "moment": "S02_COMPASS_PROMPT",
@@ -111,13 +152,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:527b3bc108b71cb5e644f5fc2733fe594fcd1acc8e30edcc200c1efec3130682",
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:13a4fb2552c8da2220083a892c1a302e99ed5aaa8634df6a2cf0c51ed43ea55b",
       "fingerprintParts": {
-        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
-        "captureRecipe": "58136a3a8daa357f2ad339d95fef6038203d9d4eae43d36c9786b9fe6f90fb80",
-        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
+        "captureRecipe": "517b6166438e71794f1d8fb81b29b10261cea963af880284072767f179d9250c",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
       "sourceRgbSha256": "f2a982b92f93ca14d4434de63471ff77c5333cfd1299ade48ceb8b746d394e8b",
       "images": {
@@ -169,13 +210,13 @@
           "y": 360
         }
       },
-      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:260f32bcc720710d09dda63bb7521fb701c0c6301b05c1291e463ca6584f3efb",
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:a270ad98e8908c4c4c227ebf16ac8826e5f0cbf0debdc039b36e2adc23ab3ce4",
       "fingerprintParts": {
-        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
-        "captureRecipe": "4d1c40590773564b560edf505ca6b21e25d6e36b58a338059807c9d3f341e49e",
-        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
+        "captureRecipe": "9890f96fe8a004578849626395993a940d662087521fde9f3b0a4094571a368c",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
       "sourceRgbSha256": "6700154d9667ddab9e6d5b1878501b12ad0f453ba18e382c57645442c40f8342",
       "images": {
@@ -217,13 +258,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:633a3b1acff99f385114e7265cffe511fe31c5fe3f39fd2d5d905ef641a0c357",
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:7b11540a297550b96b8229425f78bed9c9fae2625181cecfa7ec4a01254f9e62",
       "fingerprintParts": {
-        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
-        "captureRecipe": "6d61e70e107cea63b3c0ff0812df4ddeb87547645939cf91d7fd78b5d4f7a2d0",
-        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
+        "captureRecipe": "8f5dc9eabc602e1936c1dc5b7bf90017c66ccc37957089053e80a63f2051bdb3",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
       "sourceRgbSha256": "8a781048fef91c8e0cf1e52802537d97e3370ae9fbd2cc2203e60d423f3847b5",
       "images": {
@@ -265,13 +306,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:d81d2414554ba1d9b1b214ae75fa50a802a53568e229e28d81d815c8f4c40fe3",
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:e6880f1c9bd79c384f8b11519bda3466d79fe1e9cceeb45b46d5e4d9083c5c15",
       "fingerprintParts": {
-        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
-        "captureRecipe": "db4365bc96862f02e65cbe7744bdd01b573a116d64430a48c3fb3a41f54f5df4",
-        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
+        "captureRecipe": "ce179443eeeefc22e8172f85cf2094ac5a9d1d8252bd5574abfd0d303017a918",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
       "sourceRgbSha256": "64ac64822cfdf68ca7378b182a634479a19eb31343506aa6131fe25a30114b8a",
       "images": {
@@ -314,13 +355,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:b58791b818be7e28f4d6ff58be622c66adccd018b799a140ca92179dcbd09a05",
+      "runtimeCommit": "3038cf44dc556a6e878141b8e1fbb6c580095aa4",
+      "presentationFingerprint": "sha256:ee3ae6d34a8182eace7815b23130b0cb437e2ce4fefdb4f6032afadeb9439068",
       "fingerprintParts": {
-        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
+        "runtime": "e7e1c958834a612d101707ae4173c54a9d13416d4dbf742738d18bfe4261efee",
         "packages": "4c3f6d5d410b03c1c91aacb7a85bd7a8a1f487e95bf497a55a6b40a70a593e8d",
-        "captureRecipe": "3ffe4a14b6c2997828012e6476adefe0f4b86a29bd2bfde84fdb4953f880e884",
-        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
+        "captureRecipe": "9ca62375589f777ea33321bc7ff13a2669a3760842f27e69b733cf08e7ebaa26",
+        "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
       "sourceRgbSha256": "680c001674002ebbaf4d6b9ddeedf50c1fda99b68d3e7c27a021db5aa021353b",
       "images": {
