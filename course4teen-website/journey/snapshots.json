@@ -1,5 +1,5 @@
 {
-  "schema": "explore-studio/journey-snapshots@1",
+  "schema": "explore-studio/journey-snapshots@2",
   "canonicalFrame": {
     "width": 960,
     "height": 640
@@ -15,6 +15,78 @@
     "resample": "LANCZOS"
   },
   "hashPolicy": "sourceRgbSha256 (the raw 960x640 RGB frame) is authoritative for regeneration on the recorded toolchain; image sha256 values verify the committed files. WebP and font rasterization bytes are not promised across toolchains.",
+  "fingerprintParts": [
+    "runtime",
+    "packages",
+    "captureRecipe",
+    "captureImplementation"
+  ],
+  "fingerprintInputs": {
+    "runtime": {
+      "engine-core": [
+        "engine/_color.py",
+        "engine/_config.py",
+        "engine/_platform.py"
+      ],
+      "rendering": [
+        "engine/rendering"
+      ],
+      "scene": [
+        "engine/scenes",
+        "engine/entities",
+        "engine/animation",
+        "engine/input",
+        "engine/interactions",
+        "engine/audio/_trail_audio.py"
+      ],
+      "trusted-art": [
+        "engine/assets/__init__.py",
+        "engine/assets/_sprite_sheets.py",
+        "engine/assets/_trusted_art.py",
+        "engine/assets/trusted"
+      ],
+      "curriculum": [
+        "explore/curriculum"
+      ],
+      "package-pipeline": [
+        "explore/packages",
+        "explore/_colors.py"
+      ]
+    },
+    "runtimePixelInert": {
+      "engine/audio/__init__.py": "re-exports the audio manager and modes",
+      "engine/audio/_cues.py": "sound cue definitions; draws nothing",
+      "engine/audio/_manager.py": "audio playback; the harness runs with no audio manager",
+      "engine/assets/_trusted_audio.py": "loads trusted audio clips; draws nothing",
+      "engine/__init__.py": "re-exports App and Config; the harness never runs App",
+      "engine/app.py": "the windowed App loop; the harness drives the scene itself",
+      "engine/_logging.py": "logging setup",
+      "explore/__init__.py": "re-exports the Student API v0.1 classes",
+      "explore/_character.py": "Student API v0.1 Character; the Trail never builds one",
+      "explore/_object.py": "Student API v0.1 Object; the Trail never builds one",
+      "explore/_world.py": "Student API v0.1 World; the Trail never builds one",
+      "explore/_error.py": "the StudentAPIError exception type"
+    },
+    "packages": "every file of each task-card package (a Student Workspace copy resolves to its Course Kit seed)",
+    "captureRecipe": [
+      "session",
+      "missionId",
+      "player",
+      "packages",
+      "presentation",
+      "mustShow",
+      "mustNotShow",
+      "moment",
+      "canonicalSize",
+      "widths",
+      "webp"
+    ],
+    "captureImplementation": [
+      "scripts/capture_journey_snapshots.py",
+      "scripts/journey_snapshots.py",
+      "scripts/trail_driver.py"
+    ]
+  },
   "deferred": [
     {
       "session": "S01",
@@ -40,11 +112,12 @@
       "presentation": "moon-meadow",
       "fixture": null,
       "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:97b2108a301706e6f7fc08c08b8c67ee60fb56d3867316086918606fc47ca1dd",
+      "presentationFingerprint": "sha256:527b3bc108b71cb5e644f5fc2733fe594fcd1acc8e30edcc200c1efec3130682",
       "fingerprintParts": {
-        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
-        "capture": "58136a3a8daa357f2ad339d95fef6038203d9d4eae43d36c9786b9fe6f90fb80"
+        "captureRecipe": "58136a3a8daa357f2ad339d95fef6038203d9d4eae43d36c9786b9fe6f90fb80",
+        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
       },
       "sourceRgbSha256": "f2a982b92f93ca14d4434de63471ff77c5333cfd1299ade48ceb8b746d394e8b",
       "images": {
@@ -97,11 +170,12 @@
         }
       },
       "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:55442af80d380b363418f9d9d9c6be6407026c05349231d3c35b44a916085281",
+      "presentationFingerprint": "sha256:260f32bcc720710d09dda63bb7521fb701c0c6301b05c1291e463ca6584f3efb",
       "fingerprintParts": {
-        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
-        "capture": "4d1c40590773564b560edf505ca6b21e25d6e36b58a338059807c9d3f341e49e"
+        "captureRecipe": "4d1c40590773564b560edf505ca6b21e25d6e36b58a338059807c9d3f341e49e",
+        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
       },
       "sourceRgbSha256": "6700154d9667ddab9e6d5b1878501b12ad0f453ba18e382c57645442c40f8342",
       "images": {
@@ -144,11 +218,12 @@
       "presentation": "moon-meadow",
       "fixture": null,
       "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:d767adcb06283ef610e631cfc62f71347c1648195bfb2712b62ef83c8b66c20b",
+      "presentationFingerprint": "sha256:633a3b1acff99f385114e7265cffe511fe31c5fe3f39fd2d5d905ef641a0c357",
       "fingerprintParts": {
-        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
-        "capture": "6d61e70e107cea63b3c0ff0812df4ddeb87547645939cf91d7fd78b5d4f7a2d0"
+        "captureRecipe": "6d61e70e107cea63b3c0ff0812df4ddeb87547645939cf91d7fd78b5d4f7a2d0",
+        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
       },
       "sourceRgbSha256": "8a781048fef91c8e0cf1e52802537d97e3370ae9fbd2cc2203e60d423f3847b5",
       "images": {
@@ -191,11 +266,12 @@
       "presentation": "moon-meadow",
       "fixture": null,
       "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:9efc9cfe11b6766feb2b402004b682c9bba729845b4099c88bc6a48bb3235d0e",
+      "presentationFingerprint": "sha256:d81d2414554ba1d9b1b214ae75fa50a802a53568e229e28d81d815c8f4c40fe3",
       "fingerprintParts": {
-        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
-        "capture": "db4365bc96862f02e65cbe7744bdd01b573a116d64430a48c3fb3a41f54f5df4"
+        "captureRecipe": "db4365bc96862f02e65cbe7744bdd01b573a116d64430a48c3fb3a41f54f5df4",
+        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
       },
       "sourceRgbSha256": "64ac64822cfdf68ca7378b182a634479a19eb31343506aa6131fe25a30114b8a",
       "images": {
@@ -239,11 +315,12 @@
       "presentation": "moon-meadow",
       "fixture": null,
       "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
-      "presentationFingerprint": "sha256:f96dd97f00e4b9826604b8d82db50d0a3278cc2933496ba02612d445420f366e",
+      "presentationFingerprint": "sha256:b58791b818be7e28f4d6ff58be622c66adccd018b799a140ca92179dcbd09a05",
       "fingerprintParts": {
-        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "runtime": "a746af40c412e3d57553938e203510a1aca0774abe26f2f0d35128127bbd276d",
         "packages": "4c3f6d5d410b03c1c91aacb7a85bd7a8a1f487e95bf497a55a6b40a70a593e8d",
-        "capture": "3ffe4a14b6c2997828012e6476adefe0f4b86a29bd2bfde84fdb4953f880e884"
+        "captureRecipe": "3ffe4a14b6c2997828012e6476adefe0f4b86a29bd2bfde84fdb4953f880e884",
+        "captureImplementation": "283d81c2bedfd90727166dbf72579017855db70fd341590db8a5416a6e378e13"
       },
       "sourceRgbSha256": "680c001674002ebbaf4d6b9ddeedf50c1fda99b68d3e7c27a021db5aa021353b",
       "images": {

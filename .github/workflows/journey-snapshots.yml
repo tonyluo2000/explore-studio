@@ -1,7 +1,10 @@
 name: Journey snapshots
 
 # Fails when a published Journey snapshot no longer matches the runtime,
-# packages, or task cards that drew it. CI never recaptures or commits images.
+# packages, task cards, or capture harness that drew it. CI never recaptures
+# or commits images. The paths below must cover every fingerprint input
+# (scripts/journey_snapshots.py RUNTIME_GROUPS, CAPTURE_IMPLEMENTATION_INPUTS,
+# and the task-card packages); tests/test_journey_snapshots.py enforces it.
 on:
   pull_request:
     paths:
@@ -10,8 +13,9 @@ on:
       - "course4teen-website/public/journey/**"
       - "course4teen-website/lib/calendar.ts"
       - "engine/**"
+      - "explore/_colors.py"
       - "explore/curriculum/**"
-      - "explore/packages/classroom_trail.py"
+      - "explore/packages/**"
       - "examples/explorer-packages/**"
       - "lessons/sessions/**"
       - "scripts/journey_snapshots.py"
@@ -29,8 +33,9 @@ on:
       - "course4teen-website/public/journey/**"
       - "course4teen-website/lib/calendar.ts"
       - "engine/**"
+      - "explore/_colors.py"
       - "explore/curriculum/**"
-      - "explore/packages/classroom_trail.py"
+      - "explore/packages/**"
       - "examples/explorer-packages/**"
       - "lessons/sessions/**"
       - "scripts/journey_snapshots.py"
@@ -60,8 +65,11 @@ jobs:
           cache: pip
       - name: Install project with the snapshot encoder
         run: python -m pip install -e ".[dev,art]"
-      - name: Verify snapshot contract, publication boundary, freshness, and determinism
+      - name: Check schema, publication boundary, freshness, and image integrity
+        run: python scripts/capture_journey_snapshots.py --check
+      - name: Verify snapshot contract, parser, mutations, and determinism
         run: >-
           python -m pytest -q
           tests/test_journey_snapshots.py
+          tests/test_journey_snapshot_freshness.py
           tests/test_journey_snapshot_determinism.py

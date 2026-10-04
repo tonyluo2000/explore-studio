@@ -11,10 +11,26 @@ from a second hand-maintained list: :func:`canonical_command` reads the card,
 and the table only states what each moment must show. Tests keep the table's
 mission and player equal to the card.
 
-The ``presentationFingerprint`` hashes only what can change a captured frame:
-the Trail runtime that draws it (:data:`RUNTIME_INPUTS`), the session's package
-files, and the capture recipe. When any of them changes the freshness test
-fails and names the command that recaptures the session.
+The ``presentationFingerprint`` hashes only what can change a captured frame,
+in four named parts (see :data:`FINGERPRINT_PARTS`):
+
+``runtime``
+    The code and trusted art between task-card package files and the drawn
+    frame (:data:`RUNTIME_GROUPS`). The Course Kit runtime pin is compared on
+    exactly these files before anything is published.
+``packages``
+    Every file of every package the task card names.
+``captureRecipe``
+    The values that say which moment to capture and how to encode it: the
+    task-card command, the session row, the moment, the frame size, the WebP
+    settings.
+``captureImplementation``
+    The bytes of the harness that interprets that recipe: the fixed time step,
+    real input, frame selection, acceptance checks, and encoding
+    (:data:`CAPTURE_IMPLEMENTATION_INPUTS`).
+
+When any part changes the freshness check fails, names the part, and names the
+command that recaptures the session.
 """
 
 from __future__ import annotations
@@ -37,7 +53,12 @@ PUBLIC_JOURNEY: Final = WEBSITE / "public" / "journey"
 MANIFEST_PATH: Final = WEBSITE / "journey" / "snapshots.json"
 CALENDAR: Final = WEBSITE / "lib" / "calendar.ts"
 SESSIONS_DIR: Final = REPO / "lessons" / "sessions"
-SCHEMA: Final = "explore-studio/journey-snapshots@1"
+SCHEMA_NAME: Final = "explore-studio/journey-snapshots"
+SCHEMA_VERSION: Final = 2
+SCHEMA: Final = f"{SCHEMA_NAME}@{SCHEMA_VERSION}"
+#: Manifest schemas this code can check. Version 1 had no capture
+#: implementation fingerprint, so its entries cannot be trusted as fresh.
+SUPPORTED_SCHEMAS: Final = frozenset({SCHEMA})
 CAPTURE_SCRIPT: Final = "scripts/capture_journey_snapshots.py"
 
 CANONICAL_SIZE: Final = (960, 640)
@@ -62,30 +83,101 @@ LANTERN: Final = "crystal-lantern:lantern"
 S02_COMPASS: Final = "moon-compass:compass"
 S03_COMPASS: Final = "moon-compass-response:compass"
 GUIDE: Final = "moonlit-guide:guide"
+#: The pre-Moon Meadow S01 cast, retired by Phase B.
+FERN: Final = "forest-guide:guide"
+FOUNTAIN: Final = "river-fountain:fountain"
 
 S02_PACKAGE: Final = "../my-explore-world/projects/moon-compass"
 S03_PACKAGE: Final = "lessons/sessions/s03/student/explorer-package"
 S04_PACKAGE: Final = "lessons/sessions/s04/student/explorer-package"
 
-#: Files whose change can change a captured frame. Audio is left out: the
-#: harness runs without an audio manager, so no audio code draws anything.
-RUNTIME_INPUTS: Final = (
-    "engine/_color.py",
-    "engine/_config.py",
-    "engine/_platform.py",
-    "engine/animation",
-    "engine/assets/__init__.py",
-    "engine/assets/_sprite_sheets.py",
-    "engine/assets/_trusted_art.py",
-    "engine/assets/trusted",
-    "engine/entities",
-    "engine/input",
-    "engine/interactions",
-    "engine/rendering",
-    "engine/scenes",
-    "explore/curriculum",
-    "explore/packages/classroom_trail.py",
+#: The presentation runtime: everything between the task-card package files and
+#: the drawn frame, in groups an auditor can read. ``tests/test_journey_snapshots.py``
+#: walks the harness's imports statically and fails if it reaches an engine or
+#: ``explore`` module that is neither here nor in :data:`RUNTIME_PIXEL_INERT`.
+RUNTIME_GROUPS: Final[Mapping[str, tuple[str, ...]]] = {
+    # Window size, palette, display setup, and frame clearing.
+    "engine-core": ("engine/_color.py", "engine/_config.py", "engine/_platform.py"),
+    # The renderer, Moon Meadow environment and layout, sprites, effects, and
+    # the per-mission presentation policy.
+    "rendering": ("engine/rendering",),
+    # Scene update and render order, entities, movement, animation clips,
+    # input handling, and proximity (what becomes the target). The scene's
+    # audio bridge is here too: the scene calls it every frame and it draws
+    # the audio indicator.
+    "scene": (
+        "engine/scenes",
+        "engine/entities",
+        "engine/animation",
+        "engine/input",
+        "engine/interactions",
+        "engine/audio/_trail_audio.py",
+    ),
+    # Course-owned sprite sheets and the code that loads and slices them.
+    "trusted-art": (
+        "engine/assets/__init__.py",
+        "engine/assets/_sprite_sheets.py",
+        "engine/assets/_trusted_art.py",
+        "engine/assets/trusted",
+    ),
+    # Mission definitions: targets, completion, and labels drawn on screen.
+    "curriculum": ("explore/curriculum",),
+    # Package YAML -> scene: loader, models, policy, validator, package-set
+    # planner, registration adapter, Trail plan and scene construction, and
+    # the colour names they resolve.
+    "package-pipeline": ("explore/packages", "explore/_colors.py"),
+}
+RUNTIME_INPUTS: Final = tuple(path for group in RUNTIME_GROUPS.values() for path in group)
+
+#: Modules the harness imports that cannot change a pixel, and why. Anything
+#: else it imports from ``engine`` or ``explore`` must be in :data:`RUNTIME_GROUPS`.
+RUNTIME_PIXEL_INERT: Final[Mapping[str, str]] = {
+    "engine/audio/__init__.py": "re-exports the audio manager and modes",
+    "engine/audio/_cues.py": "sound cue definitions; draws nothing",
+    "engine/audio/_manager.py": "audio playback; the harness runs with no audio manager",
+    "engine/assets/_trusted_audio.py": "loads trusted audio clips; draws nothing",
+    "engine/__init__.py": "re-exports App and Config; the harness never runs App",
+    "engine/app.py": "the windowed App loop; the harness drives the scene itself",
+    "engine/_logging.py": "logging setup",
+    "explore/__init__.py": "re-exports the Student API v0.1 classes",
+    "explore/_character.py": "Student API v0.1 Character; the Trail never builds one",
+    "explore/_object.py": "Student API v0.1 Object; the Trail never builds one",
+    "explore/_world.py": "Student API v0.1 World; the Trail never builds one",
+    "explore/_error.py": "the StudentAPIError exception type",
+}
+
+#: The capture harness itself. ``captureRecipe`` hashes the table values; these
+#: bytes hash the code that turns them into a frame (``STEP``, ``walk_to``,
+#: ``hold``, the acceptance checks, ``encode``, package resolution).
+CAPTURE_IMPLEMENTATION_INPUTS: Final = (
+    "scripts/capture_journey_snapshots.py",
+    "scripts/journey_snapshots.py",
+    "scripts/trail_driver.py",
 )
+
+#: The values ``captureRecipe`` hashes (see :func:`capture_recipe`).
+CAPTURE_RECIPE_FIELDS: Final = (
+    "session",
+    "missionId",
+    "player",
+    "packages",
+    "presentation",
+    "mustShow",
+    "mustNotShow",
+    "moment",
+    "canonicalSize",
+    "widths",
+    "webp",
+)
+
+#: The fingerprint parts, in the order they are joined, and what each covers.
+FINGERPRINT_PARTS: Final[Mapping[str, str]] = {
+    "runtime": "presentation runtime (engine rendering/scene/assets, package pipeline)",
+    "packages": "session package files",
+    "captureRecipe": "capture recipe or task-card command",
+    "captureImplementation": "capture harness implementation",
+}
+
 _RUNTIME_SUFFIXES: Final = frozenset({".py", ".json", ".png"})
 
 
@@ -181,8 +273,10 @@ SESSIONS: Final[tuple[Session, ...]] = (
         mission_id="visit-all-classroom-objects",
         player=NOVA,
         presentation=MOON_MEADOW,
-        must_show=(NOVA,),
-        must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE),
+        # The Phase B cast, already the contract: when the deferral is lifted
+        # the capture must show all three in trusted art, in Moon Meadow.
+        must_show=(NOVA, PIXEL, LANTERN),
+        must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE, FERN, FOUNTAIN),
         moments=(
             Moment(
                 name="S01_ARRIVAL",
@@ -328,6 +422,18 @@ def calendar_sessions() -> tuple[str, ...]:
     return tuple(re.findall(r'\{ id: "(S\d\d)"', text))
 
 
+class TaskCardError(ValueError):
+    """A task card's ``explore-package trail`` command is malformed or ambiguous."""
+
+
+#: The single-value options of ``explore-package trail`` (``explore/packages/cli.py``).
+#: ``--player`` and ``--mission-id`` decide what a snapshot shows; ``--name`` is
+#: the window title. Each may appear once.
+TRAIL_OPTIONS: Final = ("--player", "--mission-id", "--name")
+#: Options a canonical (snapshot) command must state.
+REQUIRED_TRAIL_OPTIONS: Final = ("--player", "--mission-id")
+
+
 @dataclass(frozen=True)
 class TrailCommand:
     packages: tuple[str, ...]
@@ -346,23 +452,71 @@ def task_card(session: str) -> Path:
     return SESSIONS_DIR / session.lower() / "student" / "task-card.md"
 
 
-def trail_commands(card: Path) -> list[TrailCommand]:
-    """Each ``explore-package trail`` command on a task card."""
-    joined = re.sub(r"\\\n", " ", card.read_text(encoding="utf-8"))
-    commands = []
-    for line in joined.splitlines():
-        if not line.strip().startswith("explore-package trail "):
+def _card_label(card: Path, session: str | None) -> str:
+    if session is None and card.name == "task-card.md":
+        session = card.parent.parent.name.upper()
+    try:
+        shown = card.relative_to(REPO).as_posix()
+    except ValueError:
+        shown = str(card)
+    return f"{session or 'task card'} ({shown})"
+
+
+def parse_trail_command(line: str, *, where: str = "task card") -> TrailCommand:
+    """One ``explore-package trail ...`` line, rejecting anything ambiguous.
+
+    Fails on unbalanced quotes, unknown options, an option without a value, any
+    repeated option, a repeated package, and a command with no packages.
+    """
+
+    def fail(problem: str) -> TaskCardError:
+        return TaskCardError(f"{where}: `explore-package trail` command {problem}")
+
+    try:
+        tokens = shlex.split(line)
+    except ValueError as error:
+        raise fail(f"cannot be parsed: {error}") from None
+    if tokens[:2] != ["explore-package", "trail"]:
+        raise fail("does not start with `explore-package trail`")
+    packages: list[str] = []
+    options: dict[str, str] = {}
+    rest = tokens[2:]
+    index = 0
+    while index < len(rest):
+        token = rest[index]
+        index += 1
+        if not token.startswith("-"):
+            if token in packages:
+                raise fail(f"names package {token} twice")
+            packages.append(token)
             continue
-        packages: list[str] = []
-        options: dict[str, str] = {}
-        rest = iter(shlex.split(line.strip())[2:])
-        for token in rest:
-            if token.startswith("--"):
-                options[token] = next(rest)
-            else:
-                packages.append(token)
-        commands.append(TrailCommand(tuple(packages), options))
-    return commands
+        flag, equals, value = token.partition("=")
+        if flag not in TRAIL_OPTIONS:
+            raise fail(f"has unknown option {flag}")
+        if flag in options:
+            raise fail(f"repeats {flag}")
+        if not equals:
+            if index == len(rest) or rest[index].startswith("--"):
+                raise fail(f"is missing a value for {flag}")
+            value = rest[index]
+            index += 1
+        if not value.strip():
+            raise fail(f"has an empty value for {flag}")
+        options[flag] = value
+    if not packages:
+        raise fail("names no packages")
+    return TrailCommand(tuple(packages), options)
+
+
+def trail_commands(card: Path, *, session: str | None = None) -> list[TrailCommand]:
+    """Each ``explore-package trail`` command on a task card, strictly parsed."""
+    where = _card_label(card, session)
+    joined = re.sub(r"\\\r?\n", " ", card.read_text(encoding="utf-8"))
+    return [
+        parse_trail_command(line.strip(), where=where)
+        for line in joined.splitlines()
+        if line.strip().startswith("explore-package trail")
+    ]
 
 
 def canonical_command(session: str) -> TrailCommand | None:
@@ -370,10 +524,24 @@ def canonical_command(session: str) -> TrailCommand | None:
     card = task_card(session)
     if not card.is_file():
         return None
-    commands = [command for command in trail_commands(card) if "--mission-id" in command.options]
+    commands = [
+        command
+        for command in trail_commands(card, session=session)
+        if "--mission-id" in command.options
+    ]
     if not commands:
         return None
-    assert len(commands) == 1, f"{card}: expected one canonical trail command"
+    if len(commands) != 1:
+        raise TaskCardError(
+            f"{_card_label(card, session)}: {len(commands)} `explore-package trail` "
+            "commands name --mission-id; expected one canonical command"
+        )
+    missing = [flag for flag in REQUIRED_TRAIL_OPTIONS if flag not in commands[0].options]
+    if missing:
+        raise TaskCardError(
+            f"{_card_label(card, session)}: the canonical `explore-package trail` command "
+            f"has no {', '.join(missing)}"
+        )
     return commands[0]
 
 
@@ -460,6 +628,13 @@ def runtime_digest(files: Mapping[str, bytes] | None = None) -> str:
     return _digest((path, _sha256(data)) for path, data in files.items())
 
 
+def capture_implementation_digest(root: Path = REPO) -> str:
+    """The harness source (:data:`CAPTURE_IMPLEMENTATION_INPUTS`), byte for byte."""
+    return _digest(
+        (path, _sha256((root / path).read_bytes())) for path in CAPTURE_IMPLEMENTATION_INPUTS
+    )
+
+
 def packages_digest(packages: Iterable[str]) -> str:
     """Every file of every package, keyed by the task-card argument it came from."""
     entries = []
@@ -473,8 +648,8 @@ def packages_digest(packages: Iterable[str]) -> str:
     return _digest(entries)
 
 
-def capture_digest(row: Session, moment: Moment, command: TrailCommand) -> str:
-    recipe = {
+def capture_recipe(row: Session, moment: Moment, command: TrailCommand) -> dict[str, object]:
+    return {
         "session": row.session,
         "missionId": command.mission_id,
         "player": command.player,
@@ -487,21 +662,32 @@ def capture_digest(row: Session, moment: Moment, command: TrailCommand) -> str:
         "widths": list(WIDTHS),
         "webp": describe(WEBP_SETTINGS),
     }
-    return _sha256(json.dumps(recipe, sort_keys=True).encode("utf-8"))
+
+
+def capture_recipe_digest(row: Session, moment: Moment, command: TrailCommand) -> str:
+    return _sha256(json.dumps(capture_recipe(row, moment, command), sort_keys=True).encode())
 
 
 def fingerprint_parts(
-    row: Session, moment: Moment, command: TrailCommand, runtime: str | None = None
+    row: Session,
+    moment: Moment,
+    command: TrailCommand,
+    runtime: str | None = None,
+    implementation: str | None = None,
 ) -> dict[str, str]:
+    """The four :data:`FINGERPRINT_PARTS`, computed from the working tree."""
     return {
         "runtime": runtime_digest() if runtime is None else runtime,
         "packages": packages_digest(command.packages),
-        "capture": capture_digest(row, moment, command),
+        "captureRecipe": capture_recipe_digest(row, moment, command),
+        "captureImplementation": (
+            capture_implementation_digest() if implementation is None else implementation
+        ),
     }
 
 
 def presentation_fingerprint(parts: Mapping[str, str]) -> str:
-    joined = "\n".join(f"{key}={parts[key]}" for key in ("runtime", "packages", "capture"))
+    joined = "\n".join(f"{key}={parts[key]}" for key in FINGERPRINT_PARTS)
     return "sha256:" + _sha256(joined.encode("utf-8"))
 
 
@@ -516,6 +702,33 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def schema_problem(manifest: Mapping[str, object]) -> str | None:
+    """Why this code cannot check *manifest*, or ``None`` if its schema is supported."""
+    schema = manifest.get("schema")
+    if schema is None:
+        return f"{MANIFEST_PATH.name} has no schema; expected {SCHEMA}"
+    if not isinstance(schema, str) or not re.fullmatch(rf"{re.escape(SCHEMA_NAME)}@\d+", schema):
+        return f"{MANIFEST_PATH.name} has unknown schema {schema!r}; expected {SCHEMA}"
+    if schema not in SUPPORTED_SCHEMAS:
+        return (
+            f"{MANIFEST_PATH.name} has unsupported schema version {schema!r}; expected {SCHEMA}. "
+            "Recapture with `python scripts/capture_journey_snapshots.py --all-published`"
+        )
+    return None
+
+
+def fingerprint_inputs() -> dict[str, object]:
+    """What each fingerprint part hashes, recorded in the manifest for auditors."""
+    return {
+        "runtime": {group: list(paths) for group, paths in RUNTIME_GROUPS.items()},
+        "runtimePixelInert": dict(RUNTIME_PIXEL_INERT),
+        "packages": "every file of each task-card package (a Student Workspace copy "
+        "resolves to its Course Kit seed)",
+        "captureRecipe": list(CAPTURE_RECIPE_FIELDS),
+        "captureImplementation": list(CAPTURE_IMPLEMENTATION_INPUTS),
+    }
+
+
 def manifest_header() -> dict[str, object]:
     return {
         "schema": SCHEMA,
@@ -527,6 +740,8 @@ def manifest_header() -> dict[str, object]:
             "on the recorded toolchain; image sha256 values verify the committed files. "
             "WebP and font rasterization bytes are not promised across toolchains."
         ),
+        "fingerprintParts": list(FINGERPRINT_PARTS),
+        "fingerprintInputs": fingerprint_inputs(),
         "deferred": [
             {
                 "session": row.session,
@@ -553,23 +768,54 @@ def write_manifest(snapshots: list[dict[str, object]], path: Path = MANIFEST_PAT
     path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def stale_reason(entry: Mapping[str, object]) -> str | None:
+def publication_problems(manifest: Mapping[str, object]) -> list[str]:
+    """Manifest entries and public files that must not be published, without capturing."""
+    problem = schema_problem(manifest)
+    if problem:
+        return [problem]
+    problems = []
+    published = published_sessions()
+    seen: set[tuple[str, str]] = set()
+    listed: set[Path] = set()
+    for entry in manifest.get("snapshots", []):  # type: ignore[union-attr]
+        session, name = entry.get("session"), entry.get("moment")
+        row = SESSIONS_BY_ID.get(session)
+        if session not in published:
+            problems.append(f"manifest entry {session} {name}: {session} is not published")
+        elif row is None:
+            problems.append(f"manifest entry {session} {name}: {session} has no snapshot row")
+        elif row.deferred:
+            problems.append(f"manifest entry {session} {name}: {session} is deferred")
+        elif name not in {moment.name for moment in row.moments}:
+            problems.append(f"manifest entry {session} {name}: no such moment in the table")
+        if (session, name) in seen:
+            problems.append(f"manifest entry {session} {name} is listed twice")
+        seen.add((session, name))
+        for image in entry.get("images", {}).values():
+            listed.add(WEBSITE / "public" / image["src"].lstrip("/"))
+    if PUBLIC_JOURNEY.exists():
+        for path in sorted(p for p in PUBLIC_JOURNEY.rglob("*") if p.is_file()):
+            if path not in listed:
+                shown = path.relative_to(REPO).as_posix()
+                problems.append(f"{shown} is published but not in the manifest")
+    return problems
+
+
+def stale_reason(
+    entry: Mapping[str, object], runtime: str | None = None, implementation: str | None = None
+) -> str | None:
     """Why a manifest entry no longer matches its inputs, or ``None`` if fresh."""
     row = SESSIONS_BY_ID[entry["session"]]  # type: ignore[index]
     moment = next(m for m in row.moments if m.name == entry["moment"])
     command = canonical_command(row.session)
     assert command is not None
-    parts = fingerprint_parts(row, moment, command)
+    parts = fingerprint_parts(row, moment, command, runtime, implementation)
     if presentation_fingerprint(parts) == entry["presentationFingerprint"]:
         return None
     recorded = entry.get("fingerprintParts", {})
-    changed = sorted(key for key in parts if recorded.get(key) != parts[key])  # type: ignore[union-attr]
-    labels = {
-        "runtime": "presentation runtime (engine rendering/scene/assets)",
-        "packages": "session package files",
-        "capture": "capture recipe or task-card command",
-    }
+    changed = [key for key in FINGERPRINT_PARTS if recorded.get(key) != parts[key]]  # type: ignore[union-attr]
     return (
         f"Journey snapshot for {row.session} ({moment.name}) is stale: "
-        f"{', '.join(labels[key] for key in changed)} changed; rerun `{row.command}`"
+        f"{', '.join(FINGERPRINT_PARTS[key] for key in changed) or 'fingerprint'} changed; "
+        f"rerun `{row.command}`"
     )

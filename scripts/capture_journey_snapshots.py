@@ -19,6 +19,10 @@ sessions the website does not publish, and a working tree whose presentation
 runtime differs from the Course Kit runtime pin. ``--preview`` writes PNG and
 WebP files to a review directory only and never publishes, so it may capture a
 deferred session or an unpinned runtime.
+
+``--check`` fails on an unsupported manifest schema, on any published file or
+manifest entry outside the publication boundary, on a stale fingerprint, and
+on a committed image that differs from the manifest.
 """
 
 from __future__ import annotations
@@ -284,11 +288,12 @@ def resolve(session: str) -> tuple[Session, TrailCommand]:
 
 def capture_session(session: str, *, runtime: str) -> list[Capture]:
     row, command = resolve(session)
+    implementation = journey.capture_implementation_digest()
     captures = []
     for moment in row.moments:
         print(f"capturing {moment.name} ...", flush=True)
         rgb = capture_moment(row, moment, command)
-        parts = journey.fingerprint_parts(row, moment, command, runtime)
+        parts = journey.fingerprint_parts(row, moment, command, runtime, implementation)
         captures.append(Capture(row, moment, command, rgb, encode(rgb), parts))
     return captures
 
@@ -332,10 +337,14 @@ def manifest_entry(capture: Capture, runtime_commit: str, tools: dict[str, str])
     }
 
 
-def require_pinned_runtime() -> tuple[str, str]:
-    """The pin and the runtime digest, if the working tree draws what the pin draws."""
+def require_pinned_runtime(root: Path = REPO) -> tuple[str, str]:
+    """The pin and the runtime digest, if the tree at *root* draws what the pin draws.
+
+    Compares every :data:`journey.RUNTIME_GROUPS` file, so a change to the
+    package pipeline or colours blocks publishing just as a renderer change does.
+    """
     pin = journey.runtime_pin()
-    here = journey.runtime_digest()
+    here = journey.runtime_digest(journey.runtime_files(root))
     try:
         pinned = journey.runtime_digest(journey.runtime_files_at(pin))
     except Exception as error:  # noqa: BLE001
@@ -363,6 +372,12 @@ def publish(sessions: list[str]) -> None:
     tools = toolchain()
     manifest = journey.load_manifest()
     entries = [e for e in manifest.get("snapshots", []) if e["session"] not in sessions]  # type: ignore[union-attr]
+    problem = journey.schema_problem(manifest)
+    if problem and entries:
+        # Entries kept from an older schema would carry fingerprints this code
+        # cannot check; recapture them rather than relabel them.
+        kept = sorted({entry.get("session") for entry in entries})
+        raise CaptureError(f"{problem}; this run would keep {', '.join(kept)} unrecaptured")
     for session in sessions:
         captures = capture_session(session, runtime=runtime)
         directory = PUBLIC_JOURNEY / session.lower()
@@ -381,10 +396,19 @@ def publish(sessions: list[str]) -> None:
 
 
 def check() -> list[str]:
-    """Freshness and file integrity of the committed snapshots, without capturing."""
-    failures = []
-    for entry in journey.load_manifest().get("snapshots", []):  # type: ignore[union-attr]
-        reason = journey.stale_reason(entry)
+    """Schema, publication boundary, freshness, and file integrity, without capturing."""
+    manifest = journey.load_manifest()
+    failures = journey.publication_problems(manifest)
+    if failures:
+        # Entries outside the contract cannot be fingerprinted meaningfully.
+        return failures
+    runtime = journey.runtime_digest()
+    implementation = journey.capture_implementation_digest()
+    for entry in manifest.get("snapshots", []):  # type: ignore[union-attr]
+        try:
+            reason = journey.stale_reason(entry, runtime, implementation)
+        except journey.TaskCardError as error:
+            reason = str(error)
         if reason:
             failures.append(reason)
         for image in entry["images"].values():
@@ -495,7 +519,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1 if differences else 0
         else:
             publish(sessions)
-    except CaptureError as error:
+    except (CaptureError, journey.TaskCardError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     return 0

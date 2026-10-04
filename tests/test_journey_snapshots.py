@@ -10,6 +10,7 @@ produced it.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -88,6 +89,10 @@ def test_row_matches_its_task_card_command(row) -> None:  # type: ignore[no-unty
         for spec in moment.expect.texts:
             if isinstance(spec, journey.PackageText):
                 assert spec.package in command.packages, (moment.name, spec)
+    if row.deferred:
+        # Its task card is still changing; its must_show is the post-deferral
+        # contract (see test_s01_deferred_row_already_states_the_phase_b_contract).
+        return
     package_ids = {_package_id(argument) for argument in command.packages}
     for qualified_id in row.must_show:
         assert qualified_id.split(":")[0] in package_ids, (row.session, qualified_id)
@@ -156,6 +161,28 @@ def test_s01_is_deferred_with_a_reason_or_published_as_moon_meadow() -> None:
     assert S01.presentation == MOON_MEADOW, "the S01 HERO must be the Moon Meadow arrival"
 
 
+def test_s01_deferred_row_already_states_the_phase_b_contract() -> None:
+    # Phase B's canonical S01 cast is Nova, Pixel, and the Crystal Lantern in
+    # Moon Meadow. Lifting the deferral must not need anyone to remember to add
+    # them: the capture then requires each one drawn in trusted art.
+    assert S01.presentation == MOON_MEADOW
+    assert set(S01.must_show) == {journey.NOVA, journey.PIXEL, journey.LANTERN}
+    assert set(S01.must_not_show) >= {
+        journey.S02_COMPASS,
+        journey.S03_COMPASS,
+        journey.GUIDE,
+        journey.FERN,
+        journey.FOUNTAIN,
+    }
+    assert not set(S01.must_show) & set(S01.must_not_show)
+    assert [moment.kind for moment in S01.moments] == [HERO]
+    # The retired cast's qualified IDs are real, so the exclusion can bite.
+    assert _package_id("examples/explorer-packages/forest-guide") == journey.FERN.split(":")[0]
+    assert (
+        _package_id("examples/explorer-packages/river-fountain") == journey.FOUNTAIN.split(":")[0]
+    )
+
+
 def test_harness_refuses_deferred_and_unpublished_sessions() -> None:
     from scripts.capture_journey_snapshots import CaptureError, publish
 
@@ -172,7 +199,12 @@ def test_harness_refuses_deferred_and_unpublished_sessions() -> None:
 
 
 def test_manifest_header_matches_the_contract() -> None:
-    assert MANIFEST["schema"] == journey.SCHEMA
+    assert MANIFEST["schema"] == journey.SCHEMA == "explore-studio/journey-snapshots@2"
+    assert journey.schema_problem(MANIFEST) is None
+    assert MANIFEST["fingerprintParts"] == list(journey.FINGERPRINT_PARTS)
+    assert MANIFEST["fingerprintInputs"] == journey.fingerprint_inputs()
+    for entry in ENTRIES:
+        assert list(entry["fingerprintParts"]) == list(journey.FINGERPRINT_PARTS), entry
     assert MANIFEST["canonicalFrame"] == {"width": 960, "height": 640}
     assert MANIFEST["widths"] == [960, 480]
     assert MANIFEST["webp"] == dict(journey.WEBP_SETTINGS)
@@ -322,7 +354,226 @@ def test_fingerprint_notices_a_runtime_change(monkeypatch: pytest.MonkeyPatch) -
 def test_fingerprint_ignores_audio_and_unrelated_code() -> None:
     inputs = journey.runtime_files()
     assert inputs and all(path.startswith(("engine/", "explore/")) for path in inputs)
-    assert not any(path.startswith("engine/audio/") for path in inputs)
-    assert not any("trusted_audio" in path for path in inputs)
+    assert not any(path.startswith("engine/assets/trusted_audio/") for path in inputs)
+    for inert in ("engine/audio/_manager.py", "engine/audio/_cues.py", "engine/app.py"):
+        assert inert not in inputs
+    assert "engine/assets/_trusted_audio.py" not in inputs
     assert "engine/rendering/_trail_presentation.py" in inputs
     assert any(path.startswith("engine/assets/trusted/") for path in inputs)
+
+
+def test_fingerprint_covers_the_package_pipeline_and_colours() -> None:
+    inputs = journey.runtime_files()
+    for path in (
+        "explore/_colors.py",
+        "explore/packages/registration_adapter.py",
+        "explore/packages/loader.py",
+        "explore/packages/models.py",
+        "explore/packages/package_set_planner.py",
+        "explore/packages/classroom_trail.py",
+        "engine/rendering/_mission_presentation.py",
+        "engine/audio/_trail_audio.py",
+    ):
+        assert path in inputs, path
+    assert set(journey.CAPTURE_IMPLEMENTATION_INPUTS) == {
+        "scripts/capture_journey_snapshots.py",
+        "scripts/journey_snapshots.py",
+        "scripts/trail_driver.py",
+    }
+
+
+def test_capture_recipe_fields_are_what_the_recipe_hashes() -> None:
+    row = ACTIVE_ROWS[0]
+    command = journey.canonical_command(row.session)
+    assert command is not None
+    recipe = journey.capture_recipe(row, row.hero, command)
+    assert tuple(recipe) == journey.CAPTURE_RECIPE_FIELDS
+
+
+# ---------------------------------------------------------------------------
+# The runtime input set is complete: a static walk of the harness's imports
+# ---------------------------------------------------------------------------
+
+
+def _module_file(name: str) -> Path | None:
+    parts = name.split(".")
+    if parts[0] not in {"engine", "explore"}:
+        return None
+    base = journey.REPO.joinpath(*parts)
+    if (base / "__init__.py").is_file():
+        return base / "__init__.py"
+    if base.with_suffix(".py").is_file():
+        return base.with_suffix(".py")
+    return None
+
+
+def _imported_names(path: Path, module: str) -> set[str]:
+    """Every module name *path* may import, read from its syntax tree (never run)."""
+    package = module if path.name == "__init__.py" else module.rpartition(".")[0]
+    names: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                anchor = package.split(".")[: len(package.split(".")) - node.level + 1]
+                base = ".".join(anchor + ([node.module] if node.module else []))
+            else:
+                base = node.module or ""
+            names.add(base)
+            names.update(f"{base}.{alias.name}" for alias in node.names)
+    with_parents = set(names)
+    for name in names:
+        parts = name.split(".")
+        with_parents.update(".".join(parts[:index]) for index in range(1, len(parts)))
+    return with_parents
+
+
+def _harness_import_closure() -> set[str]:
+    """Repo-relative engine/explore files reachable from the capture harness."""
+    pending = [
+        (journey.REPO / path, "scripts." + Path(path).stem)
+        for path in journey.CAPTURE_IMPLEMENTATION_INPUTS
+    ]
+    seen: set[Path] = set()
+    while pending:
+        path, module = pending.pop()
+        for name in _imported_names(path, module):
+            found = _module_file(name)
+            if found is not None and found not in seen:
+                seen.add(found)
+                pending.append((found, name))
+    return {path.relative_to(journey.REPO).as_posix() for path in seen}
+
+
+def _covered(path: str, entries) -> bool:  # type: ignore[no-untyped-def]
+    return any(path == entry or path.startswith(entry + "/") for entry in entries)
+
+
+def test_every_module_the_harness_reaches_is_fingerprinted_or_pixel_inert() -> None:
+    closure = _harness_import_closure()
+    # The walk must reach the scene-construction layers the reviewer named.
+    assert {
+        "explore/_colors.py",
+        "explore/packages/registration_adapter.py",
+        "explore/packages/loader.py",
+        "explore/packages/package_set_planner.py",
+        "explore/packages/models.py",
+        "engine/scenes/_classroom_trail_scene.py",
+    } <= closure
+    unclassified = sorted(
+        path
+        for path in closure
+        if not _covered(path, journey.RUNTIME_INPUTS)
+        and not _covered(path, journey.RUNTIME_PIXEL_INERT)
+    )
+    assert not unclassified, (
+        "The capture harness imports these modules, but they are neither in "
+        "journey_snapshots.RUNTIME_GROUPS nor justified in RUNTIME_PIXEL_INERT: "
+        f"{unclassified}"
+    )
+
+
+def test_pixel_inert_entries_are_real_reached_and_disjoint_from_the_runtime() -> None:
+    closure = _harness_import_closure()
+    for path, reason in journey.RUNTIME_PIXEL_INERT.items():
+        assert reason, path
+        assert any(_covered(module, [path]) for module in closure), f"{path} is never imported"
+        assert not _covered(path, journey.RUNTIME_INPUTS), path
+        assert not any(_covered(entry, [path]) for entry in journey.RUNTIME_INPUTS), path
+
+
+def test_no_tracked_runtime_file_is_skipped_by_the_suffix_filter() -> None:
+    try:
+        listing = subprocess.run(
+            ["git", "ls-files", "-z", "--", *journey.RUNTIME_INPUTS],
+            cwd=journey.REPO,
+            check=True,
+            capture_output=True,
+        ).stdout.decode("utf-8")
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip("git is not available")
+    tracked = {name for name in listing.split("\0") if name}
+    assert tracked and tracked == set(journey.runtime_files()), (
+        "every tracked file under RUNTIME_GROUPS must be hashed; extend _RUNTIME_SUFFIXES "
+        "or move the file"
+    )
+
+
+# ---------------------------------------------------------------------------
+# CI runs whenever a fingerprint input changes
+# ---------------------------------------------------------------------------
+
+WORKFLOW = journey.REPO / ".github" / "workflows" / "journey-snapshots.yml"
+
+
+def _workflow_paths() -> list[str]:
+    document = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+    triggers = document.get("on", document.get(True))  # YAML 1.1 reads `on` as True
+    pull_request, push = triggers["pull_request"]["paths"], triggers["push"]["paths"]
+    assert pull_request == push, "pull_request and push must watch the same paths"
+    return pull_request
+
+
+def _glob(pattern: str) -> re.Pattern[str]:
+    """GitHub's path filter syntax: ``**`` crosses directories, ``*`` does not."""
+    out = ""
+    index = 0
+    while index < len(pattern):
+        if pattern.startswith("**", index):
+            out, index = out + ".*", index + 2
+        elif pattern[index] == "*":
+            out, index = out + "[^/]*", index + 1
+        else:
+            out, index = out + re.escape(pattern[index]), index + 1
+    return re.compile(out)
+
+
+def _triggers_ci(path: str) -> bool:
+    return any(_glob(pattern).fullmatch(path) for pattern in _workflow_paths())
+
+
+def _fingerprinted_paths() -> set[str]:
+    paths = set(journey.runtime_files())
+    paths.update(journey.CAPTURE_IMPLEMENTATION_INPUTS)
+    for row in SESSIONS:
+        command = journey.canonical_command(row.session)
+        assert command is not None
+        for argument in command.packages:
+            root = journey.package_root(argument)
+            for path in root.rglob("*"):
+                if path.is_file() and "__pycache__" not in path.parts:
+                    paths.add(path.relative_to(journey.REPO).as_posix())
+        paths.add(journey.task_card(row.session).relative_to(journey.REPO).as_posix())
+    return paths
+
+
+def test_every_fingerprint_input_triggers_the_journey_workflow() -> None:
+    missed = sorted(path for path in _fingerprinted_paths() if not _triggers_ci(path))
+    assert not missed, f"{WORKFLOW.name} paths miss fingerprint inputs: {missed}"
+    for path in (
+        journey.MANIFEST_PATH,
+        journey.CALENDAR,
+        PUBLIC_JOURNEY / "s02" / "hero.webp",
+        PUBLIC_JOURNEY / "s05" / "stray.webp",
+        journey.REPO / "scripts" / "make_my_world.py",
+        journey.REPO / "scripts" / "provision_student_workspace.py",
+    ):
+        assert _triggers_ci(path.relative_to(journey.REPO).as_posix()), path
+
+
+def test_the_journey_workflow_ignores_unrelated_changes() -> None:
+    for path in (
+        "README.md",
+        "docs/architecture.md",
+        "course4teen-website/app/page.tsx",
+        "course4teen-website/app/students/slides/s02/page.tsx",
+        "explore/_world.py",
+    ):
+        assert not _triggers_ci(path), path
+
+
+def test_the_journey_workflow_runs_the_standalone_check() -> None:
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "python scripts/capture_journey_snapshots.py --check" in text
+    assert "tests/test_journey_snapshot_freshness.py" in text
