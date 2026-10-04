@@ -35,7 +35,10 @@ visual polish pass (painterly plate, varied props, focal lighting). On
 polished Moon Meadow to S03 (M03). On 2026-10-04 it advanced to
 `cc154e8c7c8c99c6bb2a700fbf82e6ddaab64d6f` for the final Moon Meadow visual-polish pass
 (lighting and depth, Nova's face and silhouette, the crescent Compass and its
-ground halo, and integrated prompts and dialogue). The
+ground halo, and integrated prompts and dialogue). Later on 2026-10-04 it
+advanced to `d8f23818c6bde5692a4b4a914b260d6e8be22777` to bring S04 (M04) into the frozen
+Moon Meadow (the trusted Moonlit Guide, its talk cue, and the dialogue-focus
+bubble). The
 original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
