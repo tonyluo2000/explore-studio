@@ -260,9 +260,14 @@ def test_a_frame_changing_edit_makes_the_check_fail(
     ("path", "sessions"),
     [
         ("lessons/sessions/s04/student/explorer-package/character/guide.yaml", {"S04"}),
+        ("lessons/sessions/s05/student/explorer-package/character/guide.yaml", {"S05"}),
         ("examples/explorer-packages/pixel-companion/character/pixel.yaml", {"S01", "S02"}),
+        (
+            "examples/explorer-packages/crystal-lantern/objects/lantern.yaml",
+            {"S01", "S02", "S04", "S05"},
+        ),
     ],
-    ids=["s04-guide", "pixel"],
+    ids=["s04-guide", "s05-guide", "pixel", "lantern"],
 )
 def test_a_package_edit_stales_only_the_sessions_that_use_it(
     mirror: Path, path: str, sessions: set[str]
@@ -365,12 +370,12 @@ def _copy_entry_as(session: str) -> Callable[[dict], None]:  # type: ignore[type
 BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # 13. A stray asset for a session the website does not publish.
     (
-        "stray-s05-asset",
+        "stray-s06-asset",
         lambda root: (
-            (root / "course4teen-website/public/journey/s05").mkdir(),
-            (root / "course4teen-website/public/journey/s05/hero.webp").write_bytes(b"RIFF"),
+            (root / "course4teen-website/public/journey/s06").mkdir(),
+            (root / "course4teen-website/public/journey/s06/hero.webp").write_bytes(b"RIFF"),
         ),
-        "public/journey/s05/hero.webp is published but not in the manifest",
+        "public/journey/s06/hero.webp is published but not in the manifest",
     ),
     (
         "stray-s01-asset",
@@ -383,8 +388,8 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # a moment the table does not have.
     (
         "unpublished-session-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S05")),
-        "S05 is not published",
+        lambda root: _edit_manifest(root, _copy_entry_as("S06")),
+        "S06 is not published",
     ),
     (
         "deferred-session-entry",
@@ -458,7 +463,7 @@ def test_publish_will_not_relabel_entries_from_an_older_schema(
     monkeypatch.setattr(journey, "load_manifest", lambda path=journey.MANIFEST_PATH: old)
     monkeypatch.setattr(harness, "require_pinned_runtime", lambda root=REPO: ("pin", "runtime"))
     monkeypatch.setattr(harness, "toolchain", lambda: {})
-    with pytest.raises(harness.CaptureError, match="unsupported schema version.*S03, S04"):
+    with pytest.raises(harness.CaptureError, match="unsupported schema version.*S03, S04, S05"):
         harness.publish(["S02"])
 
 
@@ -554,6 +559,14 @@ CANONICAL = {
             "lessons/sessions/s04/student/explorer-package",
         ),
         "introduce-your-character",
+    ),
+    "S05": (
+        (
+            "examples/explorer-packages/nova-character",
+            "examples/explorer-packages/crystal-lantern",
+            "lessons/sessions/s05/student/explorer-package",
+        ),
+        "write-a-short-conversation",
     ),
 }
 
