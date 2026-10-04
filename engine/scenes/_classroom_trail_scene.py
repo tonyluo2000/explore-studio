@@ -498,11 +498,11 @@ class ClassroomTrailScene(Scene):
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
         # The mission whose presentation this Trail wears; None is the plain Trail.
         self._presentation_mission_id = mission.mission_id if story_presentation else None
-        # Cosmetic only and M01-M04-only: observes state after update, never writes it.
+        # Cosmetic only and M01-M05-only: observes state after update, never writes it.
         self._presentation = TrailPresentation(
             self._presentation_mission_id, start=(player.x_float, player.y_float)
         )
-        # Audio only, M02-M04-only, and only with a manager: observes the same
+        # Audio only, M02-M05-only, and only with a manager: observes the same
         # transitions as the presentation and never writes state either.
         self._audio = TrailAudio(
             self._presentation_mission_id, audio, start=(player.x_float, player.y_float)
@@ -918,7 +918,7 @@ class ClassroomTrailScene(Scene):
         super().render()
         # Layers: backdrop and trail zones, ground life, world objects, NPCs,
         # player, overlay effects and panels, HUD, overlay text. Everything
-        # between the backdrop and the HUD beyond the sprites is M01-M04-only.
+        # between the backdrop and the HUD beyond the sprites is M01-M05-only.
         presentation = self._presentation
         draw_classroom_backdrop(self._renderer, self._presentation_mission_id)
         presentation.draw_ground(self._renderer)
@@ -971,7 +971,7 @@ class ClassroomTrailScene(Scene):
                 _TEXT_COLOR,
                 _FEEDBACK_FONT_SIZE,
             )
-        # Same text as feedback_message; only M04's dialogue focus fits a
+        # Same text as feedback_message; only M04-M05 dialogue focus fits a
         # too-long line on screen with an ellipsis.
         message = presentation.fit_feedback(self._renderer, self.feedback_message)
         if message is not None:
@@ -991,7 +991,7 @@ class ClassroomTrailScene(Scene):
         entity: Character | WorldObject,
         color: tuple[int, int, int],
     ) -> None:
-        """Draw one entity at its authoritative bounds, with M01-M04 effects."""
+        """Draw one entity at its authoritative bounds, with M01-M05 effects."""
         presentation = self._presentation
         presentation.draw_under(self._renderer, qualified_id, entity, color)
         with classroom_sprite_pose(presentation.pose_for(qualified_id)):

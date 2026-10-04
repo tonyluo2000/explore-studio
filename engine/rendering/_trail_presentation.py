@@ -1,4 +1,4 @@
-"""Cosmetic presentation layer for the S01-S04 (M01-M04) Classroom Trail.
+"""Cosmetic presentation layer for the S01-S05 (M01-M05) Classroom Trail.
 
 The scene owns gameplay. This layer only *observes* the scene after each
 update (player position, current target, interaction pulse, visited set,
@@ -15,6 +15,9 @@ mission completion) and turns that into animation poses and short effects:
 * The S04 Moonlit Guide breathes, blinks, and gestures as it greets; its
   moon-staff orb glows, a small speech cue floats over it until it has been
   spoken to, and its greeting gets a larger bubble sized to the whole line.
+* In S05 the same Guide continues the conversation: each line of its 2-3-line
+  conversation gets that bubble as it is spoken, and the speech cue stays
+  until the final line has been shown.
 
 It is allow-listed by ``_mission_presentation``: M01 gets only the shared
 layers (no Lantern destination marker, label, celebration, or talk cue; the
@@ -22,8 +25,9 @@ arrival lesson asks students to predict what counts), M02 gets every layer, M03
 gets the shared ones (no discovery label or celebration, since the student's
 own clue and reveal tell that story) and draws its canonical Compass with the
 same trusted art, and M04 gets the shared ones plus the Guide's talk cue and
-dialogue focus, without the Lantern's destination marker. For every other
-Trail it is inert, so S05+ rendering, and any Trail launched without an
+dialogue focus, without the Lantern's destination marker. M05 gets M04's
+layers and draws its canonical Guide with the same trusted art. For every other
+Trail it is inert, so S06+ rendering, and any Trail launched without an
 explicit mission, is unchanged. It never mutates
 the scene, never raises into gameplay, and bounds every effect count.
 
@@ -486,6 +490,7 @@ class TrailPresentation:
         self._previous_complete: bool | None = None
         self._visited: frozenset[str] = frozenset()
         self._spoken: frozenset[str] = frozenset()
+        self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
         self._failed_layers: set[str] = set()
 
@@ -530,10 +535,12 @@ class TrailPresentation:
             self.celebration_start = self.clock
         self._previous_complete = complete
         self._visited = view.visited_qualified_ids
-        # Read-only NPC evidence (M04's completion state); views without it
-        # simply show every talk cue.
+        # Read-only NPC evidence (M04's and M05's completion state); views
+        # without it simply show every talk cue.
         spoken = getattr(view, "spoken_npc_ids", None)
         self._spoken = spoken if isinstance(spoken, frozenset) else frozenset()
+        conversed = getattr(view, "completed_conversation_npc_ids", None)
+        self._conversed = conversed if isinstance(conversed, frozenset) else frozenset()
 
     def _react_to_interaction(self, view: TrailView, target_id: str) -> None:
         trail_object = next((item for item in view.objects if item.qualified_id == target_id), None)
@@ -556,16 +563,33 @@ class TrailPresentation:
         if npc is None:
             return
         self.greet_start[target_id] = self.clock
-        lines = npc.conversation_lines
-        # Only a single-line greeting becomes a bubble; the HUD still shows it too.
-        if len(lines) != 1:
+        line = self._spoken_line(view, npc)
+        # A single-line greeting becomes a bubble; so does each line of a longer
+        # conversation under dialogue focus. The HUD still shows it too.
+        if line is None:
             self.bubble = None
             return
         duration = BUBBLE_DURATION
         if self.policy.dialogue_focus:
-            reading = DIALOGUE_BASE + DIALOGUE_PER_WORD * len(lines[0].split())
+            reading = DIALOGUE_BASE + DIALOGUE_PER_WORD * len(line.split())
             duration = max(BUBBLE_DURATION, min(DIALOGUE_MAX_DURATION, reading))
-        self.bubble = Bubble(target_id, lines[0], self.clock, duration)
+        self.bubble = Bubble(target_id, line, self.clock, duration)
+
+    def _spoken_line(self, view: TrailView, npc: _TrailNPC) -> str | None:
+        """The line *npc* just said, read from the scene's own feedback line.
+
+        A greeting is its one line. For a 2-3-line conversation the scene alone
+        knows which line came next; it shows it as ``"<name>: <line>"``, so the
+        bubble repeats exactly that line and never keeps a second position.
+        """
+        lines = npc.conversation_lines
+        if len(lines) == 1:
+            return lines[0]
+        if not lines or not self.policy.dialogue_focus:
+            return None
+        message = getattr(view, "feedback_message", None)
+        name = npc.character.name
+        return next((line for line in lines if message == f"{name}: {line}"), None)
 
     # ------------------------------------------------------------------
     # Poses
@@ -582,7 +606,7 @@ class TrailPresentation:
         return self.policy.sprite_aliases.get(qualified_id, qualified_id)
 
     def pose_for(self, qualified_id: str | None) -> SpritePose | None:
-        """Return this frame's cosmetic pose, or ``None`` outside M01-M04."""
+        """Return this frame's cosmetic pose, or ``None`` outside M01-M05."""
         if not self.active or qualified_id is None:
             return None
         role = self.sprite_identity(qualified_id)
@@ -1056,13 +1080,20 @@ class TrailPresentation:
         return None
 
     def talk_cue_ids(self, view: TrailView) -> tuple[str, ...]:
-        """Interactable NPCs not yet spoken to: exactly what M04 still needs."""
+        """Talking NPCs the mission still needs: exactly what M04 or M05 waits for.
+
+        A greeting NPC needs speaking to once (M04). An NPC with a 2-3-line
+        conversation needs its final line shown (M05), so its cue stays up
+        between lines.
+        """
         if not self.policy.talk_cue:
             return ()
         return tuple(
             npc.qualified_id
             for npc in view.npcs
-            if npc.conversation_lines and npc.qualified_id not in self._spoken
+            if npc.conversation_lines
+            and npc.qualified_id
+            not in (self._conversed if len(npc.conversation_lines) > 1 else self._spoken)
         )
 
     def _draw_talk_cues(self, renderer: object, view: TrailView) -> None:

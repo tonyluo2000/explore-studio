@@ -18,7 +18,7 @@ from engine.rendering._classroom_sprites import (
     draw_classroom_sprite,
 )
 from engine.scenes import ClassroomTrailObject
-from explore.curriculum import MISSION_01_ID, MISSION_02_ID, MISSION_05_ID
+from explore.curriculum import MISSION_01_ID, MISSION_02_ID, MISSION_06_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -154,7 +154,7 @@ def test_nova_and_pixel_silhouettes_do_not_overlap_at_the_s02_start() -> None:
 def test_backdrop_is_allow_listed_by_explicit_mission() -> None:
     renderer = _RecordingRenderer()
 
-    assert draw_classroom_backdrop(renderer, MISSION_05_ID) is False
+    assert draw_classroom_backdrop(renderer, MISSION_06_ID) is False
     assert draw_classroom_backdrop(renderer, None) is False
     assert renderer.operations == []
     assert draw_classroom_backdrop(_RecordingRenderer(), MISSION_01_ID) is True
@@ -162,7 +162,7 @@ def test_backdrop_is_allow_listed_by_explicit_mission() -> None:
     assert renderer.operations[0] == ("rect", (0, 0, 960, 170, (17, 19, 34)))
 
 
-@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+@pytest.mark.parametrize("mission_id", (MISSION_06_ID, None))
 def test_other_missions_render_without_any_backdrop(mission_id: str | None) -> None:
     renderer = _RecordingRenderer()
     scene = _s02_scene(renderer, mission_id=mission_id)

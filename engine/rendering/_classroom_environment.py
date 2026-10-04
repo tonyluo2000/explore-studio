@@ -1,7 +1,7 @@
-"""Backdrop for the S01-S04 Classroom Trail: the illustrated Moon Meadow.
+"""Backdrop for the S01-S05 Classroom Trail: the illustrated Moon Meadow.
 
 Like the classroom sprites, this is a narrow allow-list rather than a world or
-tile engine: only the missions in ``_mission_presentation`` (M01-M04)
+tile engine: only the missions in ``_mission_presentation`` (M01-M05)
 receive the backdrop, and every other Trail keeps its plain cleared frame. The
 backdrop is static scenery. It reads no entity state, so it can never move,
 resize, or hide the authoritative x/y of any entity; it only decorates the

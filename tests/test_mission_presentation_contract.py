@@ -9,7 +9,7 @@ back to the plain Trail. This module pins, per session, what the canonical
 The standard Trail is a legitimate choice: only listed ``moon-meadow`` sessions
 must show Moon Meadow. A Trail launched without ``--mission-id`` is always the
 standard Trail, even though it runs M01's completion rule. To opt a session
-(S05+) in deliberately:
+(S06+) in deliberately:
 
 1. add its mission to ``MISSION_PRESENTATIONS`` (with any ``sprite_aliases``);
 2. change its row in ``EXPECTED_PRESENTATION`` to ``MOON_MEADOW``;
@@ -57,7 +57,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s02": ("create-a-classroom-object", MOON_MEADOW),
     "s03": ("make-your-object-respond", MOON_MEADOW),
     "s04": ("introduce-your-character", MOON_MEADOW),
-    "s05": ("write-a-short-conversation", STANDARD),
+    "s05": ("write-a-short-conversation", MOON_MEADOW),
     "s06": ("build-an-object-collection", STANDARD),
     "s07": ("toggle-an-object-state", STANDARD),
     "s08": ("respond-to-object-state", STANDARD),
@@ -94,6 +94,7 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
     ),
     "s03": (NOVA_QUALIFIED_ID, "moon-compass-response:compass"),
     "s04": (NOVA_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID, MOONLIT_GUIDE_QUALIFIED_ID),
+    "s05": (NOVA_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID, "moonlit-conversation:guide"),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.
