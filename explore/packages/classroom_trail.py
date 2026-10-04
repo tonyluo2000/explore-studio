@@ -32,6 +32,9 @@ from explore.packages.registration_models import (
 if TYPE_CHECKING:
     from engine.scenes import ClassroomTrailScene
 
+#: The completion rule a Trail without an explicit mission runs. Omitting the
+#: mission never selects M01's story presentation: only an explicit
+#: ``mission_id`` (``--mission-id``) wears its mission's Moon Meadow.
 DEFAULT_CLASSROOM_TRAIL_MISSION_ID: Final = "visit-all-classroom-objects"
 
 
@@ -208,11 +211,13 @@ def create_classroom_trail_scene(
     renderer: object,
     plan: ClassroomTrailPlan,
     *,
-    mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+    mission_id: str | None = None,
     audio: object | None = None,
 ) -> ClassroomTrailScene:
     """Translate one immutable trail plan into engine-owned runtime objects.
 
+    Without *mission_id* the Trail runs M01's completion rule on the plain
+    Trail; an explicit mission id also selects that mission's presentation.
     *audio* is an optional ``engine.audio.AudioManager``; without one the
     Trail is silent. Either way gameplay is identical.
     """
@@ -236,7 +241,10 @@ def create_classroom_trail_scene(
         raise TypeError("plan must be a ClassroomTrailPlan")
     if plan.contract_version != SUPPORTED_CLASSROOM_TRAIL_CONTRACT_VERSION:
         raise ValueError('plan.contract_version must be "0.11"')
-    mission = get_course_mission(mission_id)
+    explicit_mission = mission_id is not None
+    mission = get_course_mission(
+        mission_id if explicit_mission else DEFAULT_CLASSROOM_TRAIL_MISSION_ID
+    )
     if (
         not isinstance(plan.packages, tuple)
         or not plan.packages
@@ -428,6 +436,7 @@ def create_classroom_trail_scene(
         mission=mission,
         player_qualified_id=plan.player.qualified_id,
         audio=audio,  # type: ignore[arg-type]
+        story_presentation=explicit_mission,
     )
 
 
@@ -435,9 +444,12 @@ def run_classroom_trail(
     plan: ClassroomTrailPlan,
     *,
     name: str = "Classroom Trail",
-    mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+    mission_id: str | None = None,
 ) -> None:
     """Run one planned trail locally until the window is closed.
+
+    Without *mission_id* the Trail runs M01's completion rule on the plain
+    Trail, exactly as a free-play class Trail always has.
 
     Missions whose presentation includes Moon Meadow audio get it; M toggles
     mute. ``EXPLORE_STUDIO_AUDIO=muted`` starts muted, ``=off`` never opens
@@ -450,7 +462,8 @@ def run_classroom_trail(
     from engine.rendering import Renderer
     from explore.curriculum import get_course_mission
 
-    get_course_mission(mission_id)
+    if mission_id is not None:
+        get_course_mission(mission_id)
     config = Config(app_name=name)
     platform = Platform(config)
     platform.initialize()

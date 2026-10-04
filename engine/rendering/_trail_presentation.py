@@ -1,4 +1,4 @@
-"""Cosmetic presentation layer for the S02-S04 (M02-M04) Classroom Trail.
+"""Cosmetic presentation layer for the S01-S04 (M01-M04) Classroom Trail.
 
 The scene owns gameplay. This layer only *observes* the scene after each
 update (player position, current target, interaction pulse, visited set,
@@ -16,12 +16,15 @@ mission completion) and turns that into animation poses and short effects:
   moon-staff orb glows, a small speech cue floats over it until it has been
   spoken to, and its greeting gets a larger bubble sized to the whole line.
 
-It is allow-listed by ``_mission_presentation``: M02 gets every layer, M03
+It is allow-listed by ``_mission_presentation``: M01 gets only the shared
+layers (no Lantern destination marker, label, celebration, or talk cue; the
+arrival lesson asks students to predict what counts), M02 gets every layer, M03
 gets the shared ones (no discovery label or celebration, since the student's
 own clue and reveal tell that story) and draws its canonical Compass with the
 same trusted art, and M04 gets the shared ones plus the Guide's talk cue and
 dialogue focus, without the Lantern's destination marker. For every other
-Trail it is inert, so S01 and S05+ rendering is unchanged. It never mutates
+Trail it is inert, so S05+ rendering, and any Trail launched without an
+explicit mission, is unchanged. It never mutates
 the scene, never raises into gameplay, and bounds every effect count.
 
 Internal module — not part of the Student API.
@@ -464,7 +467,7 @@ def place_clear_panel(
 class TrailPresentation:
     """Observe one Trail scene and draw its mission-gated cosmetic layer."""
 
-    def __init__(self, mission_id: str, start: tuple[float, float] | None = None) -> None:
+    def __init__(self, mission_id: str | None, start: tuple[float, float] | None = None) -> None:
         policy = mission_presentation(mission_id)
         self.active = policy is not None
         #: Inactive missions get the empty policy: no extras and no aliases.
@@ -579,7 +582,7 @@ class TrailPresentation:
         return self.policy.sprite_aliases.get(qualified_id, qualified_id)
 
     def pose_for(self, qualified_id: str | None) -> SpritePose | None:
-        """Return this frame's cosmetic pose, or ``None`` outside M02/M03."""
+        """Return this frame's cosmetic pose, or ``None`` outside M01-M04."""
         if not self.active or qualified_id is None:
             return None
         role = self.sprite_identity(qualified_id)

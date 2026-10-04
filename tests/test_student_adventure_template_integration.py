@@ -158,14 +158,13 @@ def test_pinned_standalone_template_contract(tmp_path: Path) -> None:
     )
     assert starter_output.splitlines() == [
         "The crystal lantern glows beside the path.",
-        "The river fountain sounds like quiet rain.",
-        "Fern waits near the edge of the trail.",
+        "A small robot waits by the landing pad.",
+        "Tall stones circle an empty clearing.",
     ]
     for package_id in (
         "nova-character",
-        "forest-guide",
+        "pixel-companion",
         "crystal-lantern",
-        "river-fountain",
     ):
         _run(
             [
@@ -206,9 +205,8 @@ def test_pinned_standalone_template_contract(tmp_path: Path) -> None:
         result = main([
             "trail",
             "examples/explorer-packages/nova-character",
-            "examples/explorer-packages/forest-guide",
+            "examples/explorer-packages/pixel-companion",
             "examples/explorer-packages/crystal-lantern",
-            "examples/explorer-packages/river-fountain",
             "--player", "nova-character:nova",
             "--mission-id", "visit-all-classroom-objects",
             "--name", "S01 Clean Workspace Rehearsal",

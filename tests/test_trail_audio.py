@@ -242,13 +242,15 @@ def test_audio_is_explicitly_allow_listed_for_m02_m03_m04_only() -> None:
     assert {
         mission_id for mission_id, policy in MISSION_PRESENTATIONS.items() if policy.meadow_audio
     } == {MISSION_02_ID, MISSION_03_ID, MISSION_04_ID}
-    assert mission_presentation(MISSION_01_ID) is None
+    # M01 wears the Moon Meadow but stays silent.
+    m01 = mission_presentation(MISSION_01_ID)
+    assert m01 is not None and not m01.meadow_audio
     for mission_id in LATER_MISSIONS:
         assert mission_presentation(mission_id) is None
 
 
-@pytest.mark.parametrize("mission_id", (MISSION_01_ID, *LATER_MISSIONS))
-def test_m01_and_m05_plus_stay_silent_even_with_a_manager(mission_id: str) -> None:
+@pytest.mark.parametrize("mission_id", (MISSION_01_ID, None, *LATER_MISSIONS))
+def test_m01_and_m05_plus_stay_silent_even_with_a_manager(mission_id: str | None) -> None:
     backend = FakeBackend()
     manager = _manager(backend)
     renderer = ArtRenderer()

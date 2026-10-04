@@ -1,7 +1,7 @@
-"""Backdrop for the S02/S03 Classroom Trail: the illustrated Moon Meadow.
+"""Backdrop for the S01-S04 Classroom Trail: the illustrated Moon Meadow.
 
 Like the classroom sprites, this is a narrow allow-list rather than a world or
-tile engine: only the missions in ``_mission_presentation`` (M02 and M03)
+tile engine: only the missions in ``_mission_presentation`` (M01-M04)
 receive the backdrop, and every other Trail keeps its plain cleared frame. The
 backdrop is static scenery. It reads no entity state, so it can never move,
 resize, or hide the authoritative x/y of any entity; it only decorates the
@@ -350,7 +350,7 @@ def illustrated_backdrop_available(renderer: object) -> bool:
         return False
 
 
-def draw_classroom_backdrop(renderer: _SpriteRenderer, mission_id: str) -> bool:
+def draw_classroom_backdrop(renderer: _SpriteRenderer, mission_id: str | None) -> bool:
     """Draw the Moon Meadow behind entities; report whether it completed."""
     if mission_presentation(mission_id) is None:
         return False

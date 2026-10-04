@@ -43,8 +43,8 @@ REQUIRED_TASK_CARD_CONTENT = (
 EXPECTED_STARTER_OUTPUTS = {
     "s01": (
         "The crystal lantern glows beside the path.\n"
-        "The river fountain sounds like quiet rain.\n"
-        "Fern waits near the edge of the trail.\n"
+        "A small robot waits by the landing pad.\n"
+        "Tall stones circle an empty clearing.\n"
     ),
     "s02": "Moon Compass\n240 180\npurple\n",
     "s03": "Moon Compass\nThe Moon Compass points past the trees to a guide's lantern!\n",

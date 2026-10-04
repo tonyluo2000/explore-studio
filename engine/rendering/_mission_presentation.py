@@ -7,6 +7,11 @@ audio. A mission absent
 from :data:`MISSION_PRESENTATIONS` keeps the plain cleared frame and the static
 procedural sprites, exactly as before.
 
+A mission id must be chosen explicitly to receive its presentation: a Trail
+launched without ``--mission-id`` keeps M01's completion rule on the plain
+Trail (see ``explore.packages.classroom_trail``), so M01's entry here never
+leaks into free-play runs.
+
 Presentation never changes gameplay. Per-mission options only *withhold*
 story beats that belong to one session, and alias a mission's canonical
 package identity onto the trusted art it should wear.
@@ -23,9 +28,9 @@ from typing import Final
 
 from engine.rendering._classroom_sprites import MOON_COMPASS_QUALIFIED_ID
 
-#: Match ``explore.curriculum.MISSION_02_ID`` / ``MISSION_03_ID`` /
-#: ``MISSION_04_ID`` without importing the course layer into the engine (a test
-#: keeps them equal).
+#: Match ``explore.curriculum.MISSION_01_ID`` .. ``MISSION_04_ID`` without
+#: importing the course layer into the engine (a test keeps them equal).
+S01_MISSION_ID: Final = "visit-all-classroom-objects"
 S02_MISSION_ID: Final = "create-a-classroom-object"
 S03_MISSION_ID: Final = "make-your-object-respond"
 S04_MISSION_ID: Final = "introduce-your-character"
@@ -65,6 +70,10 @@ class MissionPresentation:
 
 MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyType(
     {
+        # S01 is the arrival: the frozen meadow, Nova, Pixel, and the Lantern
+        # with the shared layers only. No waypoint (students predict what
+        # counts), no M02 label or celebration, no talk cue, and no audio.
+        S01_MISSION_ID: MissionPresentation(),
         S02_MISSION_ID: MissionPresentation(
             discovery_label=True, celebration=True, lantern_waypoint=True, meadow_audio=True
         ),
@@ -86,6 +95,6 @@ MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyTy
 )
 
 
-def mission_presentation(mission_id: str) -> MissionPresentation | None:
+def mission_presentation(mission_id: str | None) -> MissionPresentation | None:
     """Return the mission's presentation, or ``None`` for the plain Trail."""
     return MISSION_PRESENTATIONS.get(mission_id) if isinstance(mission_id, str) else None

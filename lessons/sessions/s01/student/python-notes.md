@@ -14,8 +14,8 @@ Session 1 · Explorer's Field Notes
 
 ```python
 print("The crystal lantern glows beside the path.")
-print("The river fountain sounds like quiet rain.")
-print("Fern waits near the edge of the trail.")
+print("A small robot waits by the landing pad.")
+print("Tall stones circle an empty clearing.")
 ```
 
 We ran it from the course folder:
@@ -37,8 +37,8 @@ Output:
 
 ```text
 The crystal lantern glows beside the path.
-The river fountain sounds like quiet rain.
-Fern waits near the edge of the trail.
+A small robot waits by the landing pad.
+Tall stones circle an empty clearing.
 ```
 
 ## 4. Why programmers use this
@@ -51,7 +51,7 @@ in nearly all Python code, far beyond games.
 ## 5. What we debugged
 
 ```python
-print("The lantern flickers near the fountain.')
+print("The lantern flickers near the pond.')
 ```
 
 Python reported:
@@ -65,7 +65,7 @@ Python keeps looking for a matching `"` and reaches the end of the line
 without finding one. Fix: make both quotes match.
 
 ```python
-print("The lantern flickers near the fountain.")
+print("The lantern flickers near the pond.")
 ```
 
 ## 6. Key Python words

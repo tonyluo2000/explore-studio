@@ -53,7 +53,7 @@ from engine.rendering._trail_presentation import (
     wrap_text,
 )
 from engine.scenes import ClassroomTrailObject
-from explore.curriculum import MISSION_01_ID, MISSION_02_ID
+from explore.curriculum import MISSION_02_ID, MISSION_05_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -128,7 +128,7 @@ class GameRenderer:
         return {str(values[0]): values for kind, values in self.operations if kind == "sprite"}
 
 
-def _scene(renderer: object, *, mission_id: str = MISSION_02_ID, package_roots=S02_PACKAGES):  # type: ignore[no-untyped-def]
+def _scene(renderer: object, *, mission_id: str | None = MISSION_02_ID, package_roots=S02_PACKAGES):  # type: ignore[no-untyped-def]
     planned = plan_local_classroom_trail(package_roots, player_qualified_id=NOVA_QUALIFIED_ID)
     assert planned.is_planned, planned.issues
     scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=mission_id)
@@ -932,9 +932,11 @@ def test_render_order_keeps_hud_text_first_after_all_shapes() -> None:
     assert 0 < kinds.index("shadow") < first_entity  # ground and shadows beneath entities
 
 
-def test_other_missions_are_untouched_by_the_presentation_layer() -> None:
+@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+def test_other_missions_are_untouched_by_the_presentation_layer(mission_id: str | None) -> None:
+    # None is a Trail launched without --mission-id: M01 rules, plain Trail.
     renderer = GameRenderer()
-    scene = _scene(renderer, mission_id=MISSION_01_ID)
+    scene = _scene(renderer, mission_id=mission_id)
     scene.update(STILL, NO_E, STEP)
     renderer.operations.clear()
     scene.render()

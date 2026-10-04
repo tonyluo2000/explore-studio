@@ -12,12 +12,12 @@ No Git client, GitHub account, or clone is required for this session.
 
 ## Expedition context
 
-S01 opens the shared expedition with the lightest possible touch: students are
-arriving somewhere unfamiliar and starting a field notebook. This is narrative
-framing only — mechanics, Trail behavior, and M01 completion are unchanged.
-Do not steer students toward a specific "worth investigating" answer or
-mention the Moon Compass; S02 introduces it independently, and S01 must stand
-on its own as simple first-day practice.
+S01 is the arrival chapter, told with the lightest possible touch: Nova has
+just landed at the **Landing Site** in **Moon Meadow** and starts field notes.
+This is narrative framing only — M01 completion is unchanged, and the story
+stays secondary to Python. Do not steer students toward a specific "worth
+investigating" answer or mention the Moon Compass; S02 introduces it
+independently, and S01 must stand on its own as simple first-day practice.
 
 Slide 1 is the first impression of the whole course: *Explore Studio — Learn
 Python. Explore Worlds. Build Your Own.* It introduces Nova (the reference
@@ -25,7 +25,9 @@ explorer) and Pixel (Nova's companion), and promises that over the year each
 student will create their own explorer, companion, and interactive world with
 Python. It is a promise, not a lesson: S01 teaches only running Python,
 `print(...)`, strings, quotation marks, output, and basic debugging. Do not
-introduce variables; S02 does. Pixel is not in the S01 Trail. See
+introduce variables; S02 does. Pixel waits by the landing pad in the S01 Trail
+for continuity only: it is a character, it never counts toward `Visited`, and
+nothing is required of it. See
 [Course Identity](../../../docs/course-identity.md).
 
 ## Before class
@@ -44,7 +46,7 @@ introduce variables; S02 does. Pixel is not in the S01 Trail. See
   `.venv`, Python, `explore-package`, Trail open/close, controls, window
   switching, and screen-sharing readiness. Git identity is not part of S01.
 - Confirm `python lessons/sessions/s01/student/starter.py` runs locally.
-- Confirm the four example package directories in the world command below
+- Confirm the three example package directories in the world command below
   validate. Screen-share controls; students run their own local copy.
 - Ask students to rename or copy the starter only if that matches the class
   setup. Do not edit engine code or package files in this session.
@@ -53,10 +55,10 @@ introduce variables; S02 does. Pixel is not in the S01 Trail. See
 
 | Clock anchor | Range | Teacher move | Student evidence |
 |---:|---:|---|---|
-| 0:00–0:05 | 4–5 min | Open on slide 1 (Nova, Pixel, and the year's promise), then show the local trail. Ask, “What would an explorer write down here?” | Names one sensory or story detail. |
-| 0:05–0:12 | 6–8 min | Model a string literal and `print`. Before running, ask which visible things should count toward M01 completion. | Predicts that world objects—not the player or guide—fill the visited count. |
+| 0:00–0:05 | 4–5 min | Open on slide 1 (Nova, Pixel, and the year's promise), then show the local Trail: Nova has just landed in Moon Meadow. Ask, “What would an explorer write down here?” | Names one sensory or story detail. |
+| 0:05–0:12 | 6–8 min | Model a string literal and `print`. Before running, ask which visible things should count toward M01 completion. | Predicts that world objects—not Nova or Pixel—fill the visited count. |
 | 0:12–0:24 | 11–15 min | Open `student/starter.py`. Students personalize exactly three observations, run the file after each change, then choose one detail worth investigating next. | Three readable printed lines and one self-chosen detail, with no forced answer. |
-| 0:24–0:37 | 9–13 min | Launch M01. Coach window focus, WASD/arrows, and E; compare the count with the prediction. | Both objects visited and the trail reports completion. |
+| 0:24–0:37 | 9–13 min | Launch M01. Coach window focus, WASD/arrows, and E; compare the count with the prediction. | The Crystal Lantern visited and the trail reports completion. |
 | 0:37–0:42 | 4–6 min | Give the quoting bug below. Students predict the cause, repair it, and rerun. | Explains that an opening quote needs a matching closing quote. |
 | 0:42–0:45 | 3–5 min | Ask for one observation and one test result. Confirm the file is saved. | States which line changed and why, with the saved file as evidence. |
 
@@ -85,9 +87,8 @@ ___ things count because ___.” Then run:
 ```console
 explore-package trail \
   examples/explorer-packages/nova-character \
-  examples/explorer-packages/forest-guide \
+  examples/explorer-packages/pixel-companion \
   examples/explorer-packages/crystal-lantern \
-  examples/explorer-packages/river-fountain \
   --player "nova-character:nova" \
   --mission-id "visit-all-classroom-objects" \
   --name "S01 Explorer's Field Notes"
@@ -100,17 +101,21 @@ Use the local movement controls and interact with each world object.
 Predict the error before running this line, then fix only the quotation marks:
 
 ```python
-print("The lantern flickers near the fountain.')
+print("The lantern flickers near the pond.')
 ```
 
 Ask: “Where does Python think the string starts, and where should it end?”
 
 ## Expected output and behavior
 
-The starter prints three lines in order. Personalized wording may differ. In
-the Trail, the player and NPC do not increase `Visited`; interacting with the
-Crystal Lantern and River Fountain produces `Visited 2 / 2` and
-`Trail complete!`.
+The starter prints three lines in order. Personalized wording may differ.
+
+The Trail opens on Moon Meadow at the Landing Site: Nova, Pixel beside the
+landing pad, the Crystal Lantern's shrine down the path, and an empty circle of
+standing stones nearby. Nova and Pixel do not increase `Visited`; pressing E
+near Pixel shows its greeting but never changes the count. Interacting with the
+Crystal Lantern produces `Visited 1 / 1` and `Trail complete!`. The S01 Trail
+is silent.
 
 ## Bounded AI assistance
 
@@ -146,11 +151,14 @@ not add or change a mission.
   students toward a specific detail and do not mention the Moon Compass — S02
   introduces it on its own, and S01 must stand alone as simple field-note
   practice.
-- Correct bug: `print("The lantern flickers near the fountain.")` (matching
+- Correct bug: `print("The lantern flickers near the pond.")` (matching
   single quotes are also valid).
 - Accept creative sentences if each is one valid string passed to `print`.
-- Watch for smart quotes pasted from chat and for students counting Fern as a
-  visited object. Fern is a character; M01 completion counts world objects.
+- Watch for smart quotes pasted from chat and for students counting Pixel as a
+  visited object. Pixel is a companion character; M01 completion counts world
+  objects. Talking to Pixel is optional and is not evidence.
+- The empty stone circle near the landing site is scenery. If students notice
+  it, let it stay a field-note mystery: do not say what belongs there.
 - If controls fail, check Trail-window focus before changing code. Close the
   window or use Control-C once before relaunching.
 - Success means the student can explain literal, string, `print`, prediction,

@@ -50,9 +50,9 @@ const slides: Slide[] = [
     body: (
       <>
         <p>
-          You&rsquo;re stepping into an unfamiliar place, and the first thing
-          any explorer does is start a field notebook. Today&rsquo;s three
-          observations are the opening page of yours.
+          Nova has just landed in Moon Meadow, an unfamiliar place, and the
+          first thing any explorer does is start a field notebook.
+          Today&rsquo;s three observations are the opening page of yours.
         </p>
         <p>
           <strong>Mission:</strong> <code>visit-all-classroom-objects</code>
@@ -71,14 +71,14 @@ const slides: Slide[] = [
     body: (
       <>
         <p>
-          <strong>Who&rsquo;s who today:</strong> you move Nova, the explorer.
-          Fern is a guide character. The Crystal Lantern and River Fountain are
-          world objects.
+          <strong>Who&rsquo;s who today:</strong> you move Nova, the explorer,
+          from the Landing Site. Pixel, Nova&rsquo;s companion, waits by the
+          landing pad. The Crystal Lantern is a world object.
         </p>
         <p>
           Write it down: &ldquo;I think ___ visible things will increase{" "}
-          <code>Visited</code> because ___.&rdquo; Decide whether the player,
-          Fern, the lantern, and the fountain should count.
+          <code>Visited</code> because ___.&rdquo; Decide whether Nova, Pixel,
+          and the lantern should count.
         </p>
       </>
     ),
@@ -122,7 +122,7 @@ const slides: Slide[] = [
     body: (
       <>
         <pre className="slide-code">
-          <code>{`print("The lantern flickers near the fountain.')`}</code>
+          <code>{`print("The lantern flickers near the pond.')`}</code>
         </pre>
         <p>
           Evidence: explain where Python thinks the string begins and where

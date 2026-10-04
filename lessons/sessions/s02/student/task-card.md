@@ -141,8 +141,8 @@ each one is a string.
 | Explorer: `explorer_name`, `looks_like`, `personality`, `favorite_subject` | `explorer.py` | Your explorer output (Card or printed lines) | No. Display only. |
 | Companion: `companion_name`, `companion_kind`, `personality`, `specialty` | `companion.py` | Your companion output (Card or printed lines) | No. Display only. |
 | Companion: `future_ability` | `companion.py` | "PLAN for later" in your output | No. A plan for later. |
-| Moon Compass: `x`, `y` | `compass.yaml` | Where the compass box sits | **Yes.** It moves. |
-| Moon Compass: `color` | `compass.yaml` | The compass box color | **Yes.** |
+| Moon Compass: `x`, `y` | `compass.yaml` | Where the Moon Compass sits | **Yes.** It moves. |
+| Moon Compass: `color` | `compass.yaml` | The Moon Compass color | **Yes.** |
 | Moon Compass: `name` | `compass.yaml` | Stored in the file | No. Not a permanent label and no mission effect; a nearby `[E] Inspect` prompt may show it. |
 
 | File | What it is for |
@@ -154,8 +154,10 @@ each one is a string.
 ## Your first expedition tool
 
 The Moon Compass is the expedition's first instrument, and **you** decide
-where it lives. The Crystal Lantern is already in the world and marks the end
-of the trail. Where you place the compass is a world decision, not just a
+where it lives. Remember the empty circle of stones near where Nova landed?
+That is **Compass Clearing**, and the sample `x = 240`, `y = 180` puts the
+compass right there. The Crystal Lantern is already in the world and marks the
+end of the trail. Where you place the compass is a world decision, not just a
 coordinate exercise: put it somewhere an explorer would actually notice it and
 want to reach on the way.
 
