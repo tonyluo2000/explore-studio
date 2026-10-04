@@ -101,3 +101,18 @@ this check before debugging their code.
 Record only device or image identifiers and pass/fail results, never student
 credentials or personal data. This flow is manual on purpose: there is no
 remote management of student computers.
+
+## Trail sound (S02-S04)
+
+The S02-S04 Moon Meadow Trail plays quiet, optional sound: a soft night
+ambience, gentle chimes on interactions, and a short motif on mission
+complete. There are no voices, and nothing in a lesson needs sound.
+
+- **Press M** in the Trail window to mute or unmute it. A small
+  "Audio: On" / "Audio: Muted" label in the bottom-right corner shows the state.
+  Mute before you explain something; the Trail keeps working.
+- If Zoom shares your computer's sound when you did not expect it, press M.
+- `EXPLORE_STUDIO_AUDIO=muted` starts the Trail muted; `EXPLORE_STUDIO_AUDIO=off`
+  never opens audio at all.
+- A computer without working audio (common in WSL) simply runs the Trail
+  silently. Nothing to fix; every sound has an on-screen twin.

@@ -209,8 +209,13 @@ def create_classroom_trail_scene(
     plan: ClassroomTrailPlan,
     *,
     mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
+    audio: object | None = None,
 ) -> ClassroomTrailScene:
-    """Translate one immutable trail plan into engine-owned runtime objects."""
+    """Translate one immutable trail plan into engine-owned runtime objects.
+
+    *audio* is an optional ``engine.audio.AudioManager``; without one the
+    Trail is silent. Either way gameplay is identical.
+    """
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
     from engine.scenes import (
@@ -422,6 +427,7 @@ def create_classroom_trail_scene(
         engine_npcs,
         mission=mission,
         player_qualified_id=plan.player.qualified_id,
+        audio=audio,  # type: ignore[arg-type]
     )
 
 
@@ -431,9 +437,15 @@ def run_classroom_trail(
     name: str = "Classroom Trail",
     mission_id: str = DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
 ) -> None:
-    """Run one planned trail locally until the window is closed."""
+    """Run one planned trail locally until the window is closed.
+
+    Missions whose presentation includes Moon Meadow audio get it; M toggles
+    mute. ``EXPLORE_STUDIO_AUDIO=muted`` starts muted, ``=off`` never opens
+    the mixer. A machine without working audio simply runs silently.
+    """
     from engine._config import Config
     from engine._platform import Platform
+    from engine.audio import AudioManager, AudioMode, audio_mode_from_environment
     from engine.input import InteractionInput
     from engine.rendering import Renderer
     from explore.curriculum import get_course_mission
@@ -442,15 +454,23 @@ def run_classroom_trail(
     config = Config(app_name=name)
     platform = Platform(config)
     platform.initialize()
+    audio_mode = audio_mode_from_environment()
+    audio = (
+        None
+        if audio_mode is AudioMode.OFF
+        else AudioManager(platform.audio_backend(), muted=audio_mode is AudioMode.MUTED)
+    )
     scene: ClassroomTrailScene | None = None
     try:
         renderer = Renderer(platform)
-        scene = create_classroom_trail_scene(renderer, plan, mission_id=mission_id)
+        scene = create_classroom_trail_scene(renderer, plan, mission_id=mission_id, audio=audio)
         scene.enter()
         while True:
             events = platform.poll_frame_events()
             if events.quit_requested:
                 break
+            if events.audio_toggle_pressed:
+                scene.toggle_audio_mute()
             dt = platform.tick()
             directional_input = platform.poll_directional_input()
             scene.update(
@@ -464,4 +484,6 @@ def run_classroom_trail(
     finally:
         if scene is not None:
             scene.exit()
+        if audio is not None:
+            audio.shutdown()
         platform.shutdown()
