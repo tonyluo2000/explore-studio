@@ -86,6 +86,7 @@ jobs:
           python -m pytest -q
           tests/test_lesson_materials.py
           tests/test_lesson_materials_s03_website.py
+          tests/test_lesson_materials_s04_website.py
           tests/test_lesson_materials_s06_s10.py
           tests/test_lesson_materials_s11_s15.py
           tests/test_lesson_materials_s16_s20.py

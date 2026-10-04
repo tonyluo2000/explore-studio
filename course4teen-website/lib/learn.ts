@@ -274,6 +274,100 @@ The Moon Compass points past the trees to a guide's lantern!`,
       "Write a second, harder clue that hints at the same reveal with less detail.",
     ],
   },
+  {
+    id: "S04",
+    sourceFile: "task-card.md",
+    concepts: [
+      {
+        term: "function",
+        meaning: "A named, reusable set of steps. Define it once, then call it as many times as you need.",
+      },
+      {
+        term: "def",
+        meaning: "The keyword that defines a function: def, the function name, parentheses, then a colon.",
+      },
+      {
+        term: "parameter",
+        meaning: "The name in the definition's parentheses. In def greet(name):, name is the parameter.",
+      },
+      {
+        term: "argument",
+        meaning: "The value in a call's parentheses. In greet(\"Ari\"), \"Ari\" is the argument, and it becomes name.",
+      },
+      {
+        term: "Python to the world",
+        meaning:
+          "greet(name) runs on your computer. The guide's greeting in the Trail is plain text in the YAML greeting field.",
+      },
+    ],
+    code: `def greet(name):
+    place = "Moonlit Trail"
+    print(f"Welcome to {place}, {name}!")
+
+
+greet("Ari")
+greet("Sam")`,
+    runCommand: "python lessons/sessions/s04/student/starter.py",
+    output: `Welcome to Moonlit Trail, Ari!
+Welcome to Moonlit Trail, Sam!`,
+    meanings: [
+      {
+        term: "def greet(name):",
+        meaning:
+          "Defines a function named greet with one parameter, name. Defining it does not run it; nothing prints yet.",
+      },
+      {
+        term: "place = \"Moonlit Trail\"",
+        meaning:
+          "The first body line. In the starter it says \"TODO: name your setting\" until you replace it with your setting name.",
+      },
+      {
+        term: "print(f\"Welcome to {place}, {name}!\")",
+        meaning:
+          "Uses the value inside the function: {name} becomes whatever argument the call sent in. Both body lines are indented by the same four spaces.",
+      },
+      {
+        term: "greet(\"Ari\")",
+        meaning: "A call. It runs the body with name set to \"Ari\" and prints the first line.",
+      },
+      {
+        term: "greet(\"Sam\")",
+        meaning: "Your second call, with a name you choose. Same body, different argument, different line.",
+      },
+      {
+        term: "greeting:",
+        meaning:
+          "The YAML field in character/guide.yaml. One sentence that tells who the guide is, what the trail problem is, and what help it needs. Press E beside the Moonlit Guide to see it in the speech bubble.",
+      },
+    ],
+    why: [
+      "Functions let you write a set of steps once and reuse it. Fix or change the body, and every call gets the change.",
+      "Parameters make one function work for many values: the same greet body welcomes Ari, Sam, or anyone else.",
+      "Outside Explore Studio: a game that greets each player by name, or an app that sends \"Happy birthday\" to whoever's birthday it is, calls one function with a different argument each time.",
+    ],
+    debugged: {
+      broken: `greet()`,
+      error: "TypeError: greet() missing 1 required positional argument: 'name'",
+      explanation:
+        "greet has one parameter, name, so every call needs one argument to fill it. greet() sends none. Read the final traceback line for the error type, then move upward to the first line naming starter.py to find the line number. Fix the call; do not remove or add a parameter to hide the error.",
+      fixed: `greet("Kai")`,
+    },
+    keyWords: [
+      { term: "function", meaning: "A named, reusable set of steps." },
+      { term: "def", meaning: "The keyword that starts a function definition." },
+      { term: "parameter", meaning: "The name in a definition's parentheses that receives a value." },
+      { term: "argument", meaning: "The value placed in a call's parentheses." },
+      { term: "call", meaning: "Using a function's name with parentheses to run its body." },
+      { term: "indentation", meaning: "The four spaces that put lines inside the function body." },
+      { term: "traceback", meaning: "Python's error report: the error type on the last line, and the file and line above it." },
+    ],
+    tryIt: [
+      "Predict, then test: add greet(\"Kai\"). What exact line will it print?",
+      "Change place to your own setting name. How many printed lines change?",
+      "Remove the four spaces before the print line, run the file, and read the error. Then put them back.",
+      "Rewrite the guide's YAML greeting in one sentence using your three voice words, then read it in the speech bubble.",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);
