@@ -62,12 +62,12 @@ export const learnSessions: SessionLearning[] = [
       },
     ],
     code: `print("The crystal lantern glows beside the path.")
-print("The river fountain sounds like quiet rain.")
-print("Fern waits near the edge of the trail.")`,
+print("A small robot waits by the landing pad.")
+print("Tall stones circle an empty clearing.")`,
     runCommand: "python lessons/sessions/s01/student/starter.py",
     output: `The crystal lantern glows beside the path.
-The river fountain sounds like quiet rain.
-Fern waits near the edge of the trail.`,
+A small robot waits by the landing pad.
+Tall stones circle an empty clearing.`,
     meanings: [
       { term: "print(", meaning: "“Show something in the terminal.”" },
       {
@@ -86,11 +86,11 @@ Fern waits near the edge of the trail.`,
       "Almost every program works with text, so strings appear in nearly all Python code, far beyond games.",
     ],
     debugged: {
-      broken: `print("The lantern flickers near the fountain.')`,
+      broken: `print("The lantern flickers near the pond.')`,
       error: "SyntaxError: unterminated string literal (detected at line 1)",
       explanation:
         "The string starts with a double quote but ends with a single quote. Python keeps looking for a matching double quote and reaches the end of the line without finding one.",
-      fixed: `print("The lantern flickers near the fountain.")`,
+      fixed: `print("The lantern flickers near the pond.")`,
     },
     keyWords: [
       { term: "print", meaning: "A built-in Python function that shows output." },

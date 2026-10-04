@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from explore.packages.classroom_trail import (
-    DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
     plan_local_classroom_trail,
     run_classroom_trail,
 )
@@ -69,8 +68,11 @@ def _parser() -> argparse.ArgumentParser:
     trail.add_argument("--name", default="Classroom Trail", help="local window title")
     trail.add_argument(
         "--mission-id",
-        default=DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
-        help="exact canonical course mission ID",
+        default=None,
+        help=(
+            "exact canonical course mission ID; omitted, the plain Trail runs "
+            "the visit-all-classroom-objects completion rule"
+        ),
     )
     return parser
 

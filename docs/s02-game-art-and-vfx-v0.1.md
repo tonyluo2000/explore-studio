@@ -37,17 +37,21 @@ Unchanged:
 - the HUD text and its positions
 
 Everything new is cosmetic, is allow-listed by mission id, and is inert for
-every other Trail, so S01 and S05+ draw exactly what they drew before.
+every other Trail, so S05+ draw exactly what they drew before. Only an
+explicit mission id selects a presentation: a Trail launched without
+`--mission-id` runs M01's completion rule on the plain Trail, so free-play
+Trails never inherit S01's Moon Meadow.
 
 The allow-list is the explicit policy in
 `engine/rendering/_mission_presentation.py`:
 
 | Mission | Presentation |
 |---|---|
+| M01 `visit-all-classroom-objects` | The S01 arrival: Moon Meadow and the shared layers only (plate and foreground, ambient life, Nova, Pixel, the Lantern's trusted art and light, entity effects, HUD panel, and the `E` prompt). No Lantern waypoint (students predict what counts), no M02 label or celebration, no talk cue or dialogue focus, and no audio. Pixel stays a non-counting NPC. |
 | M02 `create-a-classroom-object` | Moon Meadow, every shared layer, plus the M02-only Compass "discovered!" label and the mission-complete confetti and banner. |
 | M03 `make-your-object-respond` | Moon Meadow and the shared layers only: plate and foreground, ambient life, Nova V3, trusted Compass art, entity effects, HUD panel, and the `E` prompt. The canonical S03 Compass (`moon-compass-response:compass`) is aliased onto the trusted Moon Compass art. The student's own `when_near` clue and `when_interacted` reveal carry the story, so the M02 label and celebration stay out. |
 | M04 `introduce-your-character` | Moon Meadow and the shared layers, plus the trusted Moonlit Guide (`moonlit-guide:guide`), a talk cue over each interactable NPC not yet spoken to, and dialogue focus (a larger bubble sized to the whole greeting and an on-screen HUD echo). M04 completes by talking, so the Lantern keeps its art and light but loses its destination waypoint, and the M02 label and celebration stay out. |
-| Every other mission | Unchanged plain Trail. |
+| Every other mission, and no `--mission-id` | Unchanged plain Trail. |
 
 Proof frames for M03 come from `scripts/capture_s03_visual_proof.py`; see
 `docs/visual-proof/s03-moon-meadow/`.

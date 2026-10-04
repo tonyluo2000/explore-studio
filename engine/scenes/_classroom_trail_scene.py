@@ -439,7 +439,13 @@ class ClassroomTrailScene(Scene):
         interaction_range: float | int = _DEFAULT_INTERACTION_RANGE,
         player_qualified_id: str | None = None,
         audio: AudioSink | None = None,
+        story_presentation: bool = True,
     ) -> None:
+        """*story_presentation* ``False`` keeps the plain Trail whatever the mission.
+
+        It is for a mission that was not chosen explicitly (a Trail launched
+        without ``--mission-id``); gameplay is identical either way.
+        """
         super().__init__()
         if not isinstance(player, Character):
             raise TypeError("player must be a Character")
@@ -490,13 +496,17 @@ class ClassroomTrailScene(Scene):
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
-        # Cosmetic only and M02-M04-only: observes state after update, never writes it.
+        # The mission whose presentation this Trail wears; None is the plain Trail.
+        self._presentation_mission_id = mission.mission_id if story_presentation else None
+        # Cosmetic only and M01-M04-only: observes state after update, never writes it.
         self._presentation = TrailPresentation(
-            mission.mission_id, start=(player.x_float, player.y_float)
+            self._presentation_mission_id, start=(player.x_float, player.y_float)
         )
         # Audio only, M02-M04-only, and only with a manager: observes the same
         # transitions as the presentation and never writes state either.
-        self._audio = TrailAudio(mission.mission_id, audio, start=(player.x_float, player.y_float))
+        self._audio = TrailAudio(
+            self._presentation_mission_id, audio, start=(player.x_float, player.y_float)
+        )
         objects_by_id = {item.qualified_id: item for item in self._objects}
         for npc in self._npcs:
             conditional = npc.respond_to_toggle
@@ -908,9 +918,9 @@ class ClassroomTrailScene(Scene):
         super().render()
         # Layers: backdrop and trail zones, ground life, world objects, NPCs,
         # player, overlay effects and panels, HUD, overlay text. Everything
-        # between the backdrop and the HUD beyond the sprites is M02-M04-only.
+        # between the backdrop and the HUD beyond the sprites is M01-M04-only.
         presentation = self._presentation
-        draw_classroom_backdrop(self._renderer, self._mission.mission_id)
+        draw_classroom_backdrop(self._renderer, self._presentation_mission_id)
         presentation.draw_ground(self._renderer)
         for item in self._objects:
             world_object = item.world_object
@@ -981,7 +991,7 @@ class ClassroomTrailScene(Scene):
         entity: Character | WorldObject,
         color: tuple[int, int, int],
     ) -> None:
-        """Draw one entity at its authoritative bounds, with M02-M04 effects."""
+        """Draw one entity at its authoritative bounds, with M01-M04 effects."""
         presentation = self._presentation
         presentation.draw_under(self._renderer, qualified_id, entity, color)
         with classroom_sprite_pose(presentation.pose_for(qualified_id)):

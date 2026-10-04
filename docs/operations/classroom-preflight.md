@@ -50,8 +50,8 @@ Also glance at the `Course Kit version` line. It should match the version on
 the course website's Prepare page (`/students/prepare/`). An older kit means
 the student must follow **Get a newer Course Kit** before class.
 
-Then the student launches one known-safe Trail and closes it. The S01 command
-works in every Course Kit:
+Then the student launches one known-safe Trail and closes it. This free-play
+command (no `--mission-id`, so the plain Trail) works in every Course Kit:
 
 ```console
 explore-package trail \
@@ -60,7 +60,6 @@ explore-package trail \
   examples/explorer-packages/crystal-lantern \
   examples/explorer-packages/river-fountain \
   --player "nova-character:nova" \
-  --mission-id "visit-all-classroom-objects" \
   --name "Preflight"
 ```
 

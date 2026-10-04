@@ -87,7 +87,7 @@ class TrailAudio:
 
     def __init__(
         self,
-        mission_id: str,
+        mission_id: str | None,
         sink: AudioSink | None,
         start: tuple[float, float] | None = None,
     ) -> None:

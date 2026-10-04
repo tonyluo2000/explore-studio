@@ -7,7 +7,9 @@ back to the plain Trail. This module pins, per session, what the canonical
 ``explore-package trail`` command on the student task card must show.
 
 The standard Trail is a legitimate choice: only listed ``moon-meadow`` sessions
-must show Moon Meadow. To opt a session (S04+) in deliberately:
+must show Moon Meadow. A Trail launched without ``--mission-id`` is always the
+standard Trail, even though it runs M01's completion rule. To opt a session
+(S05+) in deliberately:
 
 1. add its mission to ``MISSION_PRESENTATIONS`` (with any ``sprite_aliases``);
 2. change its row in ``EXPECTED_PRESENTATION`` to ``MOON_MEADOW``;
@@ -51,7 +53,7 @@ STANDARD, MOON_MEADOW = "standard", "moon-meadow"
 
 #: session -> (canonical --mission-id, presentation the runtime gives it today).
 EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
-    "s01": ("visit-all-classroom-objects", STANDARD),
+    "s01": ("visit-all-classroom-objects", MOON_MEADOW),
     "s02": ("create-a-classroom-object", MOON_MEADOW),
     "s03": ("make-your-object-respond", MOON_MEADOW),
     "s04": ("introduce-your-character", MOON_MEADOW),
@@ -83,6 +85,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
 
 #: Moon Meadow session -> package qualified ids that must draw trusted art.
 REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
+    "s01": (NOVA_QUALIFIED_ID, PIXEL_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID),
     "s02": (
         NOVA_QUALIFIED_ID,
         PIXEL_QUALIFIED_ID,
@@ -189,6 +192,22 @@ def test_runtime_presentation_matches_the_contract(session: str) -> None:
 def test_required_art_is_declared_for_exactly_the_moon_meadow_sessions() -> None:
     assert sorted(REQUIRED_TRUSTED_ART) == MOON_MEADOW_SESSIONS
     assert all(REQUIRED_TRUSTED_ART.values())
+
+
+def test_omitting_the_mission_id_is_always_the_standard_trail() -> None:
+    assert mission_presentation(None) is None
+    assert not TrailPresentation(None).active
+    for session, (packages, options) in CANONICAL.items():
+        roots = [_package_root(argument) for argument in packages]
+        planned = plan_local_classroom_trail(roots, player_qualified_id=options["--player"])
+        if not planned.is_planned:
+            continue
+        renderer = AccentCheckingRenderer()
+        scene = create_classroom_trail_scene(renderer, planned.plan)
+        scene.enter()
+        scene.render()
+        sprites = [values for kind, values in renderer.operations if kind == "sprite"]
+        assert not sprites or sprites[0][:3] != MEADOW_BACKDROP, session
 
 
 # ---------------------------------------------------------------------------

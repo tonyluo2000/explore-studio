@@ -7,16 +7,16 @@ observations, then repair mismatched quotation marks.
 
 ## You've just arrived
 
-You're stepping into an unfamiliar place, and the first thing any explorer
-does is start a field notebook. Today's three observations are the opening
-page of yours.
+Nova has just landed in **Moon Meadow**, an unfamiliar place, and the first
+thing any explorer does is start a field notebook. Today's three observations
+are the opening page of yours.
 
 ## Who's who
 
-Explore Studio's reference explorer is **Nova**. Today you move Nova around the
-Trail. Nova's companion, **Pixel**, joins the world later. In today's world,
-**Fern** is a guide character, and the **Crystal Lantern** and **River
-Fountain** are world objects.
+Explore Studio's reference explorer is **Nova**. Today you move Nova around
+Moon Meadow, starting at the **Landing Site**. Nova's companion, **Pixel**,
+waits by the landing pad; Pixel is a character, not a world object. The
+**Crystal Lantern** is today's world object.
 
 Over this year you'll create your own explorer, companion, and interactive
 world, with Python. Today starts with the first Python tool every explorer
@@ -36,7 +36,7 @@ You do not need Git or a GitHub account for this session.
 ## Predict before running
 
 Write: “I think ___ visible things will increase `Visited` because ___.” Decide
-whether the player, Fern, the lantern, and the fountain should count.
+whether Nova, Pixel, and the lantern should count.
 
 ## Core path
 
@@ -58,9 +58,8 @@ whether the player, Fern, the lantern, and the fountain should count.
    ```console
    explore-package trail \
      examples/explorer-packages/nova-character \
-     examples/explorer-packages/forest-guide \
+     examples/explorer-packages/pixel-companion \
      examples/explorer-packages/crystal-lantern \
-     examples/explorer-packages/river-fountain \
      --player "nova-character:nova" \
      --mission-id "visit-all-classroom-objects" \
      --name "S01 Explorer's Field Notes"
@@ -76,7 +75,7 @@ whether the player, Fern, the lantern, and the fountain should count.
 Predict the error, then repair only the quotation marks:
 
 ```python
-print("The lantern flickers near the fountain.')
+print("The lantern flickers near the pond.')
 ```
 
 Evidence: explain where Python thinks the string begins and ends.
