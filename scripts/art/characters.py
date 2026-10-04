@@ -769,3 +769,304 @@ def pixel_frame(column: str) -> Image.Image:
         Stroke([(cx - 15, top + 10), (cx - 10, top + 8)], 1.0, 0.6), WHITE, alpha=0.45, clip=screen
     )
     return _finish(cv).image()
+
+
+# ---------------------------------------------------------------------------
+# Moonlit Guide
+# ---------------------------------------------------------------------------
+
+#: The canonical S04 Guide is ``color: "blue"``; this sheet is drawn only for it.
+GUIDE_ACCENT: Color = (50, 80, 220)
+G_CLOAK: Color = (58, 82, 196)
+G_CLOAK_LIGHT: Color = (116, 146, 246)
+G_CLOAK_SHADE: Color = (30, 38, 118)
+G_LINING: Color = (150, 120, 214)
+G_LINING_SHADE: Color = (100, 74, 168)
+G_ROBE: Color = (226, 222, 246)
+G_ROBE_SHADE: Color = (168, 162, 210)
+G_TRIM: Color = (246, 214, 128)
+G_TRIM_SHADE: Color = (196, 146, 70)
+G_STAR: Color = (255, 236, 170)
+G_HAIR: Color = (240, 240, 250)
+G_HAIR_SHADE: Color = (176, 180, 212)
+G_SKIN: Color = (240, 196, 164)
+G_SKIN_SHADE: Color = (214, 156, 130)
+G_STAFF: Color = (150, 100, 70)
+G_STAFF_SHADE: Color = (96, 60, 48)
+G_STAFF_LIGHT: Color = (204, 150, 104)
+G_MOON: Color = (255, 226, 140)
+G_MOON_SHADE: Color = (214, 160, 70)
+G_ORB: Color = (214, 244, 255)
+G_ORB_CORE: Color = (255, 255, 255)
+G_ORB_GLOW: Color = (140, 214, 255)
+G_SHOE: Color = (70, 52, 70)
+
+GUIDE_ROWS = ("idle",)
+GUIDE_IDLE = ("idle-0", "idle-1", "idle-2", "idle-3")
+GUIDE_TALK = ("talk-0", "talk-1", "talk-2", "talk-3")
+GUIDE_COLUMNS = (*GUIDE_IDLE, "blink", *GUIDE_TALK)
+#: Where the staff's moon orb sits in the 100 x 100 cell; the runtime glow
+#: and the half-scale anchor tests use the same fractions.
+GUIDE_ORB = (24.0, 19.0)
+#: (breath, hood-tip sway, hem sway) for the four idle frames.
+_GUIDE_IDLE_MOTION = ((0.0, 0.0, 0.0), (0.5, 0.6, 0.5), (1.0, 1.2, 1.0), (0.5, 0.6, 0.5))
+#: (raised hand x, y, mouth open) for the four talk frames: lift, open, wave, settle.
+_GUIDE_TALK_HANDS = ((78.0, 60.0, 0.6), (82.0, 50.0, 1.0), (84.0, 46.0, 0.5), (80.0, 55.0, 0.8))
+
+
+def _guide_staff(cv: Canvas, *, lift: float) -> None:
+    """A gnarled staff topped by a crescent moon cradling a glowing orb."""
+    ox, oy = GUIDE_ORB
+    oy += lift
+    shaft = Stroke([(27.5, 97.0), (25.5, 70.0), (26.5, 46.0), (24.5, oy + 9.0)], 1.9, 1.6)
+    _part(cv, shaft, G_STAFF, shade=G_STAFF_SHADE)
+    cv.paint(
+        Stroke([(26.3, 92.0), (24.9, 70.0), (25.8, 48.0)], 0.45),
+        G_STAFF_LIGHT,
+        alpha=0.7,
+        clip=shaft,
+    )
+    # A small knot and a curl of leaf: a walking stick, not a weapon.
+    _part(cv, Circle(25.9, 62.0, 2.3), G_STAFF, shade=G_STAFF_SHADE, line=0.9)
+    leaf = Ellipse(30.5, 66.0, 3.4, 1.6)
+    _part(cv, leaf, (120, 196, 150), shade=(70, 140, 110), line=0.8, rim=False)
+    # The crescent moon cradle, opening up and right toward the real moon.
+    crescent = Circle(ox, oy + 1.0, 8.6) - Circle(ox + 3.4, oy - 2.6, 8.0)
+    cv.paint(Circle(ox, oy, 13.0), G_ORB_GLOW, alpha=0.22, feather=5.0)
+    _part(cv, crescent, G_MOON, shade=G_MOON_SHADE, line=1.0)
+    orb = Circle(ox + 1.6, oy - 1.4, 5.2)
+    cv.paint(orb.grow(1.0), LINE)
+    cv.paint(
+        orb, radial(ox + 0.4, oy - 2.6, 6.4, ((0, G_ORB_CORE), (0.55, G_ORB), (1, G_ORB_GLOW)))
+    )
+    cv.paint(Circle(ox - 0.2, oy - 3.4, 1.5), WHITE, alpha=0.95)
+    cv.paint(
+        Poly(star_points(ox + 9.5, oy - 8.5, 2.4, 0.8, 4)),
+        G_ORB_CORE,
+        alpha=0.9,
+    )
+
+
+def _guide_stars(cv: Canvas, cloak: Shape) -> None:
+    """A scatter of tiny embroidered stars on the cloak."""
+    for sx, sy, size in (
+        (40.0, 66.0, 1.9),
+        (70.0, 70.0, 2.1),
+        (36.0, 84.0, 1.6),
+        (74.0, 87.0, 1.8),
+        (63.0, 79.0, 1.3),
+        (45.0, 76.0, 1.2),
+    ):
+        cv.paint(Poly(star_points(sx, sy, size, size * 0.42, 4)), G_STAR, alpha=0.85, clip=cloak)
+
+
+def _guide_face(cv: Canvas, cx: float, cy: float, *, blink: bool, mouth: float) -> None:
+    face = Ellipse(cx, cy, 11.2, 11.6)
+    cv.paint(face.grow(1.1), LINE)
+    cv.paint(face, radial(cx + 3, cy - 3, 15, ((0, mix(G_SKIN, WHITE, 0.2)), (1, G_SKIN_SHADE))))
+    # Soft white fringe under the hood.
+    fringe = Union(
+        Ellipse(cx - 6.5, cy - 9.5, 6.5, 4.4),
+        Ellipse(cx + 1.0, cy - 10.6, 7.0, 4.2),
+        Ellipse(cx + 7.5, cy - 9.2, 5.4, 4.0),
+        smooth=1.5,
+    )
+    cv.paint(fringe & face.grow(1.5), G_HAIR)
+    cv.paint(
+        (fringe - fringe.shift(-1.0, -1.4)) & face.grow(1.5), G_HAIR_SHADE, alpha=0.8, feather=0.4
+    )
+    for side in (-1, 1):
+        ex = cx + side * 4.6
+        # Big fluffy brows: the kindly, wise read.
+        cv.paint(
+            Stroke(
+                [(ex - 3.0 * side, cy - 3.6), (ex, cy - 4.8), (ex + 3.2 * side, cy - 3.8)], 1.2, 0.7
+            ),
+            G_HAIR,
+        )
+        if blink:
+            cv.paint(
+                Stroke([(ex - 2.0, cy - 0.4), (ex, cy + 0.9), (ex + 2.0, cy - 0.4)], 0.75), EYE
+            )
+        else:
+            eye = Ellipse(ex, cy - 0.2, 1.7, 2.3)
+            cv.paint(eye, EYE)
+            cv.paint(Circle(ex + 0.6, cy - 1.1, 0.75), WHITE)
+        cv.paint(Ellipse(ex + side * 1.9, cy + 3.6, 2.4, 1.3), CHEEK, alpha=0.65)
+    cv.paint(Ellipse(cx + 0.6, cy + 2.6, 1.8, 1.4), G_SKIN_SHADE)
+    cv.paint(Circle(cx + 1.0, cy + 2.1, 0.6), WHITE, alpha=0.5)
+
+
+def _guide_beard(cv: Canvas, cx: float, top: float, *, mouth: float) -> None:
+    """A short, cloud-soft beard and mustache with a smile tucked inside."""
+    beard = Union(
+        Circle(cx - 6.5, top + 3.0, 4.6),
+        Circle(cx, top + 5.0, 5.6),
+        Circle(cx + 6.5, top + 3.0, 4.6),
+        Circle(cx - 3.0, top + 8.6, 4.0),
+        Circle(cx + 3.4, top + 8.4, 4.0),
+        Circle(cx + 0.2, top + 11.4, 3.2),
+        smooth=2.0,
+    )
+    cv.paint(beard.grow(1.0), LINE)
+    cv.paint(beard, linear((cx + 6, top), (cx - 6, top + 14), ((0, WHITE), (1, G_HAIR))))
+    cv.paint(beard - beard.shift(1.2, -1.8), G_HAIR_SHADE, alpha=0.85, feather=0.6, clip=beard)
+    for curl_x, curl_y in ((cx - 4.5, top + 7.0), (cx + 4.0, top + 7.4), (cx, top + 10.4)):
+        cv.paint(
+            Stroke([(curl_x - 1.4, curl_y), (curl_x, curl_y + 0.9), (curl_x + 1.4, curl_y)], 0.35),
+            G_HAIR_SHADE,
+            alpha=0.8,
+            clip=beard,
+        )
+    smile = Ellipse(cx + 0.3, top + 3.8, 2.6, 0.9 + 1.6 * mouth) & Box(
+        cx - 4, top + 3.6, cx + 4, top + 8
+    )
+    cv.paint(smile.grow(0.4), MOUTH)
+    cv.paint(smile, (110, 34, 56))
+    if mouth > 0.5:
+        cv.paint(Ellipse(cx + 0.3, top + 5.0 + mouth, 1.4, 0.7), TONGUE, clip=smile)
+    mustache = Union(
+        Ellipse(cx - 3.0, top + 1.6, 3.6, 2.0), Ellipse(cx + 3.6, top + 1.6, 3.6, 2.0), smooth=1.0
+    )
+    cv.paint(mustache.grow(0.6), G_HAIR_SHADE)
+    cv.paint(mustache, WHITE)
+
+
+def _guide(
+    cv: Canvas,
+    *,
+    breath: float,
+    tip: float,
+    hem: float,
+    blink: bool,
+    hand: tuple[float, float] | None,
+    mouth: float,
+) -> None:
+    cx = 54.0
+    head_y = 31.0 + breath
+    shoulders = 51.0 + breath
+    # Shoes peek from under the hem.
+    for shoe_x in (46.0, 61.0):
+        _part(cv, Ellipse(shoe_x, 95.3, 5.4, 2.6), G_SHOE, shade=(40, 30, 46), rim=False)
+    # The staff stands behind the near (left) sleeve.
+    _guide_staff(cv, lift=breath * 0.6)
+    # Bell-shaped cloak with a gently swaying hem.
+    sway = hem * 1.2
+    cloak = Union(
+        Poly(
+            [
+                (cx - 12, shoulders - 2),
+                (cx + 12, shoulders - 2),
+                (cx + 22 + sway, 90.0),
+                (cx + 24 + sway, 95.0),
+                (cx + 12 + sway * 0.6, 96.5),
+                (cx + 2, 95.0),
+                (cx - 9 + sway * 0.6, 96.5),
+                (cx - 22 + sway, 95.0),
+                (cx - 20 + sway, 90.0),
+            ]
+        ),
+        Circle(cx, shoulders + 4, 13.0),
+        smooth=4.0,
+    )
+    _part(
+        cv,
+        cloak,
+        linear(
+            (cx + 18, shoulders),
+            (cx - 18, 96),
+            ((0, G_CLOAK_LIGHT), (0.35, G_CLOAK), (1, G_CLOAK_SHADE)),
+        ),
+        line=1.35,
+        shade=G_CLOAK_SHADE,
+    )
+    # Inner robe and the cloak's gold-trimmed front edges.
+    robe = Poly([(cx - 4, shoulders + 6), (cx + 4, shoulders + 6), (cx + 9, 95), (cx - 7, 95)])
+    cv.paint(robe & cloak, linear((cx + 6, 60), (cx - 6, 95), ((0, G_ROBE), (1, G_ROBE_SHADE))))
+    for side in (-1, 1):
+        edge = Stroke(
+            [
+                (cx + side * 4.2, shoulders + 6),
+                (cx + side * 6.4 + 1, 75.0),
+                (cx + side * 8.6, 95.0),
+            ],
+            1.15,
+        )
+        cv.paint(edge & cloak, G_TRIM)
+    cv.paint(Box(cx - 22, 92.6, cx + 26, 97, 1) & cloak, G_TRIM_SHADE, alpha=0.9)
+    _guide_stars(cv, cloak)
+    # Near sleeve and hand on the staff (viewer's left).
+    sleeve = Stroke([(cx - 10, shoulders + 3), (cx - 19, shoulders + 12), (30.5, 63.0)], 4.6, 5.4)
+    _part(cv, sleeve, G_CLOAK, shade=G_CLOAK_SHADE)
+    cv.paint(Ellipse(30.5, 63.0, 4.4, 4.0) & sleeve.grow(0.5), G_LINING_SHADE)
+    _part(cv, Circle(27.8, 62.5, 3.4), G_SKIN, shade=G_SKIN_SHADE, line=1.0)
+    # Far sleeve: resting, or raised in a small open-palm gesture while talking.
+    if hand is None:
+        far = Stroke(
+            [(cx + 10, shoulders + 3), (cx + 17, shoulders + 12), (cx + 15, 67.0)], 4.4, 5.0
+        )
+        _part(cv, far, G_CLOAK, shade=G_CLOAK_SHADE)
+        cv.paint(Ellipse(cx + 15, 67.5, 4.0, 3.2) & far.grow(0.5), G_LINING_SHADE)
+        _part(cv, Circle(cx + 14.6, 69.0, 3.0), G_SKIN, shade=G_SKIN_SHADE, line=1.0)
+    else:
+        hx, hy = hand
+        elbow = (cx + 19, (shoulders + 4 + hy) / 2 + 6)
+        far = Stroke([(cx + 10, shoulders + 3), elbow, (hx - 1.5, hy + 4.0)], 4.2, 4.6)
+        _part(cv, far, G_CLOAK, shade=G_CLOAK_SHADE)
+        cv.paint(Circle(hx - 1.5, hy + 4.0, 4.2) & far.grow(0.4), G_LINING)
+        palm = Union(
+            Ellipse(hx, hy, 3.2, 3.8),
+            Segment((hx - 1.6, hy - 2.8), (hx - 2.4, hy - 6.0), 0.95),
+            Segment((hx, hy - 3.2), (hx, hy - 6.8), 0.95),
+            Segment((hx + 1.7, hy - 2.8), (hx + 2.6, hy - 6.0), 0.95),
+            Segment((hx + 2.8, hy), (hx + 5.2, hy - 2.4), 0.9),
+            smooth=0.8,
+        )
+        _part(cv, palm, G_SKIN, shade=G_SKIN_SHADE, line=0.9)
+        cv.paint(Poly(star_points(hx + 6.5, hy - 8.5, 2.2, 0.7, 4)), G_STAR, alpha=0.9)
+    # Hood: a deep round cowl with a drooping star-tipped point.
+    hood = Circle(cx, head_y, 19.5)
+    point = Stroke(
+        [(cx + 4, head_y - 14), (cx + 15 + tip * 0.5, head_y - 22), (cx + 25 + tip, head_y - 16)],
+        7.0,
+        1.4,
+    )
+    hood_shape = Union(hood, point, smooth=3.0)
+    _part(
+        cv,
+        hood_shape,
+        linear(
+            (cx + 16, head_y - 18),
+            (cx - 14, head_y + 16),
+            ((0, G_CLOAK_LIGHT), (0.4, G_CLOAK), (1, G_CLOAK_SHADE)),
+        ),
+        line=1.4,
+        shade=G_CLOAK_SHADE,
+    )
+    tassel = (cx + 25 + tip, head_y - 16)
+    cv.paint(Circle(*tassel, 5.0), G_STAR, alpha=0.25, feather=2.0)
+    _part(cv, Poly(star_points(*tassel, 3.6, 1.6, 5, 0.2)), G_STAR, shade=G_TRIM_SHADE, line=0.8)
+    # The hood's gold rim and dark opening frame the face.
+    opening = Ellipse(cx, head_y + 2.0, 14.2, 14.6)
+    cv.paint(opening.grow(1.6), G_TRIM)
+    cv.paint(opening.grow(1.6) - opening.grow(1.6).shift(-0.8, -1.2), G_TRIM_SHADE, alpha=0.8)
+    cv.paint(opening, (30, 26, 70))
+    _guide_face(cv, cx, head_y + 3.0, blink=blink, mouth=mouth)
+    _guide_beard(cv, cx, head_y + 8.4, mouth=mouth)
+    # A small crescent clasp holds the cloak at the collar.
+    clasp = Circle(cx, shoulders + 3.6, 3.2) - Circle(cx + 1.6, shoulders + 2.4, 2.6)
+    _part(cv, clasp, G_MOON, shade=G_MOON_SHADE, line=0.8, rim=False)
+
+
+def guide_frame(column: str) -> Image.Image:
+    """One frame of the Moonlit Guide: idle breaths, a blink, or a talk gesture."""
+    cv = Canvas(100, 100, SS)
+    kind, _, number = column.partition("-")
+    index = int(number) if number else 0
+    if kind == "talk":
+        hx, hy, mouth = _GUIDE_TALK_HANDS[index]
+        _guide(cv, breath=0.4, tip=0.8, hem=0.4, blink=False, hand=(hx, hy), mouth=mouth)
+    else:
+        breath, tip, hem = _GUIDE_IDLE_MOTION[index] if kind == "idle" else (0.0, 0.0, 0.0)
+        _guide(cv, breath=breath, tip=tip, hem=hem, blink=kind == "blink", hand=None, mouth=0.0)
+    return _finish(cv).image()

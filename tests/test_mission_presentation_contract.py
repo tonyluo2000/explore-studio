@@ -30,6 +30,7 @@ from engine.rendering._classroom_sprites import (
     COMPASS_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
     MOON_COMPASS_QUALIFIED_ID,
+    MOONLIT_GUIDE_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
     PIXEL_QUALIFIED_ID,
     SPRITE_SHEET_IDS,
@@ -53,7 +54,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s01": ("visit-all-classroom-objects", STANDARD),
     "s02": ("create-a-classroom-object", MOON_MEADOW),
     "s03": ("make-your-object-respond", MOON_MEADOW),
-    "s04": ("introduce-your-character", STANDARD),
+    "s04": ("introduce-your-character", MOON_MEADOW),
     "s05": ("write-a-short-conversation", STANDARD),
     "s06": ("build-an-object-collection", STANDARD),
     "s07": ("toggle-an-object-state", STANDARD),
@@ -89,6 +90,7 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
         MOON_COMPASS_QUALIFIED_ID,
     ),
     "s03": (NOVA_QUALIFIED_ID, "moon-compass-response:compass"),
+    "s04": (NOVA_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID, MOONLIT_GUIDE_QUALIFIED_ID),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.

@@ -16,6 +16,10 @@ plate's lighting and depth, gave Nova a face and a stronger silhouette, set
 the Compass in a brass crescent with a tinted ground halo, and integrated the
 prompt, dialogue, and feedback surfaces, again on the same runtime systems.
 
+The **S04 integration** (see [below](#s04-moonlit-guide)) brings M04 into the
+frozen Moon Meadow with a trusted Moonlit Guide and a dialogue-focused
+bubble. It changes no shared scene-wide style.
+
 Student Explorers and Companions are **not** implemented here. They are the
 next tranche: "Nova has been upgraded. Yours is next."
 
@@ -33,7 +37,7 @@ Unchanged:
 - the HUD text and its positions
 
 Everything new is cosmetic, is allow-listed by mission id, and is inert for
-every other Trail, so S01 and S04+ draw exactly what they drew before.
+every other Trail, so S01 and S05+ draw exactly what they drew before.
 
 The allow-list is the explicit policy in
 `engine/rendering/_mission_presentation.py`:
@@ -42,6 +46,7 @@ The allow-list is the explicit policy in
 |---|---|
 | M02 `create-a-classroom-object` | Moon Meadow, every shared layer, plus the M02-only Compass "discovered!" label and the mission-complete confetti and banner. |
 | M03 `make-your-object-respond` | Moon Meadow and the shared layers only: plate and foreground, ambient life, Nova V3, trusted Compass art, entity effects, HUD panel, and the `E` prompt. The canonical S03 Compass (`moon-compass-response:compass`) is aliased onto the trusted Moon Compass art. The student's own `when_near` clue and `when_interacted` reveal carry the story, so the M02 label and celebration stay out. |
+| M04 `introduce-your-character` | Moon Meadow and the shared layers, plus the trusted Moonlit Guide (`moonlit-guide:guide`), a talk cue over each interactable NPC not yet spoken to, and dialogue focus (a larger bubble sized to the whole greeting and an on-screen HUD echo). M04 completes by talking, so the Lantern keeps its art and light but loses its destination waypoint, and the M02 label and celebration stay out. |
 | Every other mission | Unchanged plain Trail. |
 
 Proof frames for M03 come from `scripts/capture_s03_visual_proof.py`; see
@@ -219,6 +224,11 @@ the art pass costs no more per frame than the base did.
   - The speech bubble already takes any single-line greeting from any M02 NPC.
   - Follow or autonomy behavior would be new gameplay, which belongs in the
     scene, not in this cosmetic layer.
+- **Anchors and poses are identity-keyed.** `TrailPresentation._anchor_rect`
+  (where prompts and bubbles point) and `pose_for` branch on known trusted
+  identities (Nova, Pixel, the Moonlit Guide). A student Explorer or
+  Companion should declare its visible-body rect and pose family as manifest
+  data, rather than adding another branch per character.
 - **Accent rule.** Art declares the color it was drawn for, and a mismatch
   falls back to procedural drawing. Student recoloring can later swap in a
   tinted variant or palette mask without touching gameplay.
@@ -285,3 +295,49 @@ allow-listed to M02/M03.
 
 Proof frames, side-by-side comparisons, and the written evaluation live in
 `docs/visual-proof/moon-meadow-final/`.
+
+## S04 Moonlit Guide
+
+S04 reuses the frozen Moon Meadow unchanged. Only the pieces needed to
+present M04 are new; the plate, foreground, ambience, HUD, Nova, Pixel, the
+Compass, and the Lantern art are untouched, and M02/M03 frames are
+pixel-identical to the final polish pass.
+
+- **Guide art.** `characters/moonlit-guide` is a 100 × 100 trusted sheet
+  painted by `scripts/art/characters.py` with the same line, cel shade, rim,
+  and silhouette finish as Nova and Pixel. It shows a small, friendly elder in
+  a starry blue hooded cloak, with a cloud-soft beard, holding a staff whose
+  crescent moon cradles a glowing orb. Its `idle` row has four breaths, a
+  blink, and four `talk` frames (lift, open, wave, settle). Its accent is the
+  canonical `color: "blue"`. Any other color draws a posed procedural guide
+  cloaked in that color, so the field keeps its meaning.
+- **Posed only.** The Guide has no static drawing. Outside a presentation pose
+  (every mission except M04) it keeps the rectangle fallback, so no other
+  session changes. An NPC from any other package also keeps the rectangle in
+  M04.
+- **Animation.** The Guide breathes and blinks, waves once when greeted, and
+  its orb glow pulses and brightens while it speaks. A soft shadow and a faint
+  moonlight pool ground it. Nothing moves its `x`/`y`, box, or range.
+- **Focus.** A small floating speech cue hovers over every interactable NPC
+  that the scene's read-only `spoken_npc_ids` does not yet list, which is
+  exactly what `ALL_INTERACTABLE_NPCS_SPOKEN_TO` still needs. The Lantern
+  waypoint is now the explicit `lantern_waypoint` flag (on for M02 and M03,
+  off for M04). The Lantern itself, its light, and its inspect flare are
+  unchanged.
+- **Dialogue focus.** The greeting bubble uses a 24 px font, which is still
+  12 px at a half-scale share. It wraps to a 340 px column and holds up to six
+  lines, about 180 characters. It stays up for 2 s plus 0.4 s per word,
+  between 4 s and 14 s. It is placed to avoid Nova, the speaker, objects, and
+  the HUD feedback card, and is always on screen below the HUD rows. Longer
+  text ends in an explicit `…` and is never dropped silently. The bottom HUD
+  echo keeps its text and position, but under dialogue focus a line too long
+  for the screen is shortened with `…`. The scene's `feedback_message` state
+  never changes. Wrapped and fitted lines are measured once each, through a
+  bounded layout cache.
+- **Shared fix.** For every mission, a bubble that runs past its last line
+  now ends in `…`, and an unbroken word wider than the column is split.
+  Canonical M02/M03 text is unaffected.
+
+Proof frames, the side-by-side, and the written review live in
+`docs/visual-proof/s04-moonlit-guide/` (from
+`scripts/capture_s04_visual_proof.py`).

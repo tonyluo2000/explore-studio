@@ -1,4 +1,4 @@
-"""Original sprites for the four S02 classroom examples.
+"""Original sprites for the S02 classroom examples and the S04 Moonlit Guide.
 
 This is intentionally a narrow identity allow-list, not the future generic
 Explorer Package ``asset_id`` pipeline. Unknown identities return ``False`` so
@@ -13,6 +13,9 @@ Compass is student-colored, so its trusted art is layered: a neutral rune ring
 tinted by the student's color, an untinted body, a pre-rotated needle, and a
 glass sheen, all drawn inside the Compass's own box. A pose never changes the
 bounds a sprite is drawn into.
+
+The S04 Moonlit Guide is *posed-only*: it has no static drawing, so outside a
+presentation pose (every Trail except M04) it keeps the rectangle fallback.
 """
 
 from __future__ import annotations
@@ -34,6 +37,8 @@ NOVA_QUALIFIED_ID = "nova-character:nova"
 PIXEL_QUALIFIED_ID = "pixel-companion:pixel"
 MOON_COMPASS_QUALIFIED_ID = "moon-compass:compass"
 CRYSTAL_LANTERN_QUALIFIED_ID = "crystal-lantern:lantern"
+#: The canonical S04 Guide (``lessons/sessions/s04/student/explorer-package``).
+MOONLIT_GUIDE_QUALIFIED_ID = "moonlit-guide:guide"
 
 
 class _SpriteRenderer(Protocol):
@@ -61,6 +66,7 @@ SPRITE_SHEET_IDS: Final = {
     NOVA_QUALIFIED_ID: "characters/nova",
     PIXEL_QUALIFIED_ID: "characters/pixel",
     CRYSTAL_LANTERN_QUALIFIED_ID: "objects/crystal-lantern",
+    MOONLIT_GUIDE_QUALIFIED_ID: "characters/moonlit-guide",
 }
 #: The student-colored Moon Compass: neutral layers tinted at draw time.
 COMPASS_SHEET_ID: Final = "objects/moon-compass"
@@ -413,12 +419,63 @@ def _draw_crystal_lantern(
     renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
 
 
+def _draw_moonlit_guide(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """Draw a hooded guide with a moon staff, cloaked in the authored color.
+
+    The posed fallback for the trusted Guide art (another color, or art that
+    is unavailable). A pose lowers the hood and cloak by ``bob`` pixels.
+    """
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 25))
+    box = _Box(x, y + bob, width, height)
+    base = _Box(x, y, width, height)
+    outline = _mix(accent, (18, 20, 48), 0.75)
+    shade = _mix(accent, (18, 20, 48), 0.35)
+    light = _mix(accent, _WHITE, 0.35)
+    skin = (240, 196, 164)
+    beard = (240, 240, 250)
+    gold = (246, 214, 128)
+    staff = (150, 100, 70)
+    line_width = _stroke(width, height)
+
+    base.shadow(renderer, 54, 30)
+    renderer.draw_line(*base.point(27, 97), *box.point(25, 28), staff, line_width + 2)
+    renderer.draw_circle(*box.point(24, 19), box.radius(9), gold)
+    renderer.draw_circle(*box.point(27, 16), box.radius(8), _mix(accent, (18, 20, 48), 0.6))
+    renderer.draw_circle(*box.point(26, 18), box.radius(5), (214, 244, 255))
+    box.polygon(renderer, ((40, 50), (68, 50), (80, 96), (28, 96)), outline)
+    box.polygon(renderer, ((42, 53), (66, 53), (77, 94), (31, 94)), accent)
+    box.polygon(renderer, ((50, 56), (58, 56), (63, 94), (46, 94)), (226, 222, 246))
+    box.rect(renderer, 28, 92, 80, 95, shade)
+    renderer.draw_circle(*box.point(30, 63), box.radius(4), skin)
+    renderer.draw_circle(*box.point(69, 69), box.radius(3), skin)
+    box.polygon(renderer, ((58, 14), (74, 6), (80, 14), (66, 22)), accent)
+    renderer.draw_circle(*box.point(54, 31), box.radius(20), outline)
+    renderer.draw_circle(*box.point(54, 31), box.radius(18), light)
+    renderer.draw_circle(*box.point(54, 33), box.radius(14), gold)
+    renderer.draw_circle(*box.point(54, 33), box.radius(12), skin)
+    renderer.draw_circle(*box.point(54, 45), box.radius(9), beard)
+    renderer.draw_circle(*box.point(50, 33), max(1, box.radius(2)), (40, 32, 70))
+    renderer.draw_circle(*box.point(59, 33), max(1, box.radius(2)), (40, 32, 70))
+    renderer.draw_circle(*box.point(80, 14), box.radius(4), gold)
+
+
 _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
     NOVA_QUALIFIED_ID: _draw_nova,
     PIXEL_QUALIFIED_ID: _draw_pixel,
     MOON_COMPASS_QUALIFIED_ID: _draw_moon_compass,
     CRYSTAL_LANTERN_QUALIFIED_ID: _draw_crystal_lantern,
+    MOONLIT_GUIDE_QUALIFIED_ID: _draw_moonlit_guide,
 }
+#: Identities with no static drawing: without a pose they keep the rectangle.
+_POSED_ONLY: Final = frozenset({MOONLIT_GUIDE_QUALIFIED_ID})
 
 
 def _draw_trusted_frame(
@@ -495,6 +552,8 @@ def draw_classroom_sprite(
     if drawer is None:
         return False
     pose = _ACTIVE_POSE.get()
+    if pose is None and qualified_id in _POSED_ONLY:
+        return False
     try:
         if pose is None:
             drawer(renderer, x, y, width, height, color)

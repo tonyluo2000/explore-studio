@@ -1,4 +1,4 @@
-"""Build the course-owned trusted art for the S02 Classroom Trail.
+"""Build the course-owned trusted art for the Moon Meadow Classroom Trail (S02-S04).
 
 This is the provenance for every PNG under ``engine/assets/trusted``. The art
 is original and painted from code by the small signed-distance-field painter
@@ -15,6 +15,7 @@ Sheets:
 * ``scenery/moon-meadow-foreground`` — transparent framing plants over entities.
 * ``characters/nova`` — Nova V3: idle, blink, and an 8-frame walk per facing.
 * ``characters/pixel`` — Pixel V3: idle, blink, and a greeting wave.
+* ``characters/moonlit-guide`` — the S04 Moonlit Guide: idle, blink, and a talk gesture.
 * ``objects/moon-compass`` — ring (tinted by the student's color), body, glass.
 * ``objects/moon-compass-needle`` — the needle at 64 pre-rotated angles.
 * ``objects/moon-compass-halo`` — the ground rune circle (tinted by the student's color).
@@ -110,6 +111,15 @@ SHEETS: tuple[SheetSpec, ...] = (
         characters.PIXEL_COLUMNS,
         characters.PIXEL_ACCENT,
         lambda _row, column: characters.pixel_frame(column),
+    ),
+    SheetSpec(
+        "characters/moonlit-guide",
+        "characters/moonlit-guide/guide.png",
+        (100, 100),
+        characters.GUIDE_ROWS,
+        characters.GUIDE_COLUMNS,
+        characters.GUIDE_ACCENT,
+        lambda _row, column: characters.guide_frame(column),
     ),
     SheetSpec(
         "objects/moon-compass",

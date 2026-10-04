@@ -37,7 +37,7 @@ from engine.rendering._mission_presentation import (
 )
 from engine.rendering._trail_presentation import TrailPresentation
 from explore import curriculum
-from explore.curriculum import MISSION_02_ID, MISSION_03_ID
+from explore.curriculum import MISSION_02_ID, MISSION_03_ID, MISSION_04_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -98,14 +98,17 @@ def _text_at(renderer: ArtRenderer, position: tuple[int, int]) -> list[object]:
 # ---------------------------------------------------------------------------
 
 
-def test_presentation_policy_lists_exactly_m02_and_m03() -> None:
+def test_presentation_policy_lists_exactly_m02_through_m04() -> None:
     assert S02_MISSION_ID == MISSION_02_ID
     assert S03_MISSION_ID == MISSION_03_ID
-    assert set(MISSION_PRESENTATIONS) == {MISSION_02_ID, MISSION_03_ID}
+    # M04 joined deliberately (tests/test_s04_presentation.py pins its policy).
+    assert set(MISSION_PRESENTATIONS) == {MISSION_02_ID, MISSION_03_ID, MISSION_04_ID}
     m02, m03 = mission_presentation(MISSION_02_ID), mission_presentation(MISSION_03_ID)
     assert m02 is not None and m02.discovery_label and m02.celebration
+    assert m02.lantern_waypoint and not m02.talk_cue and not m02.dialogue_focus
     assert m02.sprite_aliases == {}
     assert m03 is not None and not m03.discovery_label and not m03.celebration
+    assert m03.lantern_waypoint and not m03.talk_cue and not m03.dialogue_focus
     assert m03.sprite_aliases == {S03_MOON_COMPASS_QUALIFIED_ID: MOON_COMPASS_QUALIFIED_ID}
 
 
@@ -116,7 +119,7 @@ def test_every_other_course_mission_keeps_the_plain_trail() -> None:
         if name.startswith("MISSION_") and name.endswith("_ID")
     ]
     others = [mission_id for mission_id in others if mission_id not in MISSION_PRESENTATIONS]
-    assert len(others) == 14
+    assert len(others) == 13
     for mission_id in others:
         assert mission_presentation(mission_id) is None
         presentation = TrailPresentation(mission_id)
