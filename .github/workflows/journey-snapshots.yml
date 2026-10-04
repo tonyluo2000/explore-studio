@@ -1,0 +1,67 @@
+name: Journey snapshots
+
+# Fails when a published Journey snapshot no longer matches the runtime,
+# packages, or task cards that drew it. CI never recaptures or commits images.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/journey-snapshots.yml"
+      - "course4teen-website/journey/**"
+      - "course4teen-website/public/journey/**"
+      - "course4teen-website/lib/calendar.ts"
+      - "engine/**"
+      - "explore/curriculum/**"
+      - "explore/packages/classroom_trail.py"
+      - "examples/explorer-packages/**"
+      - "lessons/sessions/**"
+      - "scripts/journey_snapshots.py"
+      - "scripts/capture_journey_snapshots.py"
+      - "scripts/trail_driver.py"
+      - "scripts/make_my_world.py"
+      - "scripts/provision_student_workspace.py"
+      - "tests/test_journey_snapshot*.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/journey-snapshots.yml"
+      - "course4teen-website/journey/**"
+      - "course4teen-website/public/journey/**"
+      - "course4teen-website/lib/calendar.ts"
+      - "engine/**"
+      - "explore/curriculum/**"
+      - "explore/packages/classroom_trail.py"
+      - "examples/explorer-packages/**"
+      - "lessons/sessions/**"
+      - "scripts/journey_snapshots.py"
+      - "scripts/capture_journey_snapshots.py"
+      - "scripts/trail_driver.py"
+      - "scripts/make_my_world.py"
+      - "scripts/provision_student_workspace.py"
+      - "tests/test_journey_snapshot*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-journey-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Explore Studio
+        uses: actions/checkout@v7
+        with:
+          # The runtime-pin check reads the pinned commit's runtime from history.
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project with the snapshot encoder
+        run: python -m pip install -e ".[dev,art]"
+      - name: Verify snapshot contract, publication boundary, freshness, and determinism
+        run: >-
+          python -m pytest -q
+          tests/test_journey_snapshots.py
+          tests/test_journey_snapshot_determinism.py
