@@ -215,7 +215,7 @@ def test_s01_keeps_its_learning_objective_and_m01_trail_behavior():
     assert "Keep exactly three" in task_card and "`print(...)` calls." in task_card
     assert starter.count("print(") == 3
     assert "matching quotation marks to record three observations" in runbook
-    assert "`Visited 2 / 2`" in runbook
+    assert "`Visited 1 / 1`" in runbook
 
 
 def test_s01_onboarding_directs_students_through_the_computer_check():

@@ -50,7 +50,7 @@ from engine.rendering._trail_presentation import (
     HUD_BOTTOM,
     TrailPresentation,
 )
-from explore.curriculum import MISSION_01_ID, MISSION_02_ID
+from explore.curriculum import MISSION_02_ID, MISSION_05_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -126,7 +126,7 @@ class PolishRenderer:
         return [values for recorded, values in self.operations if recorded == kind]
 
 
-def _scene(renderer: object, *, mission_id: str = MISSION_02_ID):  # type: ignore[no-untyped-def]
+def _scene(renderer: object, *, mission_id: str | None = MISSION_02_ID):  # type: ignore[no-untyped-def]
     planned = plan_local_classroom_trail(S02_PACKAGES, player_qualified_id=NOVA_QUALIFIED_ID)
     assert planned.is_planned, planned.issues
     scene = create_classroom_trail_scene(renderer, planned.plan, mission_id=mission_id)
@@ -465,9 +465,10 @@ def test_speech_bubble_names_its_speaker_without_changing_the_greeting() -> None
     assert _overlaps(tag[:4], bubble[:4])  # the tag sits on the bubble's top edge
 
 
-def test_other_missions_get_none_of_the_new_presentation() -> None:
+@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+def test_other_missions_get_none_of_the_new_presentation(mission_id: str | None) -> None:
     renderer = PolishRenderer()
-    scene = _scene(renderer, mission_id=MISSION_01_ID)
+    scene = _scene(renderer, mission_id=mission_id)
     for _ in range(30):
         _render(scene, renderer, directions=DirectionalInput(right=True))
     assert not {"translucent", "sprite", "glow", "shadow"} & set(renderer.kinds())

@@ -96,9 +96,85 @@ def test_s01_task_card_distinguishes_explorer_companion_and_world_object():
     task_card = _normalized(SESSIONS / "s01" / "student" / "task-card.md")
 
     assert "reference explorer is **Nova**" in task_card
-    assert "Nova's companion, **Pixel**" in task_card
-    assert "**Crystal Lantern** and **River Fountain** are world objects" in task_card
+    assert "Nova's companion, **Pixel**, waits by the landing pad" in task_card
+    assert "Pixel is a character, not a world object" in task_card
+    assert "The **Crystal Lantern** is today's world object." in task_card
     assert "Moon Compass" not in task_card
+
+
+def _s01_materials() -> dict[str, str]:
+    learn = _read(WEBSITE / "lib" / "learn.ts")
+    s01_learn = learn.split('id: "S01"', 1)[1].split('id: "S02"', 1)[0]
+    return {
+        "task-card": _read(SESSIONS / "s01" / "student" / "task-card.md"),
+        "starter": _read(SESSIONS / "s01" / "student" / "starter.py"),
+        "python-notes": _read(SESSIONS / "s01" / "student" / "python-notes.md"),
+        "runbook": _read(SESSIONS / "s01" / "teacher-runbook.md"),
+        "slides": _read(WEBSITE / "app" / "students" / "slides" / "s01" / "page.tsx"),
+        "learn": s01_learn,
+    }
+
+
+def test_s01_materials_retire_fern_the_fountain_and_the_forest_trail():
+    for name, text in _s01_materials().items():
+        lowered = text.lower()
+        for retired in ("fern", "fountain", "forest-guide", "forest trail", "plain trail"):
+            assert retired not in lowered, f"S01 {name} still mentions {retired!r}"
+
+
+def test_s01_story_is_the_moon_meadow_arrival():
+    materials = {name: " ".join(text.split()) for name, text in _s01_materials().items()}
+
+    assert "Nova has just landed in **Moon Meadow**" in materials["task-card"]
+    assert "starting at the **Landing Site**" in materials["task-card"]
+    assert "Nova has just landed in Moon Meadow" in materials["slides"]
+    assert "from the Landing Site" in materials["slides"]
+    assert "landed at the **Landing Site** in **Moon Meadow**" in materials["runbook"]
+    assert "Visited 1 / 1" in materials["runbook"]
+    assert "The S01 Trail is silent." in materials["runbook"]
+
+
+def test_s01_never_names_or_steers_toward_the_moon_compass():
+    for name, text in _s01_materials().items():
+        if name == "runbook":
+            # The runbook only tells the teacher not to mention it.
+            prose = " ".join(text.split())
+            assert prose.count("Moon Compass") == 2
+            assert "do not mention the Moon Compass" in prose
+            assert "do not say what belongs there" in prose
+            continue
+        assert "compass" not in text.lower(), f"S01 {name} mentions the Compass"
+        assert "Compass Clearing" not in text
+
+
+def test_s01_starter_is_three_string_prints_with_no_variables():
+    starter = _read(SESSIONS / "s01" / "student" / "starter.py")
+    tree = ast.parse(starter)
+    calls = [node.value for node in tree.body if isinstance(node, ast.Expr)][1:]
+
+    assert not any(
+        isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)) for node in ast.walk(tree)
+    )
+    assert len(calls) == 3
+    assert all(isinstance(call, ast.Call) and call.func.id == "print" for call in calls)
+    assert [call.args[0].value for call in calls] == [
+        "The crystal lantern glows beside the path.",
+        "A small robot waits by the landing pad.",
+        "Tall stones circle an empty clearing.",
+    ]
+
+
+def test_s01_deliberate_quote_bug_is_still_a_syntax_error_everywhere():
+    broken = """print("The lantern flickers near the pond.')"""
+    fixed = 'print("The lantern flickers near the pond.")'
+    with pytest.raises(SyntaxError, match="unterminated string literal"):
+        compile(broken, "<s01-debug>", "exec")
+    compile(fixed, "<s01-debug>", "exec")
+    materials = _s01_materials()
+    for name in ("task-card", "python-notes", "runbook", "slides", "learn"):
+        assert broken in materials[name], f"S01 {name} lost the canonical quote bug"
+    for name in ("python-notes", "runbook", "learn"):
+        assert fixed in materials[name], f"S01 {name} lost the canonical fix"
 
 
 def test_s01_sets_the_explorer_and_companion_homework_s02_opens_from():
@@ -113,11 +189,13 @@ def test_s01_trail_and_m01_semantics_are_unchanged():
 
     assert _trail_packages(task_card) == [
         "examples/explorer-packages/nova-character",
-        "examples/explorer-packages/forest-guide",
+        "examples/explorer-packages/pixel-companion",
         "examples/explorer-packages/crystal-lantern",
-        "examples/explorer-packages/river-fountain",
     ]
     assert f'--mission-id "{MISSION_01_ID}"' in task_card
+    runbook = _read(SESSIONS / "s01" / "teacher-runbook.md")
+    assert _trail_packages(runbook) == _trail_packages(task_card)
+    assert f'--mission-id "{MISSION_01_ID}"' in runbook
     assert not (SESSIONS / "s01" / "student" / "discovery.md").exists()
 
 
@@ -679,3 +757,29 @@ def test_s02_bootstrap_no_overwrite_invariant_is_documented_unchanged():
 
     assert "it only adds missing files and never replaces your work" in task_card
     assert "never" in readme.lower() and "replace" in readme.lower()
+
+
+def test_s02_names_compass_clearing_without_claiming_saved_state():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    runbook = _normalized(SESSIONS / "s02" / "teacher-runbook.md")
+
+    assert "compass box" not in task_card.lower()
+    assert "Remember the empty circle of stones near where Nova landed?" in task_card
+    assert "That is **Compass Clearing**" in task_card
+    assert "**Compass Clearing**" in runbook
+    assert "nothing carries over from S01" in runbook
+
+
+def test_s02_learn_try_it_matches_the_python_notes():
+    learn = _read(WEBSITE / "lib" / "learn.ts")
+    s02_learn = " ".join(learn.split('id: "S02"', 1)[1].split('id: "S03"', 1)[0].split())
+    notes = _normalized(SESSIONS / "s02" / "student" / "python-notes.md").replace("`", "")
+
+    expected = (
+        "replace every TODO with concrete choices for your own Explorer and Companion "
+        "(or check your existing values, if you set these up before), then run both files "
+        "and confirm your own values appear in the output."
+    )
+    assert expected in s02_learn
+    assert expected in notes
+    assert "print your Explorer Card and Companion Card" not in s02_learn

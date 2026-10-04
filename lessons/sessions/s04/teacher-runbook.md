@@ -82,8 +82,8 @@ Before student work, output includes the visible placeholder
 the second call, the recovery example produces:
 
 ```text
-Welcome to the Moonlit Trail, Ari!
-Welcome to the Moonlit Trail, Sam!
+Welcome to Moonlit Trail, Ari!
+Welcome to Moonlit Trail, Sam!
 ```
 
 The bad call raises a `TypeError` stating that the required `name` argument is

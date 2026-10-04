@@ -63,6 +63,11 @@ Moon Compass file, `x`, `y`, and `color` change the Trail; `name` is stored
 but is not a permanent label (a nearby `[E] Inspect` prompt may show it). Students walk as Nova, the class example, because S02 has no
 student-owned character package.
 
+S02 names the empty stone circle students may have noticed on arrival in S01:
+**Compass Clearing**, where the sample `x = 240`, `y = 180` places the Moon
+Compass. A student's own coordinates decide where theirs actually sits, and
+nothing carries over from S01: it is the same meadow, not a saved world.
+
 The Moon Compass framing is narrative only: `object_name`/`x`/`y`/`color`
 mechanics, the package schema, and M02 completion are unchanged. The session
 ends with a light forward reference — next session the same static instrument

@@ -209,3 +209,16 @@ def test_s04_notes_name_their_real_course_kit_source_and_concepts():
         "Moonlit Guide",
     ):
         assert required in notes, required
+
+
+def test_s04_runbook_recovery_output_is_what_the_published_code_prints():
+    ran = subprocess.run(
+        [sys.executable, "-c", _js_string(_s04_learn_entry(), "code")],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    runbook = _read(S04 / "teacher-runbook.md")
+    assert "Welcome to Moonlit Trail, Ari!" in ran
+    assert "Welcome to Moonlit Trail, Ari!\nWelcome to Moonlit Trail, Sam!" in runbook
+    assert "Welcome to the Moonlit Trail" not in runbook

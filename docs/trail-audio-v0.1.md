@@ -51,7 +51,8 @@ Eligibility is the explicit `meadow_audio` flag on `MissionPresentation`
 
 | Mission | Audio |
 |---|---|
-| M01 | None. The mixer is never opened. |
+| M01 | None, although M01 wears the Moon Meadow (`meadow_audio` is off). The mixer is never opened. |
+| No `--mission-id` | None: the plain Trail with M01 rules. The mixer is never opened. |
 | M02 | Ambience, footsteps, near glint, Compass, Pixel, Lantern, completion |
 | M03 | Ambience, footsteps, near glint, Compass (aliased canonical S03 Compass), completion |
 | M04 | Ambience, footsteps, near glint, Guide moon bell, completion. The Lantern chimes only if it is actually inspected. |

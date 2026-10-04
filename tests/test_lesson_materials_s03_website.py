@@ -102,3 +102,21 @@ def test_s03_notes_name_their_real_course_kit_source():
         "SyntaxError",
     ):
         assert required in notes, required
+
+
+def test_s03_story_is_compass_awakening_and_its_reveal_is_text_only():
+    task_card = " ".join(_read(S03 / "student" / "task-card.md").split())
+    runbook = " ".join(_read(S03 / "teacher-runbook.md").split())
+    assert "## Expedition story: Compass Awakening" in _read(S03 / "student" / "task-card.md")
+    assert "S03 is **Compass Awakening**" in runbook
+    assert "the Compass does not turn toward the guide or change the map" in runbook
+    assert 'kicker: "Compass Awakening"' in _read(SLIDES)
+    for text in (task_card, runbook, _read(SLIDES)):
+        assert "Tonight you join" not in text and "expedition begins" not in text
+        assert "rotates" not in text
+
+
+def test_s03_task_card_and_runbook_use_the_same_commit_message():
+    message = 'git commit -m "Add moon compass response messages"'
+    assert message in _read(S03 / "student" / "task-card.md")
+    assert message in _read(S03 / "teacher-runbook.md")
