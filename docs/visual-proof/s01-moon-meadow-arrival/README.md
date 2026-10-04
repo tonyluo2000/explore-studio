@@ -63,3 +63,25 @@ mission id; positions, targets, visits, spoken NPCs, completion, and feedback
 are identical. Headless update + render of a moving M01 frame
 (`--only benchmark`, 600 frames): mean 0.97 ms, p95 1.46 ms (M02 on `main`:
 mean 1.16 ms, p95 1.96 ms).
+
+## Fresh install from the candidate Course Kit
+
+The Course Kit ZIP is `ac4a0d87…69eedd` (253 members, provenance commit
+`7dd5d0a`). It was unpacked into a clean `HOME`, given a fresh `.venv`
+(Python 3.13.7), and installed with `pip install -r requirements-student.txt`;
+the pinned archive `3038cf4` resolved from GitHub.
+
+- `python3 check-my-computer.py`: **READY FOR EXPLORE STUDIO**, course tools
+  `3038cf4 (current)`.
+- S01 starter prints the three new observations; `nova-character`,
+  `pixel-companion`, and `crystal-lantern` validate.
+- The canonical task-card `explore-package trail` commands were driven by an
+  autopilot that patches only input polling (dummy video and audio drivers):
+
+| Run | Presentation | Mixer | Result |
+|---|---|---|---|
+| S01 | Moon Meadow, no waypoint, no audio | never opened | `Visited 1 / 1`, complete without talking to Pixel |
+| S02 (after `make-my-world.py`) | Moon Meadow, unchanged | opened | `Visited 2 / 2`, complete; Compass, Lantern, completion cues |
+| S03 | Moon Meadow, unchanged | opened | `Visited 1 / 1`, complete; Compass, completion cues |
+| S04 | Moon Meadow, unchanged | opened | Guide spoken to, complete; Guide, completion cues |
+| S01 cast, no `--mission-id` | plain Trail | no audio layer | M01 rules |
