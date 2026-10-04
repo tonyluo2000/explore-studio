@@ -54,6 +54,7 @@ from engine.rendering._meadow_layout import (
     CLEARING_CENTER,
     CRYSTAL_CLUSTERS,
     HORIZON,
+    LANDER,
     MOON,
     POND,
     SHRINE_CENTER,
@@ -387,6 +388,43 @@ def _ground_edge(x: float) -> float:
     return HORIZON + 4 + 4 * math.sin(x / 110) - knoll
 
 
+_RELIEF = Noise(17, WIDTH, HEIGHT, 260)
+#: Moonlight comes from the moon in the upper right, a little above the meadow.
+_MOON_DIRECTION = np.asarray((0.62, -0.52, 0.58), np.float32) / np.linalg.norm((0.62, -0.52, 0.58))
+#: Authored swells (cx, cy, rx, ry, height): broad, foreshortened mounds that
+#: give the meadow readable form, with lit backs facing the moon.
+SWELLS: tuple[tuple[float, float, float, float, float], ...] = (
+    (640.0, 244.0, 170.0, 34.0, 10.0),
+    (850.0, 410.0, 190.0, 62.0, 26.0),
+    (360.0, 480.0, 150.0, 52.0, 20.0),
+    (720.0, 570.0, 230.0, 74.0, 34.0),
+    (70.0, 610.0, 170.0, 60.0, 30.0),
+    (470.0, 300.0, 120.0, 34.0, 9.0),
+    (60.0, 380.0, 120.0, 46.0, 16.0),
+    (900.0, 250.0, 110.0, 30.0, 10.0),
+)
+
+
+def _relief_height(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Gentle rolling ground: authored swells plus a whisper of variation."""
+    height = np.zeros_like(x, dtype=np.float32)
+    for cx, cy, rx, ry, h in SWELLS:
+        height += h * np.exp(-(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2))
+    depth = np.clip((y - HORIZON) / (HEIGHT - HORIZON), 0.0, 1.2)
+    return height + _RELIEF(x, y * 1.6) * (4 + 8 * depth)
+
+
+def terrain_light(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Lambert light (-1 to 1) on the rolling ground: slopes facing the moon lift."""
+    e = 2.0
+    hx = (_relief_height(x + e, y) - _relief_height(x - e, y)) / (2 * e)
+    hy = (_relief_height(x, y + e) - _relief_height(x, y - e)) / (2 * e)
+    norm = np.sqrt(hx * hx + hy * hy + 1.0)
+    lx, ly, lz = (float(value) for value in _MOON_DIRECTION)
+    lambert = (-hx * lx - hy * ly + lz) / norm
+    return np.clip((lambert - lz) * 3.2, -1.0, 1.0)
+
+
 def paint_ground(cv: Canvas) -> None:
     ground = ridge(0, WIDTH, 0, lambda x: -_ground_edge(x), step=4, bottom=HEIGHT + 4)
     texture = Fbm(21, WIDTH, HEIGHT, 70, 5)
@@ -426,8 +464,8 @@ def paint_ground(cv: Canvas) -> None:
     cv.paint(
         None,
         (10, 30, 40),
-        alpha=0.55,
-        mask=lambda x, y: np.clip((y - 470) / 170, 0, 1),
+        alpha=0.42,
+        mask=lambda x, y: np.clip((y - 480) / 170, 0, 1),
         clip=ground,
         box=(0, 460, WIDTH, HEIGHT),
     )
@@ -439,6 +477,24 @@ def paint_ground(cv: Canvas) -> None:
         mask=lambda x, y: np.clip((shadows(x, y * 1.8) - 0.52) * 5, 0, 1),
         clip=ground,
         box=(0, HORIZON + 30, WIDTH, HEIGHT),
+    )
+    # Rolling relief lit by the moon: lit swells and cool hollows give the
+    # meadow real form instead of a flat, evenly speckled field.
+    cv.paint(
+        None,
+        (132, 218, 178),
+        alpha=0.38,
+        mask=lambda x, y: np.clip(terrain_light(x, y), 0, 1),
+        clip=ground,
+        box=(0, HORIZON, WIDTH, HEIGHT),
+    )
+    cv.paint(
+        None,
+        (8, 22, 44),
+        alpha=0.36,
+        mask=lambda x, y: np.clip(-terrain_light(x, y), 0, 1),
+        clip=ground,
+        box=(0, HORIZON, WIDTH, HEIGHT),
     )
     # Soft rim where the meadow meets the misty hills.
     edge = ground - ground.shift(0, 5)
@@ -533,7 +589,7 @@ def paint_trail(cv: Canvas, rng: np.random.Generator) -> None:
         size = trail_width(index) * float(rng.uniform(0.42, 0.55))
         stone = Ellipse(sx, sy, size, size * 0.56)
         cv.paint(stone.grow(1.0), (92, 84, 100), alpha=0.75)
-        cv.paint(stone, (196, 186, 190))
+        cv.paint(stone, (184, 176, 184))
         cv.paint(stone - stone.shift(0, -1.8), (140, 130, 146), alpha=0.9, clip=stone)
         cv.paint(stone - stone.shift(1, 1.4), (240, 234, 226), alpha=0.6, clip=stone)
     for _ in range(90):
@@ -560,11 +616,13 @@ def paint_trail(cv: Canvas, rng: np.random.Generator) -> None:
 
 
 def _waystone(cv: Canvas, x: float, y: float) -> None:
+    cast_shadow(cv, x, y + 1, 22, 4.5, alpha=0.26)
     cv.paint(Ellipse(x, y + 1, 7, 2.6), (8, 16, 24), alpha=0.5, feather=1.2)
     stone = Box(x - 4.5, y - 15, x + 4.5, y + 1, 3.5)
     cv.part(stone, STONE, line=INK, line_width=0.9, shade=STONE_DARK, shade_offset=(2.5, 0))
     cv.paint(Poly(star_points(x, y - 8, 2.8, 1.0, 4)), CYAN_LIGHT)
     cv.glow(x, y - 8, 12, (90, 220, 255), 0.45)
+    base_tufts(cv, x, y + 1, 6.5, salt=6)
 
 
 # Landmarks ---------------------------------------------------------------------------
@@ -623,11 +681,13 @@ def paint_start_camp(cv: Canvas) -> None:
         )
         cv.glow(chevron_x + 3, cy - 2, 14, (60, 230, 210), 0.35 - index * 0.06)
         cv.paint(chevron, TEAL_LIGHT, alpha=0.95 - index * 0.2)
-    paint_lander(cv, 676, 372)
+    _weather_platform(cv, cx, cy, 122, 46, front_tufts=True)
+    paint_lander(cv, *LANDER)
     _crates(cv, 430, 416)
     _telescope(cv, 604, 356)
     # A little signpost pointing toward the Compass clearing.
     sx, sy = 392, 338
+    cast_shadow(cv, sx, sy + 1, 40, 4, alpha=0.26)
     cv.paint(Ellipse(sx + 1, sy + 1, 6, 2.2), (8, 16, 24), alpha=0.5, feather=1)
     cv.part(Box(sx - 1.6, sy - 30, sx + 1.6, sy + 1, 1), WOOD, line=INK, line_width=0.9)
     board = Poly(
@@ -641,6 +701,42 @@ def paint_start_camp(cv: Canvas) -> None:
     )
     cv.part(board, (150, 104, 76), line=INK, line_width=0.9, shade=WOOD_DARK, shade_offset=(0, -2))
     cv.paint(Poly(star_points(sx - 5, sy - 26, 2.6, 1.0, 4)), (190, 150, 255))
+    base_tufts(cv, sx, sy + 1, 6, salt=7)
+
+
+def _weather_platform(
+    cv: Canvas, cx: float, cy: float, rx: float, ry: float, *, front_tufts: bool
+) -> None:
+    """Age a stone platform into the meadow: moss on its rim, a moonlit sheen,
+    and grass growing over its front edge, so it is not a pasted-on disc."""
+    rim = Ellipse(cx, cy, rx, ry)
+    r = _prop_rng(cx, cy, 11)
+    cv.paint(
+        Ellipse(cx + rx * 0.28, cy - ry * 0.32, rx * 0.5, ry * 0.42),
+        (200, 214, 255),
+        alpha=0.1,
+        feather=ry * 0.5,
+        clip=rim,
+    )
+    for angle in (2.3, 2.75, 3.3, 0.35, 5.6, 1.4):
+        a = angle + float(r.uniform(-0.12, 0.12))
+        mx, my = cx + rx * 0.96 * math.cos(a), cy + ry * 0.96 * math.sin(a)
+        moss = blob(
+            [
+                (mx, my, 6.5),
+                (mx + 6 * math.cos(a + 1.6), my + 3, 4.5),
+                (mx - 6 * math.cos(a + 1.6), my - 1, 4.0),
+            ],
+            smooth=3,
+        )
+        cv.paint(moss, (44, 102, 80), alpha=0.85, clip=rim.grow(1.5))
+        cv.paint(moss - moss.shift(0, 1.6), (96, 170, 120), alpha=0.6, clip=rim.grow(1.5) & moss)
+    if front_tufts:
+        for index in range(11):
+            a = math.pi * (0.12 + 0.76 * index / 10)
+            tx, ty = cx + rx * math.cos(a), cy + ry * math.sin(a) + 1.5
+            if r.random() < 0.8:
+                base_tufts(cv, tx, ty, 6 + 3 * float(r.random()), salt=20 + index)
 
 
 def _crates(cv: Canvas, x: float, y: float) -> None:
@@ -667,6 +763,7 @@ def _crates(cv: Canvas, x: float, y: float) -> None:
 
 
 def _telescope(cv: Canvas, x: float, y: float) -> None:
+    cast_shadow(cv, x, y + 1, 26, 4, alpha=0.24)
     cv.paint(Ellipse(x, y + 1, 12, 3), (6, 12, 20), alpha=0.5, feather=1.2)
     for leg in (-7, 0, 7):
         cv.paint(Segment((x, y - 14), (x + leg, y), 1.0), (60, 50, 70))
@@ -679,6 +776,7 @@ def _telescope(cv: Canvas, x: float, y: float) -> None:
 
 def paint_lander(cv: Canvas, x: float, base: float) -> None:
     """A friendly little lander parked at the edge of the camp pad."""
+    cast_shadow(cv, x, base, 90, 22, alpha=0.3)
     cv.paint(Ellipse(x, base + 1, 44, 9), (8, 14, 24), alpha=0.5, feather=3)
     for lx in (-26, 26):
         cv.part(
@@ -739,6 +837,7 @@ def paint_lander(cv: Canvas, x: float, base: float) -> None:
 
 
 def _standing_stone(cv: Canvas, x: float, y: float, h: float, lean: float) -> None:
+    cast_shadow(cv, x, y + 1, h * 1.5, 5.5, alpha=0.28)
     cv.paint(Ellipse(x + 2, y + 1, 9, 3), (6, 14, 22), alpha=0.5, feather=1.5)
     stone = Poly(
         [
@@ -764,6 +863,7 @@ def _standing_stone(cv: Canvas, x: float, y: float, h: float, lean: float) -> No
     rx, ry = x + lean * 0.4, y - h * 0.55
     cv.paint(Poly(star_points(rx, ry, 2.6, 0.9, 4)), (206, 180, 255), alpha=0.95)
     cv.glow(rx, ry, 11, (170, 120, 255), 0.4)
+    base_tufts(cv, x, y + 1, 8.5, salt=5)
 
 
 def paint_clearing(cv: Canvas) -> None:
@@ -798,6 +898,7 @@ def paint_clearing(cv: Canvas) -> None:
         a = index * math.tau / 12
         rx, ry = cx + 56 * math.cos(a), cy - 3 + 18.5 * math.sin(a)
         cv.paint(Ellipse(rx, ry, 1.6, 1.0), (220, 200, 255))
+    _weather_platform(cv, cx, cy, 70, 25, front_tufts=True)
     # Standing stones, leaving the view of the Compass open.
     for angle, h in (
         (200, 26),
@@ -817,8 +918,8 @@ def paint_clearing(cv: Canvas) -> None:
 def paint_shrine(cv: Canvas) -> None:
     cx, cy = SHRINE_CENTER
     # Warm light pools under everything that belongs to the shrine.
-    cv.glow(cx + 10, cy - 30, 250, (255, 130, 40), 0.42, squash=0.7, power=1.6)
-    cv.glow(cx, cy, 140, (255, 200, 110), 0.38, squash=0.5)
+    cv.glow(cx + 10, cy - 30, 240, (255, 130, 40), 0.28, squash=0.7, power=1.7)
+    cv.glow(cx, cy, 140, (255, 200, 110), 0.32, squash=0.5)
     # Plaza with radial flagstones, then front steps down toward the viewer.
     plaza = Ellipse(cx, cy + 6, 98, 36)
     cv.paint(Ellipse(cx, cy + 12, 104, 40), (10, 16, 26), alpha=0.5, feather=4)
@@ -915,6 +1016,7 @@ def _brazier(cv: Canvas, x: float, y: float) -> None:
 
 
 def _pillar(cv: Canvas, x: float, top: float, base: float) -> None:
+    cast_shadow(cv, x, base + 2, (base - top) * 0.9, 11, alpha=0.24)
     cv.paint(Ellipse(x + 3, base + 2, 17, 5), (10, 14, 22), alpha=0.55, feather=2)
     foot = Box(x - 14, base - 12, x + 14, base + 2, 3)
     cv.part(
@@ -960,6 +1062,7 @@ def _crystal_cluster(cv: Canvas, x: float, y: float, scale: float, hue: float) -
     glow_color = (170, 120, 255) if hue else (80, 210, 255)
     cv.glow(x, y - 16 * scale, 54 * scale, glow_color, 0.35)
     cv.glow(x, y + 2, 46 * scale, glow_color, 0.25, squash=0.35)
+    cast_shadow(cv, x, y + 1, 40 * scale, 9 * scale, alpha=0.2)
     cv.paint(Ellipse(x, y + 1, 22 * scale, 5 * scale), (6, 12, 24), alpha=0.5, feather=2)
     r = _prop_rng(x, y, 3)
     flip = -1 if r.random() < 0.5 else 1
@@ -1016,6 +1119,7 @@ def _crystal_cluster(cv: Canvas, x: float, y: float, scale: float, hue: float) -
             alpha=0.7,
             clip=body,
         )
+    base_tufts(cv, x, y + 1, 20 * scale, salt=1)
 
 
 def _rock(
@@ -1054,6 +1158,7 @@ def _rock(
         cap = Ellipse(x - size * 0.1, y - size * 0.62, size * 0.7, size * 0.28)
         cv.paint(cap, (70, 150, 104), alpha=0.9, clip=rock)
         cv.paint(cap - cap.shift(0, 1.4), (130, 210, 150), alpha=0.6, clip=rock & cap)
+    base_tufts(cv, x, y + size * 0.3, size * 1.1, salt=2)
 
 
 def _prop_rng(x: float, y: float, salt: int = 0) -> np.random.Generator:
@@ -1111,7 +1216,8 @@ def _flower_bush(
         size = float(r.uniform(1.4, 2.3)) * scale
         cv.paint(Circle(fx, fy, size), color)
         cv.paint(Circle(fx - 0.5, fy - 0.5, size * 0.38), (255, 255, 240))
-        cv.glow(fx, fy, 6 * scale, color, 0.22)
+        cv.glow(fx, fy, 6 * scale, color, 0.16)
+    base_tufts(cv, x, y + 1.5, 11 * scale, salt=3)
 
 
 MUSHROOM_CAPS: tuple[tuple[Color, Color, Color], ...] = (
@@ -1156,6 +1262,7 @@ def _mushrooms(cv: Canvas, x: float, y: float, scale: float) -> None:
             Circle(top[0] - cap_r * 0.3 * scale, top[1] - cap_r * 0.3 * scale, 0.8 * scale), spark
         )
         cv.glow(top[0], top[1], 15 * scale, glow_color, 0.3)
+    base_tufts(cv, x, y + 1, (count * 4 + 4) * scale, salt=4)
 
 
 def _tuft(
@@ -1172,8 +1279,45 @@ def _tuft(
         cv.paint(Stroke(points, 1.2, 0.2), color if index % 2 else light)
 
 
+#: Ground direction of moon shadows: away from the moon, toward the lower left.
+SHADOW_DIRECTION = (-0.86, 0.5)
+
+
+def cast_shadow(
+    cv: Canvas, x: float, y: float, length: float, width: float, alpha: float = 0.32
+) -> None:
+    """A long, soft moon shadow lying on the ground behind a standing prop."""
+    dx, dy = SHADOW_DIRECTION
+    tip = (x + dx * length, y + dy * length * 0.62)
+    cv.paint(
+        Segment((x, y), tip, width, width * 0.55),
+        (6, 14, 34),
+        alpha=alpha,
+        feather=max(1.5, width * 0.7),
+    )
+
+
+def base_tufts(cv: Canvas, x: float, y: float, half_width: float, salt: int = 0) -> None:
+    """Grass blades in front of a prop's foot, so it grows out of the meadow."""
+    r = _prop_rng(x, y, 40 + salt)
+    depth = max(0.0, (y - HORIZON) / (HEIGHT - HORIZON))
+    count = max(3, int(half_width / 2.2))
+    for index in range(count):
+        t = (index + float(r.uniform(0.1, 0.9))) / count
+        bx = x - half_width + 2 * half_width * t
+        by = y + float(r.uniform(0.2, 2.6))
+        h = (2.8 + 5.5 * depth) * float(r.uniform(0.55, 1.15))
+        lean = float(r.uniform(-0.6, 0.6)) * h
+        points = [(bx, by), (bx + lean * 0.35, by - h * 0.55), (bx + lean, by - h)]
+        width = 0.5 + 0.55 * depth
+        base = mix(GRASS_DARK, GRASS_MID, float(r.uniform(0.2, 0.6)))
+        cv.paint(Stroke(points, width, 0.12), base)
+        cv.paint(Stroke(points[1:], width * 0.65, 0.1), mix(base, GRASS_LIGHT, 0.55), alpha=0.8)
+
+
 def _moon_tree(cv: Canvas, x: float, base: float, scale: float, rng: np.random.Generator) -> None:
     """A round-canopied moon tree with glowing hanging fruit."""
+    cast_shadow(cv, x, base + 2, 150 * scale, 24 * scale, alpha=0.4)
     cv.paint(
         Ellipse(x - 10 * scale, base + 2, 46 * scale, 9 * scale), (6, 12, 22), alpha=0.5, feather=4
     )
@@ -1228,8 +1372,8 @@ def _moon_tree(cv: Canvas, x: float, base: float, scale: float, rng: np.random.G
         puff = Circle(px, py, pr)
         cv.paint(
             puff - puff.shift(-pr * 0.25, pr * 0.3),
-            (126, 204, 190),
-            alpha=0.45,
+            (140, 220, 200),
+            alpha=0.55,
             feather=2,
             clip=canopy,
         )
@@ -1243,6 +1387,7 @@ def _moon_tree(cv: Canvas, x: float, base: float, scale: float, rng: np.random.G
         cv.glow(fx, fy, 14 * scale, (120, 255, 220), 0.4)
         cv.paint(Circle(fx, fy + 1, 2.3 * scale), (170, 255, 230))
         cv.paint(Circle(fx - 0.6, fy + 0.4, 0.8 * scale), (255, 255, 255))
+    base_tufts(cv, x, base + 2, 20 * scale)
 
 
 def paint_trees(cv: Canvas, rng: np.random.Generator) -> None:
@@ -1277,19 +1422,19 @@ def _flower_field(
             a = petal * math.tau / 5
             cv.paint(Circle(fx + 1.5 * math.cos(a), fy - h + 1.2 * math.sin(a), 1.25), color)
         cv.paint(Circle(fx, fy - h, 0.8), (255, 246, 190))
-        cv.glow(fx, fy - h, 7, color, 0.22)
+        cv.glow(fx, fy - h, 7, color, 0.12)
 
 
 def paint_flower_fields(cv: Canvas, rng: np.random.Generator) -> None:
     blue = ((156, 224, 255), (206, 170, 255), (242, 242, 255))
     pink = ((255, 146, 200), (255, 190, 220), (255, 234, 146))
     for cx, cy, rx, ry, count, palette in (
-        (760, 300, 60, 22, 46, blue),
-        (620, 420, 52, 18, 36, pink),
-        (470, 468, 44, 14, 26, blue),
-        (820, 600, 70, 20, 40, pink),
-        (560, 250, 44, 12, 24, pink),
-        (230, 612, 40, 12, 24, pink),
+        (760, 300, 46, 16, 28, blue),
+        (620, 420, 40, 14, 22, pink),
+        (470, 468, 34, 11, 16, blue),
+        (820, 600, 52, 15, 26, pink),
+        (560, 250, 32, 9, 14, pink),
+        (230, 612, 30, 9, 14, pink),
     ):
         _flower_field(cv, cx, cy, rx, ry, count, rng, palette)
 
@@ -1341,7 +1486,7 @@ def paint_scatter(cv: Canvas, rng: np.random.Generator) -> None:
                 color = FLOWERS[int(rng.integers(0, len(FLOWERS)))]
                 cv.paint(Segment((fx, fy), (fx, fy - 5), 0.5), (50, 120, 90))
                 cv.paint(Circle(fx, fy - 5.5, 1.6), color)
-                cv.glow(fx, fy - 5.5, 5, color, 0.25)
+                cv.glow(fx, fy - 5.5, 5, color, 0.14)
 
 
 def paint_grass(cv: Canvas, rng: np.random.Generator) -> None:
@@ -1357,18 +1502,24 @@ def paint_grass(cv: Canvas, rng: np.random.Generator) -> None:
             continue
         blades.append((y, x))
     blades.sort()
-    for y, x in blades:
+    bx = np.asarray([x for _, x in blades], np.float32)
+    by = np.asarray([y for y, _ in blades], np.float32)
+    noise = light_noise(bx, by)
+    relief = terrain_light(bx, by)
+    for (y, x), light, shade in zip(blades, noise, relief, strict=True):
         depth = (y - HORIZON) / (HEIGHT - HORIZON)
         h = 3.5 + 11 * depth * float(rng.uniform(0.6, 1.2))
         lean = float(rng.uniform(-0.5, 0.5)) * h
-        light = float(light_noise(np.asarray([x]), np.asarray([y]))[0])
-        lit = min(1.0, max(0.0, (light - 0.3) * 1.8 + (1 - depth) * 0.3))
-        base = mix(GRASS_DARK, GRASS_MID, 0.4 + 0.4 * (1 - depth))
-        tip = mix(GRASS_LIGHT, GRASS_MOON, lit * 0.8)
+        # Blades catch the moon only on lit swells, so the field has a light
+        # structure instead of an even speckle of bright tips.
+        lit = min(1.0, max(0.0, 0.42 + 0.55 * float(shade) + (float(light) - 0.5) * 0.7))
+        lit *= 1 - 0.35 * depth
+        base = mix(GRASS_DARK, GRASS_MID, (0.25 + 0.45 * (1 - depth)) * (0.65 + 0.35 * lit))
+        tip = mix(mix(GRASS_MID, GRASS_LIGHT, lit), GRASS_MOON, max(0.0, lit - 0.62) * 1.6)
         width = 0.55 + 0.75 * depth
         points = [(x, y), (x + lean * 0.3, y - h * 0.5), (x + lean, y - h)]
         cv.paint(Stroke(points, width, 0.15), base)
-        cv.paint(Stroke(points[1:], width * 0.7, 0.12), tip, alpha=0.9)
+        cv.paint(Stroke(points[1:], width * 0.7, 0.12), tip, alpha=0.5 + 0.4 * lit)
     # Trail-edge tufts overhang the path so it sits inside the meadow.
     for index in range(0, len(TRAIL_POINTS) - 1, 2):
         x, y = TRAIL_POINTS[index]
@@ -1385,43 +1536,154 @@ def paint_grass(cv: Canvas, rng: np.random.Generator) -> None:
                     _tuft(cv, tx, ty, 5 + 7 * depth, rng, GRASS_MID, GRASS_LIGHT)
 
 
+def paint_grass_clumps(cv: Canvas, rng: np.random.Generator) -> None:
+    """Fuller grass clumps in drifts, lit by the relief: rhythm, not noise."""
+    clumps: list[tuple[float, float]] = []
+    attempts = 0
+    while len(clumps) < 90 and attempts < 3000:
+        attempts += 1
+        # Drift centers, then clumps scattered loosely around them.
+        x = float(rng.uniform(10, WIDTH - 10))
+        y = float(rng.uniform(HORIZON + 30, HEIGHT - 20))
+        if _keepout(x, y, 4) or _in_text_band(x, y):
+            continue
+        if any(math.hypot(x - cx, (y - cy) * 1.5) < 26 for cx, cy in clumps):
+            continue
+        clumps.append((x, y))
+    xs = np.asarray([x for x, _ in clumps], np.float32)
+    ys = np.asarray([y for _, y in clumps], np.float32)
+    light = terrain_light(xs, ys)
+    for (x, y), shade in sorted(zip(clumps, light, strict=True), key=lambda item: item[0][1]):
+        depth = (y - HORIZON) / (HEIGHT - HORIZON)
+        lit = min(1.0, max(0.0, 0.5 + 0.6 * float(shade)))
+        h = (6 + 12 * depth) * float(rng.uniform(0.8, 1.2))
+        dark = mix(GRASS_DARK, GRASS_MID, 0.25 + 0.3 * lit)
+        bright = mix(GRASS_MID, GRASS_LIGHT, 0.3 + 0.6 * lit)
+        cv.paint(Ellipse(x, y + 1, h * 0.7, h * 0.16), (6, 14, 24), alpha=0.25, feather=2)
+        for blade in range(7):
+            spread = (blade - 3) / 3
+            lean = spread * h * 0.45 + float(rng.uniform(-0.15, 0.15)) * h
+            bh = h * (1.0 - 0.35 * abs(spread)) * float(rng.uniform(0.8, 1.1))
+            bx = x + spread * h * 0.22
+            points = [(bx, y), (bx + lean * 0.3, y - bh * 0.55), (bx + lean, y - bh)]
+            width = 0.7 + 0.8 * depth
+            cv.paint(Stroke(points, width, 0.15), dark)
+            cv.paint(Stroke(points[1:], width * 0.7, 0.12), bright, alpha=0.6 + 0.35 * lit)
+
+
 def paint_ant_colonies(cv: Canvas) -> None:
-    """A dusty ant highway, a hill, and a crystal-crumb stash per colony."""
+    """A trodden ant path, a sandy hill, and a fallen moon crystal per colony.
+
+    The runtime ants march out to the crystal and carry glowing crumbs home,
+    so the painted path stays faint: it is worn ground, not a raised road.
+    """
     for trail in ANT_TRAILS:
         loop = [*trail.loop, trail.loop[0]]
-        highway = Union(*(Segment(a, b, 7.5) for a, b in zip(loop, loop[1:], strict=False)))
-        cv.paint(highway, (38, 58, 56), alpha=0.4, feather=3.0)
-        cv.paint(highway.grow(-2.5), (120, 108, 92), alpha=0.6, feather=1.8)
+        path = Union(*(Segment(a, b, 5.5) for a, b in zip(loop, loop[1:], strict=False)))
+        cv.paint(path, (70, 82, 70), alpha=0.22, feather=3.5)
+        cv.paint(path.grow(-2.0), (128, 120, 100), alpha=0.18, feather=2.0)
         hx, hy = trail.hill
-        cv.paint(Ellipse(hx, hy + 3, 18, 5), (8, 14, 20), alpha=0.5, feather=2)
-        mound = Ellipse(hx, hy, 16, 9) & Box(hx - 20, hy - 12, hx + 20, hy + 4)
+        r = _prop_rng(hx, hy, 9)
+        cast_shadow(cv, hx, hy + 3, 26, 7, alpha=0.22)
+        cv.paint(Ellipse(hx, hy + 3, 19, 5), (8, 14, 20), alpha=0.45, feather=2.5)
+        mound = Union(
+            Ellipse(hx, hy + 1, 16, 8.5),
+            Ellipse(hx + 1, hy - 3, 9, 5.5),
+            smooth=4,
+        ) & Box(hx - 22, hy - 14, hx + 22, hy + 4)
         cv.part(
             mound,
-            (150, 120, 96),
+            textured(
+                linear(
+                    (hx + 10, hy - 8), (hx - 10, hy + 4), ((0, (196, 164, 124)), (1, (122, 96, 80)))
+                ),
+                Noise(97, WIDTH, HEIGHT, 1.6),
+                (104, 82, 70),
+                (226, 200, 160),
+                0.45,
+            ),
             line=(40, 32, 38),
-            line_width=1.0,
-            shade=(104, 82, 70),
-            shade_offset=(2, -2),
-            rim=(214, 186, 150),
+            line_width=0.9,
+            shade=(96, 76, 70),
+            shade_offset=(3, -2.5),
+            rim=(236, 214, 176),
             rim_offset=(-1, 1.2),
+            rim_alpha=0.6,
         )
-        cv.paint(Ellipse(hx + 1, hy - 5, 3.2, 1.8), (30, 22, 24))
+        # The entrance: a dark doorway with a lit lip, facing the path.
+        door = Ellipse(hx + 2, hy - 2.5, 3.6, 2.6)
+        cv.paint(door.grow(0.8), (150, 120, 96), clip=mound)
+        cv.paint(door, (24, 16, 22))
+        for _ in range(7):
+            gx = hx + float(r.uniform(-15, 15))
+            gy = hy + float(r.uniform(-1, 4))
+            cv.paint(Circle(gx, gy, float(r.uniform(0.6, 1.1))), (214, 190, 150), alpha=0.8)
+        base_tufts(cv, hx, hy + 4, 15, salt=8)
+        # A fallen moon crystal at the far end of the path: the ants' treasure.
         far = max(trail.loop, key=lambda point: point[0])
-        sx, sy = far[0] + 7, far[1] - 2
-        for dx, dy, r in ((-3, 1, 2.2), (2, 0, 2.6), (0, -3, 2.0), (4, -2, 1.6)):
-            cv.paint(Poly(star_points(sx + dx, sy + dy, r + 0.8, r * 0.5, 4)), CYAN_LIGHT)
-        cv.glow(sx, sy - 1, 14, (80, 210, 255), 0.4)
+        sx, sy = far[0] + 8, far[1] - 1
+        cv.glow(sx, sy - 2, 18, (80, 210, 255), 0.4)
+        cv.paint(Ellipse(sx, sy + 2, 8, 2.2), (6, 12, 24), alpha=0.45, feather=1.2)
+        chunk = Rotate(
+            Poly(
+                [
+                    (sx - 7, sy + 1),
+                    (sx - 4, sy - 5),
+                    (sx + 5, sy - 6),
+                    (sx + 8, sy),
+                    (sx + 2, sy + 2),
+                ]
+            ),
+            -0.25,
+            sx,
+            sy,
+        )
+        cv.paint(chunk.grow(0.8), INK)
+        cv.paint(
+            chunk,
+            linear(
+                (sx + 4, sy - 6), (sx - 5, sy + 2), ((0, CYAN_LIGHT), (0.5, CYAN), (1, CYAN_DARK))
+            ),
+        )
+        cv.paint(chunk - chunk.shift(1.2, -1.6), CYAN_DARK, alpha=0.55, clip=chunk)
+        cv.paint(Segment((sx - 3, sy - 3), (sx + 4, sy - 4.5), 0.5), (255, 255, 255), alpha=0.8)
+        for dx, dy, size in ((-11, 2, 1.3), (-8, -1, 1.0), (10, 2, 1.1)):
+            cv.paint(Poly(star_points(sx + dx, sy + dy, size + 0.6, size * 0.45, 4)), CYAN_LIGHT)
+        base_tufts(cv, sx, sy + 2, 9, salt=9)
+
+
+def paint_moon_rays(cv: Canvas) -> None:
+    """A few broad, faint shafts of moonlight fanning down across the meadow."""
+    mx, my, _ = MOON
+
+    def rays(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        angle = np.arctan2(y - my, x - mx)
+        distance = np.hypot(x - mx, y - my)
+        bands = np.zeros_like(x)
+        for center, width, strength in (
+            (2.32, 0.035, 1.0),
+            (2.47, 0.05, 0.8),
+            (2.63, 0.03, 0.7),
+            (2.78, 0.045, 0.55),
+        ):
+            bands += strength * np.exp(-(((angle - center) / width) ** 2))
+        fade_in = np.clip((y - (HORIZON - 30)) / 80, 0, 1)
+        fade_out = np.clip(1 - distance / 980, 0, 1) ** 1.4
+        return bands * fade_in * fade_out
+
+    cv.paint(None, (74, 92, 140), alpha=0.16, mode="add", mask=rays, box=(0, 0, WIDTH, HEIGHT))
 
 
 def paint_lighting(cv: Canvas) -> None:
-    """Moonlight from the upper right, then a gentle vignette."""
+    """Moonlight from the upper right, then a vignette that frames the trail."""
     cv.glow(760, 120, 620, (46, 64, 96), 0.45, power=1.6)
     cv.glow(WIDTH / 2, HEIGHT * 0.55, 460, (30, 40, 60), 0.2, power=1.5)
+    paint_moon_rays(cv)
 
     def vignette(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        nx = (x - WIDTH / 2) / (WIDTH * 0.62)
-        ny = (y - HEIGHT * 0.46) / (HEIGHT * 0.62)
-        return np.clip((np.hypot(nx, ny) - 0.62) * 1.25, 0, 0.55)
+        nx = (x - WIDTH * 0.48) / (WIDTH * 0.6)
+        ny = (y - HEIGHT * 0.5) / (HEIGHT * 0.6)
+        return np.clip((np.hypot(nx, ny) - 0.56) * 1.3, 0, 0.62)
 
     cv.paint(None, (4, 6, 20), mode="over", mask=vignette, box=(0, 0, WIDTH, HEIGHT))
     # A calm, darker backing behind the HUD's bottom feedback lines.
@@ -1443,11 +1705,30 @@ def paint_focal_light(cv: Canvas) -> None:
         return np.clip((d - 0.7) * 0.55, 0, 0.3)
 
     cv.paint(None, (8, 22, 52), mode="over", mask=cool, box=(0, 0, WIDTH, HEIGHT))
-    # A warm wash climbing the trail toward the shrine, fading with distance.
-    lit = TRAIL_POINTS[-46:]
+    # Islands of light: each landmark tints its own ground (violet magic at the
+    # clearing, teal tech at the camp, warm fire at the shrine), and the meadow
+    # between them settles a little darker, so the eye travels pool to pool.
+    pools = (
+        (CLEARING_CENTER[0], CLEARING_CENTER[1] + 12, 210.0, 110.0),
+        (START_CENTER[0] + 10, START_CENTER[1] + 6, 240.0, 120.0),
+        (sx + 10, sy - 20, 230.0, 150.0),
+    )
+
+    def between(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        d = np.full_like(x, 9.0)
+        for px, py, rx, ry in pools:
+            d = np.minimum(d, np.hypot((x - px) / rx, (y - py) / ry))
+        ground = np.clip((y - HORIZON - 10) / 40, 0, 1)
+        return np.clip((d - 0.75) * 0.45, 0, 0.26) * ground
+
+    cv.paint(None, (6, 14, 34), mode="over", mask=between, box=(0, HORIZON, WIDTH, HEIGHT))
+    cv.glow(CLEARING_CENTER[0], CLEARING_CENTER[1] + 14, 220, (120, 80, 230), 0.2, squash=0.5)
+    cv.glow(START_CENTER[0] + 10, START_CENTER[1] + 4, 230, (30, 170, 170), 0.16, squash=0.45)
+    # A gentle warm wash on the last stretch of trail: an invitation, not a spotlight.
+    lit = TRAIL_POINTS[-30:]
     for index, (x, y) in enumerate(lit):
-        strength = (index / (len(lit) - 1)) ** 1.6
-        cv.glow(x, y, 24 + 16 * strength, (255, 196, 120), 0.036 * strength, squash=0.7)
+        strength = (index / (len(lit) - 1)) ** 2.0
+        cv.glow(x, y, 22 + 12 * strength, (255, 186, 110), 0.016 * strength, squash=0.6)
     # The Compass clearing: a violet moon-pool and a brighter dais rim.
     cx, cy = CLEARING_CENTER
     cy += 5
@@ -1488,6 +1769,27 @@ def paint_atmosphere(cv: Canvas) -> None:
         mask=lambda x, y: np.exp(-(((y - (HORIZON + 26)) / 16) ** 2)) * 0.22,
         box=(0, HORIZON, WIDTH, HORIZON + 70),
     )
+
+
+def paint_mist(cv: Canvas) -> None:
+    """Low wisps of moon-mist drifting over the far meadow (atmospheric depth).
+
+    The wisps thin out around the Compass clearing so the hero stays crisp.
+    """
+    wisps = Fbm(63, WIDTH, HEIGHT, 120, 3)
+    cx, cy = CLEARING_CENTER
+
+    def mist(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        bands = (
+            np.exp(-(((y - 204) / 9) ** 2)) * 0.9
+            + np.exp(-(((y - 236 - 8 * np.sin(x / 140)) / 7) ** 2)) * 0.6
+            + np.exp(-(((y - 268 - 10 * np.sin(x / 190 + 1)) / 6) ** 2)) * 0.35
+        )
+        breakup = np.clip((wisps(x * 0.6, y * 3.0) - 0.42) * 2.6, 0, 1)
+        clear = 1 - 0.85 * np.exp(-(((x - cx) / 130) ** 2 + ((y - cy) / 45) ** 2))
+        return bands * breakup * clear
+
+    cv.paint(None, (160, 172, 232), alpha=0.32, mask=mist, box=(0, HORIZON, WIDTH, 300))
 
 
 def paint_finish(cv: Canvas) -> None:
@@ -1534,6 +1836,7 @@ def paint_background() -> Canvas:
     paint_ant_colonies(cv)
     paint_trail(cv, rng)
     paint_grass(cv, rng)
+    paint_grass_clumps(cv, rng)
     paint_start_camp(cv)
     paint_clearing(cv)
     paint_flower_fields(cv, rng)
@@ -1541,6 +1844,7 @@ def paint_background() -> Canvas:
     paint_trees(cv, rng)
     paint_shrine(cv)
     paint_atmosphere(cv)
+    paint_mist(cv)
     paint_lighting(cv)
     paint_focal_light(cv)
     paint_finish(cv)
@@ -1575,10 +1879,60 @@ def _frond(
     cv.paint(Stroke(spine[1:], width * 0.35, 0.2), FG_RIM, alpha=0.5)
 
 
+def _broad_leaf(
+    cv: Canvas, base: tuple[float, float], tip: tuple[float, float], width: float, tone: float
+) -> None:
+    """One big, dark foreground leaf with a moonlit midrib."""
+    bx, by = base
+    tx, ty = tip
+    dx, dy = tx - bx, ty - by
+    length = math.hypot(dx, dy) or 1.0
+    nx, ny = -dy / length, dx / length
+    mid = (bx + dx * 0.45, by + dy * 0.45)
+    leaf = Poly(
+        [
+            (bx, by),
+            (mid[0] + nx * width, mid[1] + ny * width),
+            (bx + dx * 0.8 + nx * width * 0.5, by + dy * 0.8 + ny * width * 0.5),
+            (tx, ty),
+            (bx + dx * 0.8 - nx * width * 0.45, by + dy * 0.8 - ny * width * 0.45),
+            (mid[0] - nx * width * 0.9, mid[1] - ny * width * 0.9),
+        ]
+    )
+    body = mix(FG_DARK, FG_MID, tone)
+    cv.paint(leaf.grow(1.0), (4, 10, 16))
+    cv.paint(leaf, body)
+    cv.paint(leaf - leaf.shift(-2.5, 3), FG_RIM, alpha=0.5, feather=1.2, clip=leaf)
+    cv.paint(Stroke([(bx, by), mid, (tx, ty)], 1.1, 0.3), FG_RIM, alpha=0.45, clip=leaf)
+
+
+def _glow_buds(cv: Canvas, points: tuple[tuple[float, float], ...]) -> None:
+    """A few bioluminescent buds on the framing plants: magic up close."""
+    for x, y in points:
+        cv.paint(Circle(x, y, 7), (60, 200, 210), alpha=0.18, feather=5)
+        cv.paint(Circle(x, y, 2.2), (150, 250, 240))
+        cv.paint(Circle(x - 0.6, y - 0.6, 0.9), (240, 255, 255))
+
+
 def paint_foreground() -> Canvas:
     """Dark framing plants in the bottom corners and a thin bottom fringe."""
     rng = np.random.default_rng(7)
     cv = Canvas(WIDTH, HEIGHT, ss=2)
+    # Out-of-focus broad leaves rising up the side edges, softened like a
+    # close camera's depth of field so the meadow sits behind them.
+    near = Canvas(WIDTH, HEIGHT, ss=2)
+    for base, tip, width, tone in (
+        ((-14, 660), (40, 486), 15, 0.2),
+        ((-20, 640), (54, 556), 12, 0.5),
+        ((6, 664), (102, 604), 11, 0.35),
+        ((974, 660), (918, 470), 15, 0.25),
+        ((984, 640), (900, 548), 12, 0.5),
+        ((952, 668), (858, 610), 11, 0.35),
+    ):
+        _broad_leaf(near, base, tip, width, tone)
+    _glow_buds(near, ((44, 500), (921, 486), (90, 610), (868, 616)))
+    blurred = near.blurred(1.6)
+    cv.composite(blurred)
     # Bottom-left ferns, kept below the shrine steps.
     for base, tip, width, bend in (
         ((-6, 648), (62, 598), 2.4, -8),

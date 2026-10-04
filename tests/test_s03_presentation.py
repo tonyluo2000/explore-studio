@@ -22,6 +22,7 @@ from engine.rendering._classroom_environment import (
     draw_classroom_backdrop,
 )
 from engine.rendering._classroom_sprites import (
+    COMPASS_HALO_SHEET_ID,
     COMPASS_NEEDLE_SHEET_ID,
     COMPASS_SHEET_ID,
     MOON_COMPASS_QUALIFIED_ID,
@@ -153,6 +154,7 @@ def test_s03_draws_the_moon_meadow_nova_v3_and_the_trusted_compass() -> None:
     assert MEADOW_FOREGROUND[0] in assets
     layers = [(values[0], values[1]) for values in sprites if "compass" in str(values[0])]
     assert layers == [
+        (COMPASS_HALO_SHEET_ID, "halo"),
         (COMPASS_SHEET_ID, "ring"),
         (COMPASS_SHEET_ID, "body"),
         (COMPASS_NEEDLE_SHEET_ID, "needle"),
@@ -189,7 +191,7 @@ def test_s03_compass_art_translates_with_student_coordinates(tmp_path: Path) -> 
         ]
         for renderer in (here, there)
     )
-    assert len(before) == len(after) == 4
+    assert len(before) == len(after) == 5  # halo, ring, body, needle, glass
     for first, second in zip(before, after, strict=True):
         assert second[:3] == first[:3]
         assert second[3:5] == (first[3] + 360, first[4] + 240)

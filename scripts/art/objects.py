@@ -11,7 +11,9 @@ drawn in order at the Compass's own x/y:
 * ``glass`` — the dome sheen, drawn last over the needle.
 
 The needle is its own sheet with 64 pre-rotated angles, so it turns smoothly
-without any runtime rotation.
+without any runtime rotation. The ``halo`` sheet is the rune circle the
+Compass casts on the ground beneath it: neutral like the ring, tinted by the
+student's color at draw time, and positioned from the Compass's own x/y.
 
 The Crystal Lantern's glow and rays are runtime effects; the sheet holds the
 brass lantern and its flickering crystal flame. The reeds sheet holds one
@@ -102,6 +104,7 @@ def compass_frame(row: str, column: str) -> Image.Image:
             )
         return cv.image()
     if row == "body":
+        _compass_wings(cv, cx, cy, r)
         bezel = Circle(cx, cy, r - 5.0)
         cv.paint(bezel.grow(0.8), LINE)
         cv.paint(
@@ -166,6 +169,72 @@ def compass_frame(row: str, column: str) -> Image.Image:
         clip=dome,
     )
     cv.paint(Circle(cx + 7, cy + 8, 1.0), WHITE, alpha=0.6, clip=dome)
+    return cv.image()
+
+
+def _compass_wings(cv: Canvas, cx: float, cy: float, r: float) -> None:
+    """A brass crescent moon cradling the Compass: it reads as a treasure.
+
+    The cradle stays inside the Compass's own 80 x 60 box, behind the ring.
+    """
+    ring = Circle(cx, cy, r + 0.4)
+    cradle = Circle(cx, cy, r + 5.5) - Circle(cx, cy - 5.2, r + 5.0) - ring
+    cv.paint(cradle.grow(0.9), LINE)
+    cv.paint(
+        cradle,
+        linear(
+            (cx + 18, cy - 4),
+            (cx - 14, cy + r + 4),
+            ((0, BRASS_LIGHT), (0.45, BRASS), (1, BRASS_SHADE)),
+        ),
+    )
+    cv.paint(cradle - cradle.shift(0, -1.3), BRASS_SHADE, alpha=0.65, clip=cradle)
+    cv.paint(cradle - cradle.shift(-0.8, 1.0), BRASS_LIGHT, alpha=0.6, clip=cradle)
+    # A tiny star perched on each crescent tip.
+    for side in (-1, 1):
+        tip_x, tip_y = cx + side * (r + 4.6), cy - 6.5
+        star = Poly(star_points(tip_x, tip_y, 3.0, 1.15, 4))
+        cv.paint(star.grow(0.7), LINE)
+        cv.paint(star, (255, 246, 210))
+        cv.paint(Circle(tip_x, tip_y, 0.7), WHITE)
+
+
+#: The ground halo frame: wide and foreshortened, centered under the Compass.
+HALO_FRAME = (144, 36)
+HALO_COLUMNS = tuple(f"spin-{index:02d}" for index in range(16))
+
+
+def halo_frame(column: str) -> Image.Image:
+    """A neutral rune circle lying on the ground, turned one rune per loop."""
+    width, height = HALO_FRAME
+    cv = Canvas(width, height, SS)
+    cx, cy = width / 2, height / 2
+    rx, ry = width / 2 - 2.5, height / 2 - 2.0
+    spin = int(column.rpartition("-")[2]) / len(HALO_COLUMNS) * (math.tau / 12)
+    squash = ry / rx
+
+    def ring(scale: float, thickness: float) -> Ellipse:
+        return Ellipse(cx, cy, rx * scale, ry * scale) - Ellipse(
+            cx, cy, rx * scale - thickness, ry * scale - thickness * squash * 1.6
+        )
+
+    cv.paint(Ellipse(cx, cy, rx * 0.74, ry * 0.74), (255, 255, 255), alpha=0.1, feather=5)
+    cv.paint(ring(1.0, 1.3), (255, 255, 255), alpha=0.55, feather=0.4)
+    cv.paint(ring(0.8, 2.2), (255, 255, 255), alpha=0.9, feather=0.3)
+    cv.paint(ring(0.8, 5.0), (255, 255, 255), alpha=0.2, feather=1.5)
+    # Twelve runes ride between the rings; every third is a bright compass star.
+    for index in range(12):
+        a = spin + index * math.tau / 12
+        px, py = cx + rx * 0.9 * math.cos(a), cy + ry * 0.9 * math.sin(a)
+        size = 3.4 if index % 3 == 0 else 2.0
+        rune = Poly(
+            [
+                (x, py + (y - py) * squash * 1.8)
+                for x, y in star_points(px, py, size, size * 0.38, 4)
+            ]
+        )
+        # Runes on the far side of the circle are fainter, so it lies flat.
+        cv.paint(rune, (255, 255, 255), alpha=0.55 + 0.4 * max(0.0, math.sin(a)))
     return cv.image()
 
 

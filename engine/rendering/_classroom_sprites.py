@@ -66,6 +66,9 @@ SPRITE_SHEET_IDS: Final = {
 COMPASS_SHEET_ID: Final = "objects/moon-compass"
 COMPASS_NEEDLE_SHEET_ID: Final = "objects/moon-compass-needle"
 COMPASS_NEEDLE_ANGLES: Final = 64
+#: The rune circle the Compass casts on the ground (neutral, tinted at draw time).
+COMPASS_HALO_SHEET_ID: Final = "objects/moon-compass-halo"
+COMPASS_HALO_FRAME: Final = (144, 36)
 
 
 def compass_needle_column(angle: float) -> str:

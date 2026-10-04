@@ -2,7 +2,10 @@
 
 Everything here is a pure function of an injected clock: ants on two fixed
 looping trails, drifting firefly motes, swaying reeds, crystal glints,
-twinkling stars, and the shrine braziers' flicker. Nothing reads or writes
+twinkling stars, and the shrine braziers' flicker. Over the illustrated plate
+the camp also comes alive: a light chases around the landing pad, the trail
+chevrons pulse toward the Compass, the lander's beacon blinks, the pond
+shimmers, and now and then a shooting star crosses the open sky. Nothing reads or writes
 entity state, nothing collides, and every count is a fixed constant, so the
 Trail's gameplay is untouched and the per-frame cost is bounded.
 
@@ -25,6 +28,11 @@ from engine.rendering._effects import Color, glow, mix, sparkle
 from engine.rendering._meadow_layout import (
     BRIGHT_STARS,
     CRYSTAL_CLUSTERS,
+    LANDER_BEACON,
+    PAD_CHEVRONS,
+    PAD_LIGHTS,
+    POND_GLINTS,
+    SHOOTING_STAR_PATHS,
     SHRINE_FLAMES,
     crystal_tip,
 )
@@ -37,7 +45,7 @@ _ANT_SHINE: Final[Color] = (96, 90, 108)
 _ANT_HILL: Final[Color] = (74, 66, 62)
 _ANT_HILL_LIGHT: Final[Color] = (96, 86, 78)
 _ANT_HOLE: Final[Color] = (24, 22, 24)
-_CRUMB: Final[Color] = (170, 236, 244)
+_CRUMB: Final[Color] = (150, 236, 255)
 _REED: Final[Color] = (70, 110, 94)
 _REED_LIGHT: Final[Color] = (104, 150, 118)
 _REED_TIP: Final[Color] = (178, 214, 150)
@@ -206,7 +214,9 @@ def _draw_ant(renderer: object, ant: AntState) -> None:
             1,
         )
     if ant.carrying:
+        # A glowing moon-crystal crumb carried home from the fallen crystal.
         draw_circle(round(ant.x + hx * 6), round(ant.y + hy * 6), 2, _CRUMB)
+        draw_circle(round(ant.x + hx * 6), round(ant.y + hy * 6 - 1), 1, _GLINT)
 
 
 def _draw_ant_hill(renderer: object, x: float, y: float) -> None:
@@ -377,6 +387,94 @@ def _draw_twinkles(renderer: object, clock: float, stars: tuple[tuple[float, flo
             sparkle(renderer, x, y, 1 + 3 * (strength - 0.55) / 0.45, _STAR)
 
 
+_PAD_LIGHT: Final[Color] = (90, 255, 220)
+_BEACON: Final[Color] = (255, 110, 90)
+_POND_LIGHT: Final[Color] = (200, 214, 255)
+_METEOR: Final[Color] = (236, 240, 255)
+_SKY: Final[Color] = (20, 24, 66)
+
+#: One lap of the landing-pad chase light, and one chevron pulse, in seconds.
+PAD_CHASE_PERIOD: Final = 4.0
+CHEVRON_PERIOD: Final = 1.8
+BEACON_PERIOD: Final = 1.8
+#: A shooting star every 13 s, visible for 0.8 s, first at 2.6 s.
+SHOOTING_STAR_PERIOD: Final = 13.0
+SHOOTING_STAR_DURATION: Final = 0.8
+SHOOTING_STAR_OFFSET: Final = 2.6
+
+
+def pad_chase(clock: float) -> tuple[tuple[int, float], ...]:
+    """The two pad lights nearest the chase head and their brightness (0-1)."""
+    count = len(PAD_LIGHTS)
+    head = (clock / PAD_CHASE_PERIOD) % 1.0 * count
+    lead = int(head) % count
+    fraction = head - int(head)
+    return ((lead, 1.0 - fraction), ((lead + 1) % count, fraction))
+
+
+def chevron_pulse(clock: float) -> tuple[int, float]:
+    """Which trail chevron is pulsing (pad side first) and how strongly."""
+    t = (clock % CHEVRON_PERIOD) / CHEVRON_PERIOD * (len(PAD_CHEVRONS) + 1)
+    index = min(int(t), len(PAD_CHEVRONS) - 1)
+    strength = math.sin(math.pi * min(1.0, t - index)) if t < len(PAD_CHEVRONS) else 0.0
+    return index, max(0.0, strength)
+
+
+def shooting_star(clock: float) -> tuple[float, float, float, float, float] | None:
+    """``(head_x, head_y, tail_x, tail_y, fade)`` while a star crosses, else ``None``."""
+    since = clock - SHOOTING_STAR_OFFSET
+    if since < 0:
+        return None
+    cycle, elapsed = divmod(since, SHOOTING_STAR_PERIOD)
+    if elapsed >= SHOOTING_STAR_DURATION:
+        return None
+    x0, y0, dx, dy, length = SHOOTING_STAR_PATHS[int(cycle) % len(SHOOTING_STAR_PATHS)]
+    progress = elapsed / SHOOTING_STAR_DURATION
+    travel = length * (1 - (1 - progress) ** 2)
+    tail = min(travel, 46.0) * (1 - 0.6 * progress)
+    head_x, head_y = x0 + dx * travel, y0 + dy * travel
+    return head_x, head_y, head_x - dx * tail, head_y - dy * tail, 1 - progress
+
+
+def _draw_shooting_star(renderer: object, clock: float) -> None:
+    star = shooting_star(clock)
+    if star is None:
+        return
+    head_x, head_y, tail_x, tail_y, fade = star
+    draw_line = renderer.draw_line  # type: ignore[attr-defined]
+    for index, (start, end, width) in enumerate(((0.0, 0.45, 1), (0.45, 0.8, 1), (0.8, 1.0, 2))):
+        sx, sy = tail_x + (head_x - tail_x) * start, tail_y + (head_y - tail_y) * start
+        ex, ey = tail_x + (head_x - tail_x) * end, tail_y + (head_y - tail_y) * end
+        color = mix(_SKY, _METEOR, fade * (0.35 + 0.3 * index))
+        draw_line(round(sx), round(sy), round(ex), round(ey), color, width)
+    glow(renderer, head_x, head_y, 9, (190, 200, 255), 0.55 * fade)
+
+
+def _draw_camp_life(renderer: object, clock: float) -> None:
+    """Landing-pad chase light, chevron pulse, and the lander's beacon."""
+    for index, strength in pad_chase(clock):
+        x, y = PAD_LIGHTS[index]
+        glow(renderer, x, y, 13, _PAD_LIGHT, 0.55 * strength)
+    index, strength = chevron_pulse(clock)
+    if strength > 0.05:
+        x, y = PAD_CHEVRONS[index]
+        glow(renderer, x, y, 16, _PAD_LIGHT, 0.5 * strength)
+    if (clock % BEACON_PERIOD) < 0.3:
+        x, y = LANDER_BEACON
+        glow(renderer, x, y, 10, _BEACON, 0.7)
+        renderer.draw_circle(round(x), round(y), 2, (255, 214, 200))  # type: ignore[attr-defined]
+
+
+def _draw_pond_shimmer(renderer: object, clock: float) -> None:
+    """The moon's reflection breathes and catches a few slow glints."""
+    x, y = POND_GLINTS[len(POND_GLINTS) // 2]
+    glow(renderer, x, y, 18, _POND_LIGHT, 0.1 + 0.06 * math.sin(clock * 0.9))
+    for index, (gx, gy) in enumerate(POND_GLINTS):
+        strength = math.sin(clock * (1.1 + 0.23 * index) + index * 2.2)
+        if strength > 0.6:
+            sparkle(renderer, gx, gy, 1 + 2.5 * (strength - 0.6) / 0.4, _GLINT)
+
+
 def draw_ground_life(renderer: object, clock: float, *, illustrated: bool = False) -> None:
     """Ground-level ambience drawn above the backdrop, below every entity.
 
@@ -386,8 +484,11 @@ def draw_ground_life(renderer: object, clock: float, *, illustrated: bool = Fals
     """
     if illustrated:
         _draw_twinkles(renderer, clock, BRIGHT_STARS)
+        _draw_shooting_star(renderer, clock)
         _draw_painted_crystal_shimmer(renderer, clock)
         _draw_shrine_flames(renderer, clock)
+        _draw_camp_life(renderer, clock)
+        _draw_pond_shimmer(renderer, clock)
     else:
         _draw_twinkles(renderer, clock, TWINKLING_STARS)
         _draw_crystal_shimmer(renderer, clock)

@@ -15,6 +15,7 @@ Internal module — not part of the Student API.
 
 from __future__ import annotations
 
+import math
 from typing import Final
 
 from engine.rendering._classroom_environment import (
@@ -29,8 +30,14 @@ __all__ = [
     "CLEARING_CENTER",
     "CRYSTAL_CLUSTERS",
     "HORIZON",
+    "LANDER",
+    "LANDER_BEACON",
     "MOON",
+    "PAD_CHEVRONS",
+    "PAD_LIGHTS",
     "POND",
+    "POND_GLINTS",
+    "SHOOTING_STAR_PATHS",
     "SHRINE_CENTER",
     "SHRINE_FLAMES",
     "START_CENTER",
@@ -76,6 +83,32 @@ SHRINE_FLAMES: Final = ((84.0, 351.0), (242.0, 351.0))
 
 #: A small moonlit pond (cx, cy, rx, ry) west of the Compass clearing.
 POND: Final = (82.0, 300.0, 62.0, 22.0)
+
+#: The painted landing pad's rim lights (12, clockwise from the east) and the
+#: three teal chevrons that point from the pad toward the trail.
+PAD_LIGHTS: Final = tuple(
+    (
+        START_CENTER[0] + 104.0 * math.cos(index * math.tau / 12),
+        START_CENTER[1] + 2.0 + 36.0 * math.sin(index * math.tau / 12),
+    )
+    for index in range(12)
+)
+PAD_CHEVRONS: Final = tuple((x, START_CENTER[1] + 1.0) for x in (435.0, 417.0, 399.0))
+
+#: The parked lander's base (x, ground y) and the red beacon on its antenna.
+LANDER: Final = (676.0, 372.0)
+LANDER_BEACON: Final = (LANDER[0] - 6.0, LANDER[1] - 85.0)
+
+#: Glints on the pond's painted moon reflection.
+POND_GLINTS: Final = ((97.0, 288.0), (103.0, 294.0), (100.0, 300.0), (99.0, 306.0), (103.0, 312.0))
+
+#: Shooting-star paths (x0, y0, dx, dy, length) in the open sky between the
+#: HUD rows and the moon, so a streak never crosses mission text.
+SHOOTING_STAR_PATHS: Final = (
+    (640.0, 16.0, -0.94, 0.34, 150.0),
+    (840.0, 20.0, -0.92, 0.38, 110.0),
+    (520.0, 12.0, -0.96, 0.28, 140.0),
+)
 
 
 def crystal_tip(cluster: tuple[float, float, float, float]) -> tuple[float, float]:

@@ -32,7 +32,10 @@ S02 art-first pass (illustrated Moon Meadow, Nova V3, and Pixel V3), and
 later the same day to `4a36ade89f78b3c2cfdf64cea5eb0d7736e6d6a6` for the S02
 visual polish pass (painterly plate, varied props, focal lighting). On
 2026-10-03 it advanced to `2e5d5ef3ed95c0e20f1c56cb45322eb3bbafac32` to extend the
-polished Moon Meadow to S03 (M03). The
+polished Moon Meadow to S03 (M03). On 2026-10-04 it advanced to
+`cc154e8c7c8c99c6bb2a700fbf82e6ddaab64d6f` for the final Moon Meadow visual-polish pass
+(lighting and depth, Nova's face and silhouette, the crescent Compass and its
+ground halo, and integrated prompts and dialogue). The
 original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
