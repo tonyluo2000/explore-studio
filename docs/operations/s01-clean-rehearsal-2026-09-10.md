@@ -40,8 +40,11 @@ advanced to `d8f23818c6bde5692a4b4a914b260d6e8be22777` to bring S04 (M04) into t
 Moon Meadow (the trusted Moonlit Guide, its talk cue, and the dialogue-focus
 bubble). Later on 2026-10-04 it advanced to
 `05843ffd7e257a3120a671b009f45fcae33f7391` for the quiet, optional Moon Meadow audio
-(ambience, interaction cues, and the M mute key) in S02-S04 (M02-M04). The
-original S01 rehearsal inputs and result above remain an unchanged historical
+(ambience, interaction cues, and the M mute key) in S02-S04 (M02-M04). Later on
+2026-10-04 it advanced to `3038cf44dc556a6e878141b8e1fbb6c580095aa4` to bring S01 (M01) into the frozen
+Moon Meadow as the silent arrival chapter (Nova, a non-counting Pixel, and the
+Crystal Lantern; a Trail without `--mission-id` stays plain); the rehearsal above used the retired
+S01 cast. The original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
 ## Student flow exercised
