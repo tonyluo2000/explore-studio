@@ -1,0 +1,277 @@
+{
+  "schema": "explore-studio/journey-snapshots@1",
+  "canonicalFrame": {
+    "width": 960,
+    "height": 640
+  },
+  "widths": [
+    960,
+    480
+  ],
+  "webp": {
+    "lossless": false,
+    "quality": 90,
+    "method": 6,
+    "resample": "LANCZOS"
+  },
+  "hashPolicy": "sourceRgbSha256 (the raw 960x640 RGB frame) is authoritative for regeneration on the recorded toolchain; image sha256 values verify the committed files. WebP and font rasterization bytes are not promised across toolchains.",
+  "deferred": [
+    {
+      "session": "S01",
+      "moment": "S01_ARRIVAL",
+      "kind": "HERO",
+      "reason": "Phase B is bringing S01 into Moon Meadow; the current runtime still gives M01 the standard Trail, so an S01 HERO captured now would be stale.",
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S01"
+    }
+  ],
+  "snapshots": [
+    {
+      "session": "S02",
+      "moment": "S02_COMPASS_PROMPT",
+      "kind": "HERO",
+      "missionId": "create-a-classroom-object",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "examples/explorer-packages/pixel-companion",
+        "examples/explorer-packages/crystal-lantern",
+        "../my-explore-world/projects/moon-compass"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": null,
+      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
+      "presentationFingerprint": "sha256:97b2108a301706e6f7fc08c08b8c67ee60fb56d3867316086918606fc47ca1dd",
+      "fingerprintParts": {
+        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
+        "capture": "58136a3a8daa357f2ad339d95fef6038203d9d4eae43d36c9786b9fe6f90fb80"
+      },
+      "sourceRgbSha256": "f2a982b92f93ca14d4434de63471ff77c5333cfd1299ade48ceb8b746d394e8b",
+      "images": {
+        "960": {
+          "src": "/journey/s02/hero.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 93166,
+          "sha256": "8c38b25c9bb61561631f3abe2ff084919d3316bb65f6a5551bd307c280996071"
+        },
+        "480": {
+          "src": "/journey/s02/hero-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 33918,
+          "sha256": "a7ab87cd4bbadb79586d1605a29bcda3ca43002d8b86a04e36b18401cf3824c5"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
+    },
+    {
+      "session": "S02",
+      "moment": "S02_MOVED_COMPASS",
+      "kind": "LEARNING_MOMENT",
+      "missionId": "create-a-classroom-object",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "examples/explorer-packages/pixel-companion",
+        "examples/explorer-packages/crystal-lantern",
+        "../my-explore-world/projects/moon-compass"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": {
+        "type": "Fixture",
+        "file": "objects/compass.yaml",
+        "package": "../my-explore-world/projects/moon-compass",
+        "values": {
+          "x": 690,
+          "y": 360
+        }
+      },
+      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
+      "presentationFingerprint": "sha256:55442af80d380b363418f9d9d9c6be6407026c05349231d3c35b44a916085281",
+      "fingerprintParts": {
+        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
+        "capture": "4d1c40590773564b560edf505ca6b21e25d6e36b58a338059807c9d3f341e49e"
+      },
+      "sourceRgbSha256": "6700154d9667ddab9e6d5b1878501b12ad0f453ba18e382c57645442c40f8342",
+      "images": {
+        "960": {
+          "src": "/journey/s02/moved-compass.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 93546,
+          "sha256": "3e8809b39af9cca65e43426da22636da57585cf32f11d98e42e828aff93f644a"
+        },
+        "480": {
+          "src": "/journey/s02/moved-compass-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 34374,
+          "sha256": "d6c8efb655c898aac8e60593c652abe5520c54bc96cc345d9b5c3c81a80fe4bf"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
+    },
+    {
+      "session": "S03",
+      "moment": "S03_REVEAL",
+      "kind": "HERO",
+      "missionId": "make-your-object-respond",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "lessons/sessions/s03/student/explorer-package"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": null,
+      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
+      "presentationFingerprint": "sha256:d767adcb06283ef610e631cfc62f71347c1648195bfb2712b62ef83c8b66c20b",
+      "fingerprintParts": {
+        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
+        "capture": "6d61e70e107cea63b3c0ff0812df4ddeb87547645939cf91d7fd78b5d4f7a2d0"
+      },
+      "sourceRgbSha256": "8a781048fef91c8e0cf1e52802537d97e3370ae9fbd2cc2203e60d423f3847b5",
+      "images": {
+        "960": {
+          "src": "/journey/s03/hero.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 93946,
+          "sha256": "b5c269d1809fa481be3b47e291b8cd9e2406a779904c02207201b35d10c44a59"
+        },
+        "480": {
+          "src": "/journey/s03/hero-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 34392,
+          "sha256": "50a5eb492860bf013a554bc70ee8356a00a55feac7d2dab2fdcb1fb7ed49934e"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
+    },
+    {
+      "session": "S03",
+      "moment": "S03_NEAR_CLUE",
+      "kind": "LEARNING_MOMENT",
+      "missionId": "make-your-object-respond",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "lessons/sessions/s03/student/explorer-package"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": null,
+      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
+      "presentationFingerprint": "sha256:9efc9cfe11b6766feb2b402004b682c9bba729845b4099c88bc6a48bb3235d0e",
+      "fingerprintParts": {
+        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
+        "capture": "db4365bc96862f02e65cbe7744bdd01b573a116d64430a48c3fb3a41f54f5df4"
+      },
+      "sourceRgbSha256": "64ac64822cfdf68ca7378b182a634479a19eb31343506aa6131fe25a30114b8a",
+      "images": {
+        "960": {
+          "src": "/journey/s03/near-clue.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 92898,
+          "sha256": "7daa0300d4d2599db5b60ac94d0a778389e6902562d49adce140e0e54c7b5672"
+        },
+        "480": {
+          "src": "/journey/s03/near-clue-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 34356,
+          "sha256": "e38029ffba0346bc1aba40b2bd5e63c5a3e9c4b60f3313af3a4dd0481311774e"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
+    },
+    {
+      "session": "S04",
+      "moment": "S04_DIALOGUE",
+      "kind": "HERO",
+      "missionId": "introduce-your-character",
+      "packages": [
+        "examples/explorer-packages/nova-character",
+        "examples/explorer-packages/crystal-lantern",
+        "lessons/sessions/s04/student/explorer-package"
+      ],
+      "player": "nova-character:nova",
+      "presentation": "moon-meadow",
+      "fixture": null,
+      "runtimeCommit": "05843ffd7e257a3120a671b009f45fcae33f7391",
+      "presentationFingerprint": "sha256:f96dd97f00e4b9826604b8d82db50d0a3278cc2933496ba02612d445420f366e",
+      "fingerprintParts": {
+        "runtime": "5697d30246f61e7783c78991d847d2b6406ed399236796a88b365161aba7a22c",
+        "packages": "4c3f6d5d410b03c1c91aacb7a85bd7a8a1f487e95bf497a55a6b40a70a593e8d",
+        "capture": "3ffe4a14b6c2997828012e6476adefe0f4b86a29bd2bfde84fdb4953f880e884"
+      },
+      "sourceRgbSha256": "680c001674002ebbaf4d6b9ddeedf50c1fda99b68d3e7c27a021db5aa021353b",
+      "images": {
+        "960": {
+          "src": "/journey/s04/hero.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 96326,
+          "sha256": "06a13690a0cf3a9989bec401960d64ae12c99bdb417a326dcb38bfe04c386d9c"
+        },
+        "480": {
+          "src": "/journey/s04/hero-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 35194,
+          "sha256": "698d47eb798215911efa26b1c9263cdf2645a81b9823452bc0bad397580cb0ca"
+        }
+      },
+      "toolchain": {
+        "python": "3.13.7",
+        "pygame": "2.6.1",
+        "sdl": "2.28.4",
+        "sdlTtf": "2.20.1",
+        "pillow": "12.3.0",
+        "libwebp": "1.6.0",
+        "platform": "darwin-arm64"
+      },
+      "captureCommand": "python scripts/capture_journey_snapshots.py --session S04"
+    }
+  ]
+}
