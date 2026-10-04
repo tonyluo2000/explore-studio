@@ -243,3 +243,16 @@ def test_prepare_page_is_a_current_hub_not_an_s01_page():
     assert "courseKitVersion()" in page
     for anchor_id in ("ready", "folders", "download", "update", "help"):
         assert f'id="{anchor_id}"' in page
+
+
+def test_prepare_page_command_blocks_cannot_widen_the_mobile_card():
+    """A grid item defaults to ``min-width: auto``; a long ``<pre>`` line inside
+    one stretches the track past a phone's viewport instead of scrolling."""
+    page = read("prepare-page")
+    css = (PROJECT_ROOT / "course4teen-website" / "app" / "globals.css").read_text(encoding="utf-8")
+
+    downloads = page[page.index('<ul className="prep-downloads">', page.index('id="computer"')) :]
+    assert '<pre className="slide-code">' in downloads[: downloads.index("</ul>")]
+    assert re.search(r"\.prep-downloads\s*\{[^}]*display:\s*grid", css)
+    assert re.search(r"\.prep-downloads > li\s*\{[^}]*min-width:\s*0", css)
+    assert re.search(r"\.slide-code\s*\{[^}]*overflow-x:\s*auto", css)
