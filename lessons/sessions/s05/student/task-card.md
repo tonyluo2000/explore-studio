@@ -51,8 +51,10 @@ the Trail should do on the interaction after the final line.
      --name "S05 Script a Conversation"
    ```
 
-3. Press E once per line. Verify the final line and M05 completion. Press E one
-   more time to test the restart prediction.
+3. Walk Nova to the Moonlit Guide (the prompt reads **Talk to Moonlit Guide**)
+   and press E once per line. Read each line in the guide's speech bubble.
+   Verify the final line and M05 completion. Press E one more time to test the
+   restart prediction.
 
 ## Support path
 

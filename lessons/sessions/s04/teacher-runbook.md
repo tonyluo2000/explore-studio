@@ -12,7 +12,8 @@ error.
 
 ## Expedition context
 
-S04 continues the Moonlit expedition opened in S03: the Moon Compass's clue
+S04 continues the Moonlit expedition that began with the S01 arrival in Moon
+Meadow. In S03 the Compass awakened and pointed toward the guide; that clue
 leads here, to the guide who now needs the student's help. The continuity is
 narrative only — no new mechanic, inventory, or engine state is introduced,
 and nothing checks that S03 was completed. The guide's one-sentence greeting
