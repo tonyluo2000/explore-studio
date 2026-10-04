@@ -173,6 +173,8 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
 
     if expect.target is not None and scene.target_qualified_id != expect.target:
         problems.append(f"target is {scene.target_qualified_id}, expected {expect.target}")
+    if expect.untargeted and scene.target_qualified_id is not None:
+        problems.append(f"target is {scene.target_qualified_id}, expected no prompt")
     if set(scene.visited_qualified_ids) != set(expect.visited):
         visited = sorted(scene.visited_qualified_ids)
         problems.append(f"visited {visited}, expected {list(expect.visited)}")
@@ -217,6 +219,8 @@ def capture_moment(row: Session, moment: Moment, command: TrailCommand) -> bytes
                     trail.hold(float(values[0]))  # type: ignore[arg-type]
                 elif action == "walk_to":
                     trail.walk_to(int(values[0]), int(values[1]))  # type: ignore[arg-type]
+                elif action == "tap" and values[0] in ("left", "right", "up", "down"):
+                    trail.step(**{str(values[0]): True})
                 elif action == "press":
                     trail.press()
                 else:

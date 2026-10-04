@@ -204,12 +204,20 @@ STALE_MUTATIONS = (
         "if False and _normalize(text) not in joined:",
         "harness",
     ),
-    # 9. Session capture config: where Nova stands for the S02/S03 moments.
+    # 9. Session capture config: where Nova stands for the S02/S03 moments,
+    # and where she arrives for S01.
     (
         "session-capture-config",
         "scripts/journey_snapshots.py",
         'BESIDE_COMPASS: Final = ("walk_to", 250, 230)',
         'BESIDE_COMPASS: Final = ("walk_to", 251, 230)',
+        "recipe",
+    ),
+    (
+        "s01-arrival-config",
+        "scripts/journey_snapshots.py",
+        'AT_LANDING_SITE: Final = ("walk_to", 340, 262)',
+        'AT_LANDING_SITE: Final = ("walk_to", 341, 262)',
         "recipe",
     ),
     # The task-card command itself: package order changes draw order.
@@ -248,17 +256,22 @@ def test_a_frame_changing_edit_makes_the_check_fail(
     assert "rerun `python scripts/capture_journey_snapshots.py --session S0" in result.stdout
 
 
-def test_a_package_edit_stales_only_the_session_that_uses_it(mirror: Path) -> None:
-    _mutate(
-        mirror,
-        "lessons/sessions/s04/student/explorer-package/character/guide.yaml",
-        "\nx: ",
-        "\nx: 1",
-    )
+@pytest.mark.parametrize(
+    ("path", "sessions"),
+    [
+        ("lessons/sessions/s04/student/explorer-package/character/guide.yaml", {"S04"}),
+        ("examples/explorer-packages/pixel-companion/character/pixel.yaml", {"S01", "S02"}),
+    ],
+    ids=["s04-guide", "pixel"],
+)
+def test_a_package_edit_stales_only_the_sessions_that_use_it(
+    mirror: Path, path: str, sessions: set[str]
+) -> None:
+    _mutate(mirror, path, "\nx: ", "\nx: 1")
     result = _check(mirror)
     assert result.returncode == 1
     stale = {line.split()[3] for line in result.stdout.splitlines() if "is stale" in line}
-    assert stale == {"S04"}, result.stdout
+    assert stale == sessions, result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -361,13 +374,13 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     ),
     (
         "stray-s01-asset",
-        lambda root: (
-            (root / "course4teen-website/public/journey/s01").mkdir(),
-            (root / "course4teen-website/public/journey/s01/hero.webp").write_bytes(b"RIFF"),
+        lambda root: (root / "course4teen-website/public/journey/s01/arrival.webp").write_bytes(
+            b"RIFF"
         ),
-        "public/journey/s01/hero.webp is published but not in the manifest",
+        "public/journey/s01/arrival.webp is published but not in the manifest",
     ),
-    # 14. Manifest entries for an unpublished or a deferred session.
+    # 14. Manifest entries for an unpublished session, a deferred session, or
+    # a moment the table does not have.
     (
         "unpublished-session-entry",
         lambda root: _edit_manifest(root, _copy_entry_as("S05")),
@@ -375,8 +388,18 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     ),
     (
         "deferred-session-entry",
+        lambda root: _mutate(
+            root,
+            "scripts/journey_snapshots.py",
+            '        mission_id="introduce-your-character",\n',
+            '        mission_id="introduce-your-character",\n        deferred="waiting",\n',
+        ),
+        "S04 is deferred",
+    ),
+    (
+        "unknown-moment-entry",
         lambda root: _edit_manifest(root, _copy_entry_as("S01")),
-        "S01 is deferred",
+        "manifest entry S01 S04_DIALOGUE: no such moment in the table",
     ),
     (
         "duplicate-entry",
@@ -500,6 +523,14 @@ def test_a_pixel_inert_change_does_not_block_publishing(
 # ---------------------------------------------------------------------------
 
 CANONICAL = {
+    "S01": (
+        (
+            "examples/explorer-packages/nova-character",
+            "examples/explorer-packages/pixel-companion",
+            "examples/explorer-packages/crystal-lantern",
+        ),
+        "visit-all-classroom-objects",
+    ),
     "S02": (
         (
             "examples/explorer-packages/nova-character",
@@ -528,7 +559,7 @@ CANONICAL = {
 
 
 @pytest.mark.parametrize("session", sorted(CANONICAL))
-def test_canonical_s02_to_s04_commands_parse_exactly(session: str) -> None:
+def test_canonical_commands_parse_exactly(session: str) -> None:
     command = journey.canonical_command(session)
     assert command is not None
     packages, mission = CANONICAL[session]

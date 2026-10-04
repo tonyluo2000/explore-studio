@@ -215,6 +215,8 @@ class Expect:
     """State the captured frame must be in; every field is checked when set."""
 
     target: str | None = None
+    #: Nothing is the interaction target, so no prompt is drawn.
+    untargeted: bool = False
     visited: tuple[str, ...] = ()
     complete: bool = False
     texts: tuple[str | PackageText, ...] = ()
@@ -226,9 +228,10 @@ class Moment:
     """One snapshot: scripted real input, then a state-checked capture.
 
     ``steps`` are ``("hold", seconds)``, ``("walk_to", x, y)`` (walk with real
-    input until there), and ``("press",)`` (one ``E`` frame). Holds only let
-    cosmetic animation settle; :class:`Expect` decides whether the moment was
-    reached.
+    input until there), ``("tap", direction)`` (one frame of that arrow key,
+    which turns the player), and ``("press",)`` (one ``E`` frame). Holds only
+    let cosmetic animation settle; :class:`Expect` decides whether the moment
+    was reached.
     """
 
     name: str
@@ -263,7 +266,10 @@ class Session:
         return capture_command(self.session)
 
 
-#: Where Nova stands beside the Moon Compass (S02/S03) and the Guide (S04).
+#: Where Nova stands on arrival (S01): a few paces onto the Landing Site beside
+#: Pixel, out of Pixel's interaction range; beside the Moon Compass (S02/S03);
+#: and beside the Guide (S04).
+AT_LANDING_SITE: Final = ("walk_to", 340, 262)
 BESIDE_COMPASS: Final = ("walk_to", 250, 230)
 BESIDE_GUIDE: Final = ("walk_to", 455, 262)
 
@@ -273,22 +279,21 @@ SESSIONS: Final[tuple[Session, ...]] = (
         mission_id="visit-all-classroom-objects",
         player=NOVA,
         presentation=MOON_MEADOW,
-        # The Phase B cast, already the contract: when the deferral is lifted
-        # the capture must show all three in trusted art, in Moon Meadow.
+        # The arrival cast, each in trusted art, in Moon Meadow; never the
+        # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
         must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE, FERN, FOUNTAIN),
         moments=(
+            # The learning world, not completion: Nova facing the camera beside
+            # Pixel, the Lantern shrine and the empty stone circle in view, and
+            # no prompt, nothing visited.
             Moment(
                 name="S01_ARRIVAL",
                 kind=HERO,
                 slug="hero",
-                steps=(("hold", 1.2),),
-                expect=Expect(),
+                steps=(("hold", 0.3), AT_LANDING_SITE, ("tap", "down"), ("hold", 2.0)),
+                expect=Expect(untargeted=True, positions=((NOVA, 342, 265),)),
             ),
-        ),
-        deferred=(
-            "Phase B is bringing S01 into Moon Meadow; the current runtime still gives "
-            "M01 the standard Trail, so an S01 HERO captured now would be stale."
         ),
     ),
     Session(

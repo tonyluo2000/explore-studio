@@ -90,8 +90,8 @@ def test_row_matches_its_task_card_command(row) -> None:  # type: ignore[no-unty
             if isinstance(spec, journey.PackageText):
                 assert spec.package in command.packages, (moment.name, spec)
     if row.deferred:
-        # Its task card is still changing; its must_show is the post-deferral
-        # contract (see test_s01_deferred_row_already_states_the_phase_b_contract).
+        # A deferred row's task card may still be changing; it is checked
+        # once the deferral is lifted.
         return
     package_ids = {_package_id(argument) for argument in command.packages}
     for qualified_id in row.must_show:
@@ -140,42 +140,43 @@ def test_s04_lantern_is_present_without_a_destination_marker() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S01 waits for Phase B and can never be published from the plain Trail
+# S01 is the Moon Meadow arrival, and only that
 # ---------------------------------------------------------------------------
 
 
-def test_s01_is_deferred_with_a_reason_or_published_as_moon_meadow() -> None:
+def test_s01_is_published_as_the_moon_meadow_arrival() -> None:
+    assert not S01.deferred, "S01 is canonical Moon Meadow; it must not be deferred"
+    assert MANIFEST["deferred"] == []
+    assert mission_presentation(S01.mission_id) is not None, "M01 lost its Moon Meadow"
     s01_entries = [entry for entry in ENTRIES if entry["session"] == "S01"]
-    if S01.deferred:
-        assert len(S01.deferred) > 40, "say why S01 is deferred"
-        assert not s01_entries, "S01 is deferred but has published snapshots"
-        assert not (PUBLIC_JOURNEY / "s01").exists(), "S01 is deferred but has public files"
-        deferred = {item["session"]: item for item in MANIFEST["deferred"]}  # type: ignore[union-attr]
-        assert deferred["S01"]["reason"] == S01.deferred
-        assert deferred["S01"]["captureCommand"] == S01.command
-    else:
-        assert (
-            mission_presentation(S01.mission_id) is not None
-        ), "S01's deferral was lifted but the runtime still gives M01 the plain Trail"
-        assert {entry["moment"] for entry in s01_entries} >= {S01.hero.name}
-    assert S01.presentation == MOON_MEADOW, "the S01 HERO must be the Moon Meadow arrival"
+    assert [(entry["moment"], entry["kind"]) for entry in s01_entries] == [("S01_ARRIVAL", HERO)]
+    assert s01_entries[0]["presentation"] == MOON_MEADOW
+    assert s01_entries[0]["fixture"] is None
+    assert sorted(path.name for path in (PUBLIC_JOURNEY / "s01").iterdir()) == [
+        "hero-480.webp",
+        "hero.webp",
+    ]
 
 
-def test_s01_deferred_row_already_states_the_phase_b_contract() -> None:
-    # Phase B's canonical S01 cast is Nova, Pixel, and the Crystal Lantern in
-    # Moon Meadow. Lifting the deferral must not need anyone to remember to add
-    # them: the capture then requires each one drawn in trusted art.
+def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
+    # The arrival cast is Nova, Pixel, and the Crystal Lantern, each drawn in
+    # trusted art; the retired Fern / River Fountain cast and every later
+    # session's Compass and Guide are excluded.
     assert S01.presentation == MOON_MEADOW
     assert set(S01.must_show) == {journey.NOVA, journey.PIXEL, journey.LANTERN}
-    assert set(S01.must_not_show) >= {
+    assert set(S01.must_not_show) == {
         journey.S02_COMPASS,
         journey.S03_COMPASS,
         journey.GUIDE,
         journey.FERN,
         journey.FOUNTAIN,
     }
-    assert not set(S01.must_show) & set(S01.must_not_show)
     assert [moment.kind for moment in S01.moments] == [HERO]
+    # The world, not completion: no prompt, nothing visited, not complete.
+    expect = S01.hero.expect
+    assert expect.untargeted and expect.target is None
+    assert expect.visited == () and not expect.complete
+    assert S01.hero.fixture is None
     # The retired cast's qualified IDs are real, so the exclusion can bite.
     assert _package_id("examples/explorer-packages/forest-guide") == journey.FERN.split(":")[0]
     assert (
@@ -183,12 +184,26 @@ def test_s01_deferred_row_already_states_the_phase_b_contract() -> None:
     )
 
 
-def test_harness_refuses_deferred_and_unpublished_sessions() -> None:
+def test_s01_metadata_names_no_later_session_or_retired_content() -> None:
+    [entry] = [entry for entry in ENTRIES if entry["session"] == "S01"]
+    text = json.dumps(entry).lower()
+    for word in ("compass", "guide", "moonlit", "fern", "fountain", "forest", "river"):
+        assert word not in text, word
+    caption = f"{entry['session']} {entry['kind']}: {entry['moment']}"  # the contact sheet's
+    assert caption == "S01 HERO: S01_ARRIVAL"
+
+
+def test_harness_refuses_deferred_and_unpublished_sessions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import dataclasses
+
     from scripts.capture_journey_snapshots import CaptureError, publish
 
-    if S01.deferred:
-        with pytest.raises(CaptureError, match="S01 is deferred"):
-            publish(["S01"])
+    deferred = dataclasses.replace(S01, deferred="waiting for a runtime change")
+    monkeypatch.setattr(journey, "SESSIONS_BY_ID", {**SESSIONS_BY_ID, "S01": deferred})
+    with pytest.raises(CaptureError, match="S01 is deferred"):
+        publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
         publish(["S05"])
 
@@ -219,6 +234,19 @@ def test_manifest_lists_exactly_the_active_rows_moments() -> None:
         "Every non-deferred row needs its HERO and optional moments captured: "
         "rerun python scripts/capture_journey_snapshots.py --all-published"
     )
+
+
+def test_published_snapshot_set_is_the_reviewed_one() -> None:
+    # Adding a session, a HERO, or an extra is a reviewed change to this set.
+    published: dict[str, list[tuple[str, str]]] = {}
+    for entry in ENTRIES:
+        published.setdefault(entry["session"], []).append((entry["kind"], entry["moment"]))
+    assert published == {
+        "S01": [(HERO, "S01_ARRIVAL")],
+        "S02": [(HERO, "S02_COMPASS_PROMPT"), ("LEARNING_MOMENT", "S02_MOVED_COMPASS")],
+        "S03": [(HERO, "S03_REVEAL"), ("LEARNING_MOMENT", "S03_NEAR_CLUE")],
+        "S04": [(HERO, "S04_DIALOGUE")],
+    }
 
 
 @pytest.mark.parametrize("entry", ENTRIES, ids=_entry_id)

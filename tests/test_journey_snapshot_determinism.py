@@ -26,6 +26,7 @@ from scripts.capture_journey_snapshots import (  # noqa: E402
     resolve,
     toolchain,
 )
+from scripts.journey_snapshots import TrailCommand  # noqa: E402
 
 ENTRIES = {
     (entry["session"], entry["moment"]): entry
@@ -80,9 +81,50 @@ def test_480_is_a_downscale_of_the_canonical_frame() -> None:
     assert difference < 4, "the 480w snapshot does not look like the 960w one"
 
 
-def test_the_plain_s01_trail_cannot_pass_as_the_moon_meadow_hero() -> None:
+def test_the_plain_s01_trail_cannot_pass_as_the_moon_meadow_hero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from types import MappingProxyType
+
+    from engine.rendering import _mission_presentation as presentations
+
     s01 = journey.SESSIONS_BY_ID["S01"]
-    if mission_presentation(s01.mission_id) is not None:
-        pytest.skip("M01 already has the Moon Meadow presentation")
+    assert mission_presentation(s01.mission_id) is not None
+    plain = {
+        mission: policy
+        for mission, policy in presentations.MISSION_PRESENTATIONS.items()
+        if mission != s01.mission_id
+    }
+    monkeypatch.setattr(presentations, "MISSION_PRESENTATIONS", MappingProxyType(plain))
     with pytest.raises(CaptureError, match="standard Trail"):
         _capture("S01", s01.hero.name)
+
+
+def test_the_retired_s01_cast_cannot_pass_as_the_arrival() -> None:
+    row, command = resolve("S01")
+    retired = TrailCommand(
+        (
+            "examples/explorer-packages/nova-character",
+            "examples/explorer-packages/forest-guide",
+            "examples/explorer-packages/crystal-lantern",
+            "examples/explorer-packages/river-fountain",
+        ),
+        command.options,
+    )
+    with pytest.raises(CaptureError) as raised:
+        capture_moment(row, row.hero, retired)
+    message = str(raised.value)
+    assert "pixel-companion:pixel is not in the scene" in message
+    assert "forest-guide:guide belongs to another session" in message
+    assert "river-fountain:fountain belongs to another session" in message
+
+
+def test_the_s01_arrival_with_a_prompt_is_rejected() -> None:
+    # At the exact start Pixel is in range and the Trail offers "Talk to
+    # Pixel"; the arrival HERO is the idle frame without a prompt.
+    import dataclasses
+
+    row, command = resolve("S01")
+    prompted = dataclasses.replace(row.hero, steps=(("hold", 1.2),))
+    with pytest.raises(CaptureError, match="target is pixel-companion:pixel, expected no prompt"):
+        capture_moment(row, prompted, command)
