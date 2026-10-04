@@ -18,24 +18,26 @@ same idle and greeting moments from an older checkout placed first on
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+REPO = Path(__file__).resolve().parents[1]
+# Appended, so an older checkout first on PYTHONPATH still provides the runtime.
+sys.path.append(str(REPO))
 
 import pygame  # noqa: E402
 
-REPO = Path(__file__).resolve().parents[1]
+from scripts.trail_driver import Trail as _Trail  # noqa: E402
+from scripts.trail_driver import half_scale, save_surface  # noqa: E402
+
 S04_PACKAGES = (
     REPO / "examples/explorer-packages/nova-character",
     REPO / "examples/explorer-packages/crystal-lantern",
     REPO / "lessons/sessions/s04/student/explorer-package",
 )
 MISSION_04_ID = "introduce-your-character"
-STEP = 1 / 60
 #: Where Nova stops to talk: in range of the Guide, beside it, not in front.
 APPROACH = (455, 262)
 #: The Guide's 100 x 100 box (canonical x/y), padded for the close-up crop.
@@ -54,93 +56,20 @@ OVERFLOW_GREETING = STRESS_GREETING + (
 )
 
 
-class Trail:
-    """One real M04 Trail scene plus the platform that renders it."""
+class Trail(_Trail):
+    """One real M04 Trail scene, with the canonical S04 packages by default."""
 
     def __init__(self, package_roots: tuple[Path, ...] = S04_PACKAGES) -> None:
-        from engine._config import Config
-        from engine._platform import Platform
-        from engine.rendering import Renderer
-        from explore.packages.classroom_trail import (
-            create_classroom_trail_scene,
-            plan_local_classroom_trail,
-        )
-
-        self.config = Config()
-        self.platform = Platform(self.config)
-        self.platform.initialize()
-        self.renderer = Renderer(self.platform)
-        planned = plan_local_classroom_trail(
-            package_roots, player_qualified_id="nova-character:nova"
-        )
-        assert planned.is_planned, planned.issues
-        self.scene = create_classroom_trail_scene(
-            self.renderer, planned.plan, mission_id=MISSION_04_ID
-        )
-        self.scene.enter()
-        self.frames: list[pygame.Surface] = []
-        self.record = False
-
-    def step(self, *, left=False, right=False, up=False, down=False, interact=False) -> None:  # type: ignore[no-untyped-def]
-        from engine.input import DirectionalInput, InteractionInput
-
-        self.scene.update(
-            DirectionalInput(left=left, right=right, up=up, down=down),
-            InteractionInput(interact_pressed=interact),
-            STEP,
-        )
-        self.platform.clear_frame(self.config.background_color)
-        self.scene.render()
-        if self.record:
-            self.frames.append(pygame.display.get_surface().copy())
-
-    def hold(self, seconds: float, **keys: bool) -> None:
-        for _ in range(round(seconds / STEP)):
-            self.step(**keys)
-
-    def press(self) -> None:
-        self.step(interact=True)
-
-    def surface(self) -> pygame.Surface:
-        return pygame.display.get_surface().copy()
-
-    def save(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        pygame.image.save(pygame.display.get_surface(), str(path))
-        print(f"wrote {path}")
-
-    def close(self) -> None:
-        self.scene.exit()
-        self.platform.shutdown()
-
-
-def _walk_to(trail: Trail, x: int, y: int) -> None:
-    """Walk with real directional input until the player reaches (x, y)."""
-    player = trail.scene.player
-    for _ in range(600):
-        dx, dy = x - player.x_float, y - player.y_float
-        if abs(dx) < 3 and abs(dy) < 3:
-            return
-        trail.step(left=dx < -2, right=dx > 2, up=dy < -2, down=dy > 2)
+        super().__init__(package_roots, mission_id=MISSION_04_ID)
 
 
 def _greet(trail: Trail) -> None:
     """Approach the Guide and press E once; the greeting is now displayed."""
-    _walk_to(trail, *APPROACH)
+    trail.walk_to(*APPROACH)
     assert trail.scene.target_qualified_id == "moonlit-guide:guide"
     assert not trail.scene.mission_is_complete
     trail.press()
     assert trail.scene.mission_is_complete
-
-
-def _save_surface(surface: pygame.Surface, path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pygame.image.save(surface, str(path))
-    print(f"wrote {path}")
-
-
-def _half(surface: pygame.Surface) -> pygame.Surface:
-    return pygame.transform.smoothscale(surface, (480, 320))
 
 
 def _closeup(surface: pygame.Surface, scale: int = 3) -> pygame.Surface:
@@ -184,7 +113,7 @@ def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
         trail.hold(1.2 if moment == 0 else 1.0)
         if moment == 0:
             trail.save(out / "s04-idle.png")
-            _save_surface(_closeup(trail.surface()), out / "guide-closeup-idle.png")
+            save_surface(_closeup(trail.surface()), out / "guide-closeup-idle.png")
         if moment == 1:
             trail.save(out / "s04-guide-visible.png")
         strip.append(trail.surface())
@@ -193,22 +122,22 @@ def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
     trail.close()
     sheet = pygame.Surface((480 * len(strip), 320))
     for index, frame in enumerate(strip):
-        sheet.blit(_half(frame), (480 * index, 0))
-    _save_surface(sheet, out / "s04-living-world-strip.png")
+        sheet.blit(half_scale(frame), (480 * index, 0))
+    save_surface(sheet, out / "s04-living-world-strip.png")
 
     # S04_APPROACH, S04_DIALOGUE, S04_COMPLETE, and S04_HALF_SCALE.
     trail = Trail()
     trail.hold(0.3)
-    _walk_to(trail, *APPROACH)
+    trail.walk_to(*APPROACH)
     trail.hold(0.5)
     trail.save(out / "s04-approach.png")
     trail.press()
     trail.hold(0.6)
     trail.save(out / "s04-dialogue.png")
     dialogue = trail.surface()
-    _save_surface(_half(dialogue), out / "s04-half-scale-480x320.png")
+    save_surface(half_scale(dialogue), out / "s04-half-scale-480x320.png")
     trail.hold(0.2)
-    _save_surface(_closeup(trail.surface()), out / "guide-closeup-talking.png")
+    save_surface(_closeup(trail.surface()), out / "guide-closeup-talking.png")
     # After the bubble's reading time the cue is gone and M04 stays Complete.
     trail.hold(12.0)
     assert trail.scene.mission_is_complete
@@ -228,7 +157,7 @@ def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
             _greet(trail)
             trail.hold(0.6)
             trail.save(out / f"{name}.png")
-            _save_surface(_half(trail.surface()), out / f"{name}-480x320.png")
+            save_surface(half_scale(trail.surface()), out / f"{name}-480x320.png")
             trail.close()
 
     # A short approach-and-greet clip and a five-second idle clip.
@@ -236,7 +165,7 @@ def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
     trail.hold(0.2)
     trail.record = True
     trail.hold(0.3)
-    _walk_to(trail, *APPROACH)
+    trail.walk_to(*APPROACH)
     trail.hold(0.3)
     trail.press()
     trail.hold(2.4)
@@ -286,7 +215,7 @@ def write_gifs(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
     for name, frames in gif_frames.items():
         images = []
         for surface in frames[::4]:
-            raw = pygame.image.tobytes(_half(surface), "RGB")
+            raw = pygame.image.tobytes(half_scale(surface), "RGB")
             images.append(Image.frombytes("RGB", (480, 320), raw).quantize(colors=128))
         path = out / f"{name}.gif"
         images[0].save(path, save_all=True, append_images=images[1:], duration=67, loop=0)

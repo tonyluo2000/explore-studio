@@ -16,92 +16,33 @@ BEFORE frame from an older checkout placed first on ``PYTHONPATH`` with
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+REPO = Path(__file__).resolve().parents[1]
+# Appended, so an older checkout first on PYTHONPATH still provides the runtime.
+sys.path.append(str(REPO))
 
 import pygame  # noqa: E402
 
-REPO = Path(__file__).resolve().parents[1]
+from scripts.trail_driver import Trail as _Trail  # noqa: E402
+
 S02_PACKAGES = (
     REPO / "examples/explorer-packages/nova-character",
     REPO / "examples/explorer-packages/pixel-companion",
     REPO / "examples/explorer-packages/crystal-lantern",
     REPO / "lessons/sessions/s02/student/explorer-package",
 )
-STEP = 1 / 60
+MISSION_02_ID = "create-a-classroom-object"
 
 
-class Trail:
-    """One real Trail scene plus the platform that renders it."""
+class Trail(_Trail):
+    """One real M02 Trail scene, with the reviewed S02 packages by default."""
 
     def __init__(self, package_roots: tuple[Path, ...] = S02_PACKAGES) -> None:
-        from engine._config import Config
-        from engine._platform import Platform
-        from engine.rendering import Renderer
-        from explore.curriculum import MISSION_02_ID
-        from explore.packages.classroom_trail import (
-            create_classroom_trail_scene,
-            plan_local_classroom_trail,
-        )
-
-        self.config = Config()
-        self.platform = Platform(self.config)
-        self.platform.initialize()
-        self.renderer = Renderer(self.platform)
-        planned = plan_local_classroom_trail(
-            package_roots, player_qualified_id="nova-character:nova"
-        )
-        assert planned.is_planned, planned.issues
-        self.scene = create_classroom_trail_scene(
-            self.renderer, planned.plan, mission_id=MISSION_02_ID
-        )
-        self.scene.enter()
-        self.frames: list[pygame.Surface] = []
-        self.record = False
-
-    def step(self, *, left=False, right=False, up=False, down=False, interact=False) -> None:  # type: ignore[no-untyped-def]
-        from engine.input import DirectionalInput, InteractionInput
-
-        self.scene.update(
-            DirectionalInput(left=left, right=right, up=up, down=down),
-            InteractionInput(interact_pressed=interact),
-            STEP,
-        )
-        self.platform.clear_frame(self.config.background_color)
-        self.scene.render()
-        if self.record:
-            self.frames.append(pygame.display.get_surface().copy())
-
-    def hold(self, seconds: float, **keys: bool) -> None:
-        for _ in range(round(seconds / STEP)):
-            self.step(**keys)
-
-    def press(self) -> None:
-        self.step(interact=True)
-
-    def save(self, path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        pygame.image.save(pygame.display.get_surface(), str(path))
-        print(f"wrote {path}")
-
-    def close(self) -> None:
-        self.scene.exit()
-        self.platform.shutdown()
-
-
-def _walk_to(trail: Trail, x: int, y: int) -> None:
-    """Walk with real directional input until the player reaches (x, y)."""
-    player = trail.scene.player
-    for _ in range(600):
-        dx, dy = x - player.x_float, y - player.y_float
-        if abs(dx) < 3 and abs(dy) < 3:
-            return
-        trail.step(left=dx < -2, right=dx > 2, up=dy < -2, down=dy > 2)
+        super().__init__(package_roots, mission_id=MISSION_02_ID)
 
 
 def capture_before(out: Path) -> None:
@@ -148,14 +89,14 @@ def capture_all(out: Path, gif_frames: dict[str, list[pygame.Surface]]) -> None:
     trail.save(out / "nova-walk-left.png")
     trail.hold(0.36, right=True)
     trail.save(out / "nova-walk-right.png")
-    _walk_to(trail, 250, 230)
+    trail.walk_to(250, 230)
     trail.hold(0.4)
     trail.save(out / "compass-prompt.png")
     trail.press()
     trail.hold(0.35)
     trail.save(out / "compass-interaction.png")
     trail.hold(1.5)
-    _walk_to(trail, 190, 390)
+    trail.walk_to(190, 390)
     trail.hold(0.4)
     trail.save(out / "lantern-prompt.png")
     trail.press()
