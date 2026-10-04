@@ -44,7 +44,11 @@ bubble). Later on 2026-10-04 it advanced to
 2026-10-04 it advanced to `3038cf44dc556a6e878141b8e1fbb6c580095aa4` to bring S01 (M01) into the frozen
 Moon Meadow as the silent arrival chapter (Nova, a non-counting Pixel, and the
 Crystal Lantern; a Trail without `--mission-id` stays plain); the rehearsal above used the retired
-S01 cast. The original S01 rehearsal inputs and result above remain an unchanged historical
+S01 cast. Later on 2026-10-04 it advanced to
+`b70c8a9e2defdff383c532fd23c783524fcd7717` to bring S05 (M05) into the frozen Moon
+Meadow: the S05 package's Moonlit Guide wears the trusted Guide art, each conversation
+line gets the existing dialogue bubble, and the existing talk cue and audio are reused.
+The original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
 ## Student flow exercised
