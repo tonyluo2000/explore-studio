@@ -48,9 +48,21 @@ session rather than at the start of S01.
 The check has two modes.
 
 **Before the course is installed**, a family can test the computer itself with
-the standalone `check-my-computer.py` from the course website:
+the standalone `check-my-computer.py` from the course website. The browser saves
+it in the Downloads folder. On Windows, in Ubuntu, copy it home from Windows
+Downloads (replace `YOUR-WINDOWS-NAME` with the folder name from the `ls` list):
 
 ```console
+cd ~
+ls /mnt/c/Users/
+cp /mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/check-my-computer.py ~
+python3 check-my-computer.py --computer-only
+```
+
+On a Mac or Linux, run it in Terminal from Downloads:
+
+```console
+cd ~/Downloads
 python3 check-my-computer.py --computer-only
 ```
 

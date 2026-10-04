@@ -185,8 +185,26 @@ Every time you open a new terminal for class, start with
 `cd ~/explore-studio-course` and `source .venv/bin/activate`. Your prompt then
 starts with `(.venv)`.
 
-Want to test a computer before downloading the course? Run the standalone
-check from the course website with `python3 check-my-computer.py --computer-only`.
+Want to test a computer before downloading the course? Download the standalone
+`check-my-computer.py` from the course website. Windows saves it in your Windows
+**Downloads** folder, so copy it into your Ubuntu home and run it there, just
+as with the ZIP in step 4:
+
+```console
+cd ~
+ls /mnt/c/Users/
+cp /mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/check-my-computer.py ~
+python3 check-my-computer.py --computer-only
+```
+
+Replace `YOUR-WINDOWS-NAME` with your folder name from the `ls` list. On a Mac,
+run it in Terminal from Downloads:
+
+```console
+cd ~/Downloads
+python3 check-my-computer.py --computer-only
+```
+
 It checks only the computer, ends with `COMPUTER CHECK PASSED`, and never says
 READY, because the course is not set up yet.
 

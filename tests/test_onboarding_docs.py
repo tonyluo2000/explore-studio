@@ -40,6 +40,12 @@ READY_COMMANDS = [
     "python3 check-my-computer.py",
 ]
 
+#: The standalone pre-install check, run from wherever the browser saved it.
+STANDALONE_CHECK = "python3 check-my-computer.py --computer-only"
+#: The surfaces that teach the standalone pre-install check.
+STANDALONE_SURFACES = ("guide", "prepare-page", "readiness")
+WINDOWS_DOWNLOADS_COPY = re.compile(r"cp /mnt/c/Users/[^/\s]+/Downloads/check-my-computer\.py ~/?$")
+
 
 def read(name: str) -> str:
     return ACTIVE_DOCS[name].read_text(encoding="utf-8")
@@ -127,6 +133,52 @@ def test_the_prepare_page_ready_check_is_the_guides_checklist():
 
     assert READY_COMMANDS in all_commands("guide")
     assert READY_COMMANDS in page_blocks
+
+
+def standalone_runs(block: list[str]) -> list[tuple[str | None, bool]]:
+    """Return ``(cwd, copied_home)`` for each standalone check run in a block."""
+    cwd, copied_home, runs = None, False, []
+    for line in block:
+        if line.startswith("cd "):
+            cwd = line.split(maxsplit=1)[1].rstrip("/") or None
+        if WINDOWS_DOWNLOADS_COPY.match(line):
+            copied_home = True
+        if line == STANDALONE_CHECK:
+            runs.append((cwd, copied_home))
+    return runs
+
+
+def standalone_blocks(name: str, cwd: str, copied_home: bool) -> list[list[str]]:
+    return [block for block in all_commands(name) if (cwd, copied_home) in standalone_runs(block)]
+
+
+@pytest.mark.parametrize("name", STANDALONE_SURFACES)
+def test_standalone_check_on_windows_is_copied_home_from_windows_downloads(name):
+    assert standalone_blocks(name, "~", copied_home=True), f"{name} lacks the WSL copy step"
+    assert "YOUR-WINDOWS-NAME" in read(name)
+
+
+@pytest.mark.parametrize("name", STANDALONE_SURFACES)
+def test_standalone_check_on_a_mac_runs_from_downloads(name):
+    assert standalone_blocks(name, "~/Downloads", copied_home=False), f"{name} lacks the Mac path"
+
+
+@pytest.mark.parametrize("name", sorted(ACTIVE_DOCS))
+def test_every_standalone_check_first_says_where_the_download_is(name):
+    text = read(name)
+    runs = [run for block in all_commands(name) for run in standalone_runs(block)]
+
+    mentions = re.findall(re.escape(STANDALONE_CHECK) + r"(?! --)", text)
+    assert len(mentions) == len(runs), f"{name} mentions the check outside a block"
+    for cwd, copied_home in runs:
+        assert (cwd == "~" and copied_home) or cwd == "~/Downloads", f"{name}: run from {cwd}"
+
+
+def test_the_prepare_page_standalone_check_is_the_guides():
+    guide_blocks = all_commands("guide")
+    for cwd, copied_home in (("~", True), ("~/Downloads", False)):
+        for block in standalone_blocks("prepare-page", cwd, copied_home):
+            assert block in guide_blocks
 
 
 def test_the_guide_update_flow_moves_the_old_kit_aside_and_starts_fresh():

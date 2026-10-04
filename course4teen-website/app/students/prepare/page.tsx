@@ -24,6 +24,19 @@ const READY_CHECK = `cd ~/explore-studio-course
 source .venv/bin/activate
 python3 check-my-computer.py`;
 
+/**
+ * The standalone pre-install check, run where the browser saved it: Windows
+ * Downloads (copied into the Ubuntu home first, as for the Course Kit ZIP) or
+ * the Mac's ~/Downloads. Identical to the guide's commands.
+ */
+const STANDALONE_CHECK_WINDOWS = `cd ~
+ls /mnt/c/Users/
+cp /mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/check-my-computer.py ~
+python3 check-my-computer.py --computer-only`;
+
+const STANDALONE_CHECK_MAC = `cd ~/Downloads
+python3 check-my-computer.py --computer-only`;
+
 function fileSizeLabel(fileName: string): string {
   const bytes = fs.statSync(path.join(DOWNLOADS_DIR, fileName)).size;
   const kb = bytes / 1024;
@@ -251,10 +264,24 @@ python3 check-my-computer.py`}</code>
                     Download check-my-computer.py ({checkerSize})
                   </a>
                   <p>
-                    Test a computer before installing the course with{" "}
-                    <code>python3 check-my-computer.py --computer-only</code>.
-                    It never asks for a password or an account.
+                    Test a computer before installing the course. Your browser
+                    saves the file in your Downloads folder. It never asks for
+                    a password or an account.
                   </p>
+                  <p>
+                    <strong>Windows:</strong> in Ubuntu, copy it home and run
+                    it. Replace <code>YOUR-WINDOWS-NAME</code> with your folder
+                    name from the <code>ls</code> list.
+                  </p>
+                  <pre className="slide-code">
+                    <code>{STANDALONE_CHECK_WINDOWS}</code>
+                  </pre>
+                  <p>
+                    <strong>Mac:</strong> in Terminal, run it from Downloads.
+                  </p>
+                  <pre className="slide-code">
+                    <code>{STANDALONE_CHECK_MAC}</code>
+                  </pre>
                 </li>
               </ul>
             </div>
