@@ -47,24 +47,67 @@ What each check verifies:
 
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
   `05843ffd7e257a3120a671b009f45fcae33f7391`. The harness refuses to publish
-  unless the working tree's presentation runtime is byte-identical to the
-  runtime at the pin. A test re-reads the pin from git to confirm this.
-- Presentation fingerprints, per moment: `S02_COMPASS_PROMPT` `97b2108a3017…`,
-  `S02_MOVED_COMPASS` `55442af80d38…`, `S03_REVEAL` `d767adcb0628…`,
-  `S03_NEAR_CLUE` `9efc9cfe11b6…`, `S04_DIALOGUE` `f96dd97f00e4…`. The full
+  unless the working tree's presentation runtime (every `runtime` file below)
+  is byte-identical to the runtime at the pin. A test re-reads the pin from
+  git to confirm this.
+- Manifest schema: `explore-studio/journey-snapshots@2`. `--check` refuses a
+  missing, unknown, or unsupported schema. Version 1 had no capture
+  implementation fingerprint, so its entries were recaptured, not relabelled.
+  The S02–S04 source frames and all ten WebP files came out byte-identical to
+  the version 1 capture.
+- Presentation fingerprints, per moment: `S02_COMPASS_PROMPT` `527b3bc108b7…`,
+  `S02_MOVED_COMPASS` `260f32bcc720…`, `S03_REVEAL` `633a3b1acff9…`,
+  `S03_NEAR_CLUE` `d81d2414554b…`, `S04_DIALOGUE` `b58791b818be…`. The full
   values are in the manifest.
-- A fingerprint hashes three parts:
-  - **runtime:** the engine rendering, scenes, animation, entities, input,
-    interactions, trusted art, `explore/curriculum`, and the Trail plan → scene
-    adapter. It excludes audio and the rest of the repository.
-  - **packages:** every file of each task-card package.
-  - **capture:** the moment recipe, the task-card command, the frame size, and
-    the WebP settings.
+- A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
+  exactly what each one covers:
+  - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
+    everything between the package files and the drawn frame.
+    - `engine-core`: `engine/_color.py`, `_config.py`, `_platform.py`.
+    - `rendering`: `engine/rendering/**`, including the per-mission
+      presentation policy.
+    - `scene`: `engine/scenes/**`, `entities/**`, `animation/**`, `input/**`,
+      `interactions/**`, and `engine/audio/_trail_audio.py`. The scene calls
+      the audio bridge every frame, and it draws the audio indicator.
+    - `trusted-art`: the trusted sprite sheets and the code that loads them.
+    - `curriculum`: `explore/curriculum/**`.
+    - `package-pipeline`: `explore/packages/**` (loader, models, policy,
+      validator, package-set planner, registration adapter, Trail plan and
+      scene construction) and `explore/_colors.py`.
 
-  When any part changes, `tests/test_journey_snapshots.py` fails with a
-  message that names the part, for example: "Journey snapshot for S03
+    Excluded, each with a reason in `RUNTIME_PIXEL_INERT`: audio playback and
+    cues, the trusted audio loader and clips, the windowed `App` loop,
+    logging, and the Student API v0.1 classes. A test walks the harness's
+    imports statically. It fails if the harness reaches an `engine` or
+    `explore` module that is neither fingerprinted nor justified there.
+  - **packages:** every file of each task-card package.
+  - **captureRecipe:** the task-card command (packages in order, `--player`,
+    `--mission-id`), the session row, the moment, the frame size, and the
+    WebP settings.
+  - **captureImplementation:** the bytes of
+    `scripts/capture_journey_snapshots.py`, `scripts/journey_snapshots.py`,
+    and `scripts/trail_driver.py`. These hold the fixed time step, real
+    input, frame selection, acceptance checks, and encoding. Any edit to
+    these files needs a recapture, which only refreshes the manifest when
+    the frames are unchanged.
+
+  When any part changes, `--check` and `tests/test_journey_snapshots.py` fail
+  with a message that names the part, for example: "Journey snapshot for S03
   (S03_REVEAL) is stale: session package files changed; rerun `python
   scripts/capture_journey_snapshots.py --session S03`".
+  `tests/test_journey_snapshot_freshness.py` makes real edits in a temporary
+  mirror of the repository and runs `--check` against it. Edits to rendering,
+  presentation policy, the registration adapter, the
+  loader/models/planner/Trail construction, colours, package YAML, the time
+  step, frame selection, acceptance, session config, or the task-card command
+  must fail it. Audio-only code, website prose, docs, and the window title must
+  not.
+- Publishing also refuses unless every `runtime` file in the working tree
+  matches the Course Kit runtime pin. So a package-pipeline or colour edit
+  blocks publishing just as a renderer edit does.
+- The Journey snapshots workflow watches every fingerprint input. A test
+  matches the workflow's path filters against the real input files, so the
+  two lists cannot drift apart.
 - Toolchain at capture: Python 3.13.7, pygame 2.6.1, SDL 2.28.4, SDL_ttf
   2.20.1, Pillow 12.3.0, libwebp 1.6.0, darwin-arm64.
 
@@ -106,23 +149,32 @@ Snapshot encoding needs Pillow, from `pip install -e ".[dev,art]"`.
 
 S01 is deliberately not captured. Phase B is bringing S01 into Moon Meadow,
 and the current runtime still gives M01 the standard Trail. The S01 row in
-`scripts/journey_snapshots.py` expects `moon-meadow` and has a `deferred`
-reason. While that reason is set:
+`scripts/journey_snapshots.py` has a `deferred` reason. While that reason is
+set:
 
 - the harness refuses to publish S01;
-- tests require that there is no `public/journey/s01/` and no S01 manifest
-  entry.
+- `--check` and the tests reject any `public/journey/s01/` file and any S01
+  manifest entry.
 
-Even with the reason removed, the plain Trail cannot pass: the capture check
-requires the Moon Meadow backdrop and trusted art. A test proves that today's
-S01 frame is rejected.
+The row already states the post-Phase B contract, so nothing has to be
+remembered when the deferral is lifted:
 
-After Phase B lands and the Course Kit pin includes it:
+- presentation: `moon-meadow` (the Moon Meadow backdrop must be drawn);
+- `must_show`: Nova, Pixel, and the Crystal Lantern, each drawn in trusted art;
+- `must_not_show`: both Moon Compasses, the Moonlit Guide, and the retired
+  Fern (`forest-guide:guide`) and River Fountain (`river-fountain:fountain`).
 
-1. Delete the `deferred=` line from the S01 row. If Phase B's arrival should
-   also require Pixel and the Lantern, add them to the row's `must_show`.
-2. Run `python scripts/capture_journey_snapshots.py --session S01`.
+Today's S01 card still names Fern and the Fountain, so even with the reason
+removed the plain Trail cannot pass. A test proves that today's S01 frame is
+rejected.
+
+After Phase B (#114) lands and this branch is updated onto it:
+
+1. Delete the `deferred=` line from the S01 row.
+2. Run `python scripts/capture_journey_snapshots.py --all-published`. Editing
+   `journey_snapshots.py` changes the capture implementation fingerprint, so
+   S02–S04 are recaptured too.
 3. Regenerate the contact sheet.
 
-Before the pin bump, `--session S01 --preview DIR` shows the frame without
-publishing it.
+Before then, `--session S01 --preview DIR` shows the frame without publishing
+it.
