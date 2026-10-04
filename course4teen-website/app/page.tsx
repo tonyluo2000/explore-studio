@@ -1,5 +1,7 @@
+import Link from "next/link";
 import SiteHeader from "./components/SiteHeader";
 import SiteFooter from "./components/SiteFooter";
+import { JOURNEY_HREF } from "../lib/journey";
 
 const contactHref =
   "mailto:hello@course4teen.com?subject=Course4Teen%20enrollment%20interest";
@@ -124,6 +126,9 @@ export default function Home() {
               </li>
             ))}
           </ol>
+          <p className="home-journey-cta">
+            <Link className="text-link" href={JOURNEY_HREF}>Follow the class Journey Map <ArrowIcon /></Link>
+          </p>
         </section>
 
         <section className="studio-section">

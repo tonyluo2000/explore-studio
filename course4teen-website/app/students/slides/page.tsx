@@ -4,6 +4,7 @@ import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import { classSessions, sessionsWithSlides } from "../../../lib/calendar";
 import { sessionsWithNotes } from "../../../lib/learn";
+import { JOURNEY_HREF, journeyContext } from "../../../lib/journey";
 
 export const metadata: Metadata = {
   title: "Student Slides | Course4Teen",
@@ -26,12 +27,18 @@ export default function StudentSlidesIndexPage() {
             class: the mission, what to try, and the checkpoints to hit.
             Slides go live as each session is taught.
           </p>
+          <p className="slides-journey-link">
+            <Link className="text-link" href={JOURNEY_HREF}>
+              See where each session sits on the Journey Map <span aria-hidden="true">&rarr;</span>
+            </Link>
+          </p>
         </section>
 
         <section className="section calendar-list-section slides-list-section">
           <ol className="calendar-list">
             {classSessions.map((session) => {
               const isPublished = sessionsWithSlides.includes(session.id);
+              const stop = isPublished ? journeyContext(session.id) : null;
               return (
                 <li key={session.id} className="calendar-item">
                   <div className="calendar-row slides-row">
@@ -45,6 +52,7 @@ export default function StudentSlidesIndexPage() {
                         {session.title} <em>&mdash; coming soon</em>
                       </span>
                     )}
+                    {stop ? <span className="slides-place">{stop.location}</span> : null}
                     {sessionsWithNotes.includes(session.id) ? (
                       <Link className="slides-notes-link" href={`/students/learn/${session.id.toLowerCase()}/`}>
                         Python notes

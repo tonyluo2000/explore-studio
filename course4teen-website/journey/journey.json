@@ -1,0 +1,152 @@
+{
+  "schema": "course4teen/journey@1",
+  "note": "Journey-only data for the published sessions. Titles and dates come from lib/calendar.ts, publication from sessionsWithSlides, Slides and Notes URLs from the session id, and snapshots from snapshots.json. Map coordinates are the frozen Moon Meadow plate's 960x640 positions shifted down 60 to leave room for the ridge and the frontier above it.",
+  "map": {
+    "width": 960,
+    "height": 700,
+    "plateOffsetY": 60
+  },
+  "regions": [
+    {
+      "id": "moon-meadow",
+      "name": "Moon Meadow",
+      "label": { "x": 800, "y": 664 },
+      "shape": "M0 240C120 228 240 250 360 238C480 226 600 248 720 234C820 224 900 242 960 234V700H0Z",
+      "reveal": [{ "from": "S01", "state": "revealed" }]
+    },
+    {
+      "id": "moonlit-ridge",
+      "name": "Moonlit Ridge",
+      "label": { "x": 790, "y": 206 },
+      "shape": "M0 244C60 204 120 192 190 208C250 222 300 182 370 180C440 178 480 208 550 200C620 192 660 166 740 172C820 178 880 204 960 190V262H0Z",
+      "reveal": [
+        { "from": "S01", "state": "fogged" },
+        { "from": "S04", "state": "revealed" }
+      ]
+    },
+    {
+      "id": "beyond-ridge",
+      "frontier": true,
+      "label": { "x": 480, "y": 96 },
+      "shape": "M0 160C80 122 150 140 220 126C300 110 360 136 440 118C520 100 600 128 680 110C760 94 840 120 960 104V210H0Z",
+      "reveal": [{ "from": "S04", "state": "fogged" }]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "landing-site",
+      "name": "Landing Site",
+      "region": "moon-meadow",
+      "icon": "lander",
+      "x": 505,
+      "y": 442,
+      "reveal": [{ "from": "S01", "state": "revealed" }]
+    },
+    {
+      "id": "lantern-shrine",
+      "name": "Lantern Shrine",
+      "region": "moon-meadow",
+      "icon": "lantern",
+      "x": 160,
+      "y": 560,
+      "reveal": [{ "from": "S01", "state": "revealed" }]
+    },
+    {
+      "id": "compass-clearing",
+      "name": "Compass Clearing",
+      "hint": "An empty circle of tall stones",
+      "region": "moon-meadow",
+      "icon": "compass",
+      "x": 282,
+      "y": 282,
+      "reveal": [
+        { "from": "S01", "state": "hinted" },
+        { "from": "S02", "state": "revealed" },
+        { "from": "S03", "state": "revealed", "detail": "awakened" }
+      ]
+    },
+    {
+      "id": "moonlit-guide",
+      "name": "Moonlit Guide",
+      "hint": "A lantern glow past the trees",
+      "region": "moonlit-ridge",
+      "icon": "guide",
+      "x": 540,
+      "y": 280,
+      "reveal": [
+        { "from": "S03", "state": "hinted" },
+        { "from": "S04", "state": "revealed" }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "trail-landing-clearing",
+      "kind": "trail",
+      "from": "landing-site",
+      "to": "compass-clearing",
+      "d": "M505 442C400 444 372 308 282 282",
+      "reveal": [{ "from": "S01", "state": "revealed" }]
+    },
+    {
+      "id": "trail-clearing-shrine",
+      "kind": "trail",
+      "from": "compass-clearing",
+      "to": "lantern-shrine",
+      "d": "M282 282C176 322 236 480 160 560",
+      "reveal": [{ "from": "S01", "state": "revealed" }]
+    },
+    {
+      "id": "bearing-clearing-guide",
+      "kind": "bearing",
+      "from": "compass-clearing",
+      "to": "moonlit-guide",
+      "d": "M318 268C390 236 450 232 512 262",
+      "reveal": [
+        { "from": "S03", "state": "hinted" },
+        { "from": "S04", "state": "revealed" }
+      ]
+    }
+  ],
+  "frontier": {
+    "teaser": "The trail beyond the ridge has gone dark."
+  },
+  "stops": [
+    {
+      "session": "S01",
+      "kind": "arrive",
+      "landmark": "landing-site",
+      "headline": "landmark",
+      "story": "Nova lands in Moon Meadow and begins the expedition's field notes.",
+      "snapshot": "S01_ARRIVAL",
+      "snapshotAlt": "The Trail in S01: Nova arrives in Moon Meadow near the landing pad, with Pixel, the lander, and the Lantern Shrine in view."
+    },
+    {
+      "session": "S02",
+      "kind": "reveal",
+      "landmark": "compass-clearing",
+      "headline": "landmark",
+      "story": "The expedition's first instrument, the Moon Compass, is placed in the stone clearing.",
+      "snapshot": "S02_COMPASS_PROMPT",
+      "snapshotAlt": "The Trail in S02: Nova stands beside the Moon Compass in the stone clearing, with the Inspect Moon Compass prompt showing."
+    },
+    {
+      "session": "S03",
+      "kind": "deepen",
+      "landmark": "compass-clearing",
+      "headline": "landmark",
+      "story": "The Moon Compass reacts and points past the trees toward someone.",
+      "snapshot": "S03_REVEAL",
+      "snapshotAlt": "The Trail in S03: the Moon Compass glows in the stone clearing as its reveal message appears."
+    },
+    {
+      "session": "S04",
+      "kind": "reveal",
+      "landmark": "moonlit-guide",
+      "headline": "region",
+      "story": "The Moonlit Guide says the trail beyond the ridge has gone dark.",
+      "snapshot": "S04_DIALOGUE",
+      "snapshotAlt": "The Trail in S04: Nova meets the Moonlit Guide below the ridge, and the guide's greeting fills a speech bubble."
+    }
+  ]
+}

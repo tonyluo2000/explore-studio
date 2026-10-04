@@ -1,0 +1,64 @@
+name: Journey map
+
+# The student Journey Map (/students/journey/) and the Journey context on the
+# Slides and Python Notes pages. Typechecks, lints, and builds the static site,
+# then runs the Journey tests: data validation and progressive reveal (the
+# site's own lib/journeyState.ts under Node), the future-content boundary, and
+# the rendered HTML. Never deploys.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/journey-map.yml"
+      - "course4teen-website/**"
+      - "lessons/sessions/s0*/student/explorer-package/character/**"
+      - "tests/test_journey_map.py"
+      - "tests/journey_map_probe.mjs"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/journey-map.yml"
+      - "course4teen-website/**"
+      - "lessons/sessions/s0*/student/explorer-package/character/**"
+      - "tests/test_journey_map.py"
+      - "tests/journey_map_probe.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-journey-map:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: course4teen-website
+    steps:
+      - name: Check out Explore Studio
+        uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          # 22.18+ runs lib/journeyState.ts directly with type stripping.
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: course4teen-website/package-lock.json
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install website dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Build the static site
+        run: npm run build
+      - name: Verify the Journey data, reveal logic, and rendered pages
+        working-directory: .
+        env:
+          JOURNEY_SITE_OUT: course4teen-website/out
+        run: |
+          python -m pip install "pytest>=8.0"
+          python -m pytest -q tests/test_journey_map.py

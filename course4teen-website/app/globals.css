@@ -328,7 +328,166 @@ kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3
 .prep-downloads .button { margin-bottom: .6rem; }
 .prep-downloads p { max-width: 520px; }
 
+/* Course Journey ---------------------------------------------------------- */
+.journey-hero { max-width: 760px; padding-bottom: 2.5rem; }
+.journey-hero h1 { font-size: clamp(2.6rem, 9vw, 5rem); margin-bottom: 1.4rem; }
+.journey-now { display: grid; gap: 1px; margin: 2rem 0 0; background: var(--line); border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; }
+.journey-now > div { background: var(--paper); padding: .9rem 1.1rem; min-width: 0; }
+.journey-now dt { font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--coral-accessible); margin-bottom: .35rem; }
+.journey-now dd { margin: 0; font: 400 1.2rem/1.3 Georgia, serif; overflow-wrap: anywhere; }
+.journey-now-current { background: #fff6dc !important; }
+.journey-now-current a { border-bottom: 1px solid currentColor; }
+.journey-now-note { display: block; font: 700 .72rem/1.4 Arial, sans-serif; color: var(--ink-soft); margin-top: .2rem; }
+
+.journey-map-section { background: #0b1030; color: #e9e4d2; padding: 3rem 0 3.5rem; }
+.journey-map-inner { width: min(1180px, calc(100% - 2rem)); margin: auto; }
+.journey-map-heading { font-size: .72rem; font-family: Arial, sans-serif; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #ffcc54; margin: 0 0 1.2rem; }
+.journey-map-figure { margin: 0; display: grid; gap: 1.6rem; min-width: 0; }
+.journey-map-frame { min-width: 0; }
+.jm-svg { display: block; width: 100%; height: auto; max-width: 100%; }
+.journey-key { font-size: .9rem; line-height: 1.5; color: #d9d3c1; }
+.journey-key-title { font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #9fb0d8; margin: 0 0 .8rem; }
+.journey-key-list { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: .65rem; }
+.journey-key-list li { display: grid; grid-template-columns: 1.9rem 1fr; gap: .6rem; align-items: start; }
+.journey-key-list strong { color: #f4ecd8; font-weight: 700; }
+.journey-key-hinted { color: #aeb6cf; }
+.journey-key-num { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; background: #f4ecd8; color: #101e2d; font: 800 .78rem/1 Arial, sans-serif; }
+.journey-key-hinted .journey-key-num { background: transparent; color: #c6cde4; border: 1px dashed #7d87a8; }
+.journey-key-current { color: #ffcc54; font-weight: 700; }
+.journey-key-legend { list-style: none; margin: 0; padding: 1rem 0 0; border-top: 1px solid rgba(233,228,210,.16); display: grid; gap: .5rem; font-size: .82rem; color: #c3c9da; }
+.journey-key-legend li { display: flex; align-items: center; gap: .6rem; }
+.journey-swatch { flex: none; display: inline-block; width: 2rem; height: .6rem; border-radius: .3rem; }
+.journey-swatch-trail { background: #c9a978; box-shadow: inset 0 0 0 2px #8d7350; }
+.journey-swatch-bearing { height: 4px; background: radial-gradient(circle, #cfe8ff 45%, transparent 50%) 0 0 / 8px 4px repeat-x; }
+.journey-swatch-gem { width: .8rem; height: .8rem; border-radius: 0; background: #ffcc54; transform: rotate(45deg) scaleY(1.3); margin-inline: .6rem; }
+
+/* Map paint. Colours follow the frozen Moon Meadow plate. */
+.jm-star { fill: #f4f1ff; opacity: .8; }
+.jm-moon { fill: #e6dfc0; }
+.jm-moon-crater { fill: #cfc6a2; }
+.jm-land-fogged { fill: #2a3058; opacity: .7; }
+.jm-mist { fill: #c9cff0; opacity: .2; }
+.jm-fog-label { fill: #c9cff0; opacity: .75; font: italic 22px Georgia, serif; letter-spacing: .3em; }
+.jm-ridge-land { fill: #43457a; }
+.jm-tree circle { fill: #2b4a58; }
+.jm-tree rect { fill: #1d2c3a; }
+.jm-tree-big circle { fill: #234552; }
+.jm-region-label { fill: #d6dcf4; font: 700 17px Arial, sans-serif; letter-spacing: .32em; text-transform: uppercase; paint-order: stroke; stroke: #11173a; stroke-width: 5px; stroke-linejoin: round; }
+.jm-pond { fill: #142844; stroke: #3c5a7c; stroke-width: 3; }
+.jm-pond-moon { fill: #e6dfc0; opacity: .5; }
+.jm-crystal { fill: #4fa7c8; stroke: #a8e6f6; stroke-width: 1.5; opacity: .85; }
+.jm-crystal-violet { fill: #7a5ad0; stroke: #c8b4ff; }
+.jm-flower { fill: #f3c7e4; opacity: .7; }
+.jm-trail-bed { fill: none; stroke: #c9a978; stroke-width: 22; stroke-linecap: round; opacity: .9; }
+.jm-trail-stones { fill: none; stroke: #e8d3a8; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 2 26; }
+.jm-bearing-glow { fill: none; stroke: #9fd0ff; stroke-width: 16; stroke-linecap: round; opacity: .14; }
+.jm-bearing-dots { fill: none; stroke: #dff0ff; stroke-width: 5; stroke-linecap: round; stroke-dasharray: .5 15; }
+.jm-bearing-hinted { opacity: .45; }
+.jm-pad { fill: #33435f; stroke: #6c88a8; stroke-width: 3; }
+.jm-pad-ring { fill: none; stroke: #4f6888; stroke-width: 2; }
+.jm-pad-star { fill: none; stroke: #6ff0e0; stroke-width: 2; opacity: .7; }
+.jm-pad-light { fill: #6ff0e0; }
+.jm-lander-body { fill: #e8eef6; stroke: #1b2033; stroke-width: 3; }
+.jm-lander-port { fill: #5fd8f2; stroke: #2b6f9a; stroke-width: 4; }
+.jm-lander-fin { fill: #e0564a; stroke: #1b2033; stroke-width: 2.5; stroke-linejoin: round; }
+.jm-lander-leg { fill: none; stroke: #1b2033; stroke-width: 4; stroke-linecap: round; }
+.jm-lander-beacon { fill: #ff5a4a; }
+.jm-pool-violet { fill: #8a6cf0; opacity: .22; }
+.jm-pool-strong { opacity: .5; }
+.jm-pool-warm { fill: #ffcf7a; opacity: .22; }
+.jm-pool-blue { fill: #7fa6ff; opacity: .26; }
+.jm-clearing-floor { fill: #6f58c9; opacity: .55; stroke: #b9a6ff; stroke-width: 2; }
+.jm-stone { fill: #706a9c; stroke: #1b2033; stroke-width: 2.5; }
+.jm-hinted .jm-stone { fill: #262b48; stroke: #48507a; }
+.jm-hinted .jm-clearing-floor { fill: #2c2f55; opacity: .7; stroke: #48507a; }
+.jm-hinted .jm-pool-violet { opacity: .14; }
+.jm-compass-ring { fill: #e9b949; stroke: #1b2033; stroke-width: 2.5; }
+.jm-compass-body { fill: #6b3fb8; }
+.jm-compass-face { fill: #f6f1ff; }
+.jm-needle-north { fill: #d9473a; }
+.jm-needle-south { fill: #8d93b0; }
+.jm-sparkle { fill: #fff4c8; }
+.jm-shrine-floor { fill: #8a7a64; stroke: #4f4538; stroke-width: 3; }
+.jm-shrine-pillar { fill: #b9ab92; stroke: #3d3528; stroke-width: 2.5; }
+.jm-shrine-lintel { fill: #cdbd9f; stroke: #3d3528; stroke-width: 2.5; }
+.jm-flame { fill: #ffb24a; }
+.jm-shrine-orb { fill: #ffe7a6; }
+.jm-lantern { fill: #f2c14e; stroke: #5a3d12; stroke-width: 2.5; }
+.jm-lantern-cap { fill: #5a3d12; }
+.jm-guide-robe { fill: #3550c8; stroke: #141a3a; stroke-width: 2.5; stroke-linejoin: round; }
+.jm-guide-face { fill: #f2d2b6; }
+.jm-guide-beard { fill: #f4f1ff; }
+.jm-guide-staff { stroke: #8a6a3a; stroke-width: 4; stroke-linecap: round; }
+.jm-guide-moon { fill: #f6e7a0; }
+.jm-guide-silhouette { fill: #1a2148; stroke: #4a5a9a; stroke-width: 2; }
+.jm-guide-glint { fill: #ffe7a6; opacity: .8; }
+.jm-label { fill: #f4ecd8; font: italic 24px Georgia, serif; paint-order: stroke; stroke: #0d1428; stroke-width: 6px; stroke-linejoin: round; }
+.jm-state-current .jm-label { fill: #ffd977; }
+.jm-badge { display: none; }
+.jm-badge circle { fill: #f4ecd8; stroke: #0d1428; stroke-width: 4; }
+.jm-badge text { fill: #101e2d; font: 800 40px Arial, sans-serif; }
+.jm-state-hinted .jm-badge circle { fill: #1a2148; stroke: #c6cde4; stroke-dasharray: 6 5; }
+.jm-state-hinted .jm-badge text { fill: #e2e6f6; }
+.jm-gem-glow { fill: #ffce6e; opacity: .35; }
+.jm-gem-body { fill: #ffcc54; stroke: #1b2033; stroke-width: 2.5; stroke-linejoin: round; }
+.jm-gem-light { fill: #fff2ba; }
+.jm-gem-shade { fill: #ce802c; }
+.jm-border { fill: none; stroke: #c9b98a; stroke-width: 3; opacity: .6; }
+.jm-border-inner { fill: none; stroke: #c9b98a; stroke-width: 1.2; opacity: .35; }
+
+@keyframes jm-drift { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+@keyframes jm-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.jm-drift { animation: jm-drift 28s ease-in-out infinite alternate; }
+.jm-gem { animation: jm-bob 3.2s ease-in-out infinite; }
+
+/* Narrow maps: numbered badges replace the text labels, matching the key. */
+@media (max-width: 599px) {
+  .jm-label, .jm-region-label, .jm-fog-label { display: none; }
+  .jm-badge { display: inline; }
+}
+
+.journey-stops { padding-top: 4rem; }
+.journey-stops h2 { font-size: clamp(2rem, 6vw, 3.4rem); margin-bottom: 2rem; }
+.journey-stop-list { list-style: none; margin: 0 0 4rem; padding: 0; display: grid; gap: 1.2rem; }
+.journey-stop { display: grid; gap: 1rem 1.6rem; padding: 1rem; background: #fff; border: 1px solid var(--line); border-radius: 1rem; min-width: 0; scroll-margin-top: 1rem; }
+.journey-stop-current { border-color: #d9a520; box-shadow: 0 0 0 3px rgba(255,204,84,.35); }
+.journey-stop-shot { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; border-radius: .6rem; background: #1a1f4a; }
+.journey-stop-body { min-width: 0; }
+.journey-stop-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; font: 700 .76rem/1.2 monospace; color: var(--ink-soft); margin-bottom: .7rem; }
+.journey-stop-flag { font: 800 .66rem/1 Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; background: #ffcc54; color: #3d2a00; padding: .3rem .55rem; border-radius: 999px; }
+.journey-stop h3 { font: 400 1.6rem/1.15 Georgia, serif; margin-bottom: .5rem; }
+.journey-stop-place { font-weight: 700; font-size: .9rem; color: var(--ink); margin-bottom: .45rem; }
+.journey-stop-story { color: var(--ink-soft); line-height: 1.6; margin-bottom: .9rem; }
+.journey-stop-links { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin: 0; }
+.journey-stop-links a { font-size: .84rem; font-weight: 800; color: var(--coral-accessible); border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+.journey-ahead-heading { margin-bottom: 1rem !important; }
+
+.journey-context { margin-top: 1.6rem; padding: .9rem 1.1rem; background: #11173a; color: #e9e4d2; border-radius: .8rem; border-left: 4px solid #ffcc54; max-width: 640px; }
+.journey-context dl { margin: 0; display: grid; gap: .55rem; }
+.journey-context dl > div { display: grid; grid-template-columns: 6.6rem 1fr; gap: .8rem; align-items: baseline; }
+.journey-context dt { font-size: .66rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: #ffcc54; }
+.journey-context dd { margin: 0; font-size: .92rem; line-height: 1.5; min-width: 0; }
+.journey-context-link { font-weight: 800; border-bottom: 1px solid currentColor; }
+.journey-context-link:focus-visible, .journey-key a:focus-visible { outline-color: #ffcc54; }
+
+.slides-journey-link { margin-top: 1.4rem; }
+.slides-place { grid-column: 2; font-size: .82rem; color: var(--ink-soft); }
+.home-journey-cta { margin-top: 2.2rem; }
+
+@media (min-width: 640px) {
+  .journey-now { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .journey-stop { grid-template-columns: minmax(0, 44%) minmax(0, 1fr); padding: 1.2rem; align-items: center; }
+}
+@media (min-width: 980px) {
+  .journey-map-figure { grid-template-columns: minmax(0, 1fr) 290px; align-items: start; }
+  .journey-stop { grid-template-columns: 360px minmax(0, 1fr); }
+}
+@media (max-width: 479px) {
+  .journey-context dl > div { grid-template-columns: 1fr; gap: .15rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; }
+  .jm-drift, .jm-gem { animation: none; }
 }
