@@ -12,10 +12,13 @@ reveals each message.
 
 ## Expedition context
 
-S03 opens the shared, loosely continuous Moonlit expedition that runs through
-S15: the Moon Compass's clue leads toward a guide who appears in S04. The
+S03 is **Compass Awakening**, the next chapter of the loosely continuous
+Moonlit expedition that began with Nova's arrival in S01 and runs through S15:
+the Moon Compass's clue leads toward a guide who appears in S04. The
 continuity is narrative only — no new mechanic, inventory, or engine state is
-introduced. Students still author only the two existing declarative fields.
+introduced. The "reveal" is the student's own text: the Compass does not turn
+toward the guide or change the map. Students still author only the two
+existing declarative fields.
 
 ## Before class
 

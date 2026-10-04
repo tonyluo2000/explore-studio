@@ -172,7 +172,7 @@ print(x + 100)  # 340`,
     tryIt: [
       "Predict, then test: what moves when you change x = 240 to x = 340?",
       "Add print(type(x)) and print(type(color)) to the starter. What does Python say each type is?",
-      "In my-explore-world/explorer.py and companion.py, replace every TODO with concrete choices for your own Explorer and Companion, then run both files to print your Explorer Card and Companion Card.",
+      "In my-explore-world/explorer.py and companion.py, replace every TODO with concrete choices for your own Explorer and Companion (or check your existing values, if you set these up before), then run both files and confirm your own values appear in the output.",
     ],
     discovery: {
       topic: "Coordinates, maps, and navigation",

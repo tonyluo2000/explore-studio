@@ -757,3 +757,29 @@ def test_s02_bootstrap_no_overwrite_invariant_is_documented_unchanged():
 
     assert "it only adds missing files and never replaces your work" in task_card
     assert "never" in readme.lower() and "replace" in readme.lower()
+
+
+def test_s02_names_compass_clearing_without_claiming_saved_state():
+    task_card = _normalized(SESSIONS / "s02" / "student" / "task-card.md")
+    runbook = _normalized(SESSIONS / "s02" / "teacher-runbook.md")
+
+    assert "compass box" not in task_card.lower()
+    assert "Remember the empty circle of stones near where Nova landed?" in task_card
+    assert "That is **Compass Clearing**" in task_card
+    assert "**Compass Clearing**" in runbook
+    assert "nothing carries over from S01" in runbook
+
+
+def test_s02_learn_try_it_matches_the_python_notes():
+    learn = _read(WEBSITE / "lib" / "learn.ts")
+    s02_learn = " ".join(learn.split('id: "S02"', 1)[1].split('id: "S03"', 1)[0].split())
+    notes = _normalized(SESSIONS / "s02" / "student" / "python-notes.md").replace("`", "")
+
+    expected = (
+        "replace every TODO with concrete choices for your own Explorer and Companion "
+        "(or check your existing values, if you set these up before), then run both files "
+        "and confirm your own values appear in the output."
+    )
+    assert expected in s02_learn
+    assert expected in notes
+    assert "print your Explorer Card and Companion Card" not in s02_learn

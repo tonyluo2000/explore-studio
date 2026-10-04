@@ -41,7 +41,7 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    kicker: "The Moonlit expedition begins",
+    kicker: "Compass Awakening",
     heading: "Make the World React",
     hero: true,
     body: (

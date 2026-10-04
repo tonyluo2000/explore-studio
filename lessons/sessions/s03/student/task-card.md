@@ -7,10 +7,10 @@ and predict which player event reveals each authored response.
 
 Use the shared [`Student Quick Start`](../../student-quick-start.md).
 
-## Expedition story
+## Expedition story: Compass Awakening
 
-Tonight you join the shared Moonlit expedition. The Moon Compass has a secret
-it is hiding — **you choose what that secret is**: a lantern, a fork in the
+The expedition continues in Compass Clearing, and the Moon Compass awakens. It
+has a secret it is hiding — **you choose what that secret is**: a lantern, a fork in the
 trail, a clearing, or an idea of your own. Your nearby clue should hint at the
 secret without giving it away; your interaction line reveals it.
 
@@ -95,7 +95,7 @@ git status --short
 git diff
 git add lessons/sessions/s03/student
 git diff --staged
-git commit -m "Add object response messages"
+git commit -m "Add moon compass response messages"
 ```
 
 Use the Quick Start for status meanings and recovery. A correct explanation is
