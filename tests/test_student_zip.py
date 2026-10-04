@@ -51,6 +51,7 @@ def test_zip_has_one_named_root_and_every_student_entry_point(student_zip):
     assert "requirements-student.txt" in paths
     assert "course-materials.json" in paths
     assert "docs/computer-readiness.md" in paths
+    assert "docs/windows-wsl-setup.md" in paths
     assert "lessons/sessions/student-quick-start.md" in paths
     assert "lessons/sessions/s02/student/explorer-package/manifest.yaml" in paths
     assert "lessons/sessions/s02/student/explorer-package/objects/compass.yaml" in paths
@@ -178,6 +179,7 @@ def collect_members_of_reference() -> list[Path]:
         Path("course-materials.json"),
         Path("requirements-student.txt"),
         Path("docs/computer-readiness.md"),
+        Path("docs/windows-wsl-setup.md"),
         Path("lessons/sessions/student-quick-start.md"),
         Path("lessons/sessions/s01/student/task-card.md"),
         Path("lessons/sessions/s30/student/task-card.md"),

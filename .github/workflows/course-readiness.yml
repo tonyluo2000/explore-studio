@@ -17,10 +17,18 @@ on:
       - "tests/test_public_zip_provenance_guard.py"
       - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
+      - "tests/test_computer_readiness.py"
+      - "tests/test_onboarding_docs.py"
+      - "tests/test_course_kit_update_scenario.py"
+      - "tests/test_mission_presentation_contract.py"
+      - "docs/operations/classroom-preflight.md"
+      - "course4teen-website/app/students/prepare/**"
+      - "course4teen-website/lib/courseKit.ts"
       - "tests/test_lesson_materials*.py"
       - "examples/explorer-packages/**"
       - "scripts/check_computer_readiness.py"
       - "docs/computer-readiness.md"
+      - "docs/windows-wsl-setup.md"
   push:
     branches:
       - main
@@ -39,10 +47,18 @@ on:
       - "tests/test_public_zip_provenance_guard.py"
       - "tests/test_student_zip.py"
       - "tests/test_classroom_student_workspace.py"
+      - "tests/test_computer_readiness.py"
+      - "tests/test_onboarding_docs.py"
+      - "tests/test_course_kit_update_scenario.py"
+      - "tests/test_mission_presentation_contract.py"
+      - "docs/operations/classroom-preflight.md"
+      - "course4teen-website/app/students/prepare/**"
+      - "course4teen-website/lib/courseKit.ts"
       - "tests/test_lesson_materials*.py"
       - "examples/explorer-packages/**"
       - "scripts/check_computer_readiness.py"
       - "docs/computer-readiness.md"
+      - "docs/windows-wsl-setup.md"
   workflow_dispatch:
 
 permissions:
@@ -81,6 +97,10 @@ jobs:
           tests/test_lesson_materials_s29.py
           tests/test_lesson_materials_s30.py
           tests/test_classroom_student_workspace.py
+          tests/test_computer_readiness.py
+          tests/test_onboarding_docs.py
+          tests/test_course_kit_update_scenario.py
+          tests/test_mission_presentation_contract.py
           tests/test_student_zip.py
           tests/test_public_zip_provenance_guard.py
       - name: Verify the committed public ZIP matches its provenance commit

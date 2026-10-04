@@ -4,15 +4,25 @@ import path from "node:path";
 import Link from "next/link";
 import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
+import { courseKitVersion } from "../../../lib/courseKit";
 
 export const metadata: Metadata = {
-  title: "Prepare for S01 | Course4Teen",
+  title: "Prepare for class | Course4Teen",
   description:
-    "Everything a Course4Teen student needs before Session 1: computer requirements, the student download package, Python setup, and the readiness check.",
+    "Get ready for any Course4Teen session: the Windows/WSL setup guide, the Course Kit download and update, and the one-minute \"Am I ready?\" check.",
   alternates: { canonical: "/students/prepare/" },
 };
 
 const DOWNLOADS_DIR = path.join(process.cwd(), "public", "downloads");
+
+/** The one canonical setup and update guide; it also ships inside the Course Kit. */
+const WINDOWS_SETUP_GUIDE =
+  "https://github.com/tonyluo2000/explore-studio/blob/main/docs/windows-wsl-setup.md";
+
+/** The "Am I ready?" commands, identical to the guide's checklist. */
+const READY_CHECK = `cd ~/explore-studio-course
+source .venv/bin/activate
+python3 check-my-computer.py`;
 
 function fileSizeLabel(fileName: string): string {
   const bytes = fs.statSync(path.join(DOWNLOADS_DIR, fileName)).size;
@@ -31,17 +41,18 @@ const requirements: Array<[string, string]> = [
 ];
 
 const supportedDevices: Array<[string, string]> = [
-  ["macOS", "Supported directly."],
-  ["Windows", "Supported through WSL2 with Ubuntu and WSLg."],
+  ["Windows", "Windows 11 with WSL 2 and Ubuntu. Run every course command in the Ubuntu terminal, not PowerShell."],
+  ["macOS", "Supported directly, in the Terminal app."],
   [
     "Phone, tablet, or Chromebook",
     "Not supported as a primary coding device. A supported computer with a physical keyboard is required.",
   ],
 ];
 
-export default function PrepareForS01Page() {
+export default function PrepareForClassPage() {
   const zipSize = fileSizeLabel("explore-studio-course.zip");
   const checkerSize = fileSizeLabel("check-my-computer.py");
+  const kitVersion = courseKitVersion();
 
   return (
     <>
@@ -49,25 +60,176 @@ export default function PrepareForS01Page() {
       <SiteHeader />
       <main id="main">
         <section className="section slides-hero">
-          <p className="kicker">Before Session 1</p>
-          <h1>Get your computer ready for S01.</h1>
+          <p className="kicker">Before every class</p>
+          <h1>Prepare for class.</h1>
           <p className="calendar-lede">
-            No Git client and no GitHub account are needed to start. Unzip the
-            student package, check the computer, install the course tools
-            once, and you&apos;re ready for{" "}
-            <Link className="text-link" href="/students/slides/s01/">
-              Session 1
-            </Link>
-            .
+            Set up once, check you are ready in under a minute before each
+            session, and update the Course Kit when a new one is out. No Git
+            client and no GitHub account are needed.
+          </p>
+          <p className="calendar-lede">
+            <strong>On Windows?</strong> Follow the one step-by-step{" "}
+            <a className="text-link" href={WINDOWS_SETUP_GUIDE}>
+              Windows setup guide
+            </a>{" "}
+            for WSL, Ubuntu, VS Code, the Course Kit, and updates.
           </p>
         </section>
 
         <section className="section slide-deck">
-          <article className="slide-card" id="check-computer">
-            <p className="kicker">Check your computer</p>
-            <h2>Confirm the computer is ready</h2>
+          <article className="slide-card" id="ready">
+            <p className="kicker">Am I ready?</p>
+            <h2>The one-minute check before every class</h2>
             <div className="slide-body">
-              <p>Course4Teen needs a computer that meets these minimums:</p>
+              <p>Open Ubuntu (Terminal on a Mac) and run:</p>
+              <pre className="slide-code">
+                <code>{READY_CHECK}</code>
+              </pre>
+              <ul className="prep-list">
+                <li>
+                  The summary says <code>Course tools: &hellip; (current)</code>{" "}
+                  and the last line says <strong>READY FOR EXPLORE STUDIO</strong>.
+                </li>
+                <li>
+                  <code>pwd</code> ends with <code>explore-studio-course</code>.
+                </li>
+                <li>Your session&apos;s Trail command opens and closes.</li>
+              </ul>
+              <p>
+                <strong>SETUP HELP NEEDED</strong>? Follow the arrow under each{" "}
+                <code>[help]</code> line, or send the summary lines to your
+                teacher before class.
+              </p>
+            </div>
+          </article>
+
+          <article className="slide-card" id="folders">
+            <p className="kicker">Two folders</p>
+            <h2>Course Kit and your world</h2>
+            <div className="slide-body">
+              <ul className="prep-list">
+                <li>
+                  <code>~/explore-studio-course</code>: the{" "}
+                  <strong>Course Kit</strong> and its <code>.venv</code>.
+                  Replaceable.
+                </li>
+                <li>
+                  <code>~/my-explore-world</code>: <strong>your own work</strong>.
+                  Never delete it.
+                </li>
+              </ul>
+              <p>
+                Run lesson commands from <code>~/explore-studio-course</code>{" "}
+                with its <code>.venv</code> active. Save your own work in{" "}
+                <code>~/my-explore-world</code>. On Windows both live in the
+                Ubuntu home folder, never under <code>/mnt/c</code>.
+              </p>
+            </div>
+          </article>
+
+          <article className="slide-card" id="download">
+            <p className="kicker">Course Kit</p>
+            <h2>Download and install</h2>
+            <div className="slide-body">
+              <ul className="prep-downloads">
+                <li>
+                  <a className="button button-primary" href="/downloads/explore-studio-course.zip" download>
+                    Download explore-studio-course.zip ({zipSize})
+                  </a>
+                  <p>
+                    Current Course Kit version:{" "}
+                    <strong>
+                      <code>{kitVersion}</code>
+                    </strong>
+                    . The check prints yours on its <em>Course Kit version</em>{" "}
+                    line.
+                  </p>
+                </li>
+              </ul>
+              <p>
+                Unzip it so the folder is exactly{" "}
+                <code>~/explore-studio-course</code>, then install the course
+                tools once:
+              </p>
+              <pre className="slide-code">
+                <code>{`cd ~/explore-studio-course
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-student.txt
+python3 check-my-computer.py`}</code>
+              </pre>
+              <p>
+                Open the course in VS Code with <code>code .</code> from{" "}
+                <code>~/explore-studio-course</code>. On Windows, the
+                bottom-left corner must say <strong>WSL</strong>. The{" "}
+                <a className="text-link" href={WINDOWS_SETUP_GUIDE}>
+                  Windows setup guide
+                </a>{" "}
+                shows how to move the ZIP from Windows Downloads into Ubuntu.
+              </p>
+            </div>
+          </article>
+
+          <article className="slide-card" id="update">
+            <p className="kicker">Get a newer Course Kit</p>
+            <h2>Replace the Course Kit, keep your world</h2>
+            <div className="slide-body">
+              <p>
+                When your teacher hands out a newer Course Kit, or your Course
+                Kit version differs from the one above, follow{" "}
+                <a className="text-link" href={`${WINDOWS_SETUP_GUIDE}#get-a-newer-course-kit`}>
+                  Get a newer Course Kit
+                </a>{" "}
+                before class. In short:
+              </p>
+              <ul className="prep-list">
+                <li>
+                  Move the old folder aside (
+                  <code>mv explore-studio-course explore-studio-course-old</code>
+                  ), unzip the new one, make a fresh <code>.venv</code>, install,
+                  and check.
+                </li>
+                <li>Never unzip on top of the old Course Kit.</li>
+                <li>
+                  Lesson files you edited inside the Course Kit are replaced.{" "}
+                  <code>~/my-explore-world</code> is never touched.
+                </li>
+                <li>Delete the old copy only after the check says READY.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article className="slide-card" id="help">
+            <p className="kicker">Something looks wrong?</p>
+            <h2>Check your setup before your code</h2>
+            <div className="slide-body">
+              <ul className="prep-list">
+                <li>
+                  If the Trail looks different from the class slides, run the
+                  Am I ready? check first. An out-of-date Course Kit or course
+                  tools can look exactly like a bug.
+                </li>
+                <li>
+                  <code>COURSE TOOLS OUT OF DATE</code>? From the Course Kit
+                  with <code>.venv</code> active, run the command below. A
+                  plain rerun of the install keeps the old version.
+                </li>
+              </ul>
+              <pre className="slide-code">
+                <code>python -m pip install --force-reinstall -r requirements-student.txt</code>
+              </pre>
+              <p>
+                Still stuck? Email{" "}
+                <a href="mailto:hello@course4teen.com">hello@course4teen.com</a>{" "}
+                with the check&apos;s summary lines before your session.
+              </p>
+            </div>
+          </article>
+
+          <article className="slide-card" id="computer">
+            <p className="kicker">Computer requirements</p>
+            <h2>What the computer needs</h2>
+            <div className="slide-body">
               <dl className="prep-table">
                 {requirements.map(([label, value]) => (
                   <div key={label}>
@@ -83,123 +245,37 @@ export default function PrepareForS01Page() {
                   </li>
                 ))}
               </ul>
-              <p>
-                Download the check below and run it before installing
-                anything &mdash; it reads only this computer&apos;s hardware
-                and never asks for a password or an account.
-              </p>
-            </div>
-          </article>
-
-          <article className="slide-card" id="download">
-            <p className="kicker">Download student package</p>
-            <h2>Get the course files</h2>
-            <div className="slide-body">
               <ul className="prep-downloads">
-                <li>
-                  <a className="button button-primary" href="/downloads/explore-studio-course.zip" download>
-                    Download explore-studio-course.zip ({zipSize})
-                  </a>
-                  <p>
-                    Sessions 1&ndash;30, the shared world packages, and the
-                    computer check &mdash; everything needed to start, with no
-                    teacher material inside.
-                  </p>
-                </li>
                 <li>
                   <a className="button" href="/downloads/check-my-computer.py" download>
                     Download check-my-computer.py ({checkerSize})
                   </a>
                   <p>
-                    The same computer check on its own, if you want to test
-                    this machine before downloading the full package.
+                    Test a computer before installing the course with{" "}
+                    <code>python3 check-my-computer.py --computer-only</code>.
+                    It never asks for a password or an account.
                   </p>
                 </li>
               </ul>
-              <p>
-                Unzip the course file and move the{" "}
-                <code>explore-studio-course</code> folder somewhere you can
-                find it &mdash; your home folder or Desktop on macOS, or your
-                Ubuntu home folder (not <code>/mnt/c</code>) on Windows WSL2.
-              </p>
             </div>
           </article>
 
-          <article className="slide-card" id="setup">
-            <p className="kicker">Set up Python environment</p>
-            <h2>Install the course tools once</h2>
+          <article className="slide-card" id="first-class">
+            <p className="kicker">New to the course?</p>
+            <h2>Your first session</h2>
             <div className="slide-body">
-              <p>From inside the unzipped <code>explore-studio-course</code> folder:</p>
-              <pre className="slide-code">
-                <code>{`python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-student.txt
-explore-package --help`}</code>
-              </pre>
               <p>
-                This is the only step that needs the internet. If{" "}
-                <code>explore-package</code> is not found, confirm your prompt
-                shows <code>(.venv)</code> and run the install command again.
-              </p>
-            </div>
-          </article>
-
-          <article className="slide-card" id="readiness-check">
-            <p className="kicker">Run readiness check</p>
-            <h2>Test a real Trail window</h2>
-            <div className="slide-body">
-              <p>Run the computer check once more, now that the course tools are installed:</p>
-              <pre className="slide-code">
-                <code>python3 check-my-computer.py</code>
-              </pre>
-              <p>Read the last line:</p>
-              <ul className="prep-list">
-                <li>
-                  <strong>READY FOR EXPLORE STUDIO</strong> &mdash; move on to Session 1.
-                </li>
-                <li>
-                  <strong>SETUP HELP NEEDED</strong> &mdash; show the lines marked{" "}
-                  <code>[help]</code> to a teacher or an adult before continuing.
-                </li>
-              </ul>
-            </div>
-          </article>
-
-          <article className="slide-card" id="start-s01">
-            <p className="kicker">Start S01</p>
-            <h2>Run your first script</h2>
-            <div className="slide-body">
-              <pre className="slide-code">
-                <code>python lessons/sessions/s01/student/starter.py</code>
-              </pre>
-              <p>
-                Then open{" "}
+                Start with{" "}
                 <Link className="text-link" href="/students/slides/s01/">
                   the S01 slides
                 </Link>{" "}
-                and follow along, or check the{" "}
+                and check the{" "}
                 <Link className="text-link" href="/calendar/">
                   class calendar
                 </Link>{" "}
-                for your session date.
+                for your session date. Your Zoom link and passcode are sent
+                privately by your teacher, never posted on this website.
               </p>
-            </div>
-          </article>
-
-          <article className="slide-card" id="help">
-            <p className="kicker">Need help?</p>
-            <h2>Support before class</h2>
-            <div className="slide-body">
-              <ul className="prep-list">
-                <li>Git and a GitHub account are not required for S01. Git is introduced later, when the class is ready for it.</li>
-                <li>Your Zoom link and passcode are sent privately by your teacher &mdash; never posted on this website or any public page.</li>
-                <li>
-                  If <code>check-my-computer.py</code> ends with{" "}
-                  <strong>SETUP HELP NEEDED</strong>, email{" "}
-                  <a href="mailto:hello@course4teen.com">hello@course4teen.com</a>{" "}
-                  before your first session rather than at the start of S01.
-                </li>
-              </ul>
             </div>
           </article>
         </section>

@@ -53,6 +53,10 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
   bootstrap, and Windows/WSL path.
 - [`docs/computer-readiness.md`](docs/computer-readiness.md) — minimum hardware,
   supported devices, and the student-facing computer check.
+- [`docs/windows-wsl-setup.md`](docs/windows-wsl-setup.md) — canonical student
+  Windows/WSL, VS Code, "Am I ready?", and Course Kit update guide.
+- [`docs/operations/classroom-preflight.md`](docs/operations/classroom-preflight.md)
+  — teacher pre-class readiness check and setup-failure fallback.
 - [`docs/student-api-v0.1-spec.md`](docs/student-api-v0.1-spec.md) — current
   implemented Student API contract.
 - [`docs/classroom-trail-v0.11.md`](docs/classroom-trail-v0.11.md) — additive local

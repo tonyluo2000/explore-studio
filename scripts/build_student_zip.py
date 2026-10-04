@@ -131,6 +131,7 @@ def assert_distribution_is_student_safe(members: list[Path]) -> None:
         "requirements-student.txt",
         "course-materials.json",
         "docs/computer-readiness.md",
+        "docs/windows-wsl-setup.md",
         "lessons/sessions/student-quick-start.md",
         "lessons/sessions/s01/student/task-card.md",
         "lessons/sessions/s30/student/task-card.md",

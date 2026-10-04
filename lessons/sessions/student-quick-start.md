@@ -25,37 +25,48 @@ Your teacher gives you the folder in one of two ways:
 Both folders contain the same lesson materials, and every task card works the
 same way in either one.
 
-Where to keep the folder:
+Where to keep your folders (the same on every computer):
 
-- **macOS:** your home folder or Desktop. Not Downloads, and never inside the
-  zipped file itself.
-- **Windows (WSL 2 Ubuntu):** the Ubuntu home directory, for example
-  `/home/student/explore-studio-course`, not under `/mnt/c`.
+| Folder | What it is | Replace it? |
+|---|---|---|
+| `~/explore-studio-course` | The Course Kit, with its course tools in `.venv`. | **Yes**, with each newer Course Kit. |
+| `~/my-explore-world` | Your own work, made in Session 2. | **Never.** Never delete it. |
+
+Both sit directly in your home folder. Not Downloads, not the Desktop, not
+inside each other, and on Windows never under `/mnt/c`.
+
+**Windows students:** the one step-by-step guide for WSL, Ubuntu, VS Code, and
+getting a newer Course Kit is
+[`Windows Setup`](../../docs/windows-wsl-setup.md).
 
 The teacher setup procedure is documented in
 [`Classroom Student Workspace`](../../docs/classroom-student-workspace.md).
 
-## Check your computer first
-
-Before anything else, from inside the course folder:
+## Am I ready? (start of every class)
 
 ```console
+cd ~/explore-studio-course
+source .venv/bin/activate
 python3 check-my-computer.py
 ```
 
-Read the last line. `READY FOR EXPLORE STUDIO` means you can continue.
-`SETUP HELP NEEDED` means you should show the lines marked `[help]` to a teacher
-or an adult at home first. The check never asks for a password or an account and
-sends nothing anywhere. What this computer needs is listed in
+Read the summary and the last line. `Course tools: ... (current)` and
+`READY FOR EXPLORE STUDIO` mean you can continue. `SETUP HELP NEEDED` means you
+should follow the arrow under each `[help]` line, or show those lines to a
+teacher or an adult at home first. READY appears only when you are in the
+Course Kit, its own `.venv` is active, and the course tools match this Course
+Kit. The check never asks for a password or an account and sends nothing
+anywhere. What this computer needs is listed in
 [`Computer Readiness`](../../docs/computer-readiness.md).
 
 ## First-day setup checklist
 
-- [ ] Open a terminal in your course folder—not Downloads or your home folder.
-- [ ] Run `python3 check-my-computer.py` and read the final result line.
-- [ ] Create a fresh project virtual environment if the teacher has not already
-      prepared one.
+- [ ] Open a terminal in `~/explore-studio-course`—not Downloads, your home
+      folder, or `my-explore-world`.
+- [ ] Create the `.venv` inside the course folder if the teacher has not
+      already prepared one.
 - [ ] Install the exact course requirements and activate the environment.
+- [ ] Run `python3 check-my-computer.py` and read the summary and result line.
 - [ ] Confirm Python runs.
 - [ ] Confirm `explore-package` is available.
 - [ ] Open and close one Classroom Trail window.
@@ -96,10 +107,14 @@ If your teacher gave you the Git-managed course folder instead, use
 else on this page is identical.
 
 Windows students use an Ubuntu shell in **WSL 2 with WSLg**, then run the same
-commands above. Keep the course folder under the Linux home directory, for
-example `/home/student/explore-studio-course`, not under `/mnt/c`.
+commands above from `~/explore-studio-course`, never under `/mnt/c`.
 Native PowerShell Python is not the supported complete-course path because
-deterministic export requires POSIX filesystem operations.
+deterministic export requires POSIX filesystem operations. Open the course in
+VS Code with `cd ~/explore-studio-course` and `code .`; the bottom-left corner
+must say **WSL**. Every step is in [`Windows Setup`](../../docs/windows-wsl-setup.md).
+
+Make the `.venv` only inside the course folder. Each new Course Kit gets a
+fresh `.venv`: never reuse one from an older kit, another folder, or Windows.
 
 Teachers install and verify WSL before class using the linked guidance in
 [`Classroom Student Workspace`](../../docs/classroom-student-workspace.md).
@@ -109,8 +124,8 @@ The prompt often gains `(.venv)` after activation. If `explore-package` says
 command. If it is still missing, stop and ask the teacher. Do not install an
 unpinned package by name.
 
-Run `python3 check-my-computer.py` once more after installing. Now that the
-course tools are present, it also opens and closes one small test window.
+Then run `python3 check-my-computer.py`. With the course tools installed, it
+confirms they match this Course Kit and opens and closes one small test window.
 
 ## Launch, control, stop, and relaunch the Trail
 
@@ -152,6 +167,7 @@ Tell the teacher what route helps you participate:
 | Trail window opens but keys do nothing | Window focus | Click the Trail window, then try WASD/arrows and E. |
 | Object or NPC seems missing | Validation and coordinates | Confirm validation passed and compare x/y with the task card's safe range. |
 | Old behavior still appears | Unsaved file or old Trail process | Close the window, save, validate, and relaunch. |
+| The Trail looks older than the slides, or a command fails only for you | Out-of-date Course Kit or `.venv` | Run `python3 check-my-computer.py`; if it reports `[help]`, follow [Windows Setup](../../docs/windows-wsl-setup.md#when-the-trail-looks-wrong-check-your-setup-first). |
 | Screen sharing is slow | Video bandwidth | Stop sharing the Trail; report text output and use the accessibility route. |
 | Setup problems you cannot place | Computer readiness | Run `python3 check-my-computer.py` and show the `[help]` lines to an adult. |
 

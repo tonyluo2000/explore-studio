@@ -108,6 +108,7 @@ def test_provisioned_workspace_excludes_teacher_and_platform_source(tmp_path):
         assert not (target / "docs" / "operations" / staff_doc).exists()
     assert (target / "docs" / "computer-readiness.md").is_file()
     assert (target / "docs" / "classroom-student-workspace.md").is_file()
+    assert (target / "docs" / "windows-wsl-setup.md").is_file()
 
 
 def test_all_student_task_card_local_links_and_course_paths_resolve(tmp_path):
@@ -133,9 +134,12 @@ def test_provisioned_student_facing_document_links_resolve(tmp_path):
     provision_student_workspace(target, PROJECT_ROOT)
 
     documents = [
+        target / "START-HERE.md",
         target / "lessons" / "sessions" / "student-quick-start.md",
         target / "lessons" / "sessions" / "README.md",
         target / "docs" / "classroom-student-workspace.md",
+        target / "docs" / "computer-readiness.md",
+        target / "docs" / "windows-wsl-setup.md",
     ]
     assert unresolved_local_links(documents) == []
 
