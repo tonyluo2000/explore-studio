@@ -42,7 +42,8 @@ second call should insert.
      --name "S04 Introduce a Character"
    ```
 
-5. Speak to the NPC. Checkpoint: report its exact greeting and M04 result.
+5. Speak to the NPC. Checkpoint: report its exact greeting (read it in the
+   guide's speech bubble) and M04 result.
 
 ## Debug checkpoint
 

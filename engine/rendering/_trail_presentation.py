@@ -1,4 +1,4 @@
-"""Cosmetic presentation layer for the S02/S03 (M02/M03) Classroom Trail.
+"""Cosmetic presentation layer for the S02-S04 (M02-M04) Classroom Trail.
 
 The scene owns gameplay. This layer only *observes* the scene after each
 update (player position, current target, interaction pulse, visited set,
@@ -12,13 +12,17 @@ mission completion) and turns that into animation poses and short effects:
   marker until visited, and flares when inspected.
 * Proximity prompts, Pixel's speech bubble, a discovery label, and a brief
   mission-complete celebration.
+* The S04 Moonlit Guide breathes, blinks, and gestures as it greets; its
+  moon-staff orb glows, a small speech cue floats over it until it has been
+  spoken to, and its greeting gets a larger bubble sized to the whole line.
 
 It is allow-listed by ``_mission_presentation``: M02 gets every layer, M03
 gets the shared ones (no discovery label or celebration, since the student's
 own clue and reveal tell that story) and draws its canonical Compass with the
-same trusted art. For every other Trail it is inert, so S01 and S04+ rendering
-is unchanged. It never mutates the scene, never raises into gameplay, and
-bounds every effect count.
+same trusted art, and M04 gets the shared ones plus the Guide's talk cue and
+dialogue focus, without the Lantern's destination marker. For every other
+Trail it is inert, so S01 and S05+ rendering is unchanged. It never mutates
+the scene, never raises into gameplay, and bounds every effect count.
 
 Internal module — not part of the Student API.
 """
@@ -43,6 +47,7 @@ from engine.rendering._classroom_sprites import (
     COMPASS_HALO_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
     MOON_COMPASS_QUALIFIED_ID,
+    MOONLIT_GUIDE_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
     PIXEL_QUALIFIED_ID,
 )
@@ -78,6 +83,13 @@ PIXEL_IDLE: Final = AnimationClip("idle", ("idle-0", "idle-1", "idle-2", "idle-3
 PIXEL_GREET: Final = AnimationClip(
     "greet", ("greet-0", "greet-1", "greet-2", "greet-1", "greet-2", "greet-3"), 0.2, loop=False
 )
+GUIDE_IDLE: Final = AnimationClip("idle", ("idle-0", "idle-1", "idle-2", "idle-3"), 0.42)
+#: Lift the hand, open it, wave once, settle: a single gesture as it speaks.
+GUIDE_TALK: Final = AnimationClip(
+    "talk", ("talk-0", "talk-1", "talk-2", "talk-1", "talk-2", "talk-3"), 0.22, loop=False
+)
+#: The staff's moon orb in the Guide's 100 x 100 box (``scripts/art/characters``).
+GUIDE_ORB: Final = (0.24, 0.19)
 LANTERN_FLICKER: Final = AnimationClip(
     "flicker",
     ("flicker-0", "flicker-2", "flicker-1", "flicker-3", "flicker-1", "flicker-0", "flicker-3"),
@@ -85,12 +97,23 @@ LANTERN_FLICKER: Final = AnimationClip(
 )
 
 BUBBLE_DURATION: Final = 4.0
+#: Dialogue-focus bubbles stay up long enough to read the whole greeting aloud:
+#: a base plus a per-word allowance, never shorter than a normal bubble.
+DIALOGUE_BASE: Final = 2.0
+DIALOGUE_PER_WORD: Final = 0.4
+DIALOGUE_MAX_DURATION: Final = 14.0
+#: Marks text that was shortened to fit, so nothing is ever clipped silently.
+ELLIPSIS: Final = "…"
+#: Trailing punctuation and spaces dropped before an ellipsis.
+_TRIM: Final = " ,;:—-"
 DISCOVERY_DURATION: Final = 0.9
 LABEL_DURATION: Final = 1.8
 FLARE_DURATION: Final = 1.2
 CELEBRATION_DURATION: Final = 3.2
 PROMPT_PAUSE: Final = 0.9
 MAX_BURSTS: Final = 4
+#: Wrapped and fitted text is measured once per distinct line, not per frame.
+MAX_CACHED_LAYOUTS: Final = 16
 BURST_PARTICLES: Final = 14
 CONFETTI_PIECES: Final = 36
 LANTERN_SPARKS: Final = 5
@@ -115,6 +138,14 @@ _BUBBLE_FONT: Final = 22
 _LABEL_FONT: Final = 24
 _BANNER_FONT: Final = 34
 _BUBBLE_TEXT_WIDTH: Final = 230
+_BUBBLE_MAX_LINES: Final = 4
+#: Dialogue focus: a larger font that stays legible at a half-scale share,
+#: a wider column, and up to six lines before an explicit ellipsis.
+_DIALOGUE_FONT: Final = 24
+_DIALOGUE_TEXT_WIDTH: Final = 340
+_DIALOGUE_MAX_LINES: Final = 6
+_TALK_CUE: Final[Color] = (250, 248, 236)
+_ORB_LIGHT: Final[Color] = (150, 220, 255)
 
 _INK: Final[Color] = (28, 24, 40)
 _PANEL: Final[Color] = (20, 24, 40)
@@ -252,6 +283,7 @@ class Bubble:
     qualified_id: str
     text: str
     start: float
+    duration: float = BUBBLE_DURATION
 
 
 @dataclass(frozen=True)
@@ -326,22 +358,107 @@ def pixel_visible_rect(npc: _Positioned) -> Rect:
     )
 
 
+def guide_visible_rect(npc: _Positioned) -> Rect:
+    """The part of the Guide's box the art covers (staff and hood to hem)."""
+    return (
+        npc.x + npc.width * 20 // 100,
+        npc.y + npc.height * 6 // 100,
+        npc.width * 64 // 100,
+        npc.height * 92 // 100,
+    )
+
+
+def _split_word(word: str, max_width: int, measure: Callable[[str], tuple[int, int]]) -> list[str]:
+    """Break one word wider than the column into pieces that each fit."""
+    if measure(word)[0] <= max_width:
+        return [word]
+    pieces: list[str] = []
+    current = ""
+    for character in word:
+        if current and measure(current + character)[0] > max_width:
+            pieces.append(current)
+            current = character
+        else:
+            current += character
+    if current:
+        pieces.append(current)
+    return pieces
+
+
+def fit_line(text: str, max_width: int, measure: Callable[[str], tuple[int, int]]) -> str:
+    """Return *text* if it fits, else its longest prefix that fits plus an ellipsis."""
+    if measure(text)[0] <= max_width:
+        return text
+    words = text.split()
+    while len(words) > 1:
+        words.pop()
+        candidate = " ".join(words).rstrip(_TRIM) + ELLIPSIS
+        if measure(candidate)[0] <= max_width:
+            return candidate
+    head = words[0] if words else ""
+    while head and measure(head + ELLIPSIS)[0] > max_width:
+        head = head[:-1]
+    return head + ELLIPSIS
+
+
 def wrap_text(
-    text: str, max_width: int, measure: Callable[[str], tuple[int, int]]
+    text: str,
+    max_width: int,
+    measure: Callable[[str], tuple[int, int]],
+    max_lines: int = _BUBBLE_MAX_LINES,
 ) -> tuple[str, ...]:
-    """Greedy word wrap using the renderer's own text measurement."""
+    """Greedy word wrap using the renderer's own text measurement.
+
+    A word wider than the column is broken across lines. Text beyond
+    *max_lines* is never dropped silently: the last line ends in an ellipsis.
+    """
     lines: list[str] = []
     current = ""
     for word in text.split():
-        candidate = f"{current} {word}" if current else word
-        if current and measure(candidate)[0] > max_width:
-            lines.append(current)
-            current = word
-        else:
-            current = candidate
+        for piece in _split_word(word, max_width, measure):
+            candidate = f"{current} {piece}" if current else piece
+            if current and measure(candidate)[0] > max_width:
+                lines.append(current)
+                current = piece
+            else:
+                current = candidate
     if current:
         lines.append(current)
-    return tuple(lines[:4])
+    if len(lines) <= max_lines:
+        return tuple(lines)
+    kept = lines[:max_lines]
+    last = kept[-1]
+    while last and measure(last + ELLIPSIS)[0] > max_width:
+        last = last.rsplit(" ", 1)[0] if " " in last else last[:-1]
+    kept[-1] = last.rstrip(_TRIM) + ELLIPSIS
+    return tuple(kept)
+
+
+def _overlap_area(first: Rect, second: Rect) -> int:
+    width = min(first[0] + first[2], second[0] + second[2]) - max(first[0], second[0])
+    height = min(first[1] + first[3], second[1] + second[3]) - max(first[1], second[1])
+    return max(0, width) * max(0, height)
+
+
+def place_clear_panel(
+    size: tuple[int, int], candidates: Sequence[tuple[int, int]], avoid: Sequence[Rect]
+) -> Rect:
+    """Clamp every candidate on screen and pick the one covering the least of *avoid*.
+
+    Unlike :func:`place_panel` the fallback is never simply the first
+    candidate pushed on screen (which can land on the speaker itself).
+    """
+    best: Rect | None = None
+    best_cover = -1
+    for x, y in candidates:
+        rect = _clamp((x, y, size[0], size[1]))
+        cover = sum(_overlap_area(rect, other) for other in avoid)
+        if best is None or cover < best_cover:
+            best, best_cover = rect, cover
+        if cover == 0:
+            break
+    assert best is not None
+    return best
 
 
 class TrailPresentation:
@@ -365,6 +482,8 @@ class TrailPresentation:
         self._previous_position: tuple[float, float] | None = start
         self._previous_complete: bool | None = None
         self._visited: frozenset[str] = frozenset()
+        self._spoken: frozenset[str] = frozenset()
+        self._layouts: dict[tuple[object, ...], object] = {}
         self._failed_layers: set[str] = set()
 
     # ------------------------------------------------------------------
@@ -408,6 +527,10 @@ class TrailPresentation:
             self.celebration_start = self.clock
         self._previous_complete = complete
         self._visited = view.visited_qualified_ids
+        # Read-only NPC evidence (M04's completion state); views without it
+        # simply show every talk cue.
+        spoken = getattr(view, "spoken_npc_ids", None)
+        self._spoken = spoken if isinstance(spoken, frozenset) else frozenset()
 
     def _react_to_interaction(self, view: TrailView, target_id: str) -> None:
         trail_object = next((item for item in view.objects if item.qualified_id == target_id), None)
@@ -432,7 +555,14 @@ class TrailPresentation:
         self.greet_start[target_id] = self.clock
         lines = npc.conversation_lines
         # Only a single-line greeting becomes a bubble; the HUD still shows it too.
-        self.bubble = Bubble(target_id, lines[0], self.clock) if len(lines) == 1 else None
+        if len(lines) != 1:
+            self.bubble = None
+            return
+        duration = BUBBLE_DURATION
+        if self.policy.dialogue_focus:
+            reading = DIALOGUE_BASE + DIALOGUE_PER_WORD * len(lines[0].split())
+            duration = max(BUBBLE_DURATION, min(DIALOGUE_MAX_DURATION, reading))
+        self.bubble = Bubble(target_id, lines[0], self.clock, duration)
 
     # ------------------------------------------------------------------
     # Poses
@@ -457,6 +587,8 @@ class TrailPresentation:
             return self._nova_pose()
         if role == PIXEL_QUALIFIED_ID:
             return self._pixel_pose(qualified_id)
+        if role == MOONLIT_GUIDE_QUALIFIED_ID:
+            return self._guide_pose(qualified_id)
         if role == CRYSTAL_LANTERN_QUALIFIED_ID:
             return SpritePose(row="glow", column=LANTERN_FLICKER.frame_at(self.clock))
         if role == MOON_COMPASS_QUALIFIED_ID:
@@ -501,6 +633,24 @@ class TrailPresentation:
             row="idle", column=column, bob=(0, 1, 1, 1)[PIXEL_IDLE.frames.index(column)]
         )
 
+    def _guide_pose(self, qualified_id: str) -> SpritePose:
+        greet = self.greet_start.get(qualified_id)
+        if greet is not None and self.clock - greet < GUIDE_TALK.duration:
+            return SpritePose(row="idle", column=GUIDE_TALK.frame_at(self.clock - greet))
+        if is_blinking(self.clock, period=4.9, duration=0.16, offset=1.3):
+            return SpritePose(row="idle", column="blink", blink=True)
+        column = GUIDE_IDLE.frame_at(self.clock)
+        return SpritePose(
+            row="idle", column=column, bob=(0, 0, 1, 0)[GUIDE_IDLE.frames.index(column)]
+        )
+
+    def _greet_strength(self, qualified_id: str, duration: float) -> float:
+        """1 at the moment an NPC greets, easing to 0 over *duration* seconds."""
+        greet = self.greet_start.get(qualified_id)
+        if greet is None or not 0 <= self.clock - greet < duration:
+            return 0.0
+        return 1 - (self.clock - greet) / duration
+
     def needle_angle(self, qualified_id: str) -> float:
         angle = 0.36 * math.sin(self.clock * 1.4) + 0.1 * math.sin(self.clock * 3.7)
         burst = self._latest_burst(qualified_id, "discovery", DISCOVERY_DURATION)
@@ -521,6 +671,14 @@ class TrailPresentation:
     # ------------------------------------------------------------------
     # Layers
     # ------------------------------------------------------------------
+
+    def _layout(self, key: tuple[object, ...], compute: Callable[[], object]) -> object:
+        """Bounded memo for text layout, so steady frames do not re-measure."""
+        if key not in self._layouts:
+            if len(self._layouts) >= MAX_CACHED_LAYOUTS:
+                self._layouts.clear()
+            self._layouts[key] = compute()
+        return self._layouts[key]
 
     def _log_once(self, layer: str) -> None:
         if layer not in self._failed_layers:
@@ -597,6 +755,24 @@ class TrailPresentation:
                 max(8, width * 42 // 100),
                 _SCREEN_LIGHT,
                 0.12 + 0.03 * math.sin(self.clock * 1.7) + 0.2 * cheer,
+            )
+        elif role == MOONLIT_GUIDE_QUALIFIED_ID:
+            soft_shadow(
+                renderer,
+                x + width * 0.53,
+                y + height * 0.96,
+                width * 30 // 100,
+                max(2, height * 5 // 100),
+                125,
+            )
+            # Moonlight from the staff pools softly on the ground around the hem.
+            glow(
+                renderer,
+                x + width * 0.4,
+                y + height * 0.9,
+                max(10, width * 40 // 100),
+                _ORB_LIGHT,
+                0.1 + 0.03 * math.sin(self.clock * 1.3),
             )
         elif role == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
@@ -747,6 +923,17 @@ class TrailPresentation:
                 sparkle(renderer, sx, sy, 1.5 + 4.0 * twinkle, light)
         elif role == CRYSTAL_LANTERN_QUALIFIED_ID:
             self._draw_lantern_over(renderer, qualified_id, x, y, width, height)
+        elif role == MOONLIT_GUIDE_QUALIFIED_ID:
+            # The staff's moon orb breathes, and brightens while the Guide speaks.
+            cheer = self._greet_strength(qualified_id, GUIDE_TALK.duration + 0.6)
+            glow(
+                renderer,
+                x + width * GUIDE_ORB[0],
+                y + height * GUIDE_ORB[1],
+                max(8, width * 24 // 100),
+                _ORB_LIGHT,
+                0.2 + 0.07 * math.sin(self.clock * 1.9) + 0.3 * cheer,
+            )
 
     def _draw_lantern_over(
         self, renderer: object, qualified_id: str, x: int, y: int, width: int, height: int
@@ -793,7 +980,7 @@ class TrailPresentation:
                 8 + 26 * ease_out(progress),
                 mix((255, 226, 150), _GROUND, progress),
             )
-        if qualified_id not in self._visited:
+        if self.policy.lantern_waypoint and qualified_id not in self._visited:
             self._draw_waypoint(renderer, cx, y - 4)
 
     def _draw_waypoint(self, renderer: object, cx: float, tip_y: float) -> None:
@@ -831,6 +1018,8 @@ class TrailPresentation:
             return ()
         self._guard("foreground", draw_scenery_plate, renderer, MEADOW_FOREGROUND)
         self._guard("air", draw_air_life, renderer, self.clock)
+        if self.policy.talk_cue:
+            self._guard("talk-cue", self._draw_talk_cues, renderer, view)
         self._guard("bursts", self._draw_bursts, renderer, view)
         self._guard("celebration", self._draw_confetti, renderer)
         if not supports(renderer, "draw_rounded_rect", "measure_text", "draw_text"):
@@ -862,6 +1051,73 @@ class TrailPresentation:
             if npc.qualified_id == qualified_id:
                 return npc.character
         return None
+
+    def talk_cue_ids(self, view: TrailView) -> tuple[str, ...]:
+        """Interactable NPCs not yet spoken to: exactly what M04 still needs."""
+        if not self.policy.talk_cue:
+            return ()
+        return tuple(
+            npc.qualified_id
+            for npc in view.npcs
+            if npc.conversation_lines and npc.qualified_id not in self._spoken
+        )
+
+    def _draw_talk_cues(self, renderer: object, view: TrailView) -> None:
+        if not supports(renderer, "draw_rounded_rect", "draw_polygon", "draw_circle"):
+            return
+        bubble = self.bubble
+        for qualified_id in self.talk_cue_ids(view):
+            if (
+                bubble is not None
+                and bubble.qualified_id == qualified_id
+                and 0 <= self.clock - bubble.start < bubble.duration
+            ):
+                continue
+            entity = self._entity(view, qualified_id)
+            if entity is None:
+                continue
+            x, y, w, _ = self._anchor_rect(qualified_id, entity)
+            self._draw_talk_cue(renderer, x + w * 0.55, y - 6)
+
+    def _draw_talk_cue(self, renderer: object, cx: float, bottom: float) -> None:
+        """A small floating speech balloon with three dots: "talk to me"."""
+        float_y = 3.0 * math.sin(self.clock * 2.2)
+        width, height = 30, 20
+        left = round(cx - width / 2)
+        top = round(max(HUD_BOTTOM + 2, bottom - height - 8 + float_y))
+        glow(renderer, cx, top + height / 2, 22, (200, 220, 255), 0.3)
+        renderer.draw_polygon(  # type: ignore[attr-defined]
+            (
+                (left + 8, top + height - 2),
+                (left + 16, top + height - 2),
+                (left + 9, top + height + 7),
+            ),
+            _INK,
+        )
+        renderer.draw_rounded_rect(left, top, width, height, _TALK_CUE, 9, _INK, 2)  # type: ignore[attr-defined]
+        renderer.draw_polygon(  # type: ignore[attr-defined]
+            (
+                (left + 10, top + height - 3),
+                (left + 15, top + height - 3),
+                (left + 10, top + height + 3),
+            ),
+            _TALK_CUE,
+        )
+        for index in range(3):
+            # The dots light up in turn, like someone about to speak.
+            lit = 0.5 + 0.5 * math.sin(self.clock * 4.0 - index * 0.9)
+            renderer.draw_circle(  # type: ignore[attr-defined]
+                left + 8 + index * 7, top + height // 2, 2, mix((150, 160, 200), _NAME_TAG, lit)
+            )
+
+    def _anchor_rect(self, qualified_id: str | None, entity: _Positioned) -> Rect:
+        """The rect prompts and bubbles point at: the art's visible body, if known."""
+        role = self.sprite_identity(qualified_id)
+        if role == PIXEL_QUALIFIED_ID:
+            return pixel_visible_rect(entity)
+        if role == MOONLIT_GUIDE_QUALIFIED_ID:
+            return guide_visible_rect(entity)
+        return _rect_of(entity)
 
     def _draw_bursts(self, renderer: object, view: TrailView) -> None:
         for burst in self.bursts:
@@ -958,7 +1214,7 @@ class TrailPresentation:
         lines: list[tuple[str, int, int]] = []
         if getattr(view, "is_complete", False):
             lines.append(("Trail complete!", FEEDBACK_TEXT_X, COMPLETE_TEXT_Y))
-        message = getattr(view, "feedback_message", None)
+        message = self.fit_feedback(renderer, getattr(view, "feedback_message", None))
         if isinstance(message, str) and message.strip():
             lines.append((message, FEEDBACK_TEXT_X, FEEDBACK_TEXT_Y))
         if not lines:
@@ -973,6 +1229,34 @@ class TrailPresentation:
         left = FEEDBACK_TEXT_X - pad_x
         right = min(SCREEN_WIDTH - 2, right + pad_x)
         return (left, top - pad_y, right - left, bottom - top + 2 * pad_y)
+
+    def fit_feedback(self, renderer: object, message: str | None) -> str | None:
+        """The HUD feedback line as drawn: unchanged, except under dialogue focus.
+
+        With dialogue focus a line too long for the screen (a full greeting
+        echoed after the speaker's name) is shortened with an explicit
+        ellipsis, since the speech bubble already shows every word. The
+        scene's ``feedback_message`` state itself is never changed.
+        """
+        if (
+            not self.active
+            or not self.policy.dialogue_focus
+            or not isinstance(message, str)
+            or not supports(renderer, "measure_text")
+        ):
+            return message
+        try:
+            return self._layout(  # type: ignore[return-value]
+                ("feedback", message),
+                lambda: fit_line(
+                    message,
+                    SCREEN_WIDTH - 8 - FEEDBACK_TEXT_X,
+                    lambda line: renderer.measure_text(line, FEEDBACK_FONT),  # type: ignore[attr-defined]
+                ),
+            )
+        except Exception:
+            self._log_once("feedback-fit")
+            return message
 
     def _draw_feedback_panel(self, renderer, view: TrailView) -> None:  # type: ignore[no-untyped-def]
         if not supports(renderer, "draw_translucent_panel", "measure_text"):
@@ -993,7 +1277,7 @@ class TrailPresentation:
         if (
             self.bubble is not None
             and self.bubble.qualified_id == target_id
-            and (self.clock - self.bubble.start < BUBBLE_DURATION)
+            and (self.clock - self.bubble.start < self.bubble.duration)
         ):
             return None
         for burst in reversed(self.bursts):
@@ -1020,9 +1304,7 @@ class TrailPresentation:
         key = 22
         width = 8 + key + 8 + text_width + 10
         height = max(key, text_height) + 10
-        x, y, w, h = _rect_of(entity)
-        if self.sprite_identity(target_id) == PIXEL_QUALIFIED_ID:
-            x, y, w, h = pixel_visible_rect(entity)
+        x, y, w, h = self._anchor_rect(target_id, entity)
         cx = x + w // 2
         rect = place_panel(
             (width, height),
@@ -1086,36 +1368,53 @@ class TrailPresentation:
 
     def _draw_bubble(self, renderer, view: TrailView) -> tuple[TextOp, ...]:  # type: ignore[no-untyped-def]
         bubble = self.bubble
-        if bubble is None or not 0 <= self.clock - bubble.start < BUBBLE_DURATION:
+        if bubble is None or not 0 <= self.clock - bubble.start < bubble.duration:
             return ()
         speaker = self._entity(view, bubble.qualified_id)
         if speaker is None:
             return ()
-        lines = wrap_text(
-            bubble.text, _BUBBLE_TEXT_WIDTH, lambda line: renderer.measure_text(line, _BUBBLE_FONT)
+        focus = self.policy.dialogue_focus
+        font = _DIALOGUE_FONT if focus else _BUBBLE_FONT
+        column = _DIALOGUE_TEXT_WIDTH if focus else _BUBBLE_TEXT_WIDTH
+        max_lines = _DIALOGUE_MAX_LINES if focus else _BUBBLE_MAX_LINES
+        lines: tuple[str, ...] = self._layout(  # type: ignore[assignment]
+            ("bubble", bubble.text, font, column, max_lines),
+            lambda: wrap_text(
+                bubble.text, column, lambda line: renderer.measure_text(line, font), max_lines
+            ),
         )
         if not lines:
             return ()
-        line_height = renderer.measure_text("Ag", _BUBBLE_FONT)[1] + 2
-        text_width = max(renderer.measure_text(line, _BUBBLE_FONT)[0] for line in lines)
+        line_height = renderer.measure_text("Ag", font)[1] + 2
+        text_width = max(renderer.measure_text(line, font)[0] for line in lines)
         width, height = text_width + 24, line_height * len(lines) + 18
-        sx, sy, sw, sh = (
-            pixel_visible_rect(speaker)
-            if self.sprite_identity(bubble.qualified_id) == PIXEL_QUALIFIED_ID
-            else _rect_of(speaker)
-        )
+        sx, sy, sw, sh = self._anchor_rect(bubble.qualified_id, speaker)
         head_y = sy + sh * 30 // 100
         avoid = [self._player_rect(view), *(_rect_of(item.world_object) for item in view.objects)]
-        rect = place_panel(
-            (width, height),
-            (
-                (sx + sw + 14, head_y - height // 2),
-                (sx - width - 14, head_y - height // 2),
-                (sx + sw // 2 - width // 2, sy - height - 14),
-                (sx + sw // 2 - width // 2, sy + sh + 14),
-            ),
-            avoid,
-        )
+        candidates = [
+            (sx + sw + 14, head_y - height // 2),
+            (sx - width - 14, head_y - height // 2),
+            (sx + sw // 2 - width // 2, sy - height - 14),
+            (sx + sw // 2 - width // 2, sy + sh + 14),
+        ]
+        if focus:
+            # Keep the speaker, the HUD feedback card, and the player all in view,
+            # and fall back to whichever spot covers the least of them.
+            avoid.append((sx, sy, sw, sh))
+            feedback = self.feedback_panel_rect(renderer, view)
+            if feedback is not None:
+                avoid.append(feedback)
+            candidates += [
+                (sx + sw - width, sy + sh + 14),
+                (sx, sy + sh + 14),
+                (sx + sw + 14, sy + sh - height),
+                (sx - width - 14, sy + sh - height),
+                (sx + sw + 14, sy),
+                (sx - width - 14, sy),
+            ]
+            rect = place_clear_panel((width, height), candidates, avoid)
+        else:
+            rect = place_panel((width, height), candidates, avoid)
         bx, by, _, _ = rect
         anchor_x = sx + sw // 2
         anchor_y = head_y
@@ -1152,7 +1451,7 @@ class TrailPresentation:
         )
         renderer.draw_polygon(inner_tail, _BUBBLE)
         texts = [
-            (line, bx + 12, by + 10 + index * line_height, _BUBBLE_TEXT, _BUBBLE_FONT)
+            (line, bx + 12, by + 10 + index * line_height, _BUBBLE_TEXT, font)
             for index, line in enumerate(lines)
         ]
         # A small name tag on the bubble's top edge says who is talking.

@@ -488,7 +488,7 @@ class ClassroomTrailScene(Scene):
         self._feedback_message: str | None = None
         self._feedback_remaining = 0.0
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
-        # Cosmetic only and M02/M03-only: observes state after update, never writes it.
+        # Cosmetic only and M02-M04-only: observes state after update, never writes it.
         self._presentation = TrailPresentation(
             mission.mission_id, start=(player.x_float, player.y_float)
         )
@@ -887,7 +887,7 @@ class ClassroomTrailScene(Scene):
         super().render()
         # Layers: backdrop and trail zones, ground life, world objects, NPCs,
         # player, overlay effects and panels, HUD, overlay text. Everything
-        # between the backdrop and the HUD beyond the sprites is M02/M03-only.
+        # between the backdrop and the HUD beyond the sprites is M02-M04-only.
         presentation = self._presentation
         draw_classroom_backdrop(self._renderer, self._mission.mission_id)
         presentation.draw_ground(self._renderer)
@@ -940,7 +940,9 @@ class ClassroomTrailScene(Scene):
                 _TEXT_COLOR,
                 _FEEDBACK_FONT_SIZE,
             )
-        message = self.feedback_message
+        # Same text as feedback_message; only M04's dialogue focus fits a
+        # too-long line on screen with an ellipsis.
+        message = presentation.fit_feedback(self._renderer, self.feedback_message)
         if message is not None:
             self._renderer.draw_text(
                 message,
@@ -957,7 +959,7 @@ class ClassroomTrailScene(Scene):
         entity: Character | WorldObject,
         color: tuple[int, int, int],
     ) -> None:
-        """Draw one entity at its authoritative bounds, with M02/M03 effects."""
+        """Draw one entity at its authoritative bounds, with M02-M04 effects."""
         presentation = self._presentation
         presentation.draw_under(self._renderer, qualified_id, entity, color)
         with classroom_sprite_pose(presentation.pose_for(qualified_id)):

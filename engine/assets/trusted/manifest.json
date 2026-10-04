@@ -25,6 +25,31 @@
       ],
       "sha256": "3c7e6c031d0b98d675d52945be1aeaa03f184d317e5d842346a9f5af15888cfd"
     },
+    "characters/moonlit-guide": {
+      "accent": [
+        50,
+        80,
+        220
+      ],
+      "columns": [
+        "idle-0",
+        "idle-1",
+        "idle-2",
+        "idle-3",
+        "blink",
+        "talk-0",
+        "talk-1",
+        "talk-2",
+        "talk-3"
+      ],
+      "file": "characters/moonlit-guide/guide.png",
+      "frame_height": 100,
+      "frame_width": 100,
+      "rows": [
+        "idle"
+      ],
+      "sha256": "caf5d9927e2498c87def363f6e56efb5cccbc12cb5d3655142e01e3485e3969b"
+    },
     "characters/nova": {
       "accent": [
         255,

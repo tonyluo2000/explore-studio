@@ -90,7 +90,9 @@ The bad call raises a `TypeError` stating that the required `name` argument is
 missing. The package validates. In the Trail, interaction displays
 `Moonlit Guide: I'm the Moonlit Guide, explorer — the trail beyond this ridge
 has gone dark, and I need your help finding a way through.` and M04
-completes.
+completes. The whole greeting appears in the guide's speech bubble under its
+`Moonlit Guide` name tag; the bottom feedback line repeats it and ends in `…`
+when it is too long for the screen. Read the exact greeting from the bubble.
 
 ## Bounded AI assistance
 
