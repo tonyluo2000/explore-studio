@@ -24,8 +24,9 @@ before the first session.
 - **macOS** — supported directly.
 - **Windows** — supported through **WSL 2 with Ubuntu and WSLg**, not native
   PowerShell Python. Deterministic export needs POSIX filesystem confinement
-  and Classroom Trail needs Linux GUI-app support. Keep the course folder in
-  the Ubuntu home directory, not under `/mnt/c`.
+  and Classroom Trail needs Linux GUI-app support. Keep the course folder at
+  `~/explore-studio-course` in the Ubuntu home directory, not under `/mnt/c`.
+  Step-by-step setup: [`Windows Setup`](windows-wsl-setup.md).
 - **Linux** — works with a normal desktop session.
 
 Python **3.11 or newer** is required on every supported computer.
@@ -44,35 +45,83 @@ session rather than at the start of S01.
 
 ## Run the computer check
 
-From inside the course folder:
+The check has two modes.
+
+**Before the course is installed**, a family can test the computer itself with
+the standalone `check-my-computer.py` from the course website. The browser saves
+it in the Downloads folder. On Windows, in Ubuntu, copy it home from Windows
+Downloads (replace `YOUR-WINDOWS-NAME` with the folder name from the `ls` list):
 
 ```console
+cd ~
+ls /mnt/c/Users/
+cp /mnt/c/Users/YOUR-WINDOWS-NAME/Downloads/check-my-computer.py ~
+python3 check-my-computer.py --computer-only
+```
+
+On a Mac or Linux, run it in Terminal from Downloads:
+
+```console
+cd ~/Downloads
+python3 check-my-computer.py --computer-only
+```
+
+It checks the operating system, Python 3.11 or newer, memory, storage, the
+screen, the internet for the one-time install, and on Ubuntu the `python3-venv`
+and `unzip` packages. It ends with `COMPUTER CHECK PASSED` or
+`SETUP HELP NEEDED`, and never with READY, because the course is not set up yet.
+
+**After the course tools are installed**, and at the start of every class, run
+the full check from the Course Kit with its `.venv` active:
+
+```console
+cd ~/explore-studio-course
+source .venv/bin/activate
 python3 check-my-computer.py
 ```
 
-The check runs on the system Python before anything is installed, so it can be
-used to decide whether a computer will work at all. It reports each item above
-and ends with exactly one of these lines:
+It reports each item, then a short summary a teacher can read at a glance, then
+exactly one result line:
 
 ```text
+Summary
+  Python: 3.12.3
+  Course folder: OK
+  Virtual environment: .venv
+  Course tools: abc1234 (current)
+  Trail dependency: OK
+
 READY FOR EXPLORE STUDIO
-SETUP HELP NEEDED
 ```
 
-`SETUP HELP NEEDED` means one line marked `[help]` needs an adult's attention.
-It does not mean anything is broken. Lines marked `[note]` are reminders to
-confirm something by hand, such as the physical keyboard; they never change the
-result on their own.
+`READY FOR EXPLORE STUDIO` appears only when every summary item passes;
+otherwise the result is `SETUP HELP NEEDED` and the command exits with status 1.
+`SETUP HELP NEEDED` does not mean anything is broken: each line marked `[help]`
+has an arrow saying what to do next. Lines marked `[note]` are reminders, such
+as confirming the physical keyboard by hand; they never make the result READY
+on their own. The full check never uses the network.
 
-Run the check a second time after the first-session install. Once the course
-tools are present, the check also opens and closes one minimal Trail window so a
-graphics or WSLg problem is found before class instead of during it.
+### What the full check looks at
+
+| Summary or line | `[help]` when |
+|---|---|
+| Python | The Python running the check is older than 3.11. |
+| Course folder | `WRONG FOLDER`: not run from the Course Kit root. `COURSE FOLDER IN WRONG PLACE`: the Course Kit is not exactly `~/explore-studio-course` (under `/mnt/c`, in Downloads, nested, or anywhere else). |
+| Virtual environment | `VENV NOT ACTIVE`: the course `.venv` is not active. `VENV IN WRONG PLACE`: another environment is active (such as `~/.venv`), or this `.venv` was moved or copied from another folder. |
+| Course tools | `COURSE TOOLS NOT INSTALLED`, or `COURSE TOOLS OUT OF DATE`: the installed course tools commit (read offline from pip's install record) is not the one this Course Kit pins in `requirements-student.txt`. Both short commits are printed. |
+| Trail dependency | `pygame`, which draws the Trail, is not installed. |
+| Course Kit version | `course-materials.json` is missing. Otherwise it prints the kit version to compare with the course website's Prepare page. |
+| Your world folder | `my-explore-world` is inside the Course Kit, where an update would replace it. |
+| Trail window opens and closes | A minimal Trail window cannot open (for example, WSLg is missing). |
+
+On Windows it also needs **WSL 2**; WSL 1 is reported as `[help]`. Fixes for
+every line are in [`Windows Setup`](windows-wsl-setup.md).
 
 Useful options:
 
 ```console
-python3 check-my-computer.py --workspace /path/to/explore-studio-course
-python3 check-my-computer.py --skip-network
+python3 check-my-computer.py --computer-only --skip-network
+python3 check-my-computer.py --workspace ~/explore-studio-course
 ```
 
 ## Privacy boundary
@@ -80,8 +129,8 @@ python3 check-my-computer.py --skip-network
 The computer check collects no credentials and no personal data. It never asks
 for a password, token, account name, or email address; it reads only local
 hardware and environment facts; it prints them on the student's own screen; and
-it uploads nothing. Its single network step opens and closes a connection to
-confirm the internet works and sends no data. Home-directory paths are shortened
+it uploads nothing. Only `--computer-only` opens and closes one connection to
+confirm the internet works, and it sends no data. Home-directory paths are shortened
 to `~` in the printed report so a shared screen or a pasted result does not
 expose a name.
 
@@ -91,5 +140,7 @@ identifiers and pass/fail results.
 ## Related pages
 
 - `START-HERE.md`, in the top folder of the course — the four first-day steps.
+- [`Windows Setup`](windows-wsl-setup.md) — WSL, Ubuntu, VS Code, and getting
+  a newer Course Kit.
 - [`Classroom Student Workspace`](classroom-student-workspace.md) — how the ZIP
   and the Git-managed course folder are produced.

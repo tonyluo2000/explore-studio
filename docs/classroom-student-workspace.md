@@ -61,15 +61,21 @@ credentials, or key material. It
 also excludes `requirements-course.txt`, whose `git+https` pin belongs to the
 Git-managed path, so the ZIP offers one unambiguous install command.
 
-Tell students exactly where to unzip it: the home folder or Desktop on macOS,
-and the Ubuntu home directory such as `/home/student/explore-studio-course`
-under WSL — never `/mnt/c`, and never Downloads.
+Tell students exactly where to unzip it: `~/explore-studio-course` on every
+computer (the Ubuntu home directory under WSL) — never `/mnt/c`, never
+Downloads, and never the Desktop. Windows students follow the canonical
+[`Windows Setup`](windows-wsl-setup.md) guide, which also covers VS Code and
+getting a newer Course Kit.
 
 ## Course Kit and Student Workspace
 
 The ZIP folder is the **Course Kit**. It is replaceable: when course materials
 change, a teacher hands out a newer ZIP and the student replaces the old
-`explore-studio-course` folder.
+`explore-studio-course` folder and makes a fresh `.venv`, following **Get a
+newer Course Kit** in [`Windows Setup`](windows-wsl-setup.md). The computer
+check prints the kit version and reports course tools that no longer match the
+kit's pin as `COURSE TOOLS OUT OF DATE`, so a stale install is found before it
+looks like a runtime bug.
 
 A student's own creations live in a separate **Student Workspace**,
 `my-explore-world`, created next to the Course Kit starting in S02:
@@ -250,7 +256,7 @@ confinement, and Classroom Trail needs Linux GUI-app support.
 An administrator installs WSL before class using Microsoft's official
 [`wsl --install` guidance](https://learn.microsoft.com/windows/wsl/install).
 Store the repository under the Linux home directory, such as
-`/home/student/explorer-course`, rather than `/mnt/c`; this follows Microsoft's
+`~/explore-studio-course`, rather than `/mnt/c`; this follows Microsoft's
 official [WSL filesystem guidance](https://learn.microsoft.com/windows/wsl/filesystems).
 Confirm WSLg can open Linux GUI applications using Microsoft's
 [GUI-app prerequisites](https://learn.microsoft.com/windows/wsl/tutorials/gui-apps).
@@ -270,9 +276,17 @@ For every classroom device or image:
 3. confirm the `explore-package` executable exists and opens its help;
 4. run the template tests and S01 starter;
 5. validate all four S01 example packages;
-6. launch and cleanly close the S01 Classroom Trail; and
+6. launch and cleanly close the S01 Classroom Trail;
 7. confirm controls, window focus, and screen-sharing choices; confirm Git
-   identity only for classes already on the Git-managed path.
+   identity only for classes already on the Git-managed path; and
+8. run `python3 check-my-computer.py` from `~/explore-studio-course` with
+   `.venv` active and confirm the summary says `Course tools: <sha> (current)`
+   and `READY FOR EXPLORE STUDIO`.
+
+Before every class, use the per-student **Classroom Preflight** in
+`docs/operations/classroom-preflight.md` (teacher repository only): each
+student sends the check's summary lines, and a student who is not ready uses
+the teacher-operated fallback instead of fixing Windows during the lesson.
 
 Record only device/image identifiers and pass/fail results. Do not record
 student credentials or personal data.

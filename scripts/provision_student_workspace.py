@@ -38,6 +38,7 @@ GENERATED_PATHS = (
 READINESS_CHECK_SOURCE = "scripts/check_computer_readiness.py"
 READINESS_CHECK_TARGET = "check-my-computer.py"
 READINESS_DOC = "computer-readiness.md"
+SETUP_GUIDE_DOC = "windows-wsl-setup.md"
 #: The Student Workspace bootstrap ships in the Course Kit as ownership
 #: templates, the reviewed S02 package seed, and one no-overwrite command. The
 #: student's own ``my-explore-world`` folder is created on the student's
@@ -90,6 +91,8 @@ def _validate_source(source_root: Path) -> None:
         raise ProvisionError("course source is missing the student workspace template")
     if not (source_root / "docs" / READINESS_DOC).is_file():
         raise ProvisionError("course source is missing computer readiness guidance")
+    if not (source_root / "docs" / SETUP_GUIDE_DOC).is_file():
+        raise ProvisionError("course source is missing the Windows setup guide")
     if not (source_root / "docs" / "classroom-student-workspace.md").is_file():
         raise ProvisionError("course source is missing classroom workspace guidance")
 
@@ -173,7 +176,7 @@ def provision_student_workspace(target_root, source_root=None):
     )
     target_docs = target / "docs"
     target_docs.mkdir()
-    for doc_name in ("classroom-student-workspace.md", READINESS_DOC):
+    for doc_name in ("classroom-student-workspace.md", READINESS_DOC, SETUP_GUIDE_DOC):
         shutil.copy2(source / "docs" / doc_name, target_docs / doc_name)
     receipt = {
         "contract_version": "0.1",
