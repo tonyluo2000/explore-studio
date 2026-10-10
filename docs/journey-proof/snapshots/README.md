@@ -52,14 +52,17 @@ What each check verifies:
 - **S04 HERO:** the Moonlit Guide's whole greeting is in the bubble, with the
   `Moonlit Guide` speaker tag. The Guide and the Lantern are drawn in trusted
   art. The Lantern has no waypoint marker, because M04 has no
-  `lantern_waypoint`. There is no S05 content.
+  `lantern_waypoint`. There is no S05 content. Since the `b875c52` pin the
+  HUD reads `Spoken to 1 / 1` and shows `Trail complete!` here, because M04
+  completes from the Guide alone; the Lantern stays unvisited.
 
 ## Provenance
 
 - Base: `main` at `8847e66d3188b9b941aa89d772006b772da15be8` (#114, the S01
   Moon Meadow arrival), merged into this branch.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `3038cf44dc556a6e878141b8e1fbb6c580095aa4`. The harness refuses to publish
+  `b875c52b76cfd4e1d72be4c77aef595475da79de` (the mission-aware Trail HUD;
+  previously `3038cf44dc556a6e878141b8e1fbb6c580095aa4`). The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from
   git to confirm this.
@@ -78,10 +81,15 @@ What each check verifies:
   (the pinned runtime moved), `captureRecipe` (the `untargeted` expectation
   added for S01), and `captureImplementation` (the harness edits). Their
   `packages` parts are unchanged.
-- Presentation fingerprints, per moment: `S01_ARRIVAL` `8c041828b795…`,
-  `S02_COMPASS_PROMPT` `13a4fb2552c8…`, `S02_MOVED_COMPASS` `a270ad98e890…`,
-  `S03_REVEAL` `7b11540a2975…`, `S03_NEAR_CLUE` `e6880f1c9bd7…`, `S04_DIALOGUE`
-  `ee3ae6d34a81…`. The full values are in the manifest.
+- Recapture at the `b875c52` pin (2026-10-10, linux-x86_64): only
+  `S04_DIALOGUE` changed in content (the progress row and the banner). On the
+  same host, the S01–S03 source frames from `3038cf4` and from `b875c52` are
+  pixel-identical. Their bytes differ from the earlier darwin-arm64 capture
+  only because text rasterizes differently on each platform.
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `8ecb418626bb…`,
+  `S02_COMPASS_PROMPT` `0200679e3210…`, `S02_MOVED_COMPASS` `d7a1e29860c5…`,
+  `S03_REVEAL` `4bcc85a1686d…`, `S03_NEAR_CLUE` `58717e931024…`, `S04_DIALOGUE`
+  `76e175d0398d…`. The full values are in the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
@@ -131,8 +139,9 @@ What each check verifies:
 - The Journey snapshots workflow watches every fingerprint input. A test
   matches the workflow's path filters against the real input files, so the
   two lists cannot drift apart.
-- Toolchain at capture: Python 3.13.7, pygame 2.6.1, SDL 2.28.4, SDL_ttf
-  2.20.1, Pillow 12.3.0, libwebp 1.6.0, darwin-arm64.
+- Toolchain at capture: Python 3.13.16, pygame 2.6.1, SDL 2.28.4, Pillow
+  12.3.0, linux-x86_64. The earlier `3038cf4` capture used Python 3.13.7,
+  SDL_ttf 2.20.1, libwebp 1.6.0, darwin-arm64.
 
 ## Encoding and hashes
 
