@@ -17,6 +17,7 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).parents[1]
 QUICK_START = PROJECT_ROOT / "lessons" / "sessions" / "student-quick-start.md"
+WINDOWS_GUIDE = PROJECT_ROOT / "docs" / "windows-wsl-setup.md"
 MARKDOWN_ROOTS = ("lessons", "classroom", "docs")
 FENCE = re.compile(r"^\s*```")
 TRAIL_COMMAND = "explore-package trail"
@@ -140,6 +141,27 @@ def test_quick_start_teaches_copying_the_whole_trail_command() -> None:
     ):
         assert phrase in launch, phrase
     assert "--player: command not found" in quick_start
+
+
+def test_windows_guide_recognizes_a_split_trail_command() -> None:
+    guide = WINDOWS_GUIDE.read_text(encoding="utf-8")
+    section = guide[guide.index("### Paste the whole Trail command") :]
+    section = section[: section.index("\n## ")]
+
+    for phrase in (
+        "it is\n**one** command",
+        "Paste the whole block at once",
+        "keep the `\\` at the end of\neach line",
+        "Is a directory",
+        "--player: command not found",
+        "--mission-id: command not found",
+        "Control-C",
+        "cd ~/explore-studio-course",
+        "(.venv)",
+        "Keep every trailing `\\`",
+        "ask your teacher for the one-line version",
+    ):
+        assert phrase in section, phrase
 
 
 def test_only_the_real_computer_check_name_is_used() -> None:
