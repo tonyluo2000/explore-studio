@@ -25,8 +25,8 @@ every required entity, and no art or entity from a later session.
 | S02 | `S02_MOVED_COMPASS` | LEARNING_MOMENT | `journey/s02/moved-compass.webp` | 93,546 B | 34,374 B |
 | S03 | `S03_REVEAL` | HERO | `journey/s03/hero.webp` | 93,946 B | 34,392 B |
 | S03 | `S03_NEAR_CLUE` | LEARNING_MOMENT | `journey/s03/near-clue.webp` | 92,898 B | 34,356 B |
-| S04 | `S04_DIALOGUE` | HERO | `journey/s04/hero.webp` | 96,326 B | 35,194 B |
-| S05 | `S05_CONVERSATION` | HERO | `journey/s05/hero.webp` | 95,776 B | 35,584 B |
+| S04 | `S04_DIALOGUE` | HERO | `journey/s04/hero.webp` | 97,086 B | 35,678 B |
+| S05 | `S05_CONVERSATION` | HERO | `journey/s05/hero.webp` | 96,206 B | 35,698 B |
 
 What each check verifies:
 
@@ -65,14 +65,16 @@ What each check verifies:
   trusted Moonlit Guide art, and the Lantern is drawn lit with no waypoint.
   The frame shows no S04 greeting Guide, Pixel, either Compass, or any of
   S06's collection (`starlight-garden:*`), and there is no completion banner.
+  The progress row reads `Conversations 0 / 1` (the mission-aware HUD).
 
 ## Provenance
 
-- Base: `main` at `ba648aa808e408a85f5d44ed052839d487909eee` (#116, Course
-  Journey Phase D).
+- Base: `main` at `d23a20eed48f991741b9e81fdc504729fc4fa1a8` (#119, after
+  #118's mission-aware Trail HUD), merged into this branch.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `b875c52b76cfd4e1d72be4c77aef595475da79de` (the mission-aware Trail HUD;
-  previously `3038cf44dc556a6e878141b8e1fbb6c580095aa4`). The harness refuses to publish
+  `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0` (S05 in the Moon Meadow on the
+  mission-aware Trail HUD; previously `b875c52b76cfd4e1d72be4c77aef595475da79de`).
+  The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from
   git to confirm this.
@@ -91,15 +93,28 @@ What each check verifies:
   (the pinned runtime moved), `captureRecipe` (the `untargeted` expectation
   added for S01), and `captureImplementation` (the harness edits). Their
   `packages` parts are unchanged.
-- Recapture at the `b875c52` pin (2026-10-10, linux-x86_64): only
-  `S04_DIALOGUE` changed in content (the progress row and the banner). On the
-  same host, the S01–S03 source frames from `3038cf4` and from `b875c52` are
-  pixel-identical. Their bytes differ from the earlier darwin-arm64 capture
-  only because text rasterizes differently on each platform.
-- Presentation fingerprints, per moment: `S01_ARRIVAL` `8ecb418626bb…`,
-  `S02_COMPASS_PROMPT` `0200679e3210…`, `S02_MOVED_COMPASS` `d7a1e29860c5…`,
-  `S03_REVEAL` `4bcc85a1686d…`, `S03_NEAR_CLUE` `58717e931024…`, `S04_DIALOGUE`
-  `76e175d0398d…`. The full values are in the manifest.
+- Recapture at the `b875c52` pin (#118): only `S04_DIALOGUE` changed in
+  content (the progress row and the banner); S01–S03 frames were
+  pixel-identical. The committed files are the darwin-arm64 capture
+  (Pillow 11.2.1, libwebp 1.5.0).
+- S01–S04 after the move to the `2692c2f` pin: every source frame and all
+  twelve WebP files are byte-identical to `main` at `d23a20e`. Only their
+  `runtimeCommit` and fingerprints changed: `runtime` (M05 joined the
+  presentation policy), `captureRecipe` (each earlier row now excludes the S05
+  Guide), and `captureImplementation` (list-item package text and step arity
+  checks). Their `packages` parts are unchanged.
+- S05 hashes (darwin-arm64, Pillow 11.2.1, libwebp 1.5.0): source frame
+  `sourceRgbSha256`
+  `775bd9da3f37b2c2178f0413b87a5f243bdf01cf7913c3e9e771012ba901dd75`;
+  `hero.webp` `062248376f28223d779949f42da2d73dabecd45e244d61bf7eedb0c314640fd2`;
+  `hero-480.webp` `0cef46cada24c7105a92cd7638cd803919a72493dbf44eb9c9b7ff9bd68ee05d`.
+  The same moment as before the merge; the only pixel change is #118's
+  progress row (`Visited 0 / 1` became `Conversations 0 / 1`).
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `ecb41fe45c6a…`,
+  `S02_COMPASS_PROMPT` `a957a00472db…`, `S02_MOVED_COMPASS` `e1850ea1e289…`,
+  `S03_REVEAL` `ba40522888d5…`, `S03_NEAR_CLUE` `32a3872a6af3…`, `S04_DIALOGUE`
+  `fee83a0540c1…`, `S05_CONVERSATION` `f9d95f071742…`. The full values are in
+  the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
