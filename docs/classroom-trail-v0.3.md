@@ -37,9 +37,11 @@ targeting rule: choose the in-range entity with the smallest squared center
 distance, then break an equal-distance tie by lexicographically smallest
 qualified ID. Pressing E on an NPC displays `Name: greeting`.
 
-Only world-object interactions update `visited_qualified_ids`. `Visited N / total`
-and `Trail complete!` continue to count the required world objects only, and
-remain process-local and idempotent.
+Only world-object interactions update `visited_qualified_ids`. Without a
+mission, `Visited N / total` and `Trail complete!` continue to count the
+required world objects only, and remain process-local and idempotent. With a
+mission whose rule is not object visitation, both follow that mission's rule
+instead (see `docs/local-mission-v0.1.md`).
 
 ## Local use
 

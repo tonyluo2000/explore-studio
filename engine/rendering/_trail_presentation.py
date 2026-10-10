@@ -1183,8 +1183,11 @@ class TrailPresentation:
     def hud_panel_rects(self, renderer, view: TrailView) -> tuple[Rect, ...]:  # type: ignore[no-untyped-def]
         """Two rounded rects hugging the HUD rows: the short rows and the long one."""
         state = "Complete" if view.mission_is_complete else "Incomplete"
+        progress = getattr(view, "mission_progress_label", None)
+        if not isinstance(progress, str):
+            progress = f"Visited {view.visited_count} / {view.total_objects}"
         rows = (
-            f"Visited {view.visited_count} / {view.total_objects}",
+            progress,
             f"Mission: {view.mission.title}",
             view.mission.instructions,
             f"Mission state: {state}",
@@ -1215,7 +1218,7 @@ class TrailPresentation:
     def feedback_panel_rect(self, renderer, view: TrailView) -> Rect | None:  # type: ignore[no-untyped-def]
         """A soft card hugging the HUD's bottom feedback lines, if any are shown."""
         lines: list[tuple[str, int, int]] = []
-        if getattr(view, "is_complete", False):
+        if view.mission_is_complete:
             lines.append(("Trail complete!", FEEDBACK_TEXT_X, COMPLETE_TEXT_Y))
         message = self.fit_feedback(renderer, getattr(view, "feedback_message", None))
         if isinstance(message, str) and message.strip():

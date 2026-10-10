@@ -81,9 +81,11 @@ ambience, HUD, Nova, Pixel, the Compass, and the Lantern art are unchanged.
 - **Bubble length.** The bubble holds up to six lines of a 340 px column at
   24 px, about 180 characters. Longer student greetings end in `…` in the
   bubble. Validation is unchanged: the Student API sets no length limit.
-- **`Visited 0 / 1` row.** The shared HUD row still counts the Lantern as
-  visited-object progress. M04 completion is the `Mission state` row. The
-  shared HUD semantics were deliberately left unchanged.
+- **Progress row (since fixed).** At capture time the shared HUD row still
+  read `Visited 0 / 1` and `Trail complete!` waited for the Lantern. The HUD
+  now follows M04's rule: `Spoken to 0 / 1` before the greeting, then
+  `Spoken to 1 / 1` with `Trail complete!` from the Guide alone; the Lantern
+  is optional. The frames above predate that fix.
 - **Guide color.** Trusted art is declared for the canonical `color: "blue"`.
   Another color draws a posed procedural guide in that color, never a
   rectangle.
