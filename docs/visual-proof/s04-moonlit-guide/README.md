@@ -81,9 +81,40 @@ ambience, HUD, Nova, Pixel, the Compass, and the Lantern art are unchanged.
 - **Bubble length.** The bubble holds up to six lines of a 340 px column at
   24 px, about 180 characters. Longer student greetings end in `…` in the
   bubble. Validation is unchanged: the Student API sets no length limit.
-- **`Visited 0 / 1` row.** The shared HUD row still counts the Lantern as
-  visited-object progress. M04 completion is the `Mission state` row. The
-  shared HUD semantics were deliberately left unchanged.
+- **Progress row (since fixed).** At capture time the shared HUD row still
+  read `Visited 0 / 1` and `Trail complete!` waited for the Lantern. The HUD
+  now follows M04's rule: `Spoken to 0 / 1` before the greeting, then
+  `Spoken to 1 / 1` with `Trail complete!` from the Guide alone; the Lantern
+  is optional. The frames above predate that fix.
 - **Guide color.** Trusted art is declared for the canonical `color: "blue"`.
   Another color draws a posed procedural guide in that color, never a
   rectangle.
+
+## Mission-aware HUD hotfix: fresh install (2026-10-10)
+
+In class, S04 completed from the Guide's greeting, but the HUD still read
+`Visited 0 / 1`. `Trail complete!` only appeared after the optional Crystal
+Lantern was visited. Runtime `b875c52` makes the progress row and the banner
+follow M04's `ALL_INTERACTABLE_NPCS_SPOKEN_TO` rule. The Course Kit ZIP is
+`5f630f2f…c89b9`: 253 members, provenance commit `82b8395`, and three
+independent builds were byte-identical. `verify_public_zip_provenance.py`
+passes.
+
+The kit was unpacked into a clean temporary `HOME`, so no real
+`~/my-explore-world` was touched. It got a fresh `.venv` (Python 3.13.16,
+linux-x86_64) and was installed with `pip install -r requirements-student.txt`.
+The pinned archive `b875c52` resolved from GitHub. `check-my-computer.py`
+reported **READY FOR EXPLORE STUDIO** with course tools `b875c52 (current)`
+when run under a virtual display. Without a display, the only `[help]` line is
+the missing desktop. The task-card `explore-package trail` commands ran with
+dummy video and audio drivers. An autopilot patched only input polling and a
+fixed 1/60 s tick, and it observed the drawn HUD text:
+
+| Run | Before | After the steps | Result |
+|---|---|---|---|
+| S01 | `Visited 0 / 1` | Pixel: `Visited 0 / 1`; Lantern: `Visited 1 / 1`, `Trail complete!` | unchanged |
+| S02 (after `make-my-world.py`) | `Visited 0 / 2` | Lantern `1 / 2`; Compass `Visited 2 / 2`, `Trail complete!` | unchanged |
+| S03 | `Visited 0 / 1` | Compass: `Visited 1 / 1`, `Trail complete!` | unchanged |
+| S04 | `Spoken to 0 / 1`, Incomplete | Guide: `Spoken to 1 / 1`, Complete, `Trail complete!`, visited `0 / 1` | Guide alone completes |
+| S04, then the Lantern | — | `Spoken to 1 / 1`, Complete, banner kept, visited `1 / 1` | Lantern optional, no second completion |
+| S04 cast, no `--mission-id` | `Visited 0 / 1` | Guide: still `0 / 1`; Lantern: `Visited 1 / 1`, `Trail complete!` | plain Trail, M01 rule |

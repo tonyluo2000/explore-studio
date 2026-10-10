@@ -1278,7 +1278,9 @@ def test_npc_rule_tracks_greeting_and_first_conversation_response_idempotently()
     assert scene.visited_qualified_ids == frozenset()
     assert scene.is_complete is False
     assert "Mission state: Complete" in renderer.text
-    assert "Trail complete!" not in renderer.text
+    assert "Spoken to 2 / 2" in renderer.text
+    assert "Trail complete!" in renderer.text
+    assert not any(text.startswith("Visited") for text in renderer.text)
 
     scene.update(_NO_MOVEMENT, _INTERACT, 0.0)
     scene.render()
@@ -1312,7 +1314,8 @@ def test_npc_rule_is_incomplete_without_interactable_npcs_and_isolated_from_obje
     assert scene.visited_qualified_ids == frozenset({"object:lantern"})
     assert scene.is_complete is True
     assert scene.mission_is_complete is False
-    assert "Trail complete!" in renderer.text
+    assert "Trail complete!" not in renderer.text
+    assert "Spoken to 0 / 0" in renderer.text
     assert "Mission state: Incomplete" in renderer.text
 
 
@@ -1353,7 +1356,8 @@ def test_conversation_rule_completes_on_final_line_and_survives_wrap(
     assert scene.visited_qualified_ids == frozenset()
     assert scene.is_complete is False
     assert "Mission state: Complete" in renderer.text
-    assert "Trail complete!" not in renderer.text
+    assert "Conversations 1 / 1" in renderer.text
+    assert "Trail complete!" in renderer.text
 
     restarted_lines: list[str] = []
     for _ in conversation:

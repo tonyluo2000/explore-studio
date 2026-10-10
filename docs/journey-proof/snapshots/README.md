@@ -53,7 +53,9 @@ What each check verifies:
 - **S04 HERO:** the Moonlit Guide's whole greeting is in the bubble, with the
   `Moonlit Guide` speaker tag. The Guide and the Lantern are drawn in trusted
   art. The Lantern has no waypoint marker, because M04 has no
-  `lantern_waypoint`. There is no S05 content.
+  `lantern_waypoint`. There is no S05 content. Since the `b875c52` pin the
+  HUD reads `Spoken to 1 / 1` and shows `Trail complete!` here, because M04
+  completes from the Guide alone; the Lantern stays unvisited.
 - **S05 HERO:** the conversation in progress, not completion. Nova walks
   beside the Guide (`walk_to 455, 262`) and presses `E` twice. The frame is
   accepted only with the S05 Guide targeted, M05 Incomplete, the package's
@@ -69,8 +71,8 @@ What each check verifies:
 - Base: `main` at `ba648aa808e408a85f5d44ed052839d487909eee` (#116, Course
   Journey Phase D).
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `b70c8a9e2defdff383c532fd23c783524fcd7717` (S05 in the Moon Meadow). The
-  harness refuses to publish
+  `b875c52b76cfd4e1d72be4c77aef595475da79de` (the mission-aware Trail HUD;
+  previously `3038cf44dc556a6e878141b8e1fbb6c580095aa4`). The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from
   git to confirm this.
@@ -89,21 +91,15 @@ What each check verifies:
   (the pinned runtime moved), `captureRecipe` (the `untargeted` expectation
   added for S01), and `captureImplementation` (the harness edits). Their
   `packages` parts are unchanged.
-- S01–S04 after the move to the `b70c8a9` pin: every source frame and all
-  twelve WebP files are byte-identical to the captures at `3038cf4`. Only their
-  `runtimeCommit` and fingerprints changed: `runtime` (M05 joined the
-  presentation policy), `captureRecipe` (each earlier row now excludes the S05
-  Guide), and `captureImplementation` (list-item package text and step arity
-  checks). Their `packages` parts are unchanged.
-- S05 hashes: source frame `sourceRgbSha256`
-  `112cb1f09ec267e9538b54b8f321945b7f4f05b633954b2af2030f4a70af1039`;
-  `hero.webp` `5a5509bf6aa84ce43985b58dcbc1359e7c43b99c891800bf1408c11bd1a17d69`;
-  `hero-480.webp` `e9ee2662089b42e3392d11cdc0e0f161f7751ede75e56558e70fb653a84492c8`.
-- Presentation fingerprints, per moment: `S01_ARRIVAL` `8c0709c69f45…`,
-  `S02_COMPASS_PROMPT` `55bdaedaaa07…`, `S02_MOVED_COMPASS` `8ccef6d2f465…`,
-  `S03_REVEAL` `c0060bc3bc59…`, `S03_NEAR_CLUE` `9c33a4ee75b3…`, `S04_DIALOGUE`
-  `a047e966b90e…`, `S05_CONVERSATION` `bd2a11026412…`. The full values are in
-  the manifest.
+- Recapture at the `b875c52` pin (2026-10-10, linux-x86_64): only
+  `S04_DIALOGUE` changed in content (the progress row and the banner). On the
+  same host, the S01–S03 source frames from `3038cf4` and from `b875c52` are
+  pixel-identical. Their bytes differ from the earlier darwin-arm64 capture
+  only because text rasterizes differently on each platform.
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `8ecb418626bb…`,
+  `S02_COMPASS_PROMPT` `0200679e3210…`, `S02_MOVED_COMPASS` `d7a1e29860c5…`,
+  `S03_REVEAL` `4bcc85a1686d…`, `S03_NEAR_CLUE` `58717e931024…`, `S04_DIALOGUE`
+  `76e175d0398d…`. The full values are in the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
@@ -153,8 +149,9 @@ What each check verifies:
 - The Journey snapshots workflow watches every fingerprint input. A test
   matches the workflow's path filters against the real input files, so the
   two lists cannot drift apart.
-- Toolchain at capture: Python 3.13.7, pygame 2.6.1, SDL 2.28.4, SDL_ttf
-  2.20.1, Pillow 12.3.0, libwebp 1.6.0, darwin-arm64.
+- Toolchain at capture: Python 3.13.16, pygame 2.6.1, SDL 2.28.4, Pillow
+  12.3.0, linux-x86_64. The earlier `3038cf4` capture used Python 3.13.7,
+  SDL_ttf 2.20.1, libwebp 1.6.0, darwin-arm64.
 
 ## Encoding and hashes
 

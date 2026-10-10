@@ -63,6 +63,25 @@ class ClassroomTrailMissionCompletionRule(StrEnum):
     ALL_THREE_OBJECT_SEQUENCES_COMPLETED = "ALL_THREE_OBJECT_SEQUENCES_COMPLETED"
 
 
+#: The HUD progress row's label per rule; each counts that rule's own evidence.
+_PROGRESS_LABELS: Mapping[ClassroomTrailMissionCompletionRule, str] = MappingProxyType(
+    {
+        ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED: "Visited",
+        ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO: "Spoken to",
+        ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED: "Conversations",
+        ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED: "Switches",
+        ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED: "Responses",
+        ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED: "Goals",
+        ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED: "Responses",
+        ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED: "Responses",
+        ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED: (
+            "Responses"
+        ),
+        ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED: "Sequences",
+    }
+)
+
+
 @dataclass(frozen=True)
 class ClassroomTrailMission:
     """One immutable local mission displayed by a Classroom Trail."""
@@ -626,29 +645,48 @@ class ClassroomTrailScene(Scene):
     @property
     def mission_is_complete(self) -> bool:
         """Derive mission completion from the selected fixed rule."""
+        required, achieved = self._mission_requirement()
+        return bool(required) and required <= achieved
+
+    @property
+    def mission_progress(self) -> tuple[int, int]:
+        """How much of the selected rule is met, as (done, required).
+
+        Counts the same evidence :attr:`mission_is_complete` reads, so the
+        mission is complete exactly when both are equal and nonzero.
+        """
+        required, achieved = self._mission_requirement()
+        return len(required & achieved), len(required)
+
+    @property
+    def mission_progress_label(self) -> str:
+        """The HUD progress row for the selected rule, e.g. ``Spoken to 0 / 1``."""
+        done, required = self.mission_progress
+        return f"{_PROGRESS_LABELS[self._mission.completion_rule]} {done} / {required}"
+
+    def _mission_requirement(self) -> tuple[frozenset[object], frozenset[object]]:
+        """The selected rule's required evidence and the evidence seen so far."""
         rule = self._mission.completion_rule
         if rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED:
-            return self.is_complete
+            return (
+                frozenset(item.qualified_id for item in self._objects),
+                self._visited_qualified_ids,
+            )
         if rule is ClassroomTrailMissionCompletionRule.ALL_INTERACTABLE_NPCS_SPOKEN_TO:
             interactable_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.conversation_lines
             )
-            return bool(interactable_npc_ids) and interactable_npc_ids <= self._spoken_npc_ids
+            return interactable_npc_ids, self._spoken_npc_ids
         if rule is ClassroomTrailMissionCompletionRule.ALL_CONVERSATION_NPCS_COMPLETED:
             conversation_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.conversation is not None
             )
-            return (
-                bool(conversation_npc_ids)
-                and conversation_npc_ids <= self._completed_conversation_npc_ids
-            )
+            return conversation_npc_ids, self._completed_conversation_npc_ids
         if rule is ClassroomTrailMissionCompletionRule.ALL_TOGGLE_OBJECTS_CHANGED:
             toggle_object_ids = frozenset(
                 item.qualified_id for item in self._objects if item.toggle is not None
             )
-            return bool(toggle_object_ids) and (
-                toggle_object_ids <= self._changed_toggle_qualified_ids
-            )
+            return toggle_object_ids, self._changed_toggle_qualified_ids
         if rule is ClassroomTrailMissionCompletionRule.ALL_CONDITIONAL_BRANCHES_DISPLAYED:
             conditional_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.respond_to_toggle is not None
@@ -658,12 +696,16 @@ class ClassroomTrailScene(Scene):
                 for qualified_id in conditional_npc_ids
                 for is_on in (False, True)
             )
-            return bool(conditional_npc_ids) and required <= self._displayed_conditional_branches
+            return required, self._displayed_conditional_branches
         if rule is ClassroomTrailMissionCompletionRule.ALL_COUNTER_GOALS_REACHED:
             counter_objects = tuple(item for item in self._objects if item.counter is not None)
-            return bool(counter_objects) and all(
-                self._counter_counts[item.qualified_id] >= item.counter.goal
-                for item in counter_objects
+            return (
+                frozenset(item.qualified_id for item in counter_objects),
+                frozenset(
+                    item.qualified_id
+                    for item in counter_objects
+                    if self._counter_counts[item.qualified_id] >= item.counter.goal
+                ),
             )
         if rule is ClassroomTrailMissionCompletionRule.ALL_TWO_TOGGLE_BRANCHES_DISPLAYED:
             conditional_npc_ids = frozenset(
@@ -674,7 +716,7 @@ class ClassroomTrailScene(Scene):
                 for qualified_id in conditional_npc_ids
                 for all_on in (False, True)
             )
-            return bool(conditional_npc_ids) and required <= self._displayed_two_toggle_branches
+            return required, self._displayed_two_toggle_branches
         if rule is ClassroomTrailMissionCompletionRule.ALL_EITHER_TOGGLE_CASES_DISPLAYED:
             conditional_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.respond_to_either_toggle is not None
@@ -684,7 +726,7 @@ class ClassroomTrailScene(Scene):
                 for qualified_id in conditional_npc_ids
                 for first_on, second_on in ((False, False), (True, False), (False, True))
             )
-            return bool(conditional_npc_ids) and required <= self._displayed_either_toggle_cases
+            return required, self._displayed_either_toggle_cases
         if rule is ClassroomTrailMissionCompletionRule.ALL_COUNTER_COMPARISON_BRANCHES_DISPLAYED:
             conditional_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.respond_to_counter is not None
@@ -694,14 +736,12 @@ class ClassroomTrailScene(Scene):
                 for qualified_id in conditional_npc_ids
                 for at_or_above_goal in (False, True)
             )
-            return bool(conditional_npc_ids) and (
-                required <= self._displayed_counter_comparison_branches
-            )
+            return required, self._displayed_counter_comparison_branches
         if rule is ClassroomTrailMissionCompletionRule.ALL_THREE_OBJECT_SEQUENCES_COMPLETED:
             sequence_npc_ids = frozenset(
                 npc.qualified_id for npc in self._npcs if npc.respond_to_sequence is not None
             )
-            return bool(sequence_npc_ids) and sequence_npc_ids <= self._completed_sequence_npc_ids
+            return sequence_npc_ids, self._completed_sequence_npc_ids
         raise AssertionError("unsupported mission completion rule")
 
     @property
@@ -935,7 +975,7 @@ class ClassroomTrailScene(Scene):
         self._draw_entity(self._player_qualified_id, self._player, self._player.color)
         overlay_text = presentation.draw_overlay(self._renderer, self)
         self._renderer.draw_text(
-            f"Visited {self.visited_count} / {self.total_objects}",
+            self.mission_progress_label,
             _PROGRESS_X,
             _PROGRESS_Y,
             _TEXT_COLOR,
@@ -963,7 +1003,9 @@ class ClassroomTrailScene(Scene):
             _TEXT_COLOR,
             _PROGRESS_FONT_SIZE,
         )
-        if self.is_complete:
+        # The banner follows the selected mission's rule, never object visits
+        # alone (M04 completes from its NPC with every object still unvisited).
+        if self.mission_is_complete:
             self._renderer.draw_text(
                 "Trail complete!",
                 _COMPLETE_X,

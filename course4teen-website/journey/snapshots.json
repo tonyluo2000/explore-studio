@@ -102,10 +102,10 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:8c0709c69f451953062e8e85b90a3b84067a8b5d1a2fdcb7ca1a64b90e8924f2",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:8ecb418626bbfee1d31e562b331b715471e22d795c6ebb57807b7737f9fa4289",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "0c842405a3b976f419196e5a11b3bcc9f83b02c268222a288238acedbeb547c8",
         "captureRecipe": "c1939ad939870a7baa05458943b6ea6a6096fa5abe241c7d6781b04d2a39ea57",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
@@ -132,8 +132,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S01"
@@ -152,10 +152,10 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:55bdaedaaa071930aceebfc4da7cfbda2cce1bd9be79c1e93971febfe0622125",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:0200679e32107aee41baab9ff342c8a886e64d2519eb680a7c37f8e77b0c35f7",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
         "captureRecipe": "011cdf6e16ef645b4762ada1cb47fe5039bacf722b0e19bba33e1c0173974be7",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
@@ -182,8 +182,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
@@ -210,10 +210,10 @@
           "y": 360
         }
       },
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:8ccef6d2f465d454546c84b7b75be4a0f42744eb6b7e5d9cd4d87ba224e6f4e7",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:d7a1e29860c5c5abc7e5f1da8ff996bcc4c51a1ec121cf8305dd8a226647c8b6",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
         "captureRecipe": "6c9442a32aa03af7250f527bd4a98716c159dd70000847651c42b117f34c53a9",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
@@ -240,8 +240,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
@@ -258,10 +258,10 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:c0060bc3bc59e6c9885aa909a98d13a5a28556467ff3c1fc653caf3a4142c0b2",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:4bcc85a1686d34c4c52c3e6c9e2e203e458929b3ff28e6de4b35db99c746a86e",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
         "captureRecipe": "8abd7ee92407c9b5daeadbda33e2958cbcf8588e219834f2ea9731ce9cba0540",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
@@ -288,8 +288,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
@@ -306,10 +306,10 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:9c33a4ee75b391472f40aa2ef568b58cf2f4f77905c6b4056ed3a71bfb480418",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:58717e9310244a63da1dadb09e7fb04b0135179c3f948127adf36a248f9ffd00",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
         "captureRecipe": "13bf06d15cd82225a432766f203bfd0c09e3c888c18e1cf2acf8b91f11837fe9",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
@@ -336,8 +336,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
@@ -355,29 +355,29 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "b70c8a9e2defdff383c532fd23c783524fcd7717",
-      "presentationFingerprint": "sha256:a047e966b90e556f1a4ae2dba67ccb662c57d5933190bf1da7c49bc4a573b50d",
+      "runtimeCommit": "b875c52b76cfd4e1d72be4c77aef595475da79de",
+      "presentationFingerprint": "sha256:76e175d0398d451243e3c6aa1cbc271aceb368140c8ce18e1f3a1b0e2c5a1e06",
       "fingerprintParts": {
-        "runtime": "0a5380d8b9be02d944ab3d9242131847c2c7b91963efc25127a00c6f6d41d803",
+        "runtime": "40ae4bc137a736213f1e48f760a186e5e92744acaf6d3f8d15399e60ee3a9d8e",
         "packages": "4c3f6d5d410b03c1c91aacb7a85bd7a8a1f487e95bf497a55a6b40a70a593e8d",
         "captureRecipe": "08be04f2915e5298f973c3dee603df56e3456b10fd980a9b71bf48877d883843",
         "captureImplementation": "c6d8dc1d6361664c88ca9fa91a4498d972dd773d2818678ac269e02232582027"
       },
-      "sourceRgbSha256": "680c001674002ebbaf4d6b9ddeedf50c1fda99b68d3e7c27a021db5aa021353b",
+      "sourceRgbSha256": "e219db32b2c14e9b7492ab26d52d3cf65ade3898471c728693b26642123eca1f",
       "images": {
         "960": {
           "src": "/journey/s04/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 96326,
-          "sha256": "06a13690a0cf3a9989bec401960d64ae12c99bdb417a326dcb38bfe04c386d9c"
+          "bytes": 97086,
+          "sha256": "3f1129e2217ba7046efc078c868e895606bc1ce6f3e6cc4a0168f8612e2d43aa"
         },
         "480": {
           "src": "/journey/s04/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 35194,
-          "sha256": "698d47eb798215911efa26b1c9263cdf2645a81b9823452bc0bad397580cb0ca"
+          "bytes": 35678,
+          "sha256": "0cd467fc6bca529ebc3aa79c9bc22caef60970b5236eef5902ddae867b8be19a"
         }
       },
       "toolchain": {
@@ -385,8 +385,8 @@
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
         "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S04"
