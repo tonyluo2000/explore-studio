@@ -226,9 +226,29 @@ quality, or the student's explanation of AI use.
 
 The Trail UI displays the mission title, instructions, and either `Incomplete`
 or `Complete`. NPC responses provide Missions 04–05 evidence without changing
-object state. Object interaction, visited-object progress, Trail completion,
-NPC targeting, conversation advancement and wrap, and multi-object package
-behavior remain unchanged.
+object state. Object interaction, visited-object tracking, NPC targeting,
+conversation advancement and wrap, and multi-object package behavior remain
+unchanged.
+
+The HUD progress row and the `Trail complete!` banner follow the selected
+rule. The row counts that rule's own evidence (`done / required`), so the
+mission is `Complete` exactly when both numbers match and are nonzero, and the
+banner shows exactly when the mission is `Complete`:
+
+| Rule | Progress row |
+|---|---|
+| `ALL_OBJECTS_VISITED` | `Visited N / total` (world objects) |
+| `ALL_INTERACTABLE_NPCS_SPOKEN_TO` | `Spoken to N / total` (NPCs with a greeting or conversation) |
+| `ALL_CONVERSATION_NPCS_COMPLETED` | `Conversations N / total` |
+| `ALL_TOGGLE_OBJECTS_CHANGED` | `Switches N / total` (toggle objects changed) |
+| `ALL_COUNTER_GOALS_REACHED` | `Goals N / total` (counter objects at their goal) |
+| `ALL_THREE_OBJECT_SEQUENCES_COMPLETED` | `Sequences N / total` |
+| The four `..._DISPLAYED` rules | `Responses N / total` (required branches or cases shown) |
+
+Mission 04 therefore reads `Spoken to 1 / 1` and shows `Trail complete!` as
+soon as its interactable NPCs are spoken to; world objects in the same Trail
+stay visitable but are never required. A Trail launched without
+`--mission-id` runs `ALL_OBJECTS_VISITED` and keeps `Visited N / total`.
 
 ## Deferred
 

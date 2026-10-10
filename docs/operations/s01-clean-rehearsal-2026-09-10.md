@@ -44,7 +44,9 @@ bubble). Later on 2026-10-04 it advanced to
 2026-10-04 it advanced to `3038cf44dc556a6e878141b8e1fbb6c580095aa4` to bring S01 (M01) into the frozen
 Moon Meadow as the silent arrival chapter (Nova, a non-counting Pixel, and the
 Crystal Lantern; a Trail without `--mission-id` stays plain); the rehearsal above used the retired
-S01 cast. The original S01 rehearsal inputs and result above remain an unchanged historical
+S01 cast. On 2026-10-10 it advanced to `b875c52b76cfd4e1d72be4c77aef595475da79de` for the
+mission-aware Trail progress row and completion banner (S04 shows `Spoken to 1 / 1` and
+`Trail complete!` from the Moonlit Guide alone; S01-S03 still show `Visited`). The original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
 ## Student flow exercised
