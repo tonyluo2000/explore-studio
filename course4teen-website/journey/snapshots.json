@@ -110,31 +110,31 @@
         "captureRecipe": "2e80cb8059318e6eb683151738727d3335df9e55f5964b15e1b39044aae69d4d",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "ce13d764c9901e85a5fd46436f4496eeb545110e6ce8e3349a2c504e845562d7",
+      "sourceRgbSha256": "7aed2bd8fa53ecb851de1370b8338be1712bb410a2ad662a7f05b8e640b3453b",
       "images": {
         "960": {
           "src": "/journey/s01/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 79536,
-          "sha256": "999035f690d71104e74b0250aebebae16b4cc2a17aa565208bbbecaf0c635d31"
+          "bytes": 79574,
+          "sha256": "d651f128a98319a27b8f6d764470a697ec6c567006f847dc0f89c1b0edf9d6c6"
         },
         "480": {
           "src": "/journey/s01/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 30146,
-          "sha256": "69f07476bf0e5ef34e6d5c06c23f604c2bc81a0c0b07930cec738cf28eb62c99"
+          "bytes": 30094,
+          "sha256": "65d2552b81500777773a29e9aa1ae77d9e4c01f8dbadf8cdf09bb93e1571fe74"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S01"
     },
@@ -160,31 +160,31 @@
         "captureRecipe": "517b6166438e71794f1d8fb81b29b10261cea963af880284072767f179d9250c",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "088381762e54a097967703d3aaf1074874b16dfc2e26cbe296775f910cdc5c24",
+      "sourceRgbSha256": "f2a982b92f93ca14d4434de63471ff77c5333cfd1299ade48ceb8b746d394e8b",
       "images": {
         "960": {
           "src": "/journey/s02/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 93198,
-          "sha256": "fd2de0166d4d88eadf734bef7d7fc1d72781fc5386f7fbe2cab25868920a2389"
+          "bytes": 93166,
+          "sha256": "8c38b25c9bb61561631f3abe2ff084919d3316bb65f6a5551bd307c280996071"
         },
         "480": {
           "src": "/journey/s02/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 33884,
-          "sha256": "7589f63a026edce14c2e11062b3d76f5850bca19b6dbd317c6fe9be8b87aee07"
+          "bytes": 33918,
+          "sha256": "a7ab87cd4bbadb79586d1605a29bcda3ca43002d8b86a04e36b18401cf3824c5"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
     },
@@ -218,31 +218,31 @@
         "captureRecipe": "9890f96fe8a004578849626395993a940d662087521fde9f3b0a4094571a368c",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "eb26815d5a669d6e7b556ca396240718e77f107696e160665558a0b808e0066c",
+      "sourceRgbSha256": "6700154d9667ddab9e6d5b1878501b12ad0f453ba18e382c57645442c40f8342",
       "images": {
         "960": {
           "src": "/journey/s02/moved-compass.webp",
           "width": 960,
           "height": 640,
-          "bytes": 93616,
-          "sha256": "39b2043529d835319c120ac2bbb7f8be8bf72fe0c92655eb8de2d2a08e465875"
+          "bytes": 93546,
+          "sha256": "3e8809b39af9cca65e43426da22636da57585cf32f11d98e42e828aff93f644a"
         },
         "480": {
           "src": "/journey/s02/moved-compass-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 34316,
-          "sha256": "662604cf83cb38c35a92f6f8d74d88007c13192f28623df33355b63b08c6276f"
+          "bytes": 34374,
+          "sha256": "d6c8efb655c898aac8e60593c652abe5520c54bc96cc345d9b5c3c81a80fe4bf"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S02"
     },
@@ -266,31 +266,31 @@
         "captureRecipe": "8f5dc9eabc602e1936c1dc5b7bf90017c66ccc37957089053e80a63f2051bdb3",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "84239686426071abc5606e720348abc6ae8795f7fd8d7aae8ba6f8b8936addad",
+      "sourceRgbSha256": "8a781048fef91c8e0cf1e52802537d97e3370ae9fbd2cc2203e60d423f3847b5",
       "images": {
         "960": {
           "src": "/journey/s03/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 93842,
-          "sha256": "38677d17f282e56c5db1c4fa9ac8610ac21573824533017675831d433e4ca6ce"
+          "bytes": 93946,
+          "sha256": "b5c269d1809fa481be3b47e291b8cd9e2406a779904c02207201b35d10c44a59"
         },
         "480": {
           "src": "/journey/s03/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 34458,
-          "sha256": "ba2452c46818e24e874e18180c1c0edd3fa206a931cb8e436f8912983314c307"
+          "bytes": 34392,
+          "sha256": "50a5eb492860bf013a554bc70ee8356a00a55feac7d2dab2fdcb1fb7ed49934e"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
     },
@@ -314,31 +314,31 @@
         "captureRecipe": "ce179443eeeefc22e8172f85cf2094ac5a9d1d8252bd5574abfd0d303017a918",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "6868ed1e6027fd877f2f47dada6e1915c87d7ab710b0235b6547fca97019fe52",
+      "sourceRgbSha256": "64ac64822cfdf68ca7378b182a634479a19eb31343506aa6131fe25a30114b8a",
       "images": {
         "960": {
           "src": "/journey/s03/near-clue.webp",
           "width": 960,
           "height": 640,
-          "bytes": 92926,
-          "sha256": "d5f18f1314afed8452975171fce3a2648dd65745864810f52b4415d46c7aa3b4"
+          "bytes": 92898,
+          "sha256": "7daa0300d4d2599db5b60ac94d0a778389e6902562d49adce140e0e54c7b5672"
         },
         "480": {
           "src": "/journey/s03/near-clue-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 34302,
-          "sha256": "a086b0aa1be15abdb1e7e97a43be6cb3046bddb8bbb5eda00f942d7798df33a8"
+          "bytes": 34356,
+          "sha256": "e38029ffba0346bc1aba40b2bd5e63c5a3e9c4b60f3313af3a4dd0481311774e"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S03"
     },
@@ -363,31 +363,31 @@
         "captureRecipe": "9ca62375589f777ea33321bc7ff13a2669a3760842f27e69b733cf08e7ebaa26",
         "captureImplementation": "b739eb9f6b9b5937b65f611c8ee12b13f9a72b3d1c0015357c12a7d3ed1f1ade"
       },
-      "sourceRgbSha256": "c9f5188a5eee059628e6ad9a13f217ebd1302cbbbc578f9fee6e691e12078dd7",
+      "sourceRgbSha256": "e219db32b2c14e9b7492ab26d52d3cf65ade3898471c728693b26642123eca1f",
       "images": {
         "960": {
           "src": "/journey/s04/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 97146,
-          "sha256": "fecc95cf49417441de7ea16e1d5d584fc9e4e23c205d002667acc34ad8f450f6"
+          "bytes": 97086,
+          "sha256": "3f1129e2217ba7046efc078c868e895606bc1ce6f3e6cc4a0168f8612e2d43aa"
         },
         "480": {
           "src": "/journey/s04/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 35700,
-          "sha256": "2668acd76edf40ee640294f4cbe2809035bde889084c1bade20408f6eaffe23f"
+          "bytes": 35678,
+          "sha256": "0cd467fc6bca529ebc3aa79c9bc22caef60970b5236eef5902ddae867b8be19a"
         }
       },
       "toolchain": {
-        "python": "3.13.16",
+        "python": "3.13.7",
         "pygame": "2.6.1",
         "sdl": "2.28.4",
         "sdlTtf": "2.20.1",
-        "pillow": "12.3.0",
-        "libwebp": "1.6.0",
-        "platform": "linux-x86_64"
+        "pillow": "11.2.1",
+        "libwebp": "1.5.0",
+        "platform": "darwin-arm64"
       },
       "captureCommand": "python scripts/capture_journey_snapshots.py --session S04"
     }
