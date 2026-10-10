@@ -253,6 +253,30 @@ Do not open the course from File Explorer, from a `C:\` folder, or through
 
 The Trail opens as its own window. Click it once before using the keys.
 
+### Paste the whole Trail command
+
+A Trail command on your task card is written over several lines, but it is
+**one** command. Paste the whole block at once, and keep the `\` at the end of
+each line except the last: it means “this command continues on the next line.”
+
+If you see any of these, the command was split into separate commands:
+
+```text
+Is a directory
+--player: command not found
+--mission-id: command not found
+```
+
+To fix it:
+
+1. Press **Control-C** if the terminal is still busy.
+2. Run `cd ~/explore-studio-course`.
+3. Check that the prompt starts with `(.venv)`. If not, run
+   `source .venv/bin/activate`.
+4. Paste the complete task-card command as one block.
+5. Keep every trailing `\`.
+6. Or ask your teacher for the one-line version.
+
 ## 7. Make your world folder (Session 2)
 
 Your Session 2 task card tells you when. From the Course Kit:

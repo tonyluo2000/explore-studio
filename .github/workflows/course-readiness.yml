@@ -19,6 +19,7 @@ on:
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_computer_readiness.py"
       - "tests/test_onboarding_docs.py"
+      - "tests/test_student_command_copy_paste.py"
       - "tests/test_course_kit_update_scenario.py"
       - "tests/test_mission_presentation_contract.py"
       - "docs/operations/classroom-preflight.md"
@@ -49,6 +50,7 @@ on:
       - "tests/test_classroom_student_workspace.py"
       - "tests/test_computer_readiness.py"
       - "tests/test_onboarding_docs.py"
+      - "tests/test_student_command_copy_paste.py"
       - "tests/test_course_kit_update_scenario.py"
       - "tests/test_mission_presentation_contract.py"
       - "docs/operations/classroom-preflight.md"
@@ -100,6 +102,7 @@ jobs:
           tests/test_classroom_student_workspace.py
           tests/test_computer_readiness.py
           tests/test_onboarding_docs.py
+          tests/test_student_command_copy_paste.py
           tests/test_course_kit_update_scenario.py
           tests/test_mission_presentation_contract.py
           tests/test_student_zip.py

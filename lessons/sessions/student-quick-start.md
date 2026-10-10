@@ -129,6 +129,29 @@ confirms they match this Course Kit and opens and closes one small test window.
 
 ## Launch, control, stop, and relaunch the Trail
 
+Trail commands are long, so task cards split them over several lines:
+
+```console
+explore-package trail \
+  package-one \
+  package-two \
+  --player "example:player"
+```
+
+- Copy the **entire** command block at once, then press Enter one time.
+- A backslash `\` at the end of a line means “this command continues on the
+  next line.”
+- Do not press Enter after each line, and do not type the lines one by one.
+- If chat or email removed the backslashes, make the command one line: replace
+  each backslash and line break with a single space.
+- Not sure? Ask the teacher for the one-line version.
+
+The same example as one line:
+
+```console
+explore-package trail package-one package-two --player "example:player"
+```
+
 1. Copy the complete Trail command from your session task card.
 2. Run it from the course folder root.
 3. Click once inside the Trail window so it has keyboard focus.
@@ -163,6 +186,7 @@ Tell the teacher what route helps you participate:
 |---|---|---|
 | `No such file` | Course folder location and spelling | Use `pwd`/`ls`; return to the course folder root. |
 | `python` or `explore-package` not found | Virtual environment | Activate `.venv`; ask the teacher if it remains unavailable. |
+| `--player: command not found`, or a package path “is a directory” | The Trail command ran one line at a time | Copy the whole block again, or ask the teacher for the one-line version. |
 | YAML validation points to a line | Indentation, spelling, quotes, and value type | Change one reported issue, save, and validate again. Never invent a field. |
 | Trail window opens but keys do nothing | Window focus | Click the Trail window, then try WASD/arrows and E. |
 | Object or NPC seems missing | Validation and coordinates | Confirm validation passed and compare x/y with the task card's safe range. |
