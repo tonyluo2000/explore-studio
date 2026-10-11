@@ -52,6 +52,7 @@ from explore.curriculum import (
     MISSION_03_ID,
     MISSION_04_ID,
     MISSION_05_ID,
+    MISSION_06_ID,
 )
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
@@ -69,8 +70,7 @@ NO_E = InteractionInput()
 PRESS_E = InteractionInput(interact_pressed=True)
 ANYWHERE = Bounds(min_x=-10_000, min_y=-10_000, max_x=10_000, max_y=10_000)
 LATER_MISSIONS = (
-    MISSION_05_ID,
-    "build-an-object-collection",
+    MISSION_06_ID,
     "toggle-an-object-state",
     "respond-to-object-state",
     "complete-actions-in-order",
@@ -238,10 +238,10 @@ def _effects(sink: RecordingSink) -> list[AudioCue]:
 # ---------------------------------------------------------------------------
 
 
-def test_audio_is_explicitly_allow_listed_for_m02_m03_m04_only() -> None:
+def test_audio_is_explicitly_allow_listed_for_m02_through_m05_only() -> None:
     assert {
         mission_id for mission_id, policy in MISSION_PRESENTATIONS.items() if policy.meadow_audio
-    } == {MISSION_02_ID, MISSION_03_ID, MISSION_04_ID}
+    } == {MISSION_02_ID, MISSION_03_ID, MISSION_04_ID, MISSION_05_ID}
     # M01 wears the Moon Meadow but stays silent.
     m01 = mission_presentation(MISSION_01_ID)
     assert m01 is not None and not m01.meadow_audio
@@ -250,7 +250,7 @@ def test_audio_is_explicitly_allow_listed_for_m02_m03_m04_only() -> None:
 
 
 @pytest.mark.parametrize("mission_id", (MISSION_01_ID, None, *LATER_MISSIONS))
-def test_m01_and_m05_plus_stay_silent_even_with_a_manager(mission_id: str | None) -> None:
+def test_m01_and_m06_plus_stay_silent_even_with_a_manager(mission_id: str | None) -> None:
     backend = FakeBackend()
     manager = _manager(backend)
     renderer = ArtRenderer()

@@ -24,7 +24,10 @@ on:
       - "tests/test_mission_presentation_contract.py"
       - "docs/operations/classroom-preflight.md"
       - "course4teen-website/app/students/prepare/**"
+      - "course4teen-website/app/students/slides/s05/**"
+      - "course4teen-website/lib/calendar.ts"
       - "course4teen-website/lib/courseKit.ts"
+      - "course4teen-website/lib/learn.ts"
       - "tests/test_lesson_materials*.py"
       - "examples/explorer-packages/**"
       - "scripts/check_computer_readiness.py"
@@ -55,7 +58,10 @@ on:
       - "tests/test_mission_presentation_contract.py"
       - "docs/operations/classroom-preflight.md"
       - "course4teen-website/app/students/prepare/**"
+      - "course4teen-website/app/students/slides/s05/**"
+      - "course4teen-website/lib/calendar.ts"
       - "course4teen-website/lib/courseKit.ts"
+      - "course4teen-website/lib/learn.ts"
       - "tests/test_lesson_materials*.py"
       - "examples/explorer-packages/**"
       - "scripts/check_computer_readiness.py"
@@ -89,6 +95,7 @@ jobs:
           tests/test_lesson_materials.py
           tests/test_lesson_materials_s03_website.py
           tests/test_lesson_materials_s04_website.py
+          tests/test_lesson_materials_s05_website.py
           tests/test_lesson_materials_s06_s10.py
           tests/test_lesson_materials_s11_s15.py
           tests/test_lesson_materials_s16_s20.py

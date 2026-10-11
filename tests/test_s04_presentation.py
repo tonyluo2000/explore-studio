@@ -3,9 +3,9 @@
 These tests pin M04's explicit presentation policy, the Guide's trusted-art
 routing and safe fallbacks, that the Guide (not the Lantern) carries the
 mission cue, the dialogue-focus bubble (canonical text preserved, no silent
-clipping, always on screen), that no M02/M03 story beat leaks in, that M05+
-are untouched, and that a scripted M04 run is identical with and without
-presentation.
+clipping, always on screen), that no M02/M03 story beat leaks in, that M06+
+are untouched (M05 joins deliberately: ``tests/test_s05_presentation.py``),
+and that a scripted M04 run is identical with and without presentation.
 """
 
 from __future__ import annotations
@@ -155,7 +155,7 @@ def _bubble_texts(renderer: ArtRenderer) -> list[tuple[object, ...]]:
 
 
 # ---------------------------------------------------------------------------
-# Policy: M04 joins explicitly; M05+ stay plain
+# Policy: M04 joins explicitly; M06+ stay plain
 # ---------------------------------------------------------------------------
 
 
@@ -174,11 +174,11 @@ def test_m04_policy_is_explicit_and_withholds_m02_m03_beats() -> None:
     "mission_id",
     [
         getattr(curriculum, f"MISSION_{number:02d}_ID")
-        for number in range(5, 17)
+        for number in range(6, 17)
         if hasattr(curriculum, f"MISSION_{number:02d}_ID")
     ],
 )
-def test_m05_and_later_keep_the_plain_trail(mission_id: str) -> None:
+def test_m06_and_later_keep_the_plain_trail(mission_id: str) -> None:
     assert mission_id not in MISSION_PRESENTATIONS
     assert not TrailPresentation(mission_id).active
     if mission_id == curriculum.MISSION_14_ID:
@@ -188,7 +188,7 @@ def test_m05_and_later_keep_the_plain_trail(mission_id: str) -> None:
     _frame(scene, renderer)
     assert not scene._presentation.active
     sprites = [values for kind, values in renderer.operations if kind == "sprite"]
-    assert not sprites, "M05+ must not draw any trusted art"
+    assert not sprites, "M06+ must not draw any trusted art"
     guide = _guide(scene).character
     box = (guide.x, guide.y, guide.width, guide.height, guide.color)
     assert ("rect", box) in renderer.operations, "the Guide keeps its plain rectangle"
@@ -204,7 +204,7 @@ def test_guide_is_posed_only_so_no_other_mission_draws_it() -> None:
     for mission_id in (curriculum.MISSION_01_ID, MISSION_02_ID, MISSION_03_ID):
         presentation = TrailPresentation(mission_id)
         assert presentation.pose_for("moonlit-conversation:guide") is None
-    # S05's guide is a different package; even M04 does not dress it.
+    # S05's guide is a different package; only M05 aliases it, so M04 does not dress it.
     assert TrailPresentation(MISSION_04_ID).pose_for("moonlit-conversation:guide") is None
 
 
@@ -401,7 +401,7 @@ def test_hud_echo_fits_on_screen_with_an_explicit_ellipsis_and_keeps_state() -> 
 def test_hud_echo_is_untouched_outside_dialogue_focus() -> None:
     long_line = "Pixel: " + "very " * 60
     renderer = ArtRenderer()
-    for mission_id in (MISSION_02_ID, MISSION_03_ID, curriculum.MISSION_05_ID):
+    for mission_id in (MISSION_02_ID, MISSION_03_ID, curriculum.MISSION_06_ID):
         assert TrailPresentation(mission_id).fit_feedback(renderer, long_line) == long_line
     assert TrailPresentation(MISSION_04_ID).fit_feedback(renderer, None) is None
     short = "Moonlit Guide: Hi!"

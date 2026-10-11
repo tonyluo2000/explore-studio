@@ -34,7 +34,7 @@ from engine.rendering._mission_presentation import (
     mission_presentation,
 )
 from engine.rendering._trail_presentation import _WAYPOINT, TrailPresentation
-from explore.curriculum import MISSION_01_ID, MISSION_05_ID
+from explore.curriculum import MISSION_01_ID, MISSION_06_ID
 from explore.packages import cli
 from explore.packages.classroom_trail import (
     DEFAULT_CLASSROOM_TRAIL_MISSION_ID,
@@ -434,6 +434,6 @@ def test_s01_presentation_never_changes_gameplay(monkeypatch: pytest.MonkeyPatch
     assert any(step[4] for step in presented), "Pixel's greeting was heard on the way"
 
 
-def test_m05_and_later_are_unchanged_by_the_s01_opt_in() -> None:
-    assert mission_presentation(MISSION_05_ID) is None
-    assert not TrailPresentation(MISSION_05_ID).active
+def test_m06_and_later_are_unchanged_by_the_s01_opt_in() -> None:
+    assert mission_presentation(MISSION_06_ID) is None
+    assert not TrailPresentation(MISSION_06_ID).active

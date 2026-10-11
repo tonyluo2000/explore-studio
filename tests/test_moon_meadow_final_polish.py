@@ -50,7 +50,7 @@ from engine.rendering._trail_presentation import (
     HUD_BOTTOM,
     TrailPresentation,
 )
-from explore.curriculum import MISSION_02_ID, MISSION_05_ID
+from explore.curriculum import MISSION_02_ID, MISSION_06_ID
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
     plan_local_classroom_trail,
@@ -465,7 +465,7 @@ def test_speech_bubble_names_its_speaker_without_changing_the_greeting() -> None
     assert _overlaps(tag[:4], bubble[:4])  # the tag sits on the bubble's top edge
 
 
-@pytest.mark.parametrize("mission_id", (MISSION_05_ID, None))
+@pytest.mark.parametrize("mission_id", (MISSION_06_ID, None))
 def test_other_missions_get_none_of_the_new_presentation(mission_id: str | None) -> None:
     renderer = PolishRenderer()
     scene = _scene(renderer, mission_id=mission_id)

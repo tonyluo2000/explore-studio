@@ -26,18 +26,25 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final
 
-from engine.rendering._classroom_sprites import MOON_COMPASS_QUALIFIED_ID
+from engine.rendering._classroom_sprites import (
+    MOON_COMPASS_QUALIFIED_ID,
+    MOONLIT_GUIDE_QUALIFIED_ID,
+)
 
-#: Match ``explore.curriculum.MISSION_01_ID`` .. ``MISSION_04_ID`` without
+#: Match ``explore.curriculum.MISSION_01_ID`` .. ``MISSION_05_ID`` without
 #: importing the course layer into the engine (a test keeps them equal).
 S01_MISSION_ID: Final = "visit-all-classroom-objects"
 S02_MISSION_ID: Final = "create-a-classroom-object"
 S03_MISSION_ID: Final = "make-your-object-respond"
 S04_MISSION_ID: Final = "introduce-your-character"
+S05_MISSION_ID: Final = "write-a-short-conversation"
 
 #: The canonical S03 package (``lessons/sessions/s03/student/explorer-package``)
 #: ships the same Moon Compass under its own package id.
 S03_MOON_COMPASS_QUALIFIED_ID: Final = "moon-compass-response:compass"
+#: The canonical S05 package (``lessons/sessions/s05/student/explorer-package``)
+#: ships the same Moonlit Guide under its own package id.
+S05_MOONLIT_GUIDE_QUALIFIED_ID: Final = "moonlit-conversation:guide"
 
 
 @dataclass(frozen=True)
@@ -55,11 +62,15 @@ class MissionPresentation:
     #: The floating gem that marks the Crystal Lantern until it is inspected.
     #: Only missions whose completion includes visiting the Lantern show it.
     lantern_waypoint: bool = False
-    #: A small speech cue over each interactable NPC not yet spoken to, for
-    #: missions completed by talking (M04's ``ALL_INTERACTABLE_NPCS_SPOKEN_TO``).
+    #: A small speech cue over each interactable NPC the mission still needs,
+    #: for missions completed by talking: until it is spoken to (M04's
+    #: ``ALL_INTERACTABLE_NPCS_SPOKEN_TO``), or, for an NPC with a 2-3-line
+    #: conversation, until its final line is shown (M05's
+    #: ``ALL_CONVERSATION_NPCS_COMPLETED``).
     talk_cue: bool = False
     #: Dialogue is the lesson: a larger, longer-lived speech bubble sized to the
-    #: whole greeting, placed clear of the HUD, and an on-screen HUD echo.
+    #: whole line, placed clear of the HUD, and an on-screen HUD echo. Each line
+    #: of a 2-3-line conversation gets the same bubble as it is spoken.
     dialogue_focus: bool = False
     #: The Moon Meadow ambience and its interaction, step, and completion cues
     #: (``engine.audio``). Off unless a mission opts in; never gameplay.
@@ -91,6 +102,16 @@ MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyTy
         # object without a destination marker, and M02's discovery label and
         # celebration stay out of it.
         S04_MISSION_ID: MissionPresentation(talk_cue=True, dialogue_focus=True, meadow_audio=True),
+        # S05 continues the same conversation at the same spot: S04's Guide
+        # treatment, worn by the S05 package's Guide, one bubble per line.
+        S05_MISSION_ID: MissionPresentation(
+            talk_cue=True,
+            dialogue_focus=True,
+            meadow_audio=True,
+            sprite_aliases=MappingProxyType(
+                {S05_MOONLIT_GUIDE_QUALIFIED_ID: MOONLIT_GUIDE_QUALIFIED_ID}
+            ),
+        ),
     }
 )
 

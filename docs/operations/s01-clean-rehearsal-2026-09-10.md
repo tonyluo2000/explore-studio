@@ -46,7 +46,11 @@ Moon Meadow as the silent arrival chapter (Nova, a non-counting Pixel, and the
 Crystal Lantern; a Trail without `--mission-id` stays plain); the rehearsal above used the retired
 S01 cast. On 2026-10-10 it advanced to `b875c52b76cfd4e1d72be4c77aef595475da79de` for the
 mission-aware Trail progress row and completion banner (S04 shows `Spoken to 1 / 1` and
-`Trail complete!` from the Moonlit Guide alone; S01-S03 still show `Visited`). The original S01 rehearsal inputs and result above remain an unchanged historical
+`Trail complete!` from the Moonlit Guide alone; S01-S03 still show `Visited`). Later on
+2026-10-10 it advanced to `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0` to bring S05 (M05) into
+the frozen Moon Meadow on top of that HUD: the S05 package's Moonlit Guide wears the trusted
+Guide art, each conversation line gets the existing dialogue bubble, and the existing talk cue
+and audio are reused. The original S01 rehearsal inputs and result above remain an unchanged historical
 record.
 
 ## Student flow exercised

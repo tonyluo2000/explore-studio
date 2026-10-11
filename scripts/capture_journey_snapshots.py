@@ -99,7 +99,12 @@ def _package_text(spec: PackageText) -> str:
 
     data = yaml.safe_load((journey.package_root(spec.package) / spec.file).read_text("utf-8"))
     value = data[spec.key]
-    assert isinstance(value, str), (spec, value)
+    if spec.index is not None:
+        if not isinstance(value, list) or not -len(value) <= spec.index < len(value):
+            raise CaptureError(f"{spec.file}: {spec.key} has no item {spec.index}")
+        value = value[spec.index]
+    if not isinstance(value, str):
+        raise CaptureError(f"{spec.file}: {spec.key} is not text")
     return spec.prefix + value
 
 
@@ -196,12 +201,28 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
     return problems
 
 
+def check_steps(moment: Moment) -> None:
+    """Refuse a step with an unknown action or the wrong number of operands."""
+    for step in moment.steps:
+        action, *values = step
+        expected = journey.STEP_OPERANDS.get(action)  # type: ignore[call-overload]
+        if expected is None:
+            raise CaptureError(f"{moment.name}: unknown step {step}")
+        if len(values) != expected:
+            raise CaptureError(
+                f"{moment.name}: step {step} takes {expected} operand(s), got {len(values)}"
+            )
+        if action == "tap" and values[0] not in journey.TAP_DIRECTIONS:
+            raise CaptureError(f"{moment.name}: step {step} is not a tap direction")
+
+
 def capture_moment(row: Session, moment: Moment, command: TrailCommand) -> bytes:
     """Drive the real Trail to *moment* and return the checked 960x640 RGB frame."""
     import pygame
 
     from scripts.trail_driver import Trail
 
+    check_steps(moment)
     with tempfile.TemporaryDirectory() as temporary:
         roots = []
         for argument in command.packages:
@@ -219,7 +240,7 @@ def capture_moment(row: Session, moment: Moment, command: TrailCommand) -> bytes
                     trail.hold(float(values[0]))  # type: ignore[arg-type]
                 elif action == "walk_to":
                     trail.walk_to(int(values[0]), int(values[1]))  # type: ignore[arg-type]
-                elif action == "tap" and values[0] in ("left", "right", "up", "down"):
+                elif action == "tap":
                     trail.step(**{str(values[0]): True})
                 elif action == "press":
                     trail.press()

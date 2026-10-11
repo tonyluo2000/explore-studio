@@ -98,16 +98,18 @@ def _text_at(renderer: ArtRenderer, position: tuple[int, int]) -> list[object]:
 # ---------------------------------------------------------------------------
 
 
-def test_presentation_policy_lists_exactly_m01_through_m04() -> None:
+def test_presentation_policy_lists_exactly_m01_through_m05() -> None:
     assert S02_MISSION_ID == MISSION_02_ID
     assert S03_MISSION_ID == MISSION_03_ID
-    # M04 and M01 joined deliberately (tests/test_s04_presentation.py and
-    # tests/test_s01_presentation.py pin their policies).
+    # M04, M01, and M05 joined deliberately (tests/test_s04_presentation.py,
+    # tests/test_s01_presentation.py, and tests/test_s05_presentation.py pin
+    # their policies).
     assert set(MISSION_PRESENTATIONS) == {
         curriculum.MISSION_01_ID,
         MISSION_02_ID,
         MISSION_03_ID,
         MISSION_04_ID,
+        curriculum.MISSION_05_ID,
     }
     m02, m03 = mission_presentation(MISSION_02_ID), mission_presentation(MISSION_03_ID)
     assert m02 is not None and m02.discovery_label and m02.celebration
@@ -125,7 +127,7 @@ def test_every_other_course_mission_keeps_the_plain_trail() -> None:
         if name.startswith("MISSION_") and name.endswith("_ID")
     ]
     others = [mission_id for mission_id in others if mission_id not in MISSION_PRESENTATIONS]
-    assert len(others) == 12
+    assert len(others) == 11
     for mission_id in others:
         assert mission_presentation(mission_id) is None
         presentation = TrailPresentation(mission_id)

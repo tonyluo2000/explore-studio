@@ -9,7 +9,7 @@ Submodules:
                    (sound, volume, cooldown) that voices them.
     _manager     — AudioManager: safe mixer start, decode-once sounds, fixed
                    channels, cooldowns, mute, and silent fallback.
-    _trail_audio — TrailAudio: the M02-M04 Moon Meadow observer that turns
+    _trail_audio — TrailAudio: the M02-M05 Moon Meadow observer that turns
                    real scene transitions into cues.
 
 Ownership: Engine team.

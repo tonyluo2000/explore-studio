@@ -458,6 +458,7 @@ def test_website_learn_route_is_data_driven_for_written_sessions_only():
         "S02",
         "S03",
         "S04",
+        "S05",
     ]
     for heading in (
         "Python concept",

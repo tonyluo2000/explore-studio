@@ -29,7 +29,7 @@
       "frontier": true,
       "label": { "x": 480, "y": 96 },
       "shape": "M0 160C80 122 150 140 220 126C300 110 360 136 440 118C520 100 600 128 680 110C760 94 840 120 960 104V210H0Z",
-      "reveal": [{ "from": "S04", "state": "fogged" }]
+      "reveal": [{ "from": "S05", "state": "fogged" }]
     }
   ],
   "landmarks": [
@@ -75,7 +75,8 @@
       "y": 280,
       "reveal": [
         { "from": "S03", "state": "hinted" },
-        { "from": "S04", "state": "revealed" }
+        { "from": "S04", "state": "revealed" },
+        { "from": "S05", "state": "revealed", "detail": "briefing" }
       ]
     }
   ],
@@ -147,6 +148,15 @@
       "story": "The Moonlit Guide says the trail beyond the ridge has gone dark.",
       "snapshot": "S04_DIALOGUE",
       "snapshotAlt": "The Trail in S04: Nova meets the Moonlit Guide below the ridge, and the guide's greeting fills a speech bubble."
+    },
+    {
+      "session": "S05",
+      "kind": "deepen",
+      "landmark": "moonlit-guide",
+      "headline": "landmark",
+      "story": "The Moonlit Guide briefs Nova line by line: the trail beyond the ridge has gone dark.",
+      "snapshot": "S05_CONVERSATION",
+      "snapshotAlt": "The Trail in S05: Nova stands beside the Moonlit Guide in the same spot below the ridge, and the guide's next line fills a speech bubble."
     }
   ]
 }

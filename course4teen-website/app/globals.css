@@ -421,6 +421,8 @@ kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3
 .jm-guide-moon { fill: #f6e7a0; }
 .jm-guide-silhouette { fill: #1a2148; stroke: #4a5a9a; stroke-width: 2; }
 .jm-guide-glint { fill: #ffe7a6; opacity: .8; }
+.jm-briefing-bubble { fill: #faf8ec; stroke: #141a3a; stroke-width: 2.5; stroke-linejoin: round; }
+.jm-briefing-line { stroke: #3550c8; stroke-width: 3; stroke-linecap: round; }
 .jm-label { fill: #f4ecd8; font: italic 24px Georgia, serif; paint-order: stroke; stroke: #0d1428; stroke-width: 6px; stroke-linejoin: round; }
 .jm-state-current .jm-label { fill: #ffd977; }
 .jm-badge { display: none; }
