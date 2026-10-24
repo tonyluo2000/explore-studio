@@ -95,6 +95,9 @@ class MissionPresentation:
     #: Give long object near/interacted responses a wrapped lower-screen card.
     #: The response still comes directly from the package-backed scene state.
     object_feedback_focus: bool = False
+    #: Optional presentation-only player spawn. This is package-scoped when a
+    #: reused mission needs a coherent visual route without moving authored objects.
+    player_start: tuple[int, int] | None = None
     #: Package qualified id -> the trusted-art identity it is drawn and posed as.
     sprite_aliases: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -145,6 +148,7 @@ PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation
                 celebration=True,
                 meadow_audio=True,
                 object_feedback_focus=True,
+                player_start=(80, 180),
                 sprite_aliases=MappingProxyType(
                     {
                         S06_SUN_SEED_QUALIFIED_ID: SUN_SEED_PRESENTATION_ID,

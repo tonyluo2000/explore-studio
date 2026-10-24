@@ -510,6 +510,7 @@ class TrailPresentation:
         self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
         self._failed_layers: set[str] = set()
+        self._object_feedback_drawn = False
 
     # ------------------------------------------------------------------
     # Observation (called after every scene update)
@@ -1111,6 +1112,7 @@ class TrailPresentation:
 
     def draw_overlay(self, renderer: object, view: TrailView) -> tuple[TextOp, ...]:
         """Draw overlay shapes; return overlay text to draw after the HUD."""
+        self._object_feedback_drawn = False
         if not self.active:
             return ()
         self._guard("foreground", draw_scenery_plate, renderer, MEADOW_FOREGROUND)
@@ -1122,13 +1124,13 @@ class TrailPresentation:
         if not supports(renderer, "draw_rounded_rect", "measure_text", "draw_text"):
             return ()
         self._guard("hud-panel", self._draw_hud_panel, renderer, view)
-        self._guard("feedback-panel", self._draw_feedback_panel, renderer, view)
         texts: list[TextOp] = []
         focused_feedback = self._guard(
             "object-feedback", self._draw_object_feedback, renderer, view
         )
         if focused_feedback:
             texts.extend(focused_feedback)  # type: ignore[arg-type]
+        self._guard("feedback-panel", self._draw_feedback_panel, renderer, view)
         for layer, draw in (
             ("prompt", self._draw_prompt),
             ("bubble", self._draw_bubble),
@@ -1350,7 +1352,7 @@ class TrailPresentation:
         ellipsis, since the speech bubble already shows every word. The
         scene's ``feedback_message`` state itself is never changed.
         """
-        if self.active and self.policy.object_feedback_focus:
+        if self.active and self.policy.object_feedback_focus and self._object_feedback_drawn:
             return None
         if (
             not self.active
@@ -1426,6 +1428,7 @@ class TrailPresentation:
             52,
             True,
         )
+        self._object_feedback_drawn = True
         return tuple(
             (
                 line,

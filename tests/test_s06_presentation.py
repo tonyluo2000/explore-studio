@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -22,6 +23,7 @@ from engine.rendering._mission_presentation import (
     S06_WIND_FLOWER_QUALIFIED_ID,
     mission_presentation,
 )
+from engine.rendering._trail_presentation import TrailPresentation
 from explore._colors import resolve_color
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
@@ -68,6 +70,7 @@ def test_s06_policy_is_exactly_package_scoped() -> None:
     assert policy.celebration and policy.meadow_audio
     assert not policy.lantern_waypoint
     assert not policy.talk_cue and not policy.dialogue_focus
+    assert policy.player_start == (80, 180)
     assert policy.sprite_aliases == {
         S06_SUN_SEED_QUALIFIED_ID: SUN_SEED_PRESENTATION_ID,
         S06_RAIN_BELL_QUALIFIED_ID: RAIN_BELL_PRESENTATION_ID,
@@ -98,6 +101,7 @@ def test_s06_scene_preserves_authored_objects_and_uses_distinct_primitives() -> 
     scene.render()
 
     assert scene._presentation.active
+    assert (scene.player.x, scene.player.y) == (80, 180)
     assert scene.npcs == ()
     assert len(scene.objects) == 3
     records = _records()
@@ -140,6 +144,8 @@ def test_s06_truthful_progress_and_package_authored_feedback() -> None:
         assert trail.scene.visited_qualified_ids == frozenset()
         assert not trail.scene.mission_is_complete
         trail.step()
+        assert trail.scene.target_qualified_id == S06_SUN_SEED_QUALIFIED_ID
+        assert "Inspect Sun Seed" in trail.renderer.texts
         assert "Visited 0 / 3" in trail.renderer.texts
         assert "Mission state: Incomplete" in trail.renderer.texts
 
@@ -168,6 +174,31 @@ def test_s06_truthful_progress_and_package_authored_feedback() -> None:
         )
     finally:
         trail.close()
+
+
+def test_s06_feedback_falls_back_when_focused_card_cannot_draw() -> None:
+    message = "Package-authored feedback stays visible."
+    presentation = TrailPresentation(S06_MISSION_ID, package_ids=(S06_PACKAGE_ID,))
+
+    class ReducedRenderer:
+        pass
+
+    reduced = ReducedRenderer()
+    assert presentation.fit_feedback(reduced, message) == message
+
+    class FailingCardRenderer:
+        @staticmethod
+        def measure_text(text: str, size: int) -> tuple[int, int]:
+            return len(text) * max(1, size // 2), size
+
+        @staticmethod
+        def draw_translucent_panel(*_args: object, **_kwargs: object) -> None:
+            raise RuntimeError("renderer cannot draw the focused card")
+
+    failing = FailingCardRenderer()
+    view = SimpleNamespace(feedback_message=message)
+    presentation._guard("object-feedback", presentation._draw_object_feedback, failing, view)
+    assert presentation.fit_feedback(failing, message) == message
 
 
 def test_s06_contains_no_lantern_or_s07_state_mechanic() -> None:
