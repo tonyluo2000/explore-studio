@@ -6,7 +6,8 @@ import type { JourneyState, LandmarkView, PathView, RegionView } from "../../lib
  * Moon Meadow plate. Geometry comes from journey.json (plate positions, shifted
  * down to leave room for the ridge); this component only paints it. Icons are
  * simple SVG drawings in the plate's palette (lander, stone circle and Moon
- * Compass, Lantern Shrine, Moonlit Guide), not copies of the runtime art.
+ * Compass, Lantern Shrine, Moonlit Guide, garden markers), not copies of the
+ * runtime art.
  *
  * The SVG is decorative to assistive technology beyond its title and summary:
  * the map key and the session list below it carry the same information as
@@ -43,6 +44,7 @@ const ICON_LAYOUT: Record<string, { gem: number; label: number }> = {
   compass: { gem: 78, label: 84 },
   lantern: { gem: 150, label: 72 },
   guide: { gem: 82, label: 62 },
+  markers: { gem: 74, label: 68 },
 };
 
 function layout(icon: string) {
@@ -256,6 +258,29 @@ function Guide({ landmark, soft }: { landmark: LandmarkView; soft: string }) {
   );
 }
 
+function GardenMarkers({ x, y, soft }: { x: number; y: number; soft: string }) {
+  return (
+    <g className="jm-markers">
+      <ellipse cx={x} cy={y + 4} rx={78} ry={30} className="jm-pool-warm" filter={soft} />
+      <path d={`M${x - 52} ${y + 3}Q${x - 20} ${y - 18} ${x} ${y}T${x + 52} ${y - 3}`} className="jm-marker-trail" />
+      <g className="jm-sun-seed">
+        <circle cx={x - 48} cy={y - 2} r={11} />
+        <path d={`M${x - 48} ${y - 18}v-8M${x - 64} ${y - 2}h-8M${x - 32} ${y - 2}h8`} />
+      </g>
+      <g className="jm-rain-bell">
+        <path d={`M${x - 11} ${y + 7}Q${x} ${y - 20} ${x + 11} ${y + 7}Z`} />
+        <circle cx={x} cy={y + 10} r={3} />
+      </g>
+      <g className="jm-wind-flower">
+        {[0, 90, 180, 270].map((angle) => (
+          <ellipse key={angle} cx={x + 48} cy={y - 4} rx={5} ry={12} transform={`rotate(${angle} ${x + 48} ${y - 4})`} />
+        ))}
+        <circle cx={x + 48} cy={y - 4} r={4} />
+      </g>
+    </g>
+  );
+}
+
 function Landmark({ landmark, number, soft }: { landmark: LandmarkView; number: number; soft: string }) {
   const { x, y } = landmark;
   const place = layout(landmark.icon);
@@ -263,6 +288,7 @@ function Landmark({ landmark, number, soft }: { landmark: LandmarkView; number: 
     landmark.icon === "lander" ? <Lander x={x} y={y} />
     : landmark.icon === "compass" ? <StoneCircle landmark={landmark} soft={soft} />
     : landmark.icon === "lantern" ? <Shrine x={x} y={y} soft={soft} />
+    : landmark.icon === "markers" ? <GardenMarkers x={x} y={y} soft={soft} />
     : <Guide landmark={landmark} soft={soft} />;
   return (
     <g className={`jm-landmark jm-state-${landmark.state}`}>

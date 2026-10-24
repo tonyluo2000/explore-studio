@@ -85,7 +85,7 @@ S03_COMPASS: Final = "moon-compass-response:compass"
 GUIDE: Final = "moonlit-guide:guide"
 #: S05's package ships the same Moonlit Guide under its own id.
 S05_GUIDE: Final = "moonlit-conversation:guide"
-#: S06's themed collection: unpublished, so only ever excluded.
+#: S06's themed collection.
 S06_OBJECTS: Final = (
     "starlight-garden:sun-seed",
     "starlight-garden:rain-bell",
@@ -99,6 +99,7 @@ S02_PACKAGE: Final = "../my-explore-world/projects/moon-compass"
 S03_PACKAGE: Final = "lessons/sessions/s03/student/explorer-package"
 S04_PACKAGE: Final = "lessons/sessions/s04/student/explorer-package"
 S05_PACKAGE: Final = "lessons/sessions/s05/student/explorer-package"
+S06_PACKAGE: Final = "lessons/sessions/s06/student/explorer-package"
 
 #: The presentation runtime: everything between the task-card package files and
 #: the drawn frame, in groups an auditor can read. ``tests/test_journey_snapshots.py``
@@ -298,7 +299,15 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # The arrival cast, each in trusted art, in Moon Meadow; never the
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
-        must_not_show=(S02_COMPASS, S03_COMPASS, GUIDE, S05_GUIDE, FERN, FOUNTAIN),
+        must_not_show=(
+            S02_COMPASS,
+            S03_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+            FERN,
+            FOUNTAIN,
+        ),
         moments=(
             # The learning world, not completion: Nova facing the camera beside
             # Pixel, the Lantern shrine and the empty stone circle in view, and
@@ -318,7 +327,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
-        must_not_show=(S03_COMPASS, GUIDE, S05_GUIDE),
+        must_not_show=(S03_COMPASS, GUIDE, S05_GUIDE, *S06_OBJECTS),
         moments=(
             Moment(
                 name="S02_COMPASS_PROMPT",
@@ -346,7 +355,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
-        must_not_show=(PIXEL, LANTERN, S02_COMPASS, GUIDE, S05_GUIDE),
+        must_not_show=(PIXEL, LANTERN, S02_COMPASS, GUIDE, S05_GUIDE, *S06_OBJECTS),
         moments=(
             Moment(
                 name="S03_REVEAL",
@@ -381,7 +390,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
-        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, S05_GUIDE),
+        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, S05_GUIDE, *S06_OBJECTS),
         moments=(
             Moment(
                 name="S04_DIALOGUE",
@@ -446,6 +455,44 @@ SESSIONS: Final[tuple[Session, ...]] = (
                             prefix="Moonlit Guide: ",
                             index=1,
                         ),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Session(
+        session="S06",
+        mission_id="build-an-object-collection",
+        player=NOVA,
+        presentation=STANDARD,
+        # The standard Trail: Nova and exactly the three package objects, with
+        # no Moon Meadow cast or presentation dependency.
+        must_show=(NOVA, *S06_OBJECTS),
+        must_not_show=(PIXEL, LANTERN, S02_COMPASS, S03_COMPASS, GUIDE, S05_GUIDE),
+        moments=(
+            # A useful learning/story moment: Sun Seed and Rain Bell have been
+            # visited, Wind Flower is targeted, and M06 is still incomplete.
+            Moment(
+                name="S06_BREADCRUMB_TRAIL",
+                kind=HERO,
+                slug="hero",
+                steps=(
+                    ("hold", 0.3),
+                    ("walk_to", 180, 180),
+                    ("hold", 0.3),
+                    ("press",),
+                    ("walk_to", 380, 300),
+                    ("hold", 0.3),
+                    ("press",),
+                    ("walk_to", 570, 420),
+                    ("hold", 2.5),
+                ),
+                expect=Expect(
+                    target=S06_OBJECTS[2],
+                    visited=S06_OBJECTS[:2],
+                    complete=False,
+                    texts=(
+                        PackageText(S06_PACKAGE, "objects/wind-flower.yaml", "when_near"),
                     ),
                 ),
             ),

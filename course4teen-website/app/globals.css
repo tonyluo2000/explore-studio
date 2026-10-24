@@ -215,11 +215,12 @@ footer a:hover { text-decoration: underline; }
 .slide-deck { display: grid; gap: 1.5px; background: var(--line); border: 1px solid var(--line); padding-block: 0; margin-bottom: 5rem; }
 .slide-card { background: var(--paper); padding: 2.2rem; min-width: 0; }
 .slide-card h2 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); margin-bottom: 1.1rem; }
-.slide-body { color: var(--ink-soft); font-size: .98rem; line-height: 1.75; max-width: 680px; }
+.slide-body { color: var(--ink-soft); font-size: .98rem; line-height: 1.75; max-width: 680px; min-width: 0; }
 .slide-body p { margin: 0 0 .9rem; }
 .slide-body p:last-child { margin-bottom: 0; }
 .slide-body code { background: var(--cream); padding: .1em .35em; border-radius: .3em; font-size: .92em; }
-.slide-steps { margin: 0; padding-left: 1.3rem; display: grid; gap: .7rem; list-style: decimal; }
+.slide-steps { margin: 0; padding-left: 1.3rem; display: grid; gap: .7rem; list-style: decimal; min-width: 0; }
+.slide-steps li { min-width: 0; overflow-wrap: anywhere; }
 .slide-steps li::marker { color: var(--coral-accessible); font-weight: 700; }
 .slide-code { background: var(--ink); color: #eaf2ee; padding: 1rem 1.2rem; border-radius: .6rem; overflow-x: auto; font-size: .88rem; margin: 0 0 .9rem; }
 .slide-code code { background: none; padding: 0; }
@@ -414,6 +415,13 @@ kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3
 .jm-shrine-orb { fill: #ffe7a6; }
 .jm-lantern { fill: #f2c14e; stroke: #5a3d12; stroke-width: 2.5; }
 .jm-lantern-cap { fill: #5a3d12; }
+.jm-marker-trail { fill: none; stroke: #d8c67a; stroke-width: 4; stroke-dasharray: 3 8; stroke-linecap: round; }
+.jm-sun-seed circle { fill: #f2c14e; stroke: #fff0a8; stroke-width: 2; }
+.jm-sun-seed path { fill: none; stroke: #ffd977; stroke-width: 2; stroke-linecap: round; }
+.jm-rain-bell path { fill: #5ca6d8; stroke: #bfe7ff; stroke-width: 2; }
+.jm-rain-bell circle { fill: #dff5ff; }
+.jm-wind-flower ellipse { fill: #e8a3d7; stroke: #ffd8f1; stroke-width: 1.5; }
+.jm-wind-flower circle { fill: #f2c14e; }
 .jm-guide-robe { fill: #3550c8; stroke: #141a3a; stroke-width: 2.5; stroke-linejoin: round; }
 .jm-guide-face { fill: #f2d2b6; }
 .jm-guide-beard { fill: #f4f1ff; }

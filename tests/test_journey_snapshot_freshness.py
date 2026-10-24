@@ -261,13 +261,14 @@ def test_a_frame_changing_edit_makes_the_check_fail(
     [
         ("lessons/sessions/s04/student/explorer-package/character/guide.yaml", {"S04"}),
         ("lessons/sessions/s05/student/explorer-package/character/guide.yaml", {"S05"}),
+        ("lessons/sessions/s06/student/explorer-package/objects/wind-flower.yaml", {"S06"}),
         ("examples/explorer-packages/pixel-companion/character/pixel.yaml", {"S01", "S02"}),
         (
             "examples/explorer-packages/crystal-lantern/objects/lantern.yaml",
             {"S01", "S02", "S04", "S05"},
         ),
     ],
-    ids=["s04-guide", "s05-guide", "pixel", "lantern"],
+    ids=["s04-guide", "s05-guide", "s06-wind-flower", "pixel", "lantern"],
 )
 def test_a_package_edit_stales_only_the_sessions_that_use_it(
     mirror: Path, path: str, sessions: set[str]
@@ -370,12 +371,12 @@ def _copy_entry_as(session: str) -> Callable[[dict], None]:  # type: ignore[type
 BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # 13. A stray asset for a session the website does not publish.
     (
-        "stray-s06-asset",
+        "stray-s07-asset",
         lambda root: (
-            (root / "course4teen-website/public/journey/s06").mkdir(),
-            (root / "course4teen-website/public/journey/s06/hero.webp").write_bytes(b"RIFF"),
+            (root / "course4teen-website/public/journey/s07").mkdir(),
+            (root / "course4teen-website/public/journey/s07/hero.webp").write_bytes(b"RIFF"),
         ),
-        "public/journey/s06/hero.webp is published but not in the manifest",
+        "public/journey/s07/hero.webp is published but not in the manifest",
     ),
     (
         "stray-s01-asset",
@@ -388,8 +389,8 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # a moment the table does not have.
     (
         "unpublished-session-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S06")),
-        "S06 is not published",
+        lambda root: _edit_manifest(root, _copy_entry_as("S07")),
+        "S07 is not published",
     ),
     (
         "deferred-session-entry",
@@ -404,11 +405,11 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     (
         "unknown-moment-entry",
         lambda root: _edit_manifest(root, _copy_entry_as("S01")),
-        "manifest entry S01 S05_CONVERSATION: no such moment in the table",
+        "manifest entry S01 S06_BREADCRUMB_TRAIL: no such moment in the table",
     ),
     (
         "duplicate-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S05")),
+        lambda root: _edit_manifest(root, _copy_entry_as("S06")),
         "is listed twice",
     ),
     # 15. Unsupported, unknown, and missing manifest schemas.
@@ -567,6 +568,13 @@ CANONICAL = {
             "lessons/sessions/s05/student/explorer-package",
         ),
         "write-a-short-conversation",
+    ),
+    "S06": (
+        (
+            "examples/explorer-packages/nova-character",
+            "lessons/sessions/s06/student/explorer-package",
+        ),
+        "build-an-object-collection",
     ),
 }
 
