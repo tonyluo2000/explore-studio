@@ -6,4 +6,4 @@
 # pytest is pinned directly here (not pulled from the platform's [dev] extra)
 # so the S20-S30 session tests run on a plain ZIP install.
 pytest==8.3.3
-explore-studio @ https://github.com/tonyluo2000/explore-studio/archive/610e301310efc8fc0156660d3d2343c18f24847a.tar.gz
+explore-studio @ https://github.com/tonyluo2000/explore-studio/archive/8811a5ceff647d4a6f408bb1aa9764b5cd64c607.tar.gz

@@ -81,7 +81,7 @@ What each check verifies:
 
 - Base: `origin/main` at `fbf4b53c94bc1e47d61a60288898b0062868b41e`.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `610e301310efc8fc0156660d3d2343c18f24847a` (S06's package-scoped Moon Meadow
+  `8811a5ceff647d4a6f408bb1aa9764b5cd64c607` (S06's package-scoped Moon Meadow
   runtime; previously `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0`).
   The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
