@@ -14,7 +14,13 @@ import type { JourneyState, LandmarkView, PathView, RegionView } from "../../lib
  * text.
  */
 
-type Props = { state: JourneyState; width: number; height: number; idPrefix?: string };
+type Props = {
+  state: JourneyState;
+  width: number;
+  height: number;
+  idPrefix?: string;
+  focus?: "full" | "current-stop";
+};
 
 const STARS: readonly (readonly [number, number, number])[] = [
   [62, 34, 1.6], [148, 70, 1.1], [236, 28, 1.8], [318, 82, 1.2], [404, 40, 1.5], [452, 88, 1],
@@ -262,6 +268,10 @@ function GardenMarkers({ x, y, soft }: { x: number; y: number; soft: string }) {
   return (
     <g className="jm-markers">
       <ellipse cx={x} cy={y + 4} rx={78} ry={30} className="jm-pool-warm" filter={soft} />
+      <path
+        d={`M${x + 48} ${y - 4}C${x + 82} ${y - 34} ${x + 72} ${y - 84} ${x + 98} ${y - 126}`}
+        className="jm-marker-frontier"
+      />
       <path d={`M${x - 52} ${y + 3}Q${x - 20} ${y - 18} ${x} ${y}T${x + 52} ${y - 3}`} className="jm-marker-trail" />
       <g className="jm-sun-seed">
         <circle cx={x - 48} cy={y - 2} r={11} />
@@ -351,7 +361,7 @@ export function svgIdNamespace(instanceId: string, idPrefix?: string): string {
   return `${hint}-${instance}`;
 }
 
-export default function JourneyMap({ state, width, height, idPrefix }: Props) {
+export default function JourneyMap({ state, width, height, idPrefix, focus = "full" }: Props) {
   // Every gradient, filter, clip, title, and desc id is scoped to this
   // instance, so two maps in one document never resolve each other's paint.
   // useId runs during the server render (no client JS) and is deterministic
@@ -362,6 +372,16 @@ export default function JourneyMap({ state, width, height, idPrefix }: Props) {
   ) as Ids;
   const numbers = landmarkNumbers(state);
   const current = state.landmarks.find((landmark) => landmark.state === "current");
+  const focusWidth = 540;
+  const focusHeight = 360;
+  const viewport = focus === "current-stop" && current
+    ? {
+        x: Math.max(0, Math.min(width - focusWidth, current.x - focusWidth * .55)),
+        y: Math.max(0, Math.min(height - focusHeight, current.y - focusHeight * .58)),
+        width: focusWidth,
+        height: focusHeight,
+      }
+    : { x: 0, y: 0, width, height };
   const regionOrder = ["frontier", "moonlit-ridge", "moon-meadow"];
   const regions = [...state.regions].sort(
     (a, b) => regionOrder.indexOf(a.frontier ? "frontier" : a.id) - regionOrder.indexOf(b.frontier ? "frontier" : b.id),
@@ -372,7 +392,7 @@ export default function JourneyMap({ state, width, height, idPrefix }: Props) {
   return (
     <svg
       className="jm-svg"
-      viewBox={`0 0 ${width} ${height}`}
+      viewBox={`${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`}
       role="img"
       aria-labelledby={`${ids.title} ${ids.desc}`}
       preserveAspectRatio="xMidYMid meet"
@@ -401,7 +421,7 @@ export default function JourneyMap({ state, width, height, idPrefix }: Props) {
           <feGaussianBlur stdDeviation="6" />
         </filter>
         <clipPath id={ids.frame}>
-          <rect x={0} y={0} width={width} height={height} rx={28} />
+          <rect x={viewport.x} y={viewport.y} width={viewport.width} height={viewport.height} rx={28} />
         </clipPath>
       </defs>
       <g clipPath={`url(#${ids.frame})`}>
@@ -424,8 +444,8 @@ export default function JourneyMap({ state, width, height, idPrefix }: Props) {
         {current ? <CurrentGem landmark={current} soft={`url(#${ids.soft})`} /> : null}
         <rect width={width} height={height} fill={`url(#${ids.vignette})`} pointerEvents="none" />
       </g>
-      <rect x={6} y={6} width={width - 12} height={height - 12} rx={24} className="jm-border" />
-      <rect x={16} y={16} width={width - 32} height={height - 32} rx={18} className="jm-border-inner" />
+      <rect x={viewport.x + 6} y={viewport.y + 6} width={viewport.width - 12} height={viewport.height - 12} rx={24} className="jm-border" />
+      <rect x={viewport.x + 16} y={viewport.y + 16} width={viewport.width - 32} height={viewport.height - 32} rx={18} className="jm-border-inner" />
     </svg>
   );
 }

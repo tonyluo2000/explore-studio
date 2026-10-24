@@ -973,6 +973,29 @@ def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignor
         assert stop["hero"]["alt"].startswith(f"The Trail in {sid}:")
 
 
+def test_current_stop_separates_journey_storytelling_from_runtime_evidence() -> None:
+    page = _read(PAGE)
+    assert 'className="journey-stop-visual"' in page
+    assert 'focus="current-stop"' in page
+    assert "Journey illustration" in page
+    assert "Sun Seed" in page and "Rain Bell" in page and "Wind Flower" in page
+    assert 'className="journey-runtime-evidence"' in page
+    assert "Actual Trail / lesson evidence" in page
+    assert "STANDARD presentation" in page and "Visited 2 / 3" in page
+    assert 'src={stop.hero.small.src}' in page
+    assert 'className="journey-stop-shot"' in page
+
+
+def test_current_stop_focus_reuses_the_journey_map_language() -> None:
+    journey_map = _read(MAP)
+    assert 'focus?: "full" | "current-stop"' in journey_map
+    assert 'focus === "current-stop" && current' in journey_map
+    assert 'className="jm-marker-frontier"' in journey_map
+    css = _read(CSS)
+    assert ".jm-marker-frontier" in css
+    assert ".journey-runtime-evidence-window" in css
+
+
 @needs_node
 def test_stop_links_reach_real_slides_and_notes(journey_run) -> None:  # type: ignore[no-untyped-def]
     for stop in journey_run["states"]["S06"]["stops"]:
@@ -1125,6 +1148,11 @@ def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
     assert "/journey/s07" not in html
     assert "/students/slides/s07/" not in html
     assert "/students/learn/s07/" not in html
+    assert 'class="journey-stop-visual"' in html
+    assert 'class="journey-runtime-evidence"' in html
+    assert "Journey illustration" in text
+    assert "Actual Trail / lesson evidence" in text
+    assert "STANDARD presentation · Visited 2 / 3" in text
     calendar = _calendar()
     # The next session is its public calendar title and date only.
     assert f"S07 · {calendar['S07']['title']}" in text
@@ -1139,7 +1167,7 @@ def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
 
 @needs_site
 def test_rendered_journey_page_svg_ids_are_unique_and_resolve() -> None:
-    _check_svg_instances(_html("students/journey"), 1)
+    _check_svg_instances(_html("students/journey"), 2)
 
 
 @needs_site
