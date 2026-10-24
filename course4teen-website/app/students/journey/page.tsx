@@ -175,34 +175,12 @@ export default function JourneyPage() {
                     <h3>{stop.session.title}</h3>
                     <p className="journey-stop-place">{stop.location}</p>
                     <p className="journey-stop-story">{stop.story}</p>
-                    {isS06JourneyStop ? (
-                      <figure className="journey-runtime-evidence">
-                        <a
-                          className="journey-runtime-evidence-window"
-                          href={stop.hero.full.src}
-                          aria-label="Open the full S06 Trail evidence image"
-                        >
-                          {/* The compact crop intentionally omits the runtime's long, clipped mission line. */}
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            className="journey-runtime-evidence-shot"
-                            src={stop.hero.small.src}
-                            width={stop.hero.small.width}
-                            height={stop.hero.small.height}
-                            alt={stop.hero.alt}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </a>
-                        <figcaption>
-                          <strong>Actual Trail / lesson evidence</strong>
-                          <span>STANDARD presentation &middot; Visited 2 / 3</span>
-                        </figcaption>
-                      </figure>
-                    ) : null}
                     <p className="journey-stop-links">
                       {stop.slidesHref ? <Link href={stop.slidesHref}>Slides</Link> : null}
                       {stop.notesHref ? <Link href={stop.notesHref}>Python notes</Link> : null}
+                      {isS06JourneyStop ? (
+                        <a href={stop.hero.full.src}>View actual Trail screenshot</a>
+                      ) : null}
                     </p>
                   </div>
                 </li>
