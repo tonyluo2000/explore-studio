@@ -178,9 +178,6 @@ export default function JourneyPage() {
                     <p className="journey-stop-links">
                       {stop.slidesHref ? <Link href={stop.slidesHref}>Slides</Link> : null}
                       {stop.notesHref ? <Link href={stop.notesHref}>Python notes</Link> : null}
-                      {isS06JourneyStop ? (
-                        <a href={stop.hero.full.src}>View actual Trail screenshot</a>
-                      ) : null}
                     </p>
                   </div>
                 </li>

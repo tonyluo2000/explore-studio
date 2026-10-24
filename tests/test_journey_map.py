@@ -973,17 +973,19 @@ def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignor
         assert stop["hero"]["alt"].startswith(f"The Trail in {sid}:")
 
 
-def test_s06_uses_the_journey_visual_and_links_runtime_evidence() -> None:
+def test_s06_uses_the_journey_visual_without_exposing_runtime_evidence() -> None:
     page = _read(PAGE)
     assert 'const isS06JourneyStop = stop.session.id === "S06";' in page
-    assert page.count("{isS06JourneyStop ? (") == 2
+    assert page.count("{isS06JourneyStop ? (") == 1
     assert 'className="journey-stop-visual"' in page
     assert 'focus="current-stop"' in page
     assert "Journey illustration" in page
     assert "Sun Seed" in page and "Rain Bell" in page and "Wind Flower" in page
     assert 'className="journey-stop-shot"' in page
-    assert 'href={stop.hero.full.src}' in page
-    assert "View actual Trail screenshot" in page
+    assert '<Link href={stop.slidesHref}>Slides</Link>' in page
+    assert '<Link href={stop.notesHref}>Python notes</Link>' in page
+    assert 'href={stop.hero.full.src}' not in page
+    assert "View actual Trail screenshot" not in page
     for removed in (
         "journey-runtime-evidence",
         "Actual Trail / lesson evidence",
@@ -1002,9 +1004,11 @@ def test_non_s06_current_stop_keeps_the_default_snapshot_treatment() -> None:
     assert 'className={isCurrent ? "journey-stop journey-stop-current" : "journey-stop"}' in loop
     assert '{isCurrent ? <span className="journey-stop-flag">Current stop</span> : null}' in loop
     assert "{isS06JourneyStop ? (" in loop
-    assert loop.count("{isS06JourneyStop ? (") == 2
-    evidence_link = loop.split("View actual Trail screenshot", 1)[0]
-    assert evidence_link.rfind("{isS06JourneyStop ? (") > evidence_link.rfind('<p className="journey-stop-links">')
+    assert loop.count("{isS06JourneyStop ? (") == 1
+    links = loop.split('<p className="journey-stop-links">', 1)[1].split("</p>", 1)[0]
+    assert links.count("<Link ") == 2
+    assert "isS06JourneyStop" not in links
+    assert "stop.hero" not in links
 
 
 def test_current_stop_focus_reuses_the_journey_map_language() -> None:
@@ -1182,10 +1186,16 @@ def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
     assert "/students/learn/s07/" not in html
     assert 'class="journey-stop-visual"' in html
     assert 'class="jm-svg jm-svg-focused"' in html
-    assert 'href="/journey/s06/hero.webp"' in html
+    assert 'href="/journey/s06/hero.webp"' not in html
     assert "/journey/s06/hero-480.webp" not in html
     assert "Journey illustration" in text
-    assert "View actual Trail screenshot" in text
+    assert "View actual Trail screenshot" not in text
+    s06_card = html.split('id="stop-s06"', 1)[1].split("</li>", 1)[0]
+    assert re.findall(r'href="([^"]+)"', s06_card) == [
+        "/students/slides/s06/",
+        "/students/learn/s06/",
+    ]
+    assert _visible(s06_card).strip().endswith("Slides Python notes")
     for removed in ("Actual Trail / lesson evidence", "STANDARD presentation", "Visited 2 / 3"):
         assert removed not in text
     calendar = _calendar()
