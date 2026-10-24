@@ -29,7 +29,7 @@
       "frontier": true,
       "label": { "x": 480, "y": 96 },
       "shape": "M0 160C80 122 150 140 220 126C300 110 360 136 440 118C520 100 600 128 680 110C760 94 840 120 960 104V210H0Z",
-      "reveal": [{ "from": "S05", "state": "fogged" }]
+      "reveal": [{ "from": "S06", "state": "fogged" }]
     }
   ],
   "landmarks": [
@@ -78,6 +78,15 @@
         { "from": "S04", "state": "revealed" },
         { "from": "S05", "state": "revealed", "detail": "briefing" }
       ]
+    },
+    {
+      "id": "garden-markers",
+      "name": "Garden Markers",
+      "region": "moonlit-ridge",
+      "icon": "markers",
+      "x": 760,
+      "y": 278,
+      "reveal": [{ "from": "S06", "state": "revealed" }]
     }
   ],
   "paths": [
@@ -107,10 +116,18 @@
         { "from": "S03", "state": "hinted" },
         { "from": "S04", "state": "revealed" }
       ]
+    },
+    {
+      "id": "trail-guide-markers",
+      "kind": "trail",
+      "from": "moonlit-guide",
+      "to": "garden-markers",
+      "d": "M570 272C632 246 700 250 744 270",
+      "reveal": [{ "from": "S06", "state": "revealed" }]
     }
   ],
   "frontier": {
-    "teaser": "The trail beyond the ridge has gone dark."
+    "teaser": "A gate hidden in the sky."
   },
   "stops": [
     {
@@ -157,6 +174,15 @@
       "story": "The Moonlit Guide briefs Nova line by line: the trail beyond the ridge has gone dark.",
       "snapshot": "S05_CONVERSATION",
       "snapshotAlt": "The Trail in S05: Nova stands beside the Moonlit Guide in the same spot below the ridge, and the guide's next line fills a speech bubble."
+    },
+    {
+      "session": "S06",
+      "kind": "reveal",
+      "landmark": "garden-markers",
+      "headline": "landmark",
+      "story": "Sun Seed, Rain Bell, and Wind Flower mark a trail toward a gate hidden in the sky.",
+      "snapshot": "S06_BREADCRUMB_TRAIL",
+      "snapshotAlt": "The Trail in S06: using its standard presentation, Nova has visited Sun Seed and Rain Bell and now stands beside Wind Flower, with M06 still incomplete."
     }
   ]
 }

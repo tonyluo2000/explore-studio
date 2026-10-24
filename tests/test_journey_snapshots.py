@@ -192,6 +192,51 @@ def test_s05_hero_shows_no_completion_or_later_content() -> None:
 
 
 # ---------------------------------------------------------------------------
+# S06 is the standard Trail after two of three breadcrumb interactions
+# ---------------------------------------------------------------------------
+
+
+def test_s06_row_states_the_breadcrumb_snapshot_contract() -> None:
+    s06 = SESSIONS_BY_ID["S06"]
+    assert not s06.deferred and s06.presentation == journey.STANDARD
+    assert s06.mission_id == "build-an-object-collection"
+    assert set(s06.must_show) == {journey.NOVA, *journey.S06_OBJECTS}
+    assert {
+        journey.PIXEL,
+        journey.LANTERN,
+        journey.S02_COMPASS,
+        journey.S03_COMPASS,
+        journey.GUIDE,
+        journey.S05_GUIDE,
+    } <= set(s06.must_not_show)
+    assert [moment.kind for moment in s06.moments] == [HERO]
+    hero = s06.hero
+    assert hero.name == "S06_BREADCRUMB_TRAIL" and hero.fixture is None
+    expect = hero.expect
+    assert expect.target == journey.S06_OBJECTS[2]
+    assert expect.visited == journey.S06_OBJECTS[:2]
+    assert not expect.complete
+    assert [step for step in hero.steps if step == ("press",)] == [("press",), ("press",)]
+    texts = [spec for spec in expect.texts if isinstance(spec, journey.PackageText)]
+    assert [(spec.file, spec.key) for spec in texts] == [
+        ("objects/wind-flower.yaml", "when_near")
+    ]
+
+
+def test_s06_hero_is_plain_and_contains_no_later_session_content() -> None:
+    [entry] = [entry for entry in ENTRIES if entry["session"] == "S06"]
+    assert (entry["moment"], entry["kind"]) == ("S06_BREADCRUMB_TRAIL", HERO)
+    assert entry["presentation"] == journey.STANDARD and entry["fixture"] is None
+    assert sorted(path.name for path in (PUBLIC_JOURNEY / "s06").iterdir()) == [
+        "hero-480.webp",
+        "hero.webp",
+    ]
+    text = json.dumps(entry).lower()
+    for word in ("s07", "toggle-an-object-state", "two-state"):
+        assert word not in text, word
+
+
+# ---------------------------------------------------------------------------
 # Step recipes are checked before anything is driven
 # ---------------------------------------------------------------------------
 
@@ -257,6 +302,7 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
         journey.S03_COMPASS,
         journey.GUIDE,
         journey.S05_GUIDE,
+        *journey.S06_OBJECTS,
         journey.FERN,
         journey.FOUNTAIN,
     }
@@ -294,7 +340,7 @@ def test_harness_refuses_deferred_and_unpublished_sessions(
     with pytest.raises(CaptureError, match="S01 is deferred"):
         publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
-        publish(["S06"])
+        publish(["S07"])
 
 
 # ---------------------------------------------------------------------------
@@ -336,6 +382,7 @@ def test_published_snapshot_set_is_the_reviewed_one() -> None:
         "S03": [(HERO, "S03_REVEAL"), ("LEARNING_MOMENT", "S03_NEAR_CLUE")],
         "S04": [(HERO, "S04_DIALOGUE")],
         "S05": [(HERO, "S05_CONVERSATION")],
+        "S06": [(HERO, "S06_BREADCRUMB_TRAIL")],
     }
 
 

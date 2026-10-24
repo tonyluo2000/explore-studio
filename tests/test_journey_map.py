@@ -41,19 +41,9 @@ PROBE = Path(__file__).with_name("journey_map_probe.mjs")
 
 JOURNEY_FILES = (JOURNEY_JSON, JOURNEY_LIB, STATE_LIB, PAGE, MAP, CONTEXT)
 
-#: Story and places that belong to later sessions (curriculum S06 onward). None
+#: Story and places that belong to later sessions (curriculum S07 onward). None
 #: may appear in Journey data or Journey code until that session is published.
 LATER_STORY = (
-    "Starlight",
-    "garden",
-    "Sun Seed",
-    "Rain Bell",
-    "Wind Flower",
-    "Themed Collection",
-    "collection",
-    "breadcrumb",
-    "marker",
-    "three lights",
     "Sky gate",
     "Sky Gate",
     "Storm",
@@ -128,14 +118,14 @@ def probe(**request: object) -> dict:  # type: ignore[type-arg]
     return json.loads(result.stdout)
 
 
-THROUGH = ["S01", "S02", "S03", "S04", "S05"]
+THROUGH = ["S01", "S02", "S03", "S04", "S05", "S06"]
 
 
 @pytest.fixture(scope="module")
 def journey_run() -> dict:  # type: ignore[type-arg]
     if NODE is None:
         pytest.skip("needs Node 22.18+ to run lib/journeyState.ts")
-    return probe(through=[*THROUGH, "S06"], contexts=[*THROUGH, "S06", "S30"])
+    return probe(through=THROUGH, contexts=[*THROUGH, "S07", "S30"])
 
 
 def _by_id(items: list[dict]) -> dict[str, dict]:  # type: ignore[type-arg]
@@ -161,7 +151,7 @@ def test_journey_data_validates_against_calendar_publication_and_manifest(journe
 
 def test_exactly_one_detailed_stop_per_published_session() -> None:
     stops = [stop["session"] for stop in _journey()["stops"]]
-    assert stops == _published() == ["S01", "S02", "S03", "S04", "S05"]
+    assert stops == _published() == ["S01", "S02", "S03", "S04", "S05", "S06"]
     kinds = {stop["session"]: (stop["kind"], stop["landmark"]) for stop in _journey()["stops"]}
     assert kinds == {
         "S01": ("arrive", "landing-site"),
@@ -169,6 +159,7 @@ def test_exactly_one_detailed_stop_per_published_session() -> None:
         "S03": ("deepen", "compass-clearing"),
         "S04": ("reveal", "moonlit-guide"),
         "S05": ("deepen", "moonlit-guide"),
+        "S06": ("reveal", "garden-markers"),
     }
     for stop in _journey()["stops"]:
         assert len(stop["story"]) <= 90, stop["session"]
@@ -190,19 +181,16 @@ def test_journey_data_duplicates_no_calendar_or_url_facts() -> None:
 
 
 @needs_node
-def test_current_stop_is_s05_with_the_moonlit_guide(journey_run) -> None:  # type: ignore[no-untyped-def]
-    assert journey_run["current"] == "S05"
-    state = journey_run["states"]["S05"]
+def test_current_stop_is_s06_at_the_garden_markers(journey_run) -> None:  # type: ignore[no-untyped-def]
+    assert journey_run["current"] == "S06"
+    state = journey_run["states"]["S06"]
     current = state["currentStop"]
-    assert current["session"]["id"] == "S05"
-    assert current["kind"] == "deepen"
-    # S05 deepens the S04 spot: the same Guide on the same ridge, no new region.
-    assert current["place"] == "Moonlit Guide"
-    assert current["location"] == "Moonlit Guide · Moonlit Ridge"
-    assert (current["session"]["number"], state["totalSessions"]) == (5, 30)
-    assert state["nextSession"] == _calendar()["S06"]
-    s04 = journey_run["states"]["S04"]["currentStop"]
-    assert (s04["landmark"], s04["region"]) == (current["landmark"], current["region"])
+    assert current["session"]["id"] == "S06"
+    assert current["kind"] == "reveal"
+    assert current["place"] == "Garden Markers"
+    assert current["location"] == "Garden Markers · Moonlit Ridge"
+    assert (current["session"]["number"], state["totalSessions"]) == (6, 30)
+    assert state["nextSession"] == _calendar()["S07"]
 
 
 EXPECTED = {
@@ -238,7 +226,7 @@ EXPECTED = {
             "bearing-clearing-guide": "hinted",
         },
     },
-    # The fog frontier sits only at the current stop, so it has moved on to S05.
+    # The fog frontier sits only at the latest published stop, now S06.
     "S04": {
         "regions": {"moon-meadow": "revealed", "moonlit-ridge": "revealed"},
         "landmarks": {
@@ -258,7 +246,6 @@ EXPECTED = {
         "regions": {
             "moon-meadow": "revealed",
             "moonlit-ridge": "revealed",
-            "beyond-ridge": "fogged",
         },
         "landmarks": {
             "landing-site": "revealed",
@@ -270,6 +257,26 @@ EXPECTED = {
             "trail-landing-clearing": "revealed",
             "trail-clearing-shrine": "revealed",
             "bearing-clearing-guide": "revealed",
+        },
+    },
+    "S06": {
+        "regions": {
+            "moon-meadow": "revealed",
+            "moonlit-ridge": "revealed",
+            "beyond-ridge": "fogged",
+        },
+        "landmarks": {
+            "landing-site": "revealed",
+            "lantern-shrine": "revealed",
+            "compass-clearing": "revealed",
+            "moonlit-guide": "revealed",
+            "garden-markers": "current",
+        },
+        "paths": {
+            "trail-landing-clearing": "revealed",
+            "trail-clearing-shrine": "revealed",
+            "bearing-clearing-guide": "revealed",
+            "trail-guide-markers": "revealed",
         },
     },
 }
@@ -321,10 +328,16 @@ def test_hinted_things_carry_no_name_and_hidden_things_are_absent(journey_run) -
         item["name"] for item in s04["landmarks"]
     ], "S05 names no new landmark"
 
+    s06 = journey_run["states"]["S06"]
+    assert _by_id(s06["landmarks"])["garden-markers"]["name"] == "Garden Markers"
+    assert _by_id(s06["landmarks"])["garden-markers"]["state"] == "current"
+
 
 @needs_node
 def test_unpublished_session_has_no_journey_state(journey_run) -> None:  # type: ignore[no-untyped-def]
-    assert journey_run["states"]["S06"] == {"error": "No published Journey stop for S06"}
+    assert probe(through=["S07"])["states"]["S07"] == {
+        "error": "No published Journey stop for S07"
+    }
 
 
 def test_only_one_generic_unnamed_fog_frontier() -> None:
@@ -333,29 +346,17 @@ def test_only_one_generic_unnamed_fog_frontier() -> None:
     (frontier,) = frontiers
     assert "name" not in frontier
     assert {step["state"] for step in frontier["reveal"]} == {"fogged"}
-    assert [step["from"] for step in frontier["reveal"]] == ["S05"]
-    # Its only text is the S04 Guide's own published words, echoed by the
-    # current (S05) stop's story.
+    assert [step["from"] for step in frontier["reveal"]] == ["S06"]
+    # Its only text echoes the approved handoff in the current S06 story.
     teaser = _journey()["frontier"]["teaser"]
-    assert teaser == "The trail beyond the ridge has gone dark."
-    (s05,) = [stop for stop in _journey()["stops"] if stop["session"] == "S05"]
-    assert teaser.rstrip(".").lower() in s05["story"].lower()
-    guide = _read(
-        ROOT
-        / "lessons"
-        / "sessions"
-        / "s04"
-        / "student"
-        / "explorer-package"
-        / "character"
-        / "guide.yaml"
-    )
-    assert "the trail beyond this ridge has gone dark" in guide
+    assert teaser == "A gate hidden in the sky."
+    (s06,) = [stop for stop in _journey()["stops"] if stop["session"] == "S06"]
+    assert teaser.rstrip(".").lower() in s06["story"].lower()
 
 
 @needs_node
 def test_frontier_stays_unnamed_in_state(journey_run) -> None:  # type: ignore[no-untyped-def]
-    frontier = _by_id(journey_run["states"]["S05"]["regions"])["beyond-ridge"]
+    frontier = _by_id(journey_run["states"]["S06"]["regions"])["beyond-ridge"]
     assert frontier == {**frontier, "name": None, "frontier": True, "state": "fogged"}
 
 
@@ -378,9 +379,15 @@ def test_journey_files_carry_no_later_story(path: Path) -> None:
 
 def test_journey_icons_are_only_published_entities() -> None:
     icons = {landmark["icon"] for landmark in _journey()["landmarks"]}
-    assert icons == {"lander", "lantern", "compass", "guide"}
+    assert icons == {"lander", "lantern", "compass", "guide", "markers"}
     names = {landmark["name"] for landmark in _journey()["landmarks"]}
-    assert names == {"Landing Site", "Lantern Shrine", "Compass Clearing", "Moonlit Guide"}
+    assert names == {
+        "Landing Site",
+        "Lantern Shrine",
+        "Compass Clearing",
+        "Moonlit Guide",
+        "Garden Markers",
+    }
     regions = {region.get("name") for region in _journey()["regions"]}
     assert regions == {"Moon Meadow", "Moonlit Ridge", None}
 
@@ -410,14 +417,14 @@ def _errors(**request: object) -> list[str]:
 
 @needs_node
 def test_validation_rejects_a_published_session_without_a_stop() -> None:
-    errors = _errors(published=["S01", "S02", "S03", "S04", "S05", "S06"])
+    errors = _errors(published=["S01", "S02", "S03", "S04", "S05", "S06", "S07"])
     assert any("must be exactly the published sessions" in error for error in errors), errors
 
 
 @needs_node
 def test_validation_rejects_detail_for_an_unpublished_session() -> None:
     def future_stop(data: dict) -> None:  # type: ignore[type-arg]
-        data["stops"].append({**data["stops"][-1], "session": "S06"})
+        data["stops"].append({**data["stops"][-1], "session": "S07"})
 
     def future_landmark(data: dict) -> None:  # type: ignore[type-arg]
         data["landmarks"].append(
@@ -425,7 +432,7 @@ def test_validation_rejects_detail_for_an_unpublished_session() -> None:
                 **data["landmarks"][0],
                 "id": "future",
                 "name": "Future Place",
-                "reveal": [{"from": "S06", "state": "revealed"}],
+                "reveal": [{"from": "S07", "state": "revealed"}],
             }
         )
 
@@ -510,7 +517,7 @@ def _frontier_too_early(data: dict) -> None:  # type: ignore[type-arg]
 
 
 def _frontier_revealed(data: dict) -> None:  # type: ignore[type-arg]
-    data["regions"][_frontier_index(data)]["reveal"].append({"from": "S05", "state": "revealed"})
+    data["regions"][_frontier_index(data)]["reveal"].append({"from": "S06", "state": "revealed"})
 
 
 def _frontier_detail(data: dict) -> None:  # type: ignore[type-arg]
@@ -547,8 +554,8 @@ FRONTIER_MUTATIONS = {
     "duplicate": (_same_frontier_twice, "exactly one generic fog frontier is required; found 2"),
     "named": (_named_frontier, "must stay unnamed"),
     "empty-name": (_empty_named_frontier, "must stay unnamed"),
-    "too-early": (_frontier_too_early, "must appear once, fogged, at the current stop S05"),
-    "revealed": (_frontier_revealed, "must appear once, fogged, at the current stop S05"),
+    "too-early": (_frontier_too_early, "must appear once, fogged, at the current stop S06"),
+    "revealed": (_frontier_revealed, "must appear once, fogged, at the current stop S06"),
     "detail": (_frontier_detail, "may carry no reveal detail"),
     "hint-field": (_frontier_hint_field, "has unknown key hint"),
     "object-field": (_frontier_object_field, "journey.frontier has unknown key destination"),
@@ -571,7 +578,7 @@ def test_validation_fails_closed_on_frontier_mutations(case: str) -> None:
 def test_frontier_is_visible_only_at_the_current_published_stop(journey_run) -> None:  # type: ignore[no-untyped-def]
     for through in THROUGH:
         frontiers = [r for r in journey_run["states"][through]["regions"] if r["frontier"]]
-        if through == "S05":
+        if through == "S06":
             assert [(r["id"], r["name"], r["state"]) for r in frontiers] == [
                 ("beyond-ridge", None, "fogged")
             ]
@@ -601,7 +608,7 @@ def _typo_endpoint(data: dict) -> None:  # type: ignore[type-arg]
 def _future_endpoint(data: dict) -> None:  # type: ignore[type-arg]
     data["landmarks"].append(
         {**_landmark(data, "landing-site"), "id": "far-camp", "name": "Far Camp",
-         "reveal": [{"from": "S06", "state": "revealed"}]}
+         "reveal": [{"from": "S07", "state": "revealed"}]}
     )
     _path(data, "bearing-clearing-guide")["to"] = "far-camp"
 
@@ -839,6 +846,19 @@ def test_s05_deepens_the_guide_with_a_briefing_only_from_s05() -> None:
 
 @needs_node
 @needs_react
+def test_s06_reveals_the_three_marker_landmark() -> None:
+    rendered = probe(render=[{"through": "S05"}, {"through": "S06"}])["rendered"]
+    s05, s06 = re.findall(r"<svg\b.*?</svg>", rendered, flags=re.S)
+    assert 'class="jm-markers"' not in s05
+    assert s06.count('class="jm-markers"') == 1
+    assert s06.count('class="jm-sun-seed"') == 1
+    assert s06.count('class="jm-rain-bell"') == 1
+    assert s06.count('class="jm-wind-flower"') == 1
+    assert "Current stop: Garden Markers." in s06
+
+
+@needs_node
+@needs_react
 def test_default_instances_get_distinct_namespaces() -> None:
     rendered = _render_maps(None, None)
     skies = re.findall(r'id="(jm-[A-Za-z0-9_]+)-sky"', rendered)
@@ -937,7 +957,7 @@ def test_map_ids_come_from_a_server_safe_per_instance_source() -> None:
 @needs_node
 def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignore[no-untyped-def]
     heroes = _heroes()
-    for stop in journey_run["states"]["S05"]["stops"]:
+    for stop in journey_run["states"]["S06"]["stops"]:
         sid = stop["session"]["id"]
         entry = heroes[sid]
         assert stop["hero"]["full"] == {
@@ -955,7 +975,7 @@ def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignor
 
 @needs_node
 def test_stop_links_reach_real_slides_and_notes(journey_run) -> None:  # type: ignore[no-untyped-def]
-    for stop in journey_run["states"]["S05"]["stops"]:
+    for stop in journey_run["states"]["S06"]["stops"]:
         slug = stop["session"]["id"].lower()
         assert stop["slidesHref"] == f"/students/slides/{slug}/"
         assert (WEBSITE / "app" / "students" / "slides" / slug / "page.tsx").is_file()
@@ -966,7 +986,7 @@ def test_stop_links_reach_real_slides_and_notes(journey_run) -> None:  # type: i
 @needs_node
 def test_stop_titles_and_dates_come_from_the_calendar(journey_run) -> None:  # type: ignore[no-untyped-def]
     calendar = _calendar()
-    for stop in journey_run["states"]["S05"]["stops"]:
+    for stop in journey_run["states"]["S06"]["stops"]:
         assert stop["session"] == calendar[stop["session"]["id"]]
 
 
@@ -980,6 +1000,7 @@ CONTEXTS = {
     "S03": ("Compass Clearing · Moon Meadow", "The Moon Compass reacts and points past the trees"),
     "S04": ("Moonlit Guide · Moonlit Ridge", "says the trail beyond the ridge has gone dark"),
     "S05": ("Moonlit Guide · Moonlit Ridge", "briefs Nova line by line"),
+    "S06": ("Garden Markers · Moonlit Ridge", "Sun Seed, Rain Bell, and Wind Flower"),
 }
 
 
@@ -995,7 +1016,7 @@ def test_journey_context_for_each_published_session(journey_run, session) -> Non
 
 @needs_node
 def test_unpublished_sessions_get_no_journey_context(journey_run) -> None:  # type: ignore[no-untyped-def]
-    assert journey_run["contexts"]["S06"] is None
+    assert journey_run["contexts"]["S07"] is None
     assert journey_run["contexts"]["S30"] is None
     assert "if (!stop) return null;" in _read(CONTEXT)
 
@@ -1092,21 +1113,21 @@ def _visible(html: str) -> str:
 
 
 @needs_site
-def test_rendered_journey_page_shows_s05_and_nothing_later() -> None:
+def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
     html = _html("students/journey")
     text = _visible(html)
-    assert "S05 · Moonlit Guide" in text
-    assert re.search(r"5\s*/\s*30", text)
-    for sid in ("s01", "s02", "s03", "s04", "s05"):
+    assert "S06 · Garden Markers" in text
+    assert re.search(r"6\s*/\s*30", text)
+    for sid in ("s01", "s02", "s03", "s04", "s05", "s06"):
         assert f"/journey/{sid}/hero-480.webp" in html
         assert f'href="/students/slides/{sid}/"' in html
         assert f'href="/students/learn/{sid}/"' in html
-    assert "/journey/s06" not in html
-    assert "/students/slides/s06/" not in html
-    assert "/students/learn/s06/" not in html
+    assert "/journey/s07" not in html
+    assert "/students/slides/s07/" not in html
+    assert "/students/learn/s07/" not in html
     calendar = _calendar()
     # The next session is its public calendar title and date only.
-    assert f"S06 · {calendar['S06']['title']}" in text
+    assert f"S07 · {calendar['S07']['title']}" in text
     future_titles = {
         session["title"] for sid, session in calendar.items() if sid not in _published()
     }
@@ -1125,7 +1146,7 @@ def test_rendered_journey_page_svg_ids_are_unique_and_resolve() -> None:
 def test_rendered_pages_link_the_journey() -> None:
     assert 'href="/students/journey/"' in _html("")
     assert 'href="/students/journey/"' in _html("students/slides")
-    for sid in ("s01", "s02", "s03", "s04", "s05"):
+    for sid in ("s01", "s02", "s03", "s04", "s05", "s06"):
         for route in (f"students/slides/{sid}", f"students/learn/{sid}"):
             html = _html(route)
             assert 'class="journey-context"' in html, route

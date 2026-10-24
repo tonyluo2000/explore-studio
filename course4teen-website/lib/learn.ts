@@ -471,6 +471,126 @@ Guide: Find those three lights and lead me home.
       "In the Trail, press E once more after the final line. Which line comes next, and does M05 stay complete?",
     ],
   },
+  {
+    id: "S06",
+    sourceFile: "task-card.md",
+    concepts: [
+      {
+        term: "dictionary",
+        meaning:
+          "One object record made of key-value pairs. Each key names a property such as name, x, y, or color.",
+      },
+      {
+        term: "list of dictionaries",
+        meaning:
+          "An ordered collection of object records. In this lesson, one list holds exactly three dictionaries.",
+      },
+      {
+        term: "key lookup",
+        meaning:
+          'Square brackets retrieve one property by its key: object_record["x"] gets that record\'s x value.',
+      },
+      {
+        term: "for loop",
+        meaning:
+          "Repeats the same indented steps once for each item in a collection, in order.",
+      },
+      {
+        term: "Python to the world",
+        meaning:
+          "The Python records are a planning inventory. The validated package YAML supplies the values the Trail actually loads.",
+      },
+    ],
+    code: `objects = [
+    {"name": "Sun Seed", "x": 180, "y": 180, "color": "gold"},
+    {"name": "Rain Bell", "x": 380, "y": 300, "color": "blue"},
+    {"name": "Wind Flower", "x": 620, "y": 420, "color": "pink"},
+]
+
+for object_record in objects:
+    print(
+        object_record["name"],
+        object_record["x"],
+        object_record["y"],
+        object_record["color"],
+    )`,
+    runCommand: "python lessons/sessions/s06/student/starter.py",
+    output: `Sun Seed 180 180 gold
+Rain Bell 380 300 blue
+Wind Flower 620 420 pink`,
+    meanings: [
+      {
+        term: "objects = [",
+        meaning: "Starts one ordered list. Its three items are the three object dictionaries below it.",
+      },
+      {
+        term: '{"name": "Sun Seed", "x": 180, "y": 180, "color": "gold"}',
+        meaning:
+          "One dictionary: a complete record for one object. Colons connect each property key to its value.",
+      },
+      {
+        term: "for object_record in objects:",
+        meaning:
+          "Starts one plain loop. On the first iteration object_record is the Sun Seed dictionary, then Rain Bell, then Wind Flower.",
+      },
+      {
+        term: 'object_record["x"]',
+        meaning:
+          "Looks up the value stored under the x key in the current dictionary. On the first iteration it is 180.",
+      },
+      {
+        term: "four indented lookups",
+        meaning:
+          "The loop prints the current record's name, x, y, and color on one inventory line, then repeats for the next record.",
+      },
+      {
+        term: "objects/*.yaml",
+        meaning:
+          "The package files receive the intended plain values. Python does not run inside the package; the validator checks the YAML before the Trail loads it.",
+      },
+    ],
+    why: [
+      "A dictionary keeps the properties of one thing together. A list keeps several related things together and preserves their order.",
+      "A for loop applies the same work to every record, so the inventory needs one block instead of three repeated print statements.",
+      "Outside Explore Studio, programs use lists of records for contacts, products, observations, and map locations. A validated data file can then carry those planned values into another system.",
+    ],
+    debugged: {
+      broken: `broken_record = {
+    "name": "Wind Flower",
+    "x": 520,
+    "color": "pink",
+}
+
+print(broken_record["y"])`,
+      error: "KeyError: 'y'",
+      explanation:
+        "The lookup asks for the y property, but that key is missing from the dictionary. Python raises KeyError instead of inventing a value. Add the missing property before reading it.",
+      fixed: `broken_record = {
+    "name": "Wind Flower",
+    "x": 520,
+    "y": 240,
+    "color": "pink",
+}
+
+print(broken_record["y"])`,
+    },
+    keyWords: [
+      { term: "dictionary", meaning: "A collection of key-value pairs inside braces { }." },
+      { term: "key", meaning: "The name of one property, such as \"x\" or \"color\"." },
+      { term: "value", meaning: "The data stored for a key, such as 180 or \"gold\"." },
+      { term: "lookup", meaning: "Reading a value with square brackets and a key." },
+      { term: "for", meaning: "The keyword that starts a loop over a collection." },
+      { term: "iteration", meaning: "One pass through a loop for one item." },
+      { term: "KeyError", meaning: "Python's error for looking up a key a dictionary does not have." },
+      { term: "YAML", meaning: "The package data format that supplies the Trail's validated runtime values." },
+    ],
+    tryIt: [
+      "Trace only the first iteration on paper: which record is object_record, what is object_record[\"x\"], and what exact line prints?",
+      "Predict the three output lines, run the starter, and compare them in list order.",
+      "Temporarily remove y from one record, predict the error, run it, then restore the property.",
+      "Match each Python record to its YAML object file and explain which side plans the data and which side drives the visible Trail.",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);

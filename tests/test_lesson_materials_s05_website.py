@@ -1,5 +1,4 @@
-"""S05 student website: slides and Python Notes stay grounded in the canonical lesson
-and runtime, and S06 stays unpublished."""
+"""S05 student website stays grounded after the next session is published."""
 
 from __future__ import annotations
 
@@ -51,12 +50,12 @@ def _js_string(source: str, key: str) -> str:
     return match.group(1)
 
 
-def test_s05_is_published_and_s06_is_not():
-    assert _slides_published() == ["S01", "S02", "S03", "S04", "S05"]
+def test_s05_remains_published_when_s06_is_added():
+    assert _slides_published() == ["S01", "S02", "S03", "S04", "S05", "S06"]
     learn_ids = re.findall(r'^\s+id: "(S\d\d)"', _read(LEARN), re.MULTILINE)
-    assert learn_ids == ["S01", "S02", "S03", "S04", "S05"]
-    assert not (WEBSITE / "app" / "students" / "slides" / "s06").exists()
-    assert not (WEBSITE / "public" / "journey" / "s06").exists()
+    assert learn_ids == ["S01", "S02", "S03", "S04", "S05", "S06"]
+    assert (WEBSITE / "app" / "students" / "slides" / "s06" / "page.tsx").is_file()
+    assert (WEBSITE / "public" / "journey" / "s06" / "hero.webp").is_file()
     slides = _read(SLIDES)
     assert 'canonical: "/students/slides/s05/"' in slides
     assert "/students/learn/s05/" in slides

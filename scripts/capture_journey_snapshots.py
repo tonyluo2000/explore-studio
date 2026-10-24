@@ -163,10 +163,11 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
         if not (inside_x and inside_y):
             problems.append(f"{qualified_id} is off screen")
         expected_sheet = sheet(qualified_id)
-        if row.presentation == MOON_MEADOW and expected_sheet is None:
-            problems.append(f"{qualified_id} has no trusted art in {row.mission_id}")
-        elif expected_sheet is not None and (expected_sheet, entity.x) not in drawn:
-            problems.append(f"{qualified_id} fell back instead of drawing {expected_sheet}")
+        if row.presentation == MOON_MEADOW:
+            if expected_sheet is None:
+                problems.append(f"{qualified_id} has no trusted art in {row.mission_id}")
+            elif (expected_sheet, entity.x) not in drawn:
+                problems.append(f"{qualified_id} fell back instead of drawing {expected_sheet}")
     for qualified_id in row.must_not_show:
         if qualified_id in entities:
             problems.append(f"{qualified_id} belongs to another session but is in the scene")

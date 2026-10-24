@@ -1,4 +1,4 @@
-# Journey snapshots: S01–S05 (review evidence)
+# Journey snapshots: S01–S06 (review evidence)
 
 Review-only evidence for the published Journey snapshots. The published files
 live in `course4teen-website/public/journey/sNN/`, and their provenance lives
@@ -27,6 +27,7 @@ every required entity, and no art or entity from a later session.
 | S03 | `S03_NEAR_CLUE` | LEARNING_MOMENT | `journey/s03/near-clue.webp` | 92,898 B | 34,356 B |
 | S04 | `S04_DIALOGUE` | HERO | `journey/s04/hero.webp` | 97,086 B | 35,678 B |
 | S05 | `S05_CONVERSATION` | HERO | `journey/s05/hero.webp` | 96,206 B | 35,698 B |
+| S06 | `S06_BREADCRUMB_TRAIL` | HERO | `journey/s06/hero.webp` | 18,856 B | 8,314 B |
 
 What each check verifies:
 
@@ -66,11 +67,18 @@ What each check verifies:
   The frame shows no S04 greeting Guide, Pixel, either Compass, or any of
   S06's collection (`starlight-garden:*`), and there is no completion banner.
   The progress row reads `Conversations 0 / 1` (the mission-aware HUD).
+- **S06 HERO:** the breadcrumb collection in progress, not completion, in the
+  mission's standard/plain Trail presentation. Nova interacts with Sun Seed
+  and Rain Bell, then walks beside Wind Flower. The frame is accepted only
+  with Wind Flower targeted, exactly the first two package objects visited,
+  M06 Incomplete, and Wind Flower's package-authored `when_near` text drawn.
+  Nova and all three `starlight-garden:*` objects are present; Pixel, the
+  Lantern, both Compasses, and both Guide packages are absent. The progress row
+  reads `Visited 2 / 3`. No Moon Meadow presentation or NPC is required.
 
 ## Provenance
 
-- Base: `main` at `d23a20eed48f991741b9e81fdc504729fc4fa1a8` (#119, after
-  #118's mission-aware Trail HUD), merged into this branch.
+- Base: `origin/main` at `27d45a01ac8b6c8c1e49d8b42c1fe9fadf61b0cf`.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
   `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0` (S05 in the Moon Meadow on the
   mission-aware Trail HUD; previously `b875c52b76cfd4e1d72be4c77aef595475da79de`).
@@ -110,11 +118,20 @@ What each check verifies:
   `hero-480.webp` `0cef46cada24c7105a92cd7638cd803919a72493dbf44eb9c9b7ff9bd68ee05d`.
   The same moment as before the merge; the only pixel change is #118's
   progress row (`Visited 0 / 1` became `Conversations 0 / 1`).
-- Presentation fingerprints, per moment: `S01_ARRIVAL` `ecb41fe45c6a…`,
-  `S02_COMPASS_PROMPT` `a957a00472db…`, `S02_MOVED_COMPASS` `e1850ea1e289…`,
-  `S03_REVEAL` `ba40522888d5…`, `S03_NEAR_CLUE` `32a3872a6af3…`, `S04_DIALOGUE`
-  `fee83a0540c1…`, `S05_CONVERSATION` `f9d95f071742…`. The full values are in
-  the manifest.
+- S06 hashes (darwin-arm64, Pillow 11.2.1, libwebp 1.5.0): source frame
+  `f867134591f5b8e202cd0b04d0ecafdfc75ff258bfa418aa33c179d821a557e1`;
+  `hero.webp` `578a989540dc75cae0ccd3e0c6f83013d376696ed0f65edab3ba37b398e885c2`;
+  `hero-480.webp` `6e2cfe64e8ef4f699c8830d8853ee989c19bd2345d3d3b51657b05c3ea5ebafa`.
+- S01–S05 remain byte-identical to their reviewed files. Their manifest
+  fingerprints changed only because the table now explicitly excludes S06
+  objects from earlier frames and the harness now accepts the standard Trail's
+  intentional rectangle fallback. Runtime and package fingerprints are
+  unchanged.
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `a8906eb30304…`,
+  `S02_COMPASS_PROMPT` `c40342978e03…`, `S02_MOVED_COMPASS` `ae50de08a57f…`,
+  `S03_REVEAL` `82b04d09cf0b…`, `S03_NEAR_CLUE` `4b948ad9d2dc…`, `S04_DIALOGUE`
+  `e9c2dbcedebf…`, `S05_CONVERSATION` `07e8c91c43be…`,
+  `S06_BREADCRUMB_TRAIL` `6d3b8226d2d0…`. The full values are in the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
@@ -164,9 +181,8 @@ What each check verifies:
 - The Journey snapshots workflow watches every fingerprint input. A test
   matches the workflow's path filters against the real input files, so the
   two lists cannot drift apart.
-- Toolchain at capture: Python 3.13.16, pygame 2.6.1, SDL 2.28.4, Pillow
-  12.3.0, linux-x86_64. The earlier `3038cf4` capture used Python 3.13.7,
-  SDL_ttf 2.20.1, libwebp 1.6.0, darwin-arm64.
+- Toolchain at capture: Python 3.13.7, pygame 2.6.1, SDL 2.28.4, SDL_ttf
+  2.20.1, Pillow 11.2.1, libwebp 1.5.0, darwin-arm64.
 
 ## Encoding and hashes
 
@@ -211,9 +227,9 @@ Snapshot encoding needs Pillow, from `pip install -e ".[dev,art]"`.
 
 ## Publication boundary
 
-`public/journey/` holds exactly `s01/`–`s05/`: the fourteen files the manifest
+`public/journey/` holds exactly `s01/`–`s06/`: the sixteen files the manifest
 lists, nothing else. The manifest's `deferred` list is empty. `--check` and the
-tests reject a file or manifest entry for an unpublished session (S06+), a
+tests reject a file or manifest entry for an unpublished session (S07+), a
 deferred row, a moment the table does not have, a duplicate entry, and any
 stray file, including one inside `s01/`.
 
