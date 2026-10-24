@@ -391,7 +391,7 @@ export default function JourneyMap({ state, width, height, idPrefix, focus = "fu
 
   return (
     <svg
-      className="jm-svg"
+      className={focus === "current-stop" ? "jm-svg jm-svg-focused" : "jm-svg"}
       viewBox={`${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`}
       role="img"
       aria-labelledby={`${ids.title} ${ids.desc}`}

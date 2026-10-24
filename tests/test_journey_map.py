@@ -973,8 +973,10 @@ def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignor
         assert stop["hero"]["alt"].startswith(f"The Trail in {sid}:")
 
 
-def test_current_stop_separates_journey_storytelling_from_runtime_evidence() -> None:
+def test_s06_separates_journey_storytelling_from_runtime_evidence() -> None:
     page = _read(PAGE)
+    assert 'const isS06JourneyStop = stop.session.id === "S06";' in page
+    assert page.count("{isS06JourneyStop ? (") == 2
     assert 'className="journey-stop-visual"' in page
     assert 'focus="current-stop"' in page
     assert "Journey illustration" in page
@@ -984,16 +986,40 @@ def test_current_stop_separates_journey_storytelling_from_runtime_evidence() -> 
     assert "STANDARD presentation" in page and "Visited 2 / 3" in page
     assert 'src={stop.hero.small.src}' in page
     assert 'className="journey-stop-shot"' in page
+    assert 'href={stop.hero.full.src}' in page
+    assert 'aria-label="Open the full S06 Trail evidence image"' in page
+
+
+def test_non_s06_current_stop_keeps_the_default_snapshot_treatment() -> None:
+    page = _read(PAGE)
+    loop = page.split("{journey.stops.map((stop) => {", 1)[1].split("</ol>", 1)[0]
+    assert 'const isCurrent = stop.session.id === current.session.id;' in loop
+    assert 'const isS06JourneyStop = stop.session.id === "S06";' in loop
+    assert "{isCurrent ? (" not in loop
+    assert 'className={isCurrent ? "journey-stop journey-stop-current" : "journey-stop"}' in loop
+    assert '{isCurrent ? <span className="journey-stop-flag">Current stop</span> : null}' in loop
+    assert "{isS06JourneyStop ? (" in loop
+    assert loop.count("{isS06JourneyStop ? (") == 2
 
 
 def test_current_stop_focus_reuses_the_journey_map_language() -> None:
     journey_map = _read(MAP)
     assert 'focus?: "full" | "current-stop"' in journey_map
     assert 'focus === "current-stop" && current' in journey_map
+    assert 'focus === "current-stop" ? "jm-svg jm-svg-focused" : "jm-svg"' in journey_map
     assert 'className="jm-marker-frontier"' in journey_map
     css = _read(CSS)
     assert ".jm-marker-frontier" in css
     assert ".journey-runtime-evidence-window" in css
+
+
+def test_mobile_map_labels_and_badges_are_scoped_by_focus() -> None:
+    css = _read(CSS)
+    rules = css.split("@media (max-width: 599px)", 1)[1].split(".journey-stops", 1)[0]
+    assert ".jm-label, .jm-region-label, .jm-fog-label { display: none; }" in rules
+    assert ".jm-badge { display: inline; }" in rules
+    assert ".jm-svg-focused .jm-label { display: inline; }" in rules
+    assert ".jm-svg-focused .jm-badge { display: none; }" in rules
 
 
 @needs_node
@@ -1150,6 +1176,9 @@ def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
     assert "/students/learn/s07/" not in html
     assert 'class="journey-stop-visual"' in html
     assert 'class="journey-runtime-evidence"' in html
+    assert 'class="jm-svg jm-svg-focused"' in html
+    assert 'aria-label="Open the full S06 Trail evidence image"' in html
+    assert 'href="/journey/s06/hero.webp"' in html
     assert "Journey illustration" in text
     assert "Actual Trail / lesson evidence" in text
     assert "STANDARD presentation · Visited 2 / 3" in text

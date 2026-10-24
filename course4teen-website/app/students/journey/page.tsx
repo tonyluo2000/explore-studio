@@ -128,13 +128,14 @@ export default function JourneyPage() {
           <ol className="journey-stop-list">
             {journey.stops.map((stop) => {
               const isCurrent = stop.session.id === current.session.id;
+              const isS06JourneyStop = stop.session.id === "S06";
               return (
                 <li
                   key={stop.session.id}
                   id={`stop-${stop.session.id.toLowerCase()}`}
                   className={isCurrent ? "journey-stop journey-stop-current" : "journey-stop"}
                 >
-                  {isCurrent ? (
+                  {isS06JourneyStop ? (
                     <figure className="journey-stop-visual">
                       <JourneyMap
                         state={journey}
@@ -174,9 +175,13 @@ export default function JourneyPage() {
                     <h3>{stop.session.title}</h3>
                     <p className="journey-stop-place">{stop.location}</p>
                     <p className="journey-stop-story">{stop.story}</p>
-                    {isCurrent ? (
+                    {isS06JourneyStop ? (
                       <figure className="journey-runtime-evidence">
-                        <div className="journey-runtime-evidence-window">
+                        <a
+                          className="journey-runtime-evidence-window"
+                          href={stop.hero.full.src}
+                          aria-label="Open the full S06 Trail evidence image"
+                        >
                           {/* The compact crop intentionally omits the runtime's long, clipped mission line. */}
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -188,7 +193,7 @@ export default function JourneyPage() {
                             loading="lazy"
                             decoding="async"
                           />
-                        </div>
+                        </a>
                         <figcaption>
                           <strong>Actual Trail / lesson evidence</strong>
                           <span>STANDARD presentation &middot; Visited 2 / 3</span>
