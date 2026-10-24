@@ -296,8 +296,8 @@ def test_no_mission_free_play_renders_exactly_like_the_pre_s01_plain_trail(
     """A free-play Trail without --mission-id draws what M01 drew before S01 opted in."""
     omitted = _plain_m01_operations(monkeypatch, mission_id=None)
     # Before the opt-in, M01 had no policy anywhere.
-    monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id: None)
-    monkeypatch.setattr(environment_module, "mission_presentation", lambda _id: None)
+    monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id, **_kwargs: None)
+    monkeypatch.setattr(environment_module, "mission_presentation", lambda _id, **_kwargs: None)
     before = _plain_m01_operations(monkeypatch, mission_id=MISSION_01_ID)
     assert omitted == before
 
@@ -386,7 +386,9 @@ def _gameplay_trace(
     monkeypatch: pytest.MonkeyPatch, *, mission_id: str | None, presented: bool
 ) -> list[object]:
     if not presented:
-        monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id: None)
+        monkeypatch.setattr(
+            presentation_module, "mission_presentation", lambda _id, **_kwargs: None
+        )
     renderer = ArtRenderer()
     scene = _scene(renderer, mission_id=mission_id)
     assert scene._presentation.active is presented

@@ -197,7 +197,13 @@ def test_m06_and_later_keep_the_plain_trail(mission_id: str) -> None:
 def test_guide_is_posed_only_so_no_other_mission_draws_it() -> None:
     renderer = ArtRenderer()
     drawn = draw_classroom_sprite(
-        renderer, MOONLIT_GUIDE_QUALIFIED_ID, 540, 220, 100, 100, (50, 80, 220)  # type: ignore[arg-type]
+        renderer,
+        MOONLIT_GUIDE_QUALIFIED_ID,
+        540,
+        220,
+        100,
+        100,
+        (50, 80, 220),  # type: ignore[arg-type]
     )
     assert not drawn
     assert renderer.operations == []
@@ -552,7 +558,9 @@ def test_no_m02_or_m03_story_beat_leaks_into_m04() -> None:
 
 def _gameplay_trace(monkeypatch: pytest.MonkeyPatch, *, presented: bool) -> list[object]:
     if not presented:
-        monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id: None)
+        monkeypatch.setattr(
+            presentation_module, "mission_presentation", lambda _id, **_kwargs: None
+        )
     renderer = AccentRenderer()
     scene = _scene(renderer)
     assert scene._presentation.active is presented

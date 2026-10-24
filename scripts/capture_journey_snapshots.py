@@ -112,7 +112,7 @@ def _normalize(text: str) -> str:
     return " ".join(text.split())
 
 
-def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[no-untyped-def]
+def _verify(trail, row: Session, moment: Moment, command: TrailCommand) -> list[str]:  # type: ignore[no-untyped-def]
     """Every reason the current frame is not the moment it claims to be."""
     import pygame
 
@@ -120,6 +120,7 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
     from engine.rendering._classroom_sprites import (
         COMPASS_SHEET_ID,
         MOON_COMPASS_QUALIFIED_ID,
+        PRESENTATION_PRIMITIVE_IDS,
         SPRITE_SHEET_IDS,
     )
     from engine.rendering._mission_presentation import mission_presentation
@@ -132,7 +133,8 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
 
     drawn = {(asset, x) for asset, x, _, _, _, ok in renderer.sprites if ok}
     sheets_drawn = {asset for asset, _ in drawn}
-    moon_meadow = mission_presentation(row.mission_id) is not None
+    package_ids = journey.package_ids(command.packages)
+    moon_meadow = mission_presentation(row.mission_id, package_ids=package_ids) is not None
     if moon_meadow != (row.presentation == MOON_MEADOW):
         given = "Moon Meadow" if moon_meadow else "the standard Trail"
         problems.append(
@@ -141,7 +143,7 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
     if row.presentation == MOON_MEADOW and MEADOW_BACKDROP[0] not in sheets_drawn:
         problems.append("the Moon Meadow backdrop was not drawn")
 
-    presentation = TrailPresentation(row.mission_id)
+    presentation = TrailPresentation(row.mission_id, package_ids=package_ids)
 
     def sheet(qualified_id: str) -> str | None:
         identity = presentation.sprite_identity(qualified_id)
@@ -164,9 +166,10 @@ def _verify(trail, row: Session, moment: Moment) -> list[str]:  # type: ignore[n
             problems.append(f"{qualified_id} is off screen")
         expected_sheet = sheet(qualified_id)
         if row.presentation == MOON_MEADOW:
-            if expected_sheet is None:
+            identity = presentation.sprite_identity(qualified_id)
+            if expected_sheet is None and identity not in PRESENTATION_PRIMITIVE_IDS:
                 problems.append(f"{qualified_id} has no trusted art in {row.mission_id}")
-            elif (expected_sheet, entity.x) not in drawn:
+            elif expected_sheet is not None and (expected_sheet, entity.x) not in drawn:
                 problems.append(f"{qualified_id} fell back instead of drawing {expected_sheet}")
     for qualified_id in row.must_not_show:
         if qualified_id in entities:
@@ -247,7 +250,7 @@ def capture_moment(row: Session, moment: Moment, command: TrailCommand) -> bytes
                     trail.press()
                 else:
                     raise CaptureError(f"{moment.name}: unknown step {step}")
-            problems = _verify(trail, row, moment)
+            problems = _verify(trail, row, moment, command)
             if problems:
                 raise CaptureError(f"{moment.name} was not reached: " + "; ".join(problems))
             return pygame.image.tobytes(pygame.display.get_surface(), "RGB")
@@ -383,6 +386,54 @@ def require_pinned_runtime(root: Path = REPO) -> tuple[str, str]:
     return pin, here
 
 
+def refresh_unchanged_metadata(
+    entries: list[dict[str, object]],
+    *,
+    pin: str,
+    runtime: str,
+    tools: dict[str, str],
+) -> list[dict[str, object]]:
+    """Refresh retained fingerprints only after byte-identical in-memory recapture.
+
+    A session-scoped runtime change still changes the repository-wide runtime
+    fingerprint. Retained snapshots may receive fresh provenance without
+    rewriting their image files, but only when the actual RGB frame and both
+    encoded WebPs reproduce exactly. Any visual change fails closed and asks
+    for an explicit recapture of that session.
+    """
+    implementation = journey.capture_implementation_digest()
+    stale_sessions = {
+        str(entry["session"])
+        for entry in entries
+        if journey.stale_reason(entry, runtime, implementation)
+    }
+    refreshed: dict[tuple[str, str], dict[str, object]] = {}
+    for session in sorted(stale_sessions):
+        for capture in capture_session(session, runtime=runtime):
+            key = (session, capture.moment.name)
+            current = next(
+                (entry for entry in entries if (entry["session"], entry["moment"]) == key),
+                None,
+            )
+            if current is None:
+                raise CaptureError(f"{key}: retained snapshot metadata is missing")
+            differences = []
+            if _sha256(capture.rgb) != current["sourceRgbSha256"]:
+                differences.append("source RGB")
+            for width, data in capture.images.items():
+                if _sha256(data) != current["images"][str(width)]["sha256"]:  # type: ignore[index]
+                    differences.append(f"{width}w WebP")
+            if differences:
+                raise CaptureError(
+                    f"{session} changed ({', '.join(differences)}); recapture it explicitly"
+                )
+            refreshed[key] = manifest_entry(capture, pin, tools)
+            print(f"refreshed {capture.moment.name} metadata; image bytes unchanged")
+    return [
+        refreshed.get((str(entry["session"]), str(entry["moment"])), entry) for entry in entries
+    ]
+
+
 def publish(sessions: list[str]) -> None:
     published = journey.published_sessions()
     for session in sessions:
@@ -404,6 +455,7 @@ def publish(sessions: list[str]) -> None:
         # cannot check; recapture them rather than relabel them.
         kept = sorted({entry.get("session") for entry in entries})
         raise CaptureError(f"{problem}; this run would keep {', '.join(kept)} unrecaptured")
+    entries = refresh_unchanged_metadata(entries, pin=pin, runtime=runtime, tools=tools)
     for session in sessions:
         captures = capture_session(session, runtime=runtime)
         directory = PUBLIC_JOURNEY / session.lower()

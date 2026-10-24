@@ -71,7 +71,7 @@ def test_s06_title_date_and_next_session_are_calendar_derived() -> None:
     assert 'classSessions.find((s) => s.id === "S07")!' in slides
     assert "2026-10-24" not in slides
     assert "Create a Two-State Prop" not in slides
-    assert 'heading: `${nextSession.id} · ${nextSession.title}`' in slides
+    assert "heading: `${nextSession.id} · ${nextSession.title}`" in slides
 
 
 def test_s06_slides_follow_the_canonical_task_card_command() -> None:
@@ -159,10 +159,12 @@ def test_s06_has_journey_context_on_slides_and_notes() -> None:
     assert 'id: "S06"' in _read(LEARN)
 
 
-def test_m06_contract_is_plain_three_objects_all_visited_and_no_npc() -> None:
+def test_m06_contract_is_session_scoped_three_objects_all_visited_and_no_npc() -> None:
     assert MISSION_06_ID == "build-an-object-collection"
     assert MISSION_06.completion_rule is ClassroomTrailMissionCompletionRule.ALL_OBJECTS_VISITED
+    # The mission id alone stays plain because later sessions reuse M06.
     assert mission_presentation(MISSION_06_ID) is None
+    assert mission_presentation(MISSION_06_ID, package_ids=("starlight-garden",)) is not None
     assert len(OBJECTS) == 3
     records = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in OBJECTS]
     for field in ("name", "x", "y", "color", "when_near", "when_interacted"):
@@ -173,6 +175,7 @@ def test_m06_contract_is_plain_three_objects_all_visited_and_no_npc() -> None:
         mission_id=MISSION_06_ID,
     )
     try:
+        assert trail.scene._presentation.active
         assert trail.scene.npcs == ()
         assert len(trail.scene.objects) == 3
         for index, record in enumerate(records):

@@ -113,7 +113,12 @@ def test_row_has_one_hero_and_at_most_two_optional_moments(row) -> None:  # type
 
 @pytest.mark.parametrize("row", ACTIVE_ROWS, ids=lambda row: row.session)
 def test_active_rows_expect_the_presentation_the_runtime_gives(row) -> None:  # type: ignore[no-untyped-def]
-    gets_moon_meadow = mission_presentation(row.mission_id) is not None
+    command = journey.canonical_command(row.session)
+    assert command is not None
+    gets_moon_meadow = (
+        mission_presentation(row.mission_id, package_ids=journey.package_ids(command.packages))
+        is not None
+    )
     assert gets_moon_meadow == (row.presentation == MOON_MEADOW), row.session
 
 
@@ -192,13 +197,13 @@ def test_s05_hero_shows_no_completion_or_later_content() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S06 is the standard Trail after two of three breadcrumb interactions
+# S06 is Moon Meadow after two of three breadcrumb interactions
 # ---------------------------------------------------------------------------
 
 
 def test_s06_row_states_the_breadcrumb_snapshot_contract() -> None:
     s06 = SESSIONS_BY_ID["S06"]
-    assert not s06.deferred and s06.presentation == journey.STANDARD
+    assert not s06.deferred and s06.presentation == journey.MOON_MEADOW
     assert s06.mission_id == "build-an-object-collection"
     assert set(s06.must_show) == {journey.NOVA, *journey.S06_OBJECTS}
     assert {
@@ -218,15 +223,13 @@ def test_s06_row_states_the_breadcrumb_snapshot_contract() -> None:
     assert not expect.complete
     assert [step for step in hero.steps if step == ("press",)] == [("press",), ("press",)]
     texts = [spec for spec in expect.texts if isinstance(spec, journey.PackageText)]
-    assert [(spec.file, spec.key) for spec in texts] == [
-        ("objects/wind-flower.yaml", "when_near")
-    ]
+    assert [(spec.file, spec.key) for spec in texts] == [("objects/wind-flower.yaml", "when_near")]
 
 
-def test_s06_hero_is_plain_and_contains_no_later_session_content() -> None:
+def test_s06_hero_is_polished_and_contains_no_later_session_content() -> None:
     [entry] = [entry for entry in ENTRIES if entry["session"] == "S06"]
     assert (entry["moment"], entry["kind"]) == ("S06_BREADCRUMB_TRAIL", HERO)
-    assert entry["presentation"] == journey.STANDARD and entry["fixture"] is None
+    assert entry["presentation"] == journey.MOON_MEADOW and entry["fixture"] is None
     assert sorted(path.name for path in (PUBLIC_JOURNEY / "s06").iterdir()) == [
         "hero-480.webp",
         "hero.webp",
@@ -234,6 +237,48 @@ def test_s06_hero_is_plain_and_contains_no_later_session_content() -> None:
     text = json.dumps(entry).lower()
     for word in ("s07", "toggle-an-object-state", "two-state"):
         assert word not in text, word
+
+
+def test_s01_through_s05_snapshot_image_bytes_did_not_change_for_s06() -> None:
+    reviewed = {
+        ("S01", "S01_ARRIVAL"): (
+            "d651f128a98319a27b8f6d764470a697ec6c567006f847dc0f89c1b0edf9d6c6",
+            "65d2552b81500777773a29e9aa1ae77d9e4c01f8dbadf8cdf09bb93e1571fe74",
+        ),
+        ("S02", "S02_COMPASS_PROMPT"): (
+            "8c38b25c9bb61561631f3abe2ff084919d3316bb65f6a5551bd307c280996071",
+            "a7ab87cd4bbadb79586d1605a29bcda3ca43002d8b86a04e36b18401cf3824c5",
+        ),
+        ("S02", "S02_MOVED_COMPASS"): (
+            "3e8809b39af9cca65e43426da22636da57585cf32f11d98e42e828aff93f644a",
+            "d6c8efb655c898aac8e60593c652abe5520c54bc96cc345d9b5c3c81a80fe4bf",
+        ),
+        ("S03", "S03_REVEAL"): (
+            "b5c269d1809fa481be3b47e291b8cd9e2406a779904c02207201b35d10c44a59",
+            "50a5eb492860bf013a554bc70ee8356a00a55feac7d2dab2fdcb1fb7ed49934e",
+        ),
+        ("S03", "S03_NEAR_CLUE"): (
+            "7daa0300d4d2599db5b60ac94d0a778389e6902562d49adce140e0e54c7b5672",
+            "e38029ffba0346bc1aba40b2bd5e63c5a3e9c4b60f3313af3a4dd0481311774e",
+        ),
+        ("S04", "S04_DIALOGUE"): (
+            "3f1129e2217ba7046efc078c868e895606bc1ce6f3e6cc4a0168f8612e2d43aa",
+            "0cd467fc6bca529ebc3aa79c9bc22caef60970b5236eef5902ddae867b8be19a",
+        ),
+        ("S05", "S05_CONVERSATION"): (
+            "062248376f28223d779949f42da2d73dabecd45e244d61bf7eedb0c314640fd2",
+            "0cef46cada24c7105a92cd7638cd803919a72493dbf44eb9c9b7ff9bd68ee05d",
+        ),
+    }
+    actual = {
+        (entry["session"], entry["moment"]): (
+            entry["images"]["960"]["sha256"],
+            entry["images"]["480"]["sha256"],
+        )
+        for entry in ENTRIES
+        if entry["session"] in {"S01", "S02", "S03", "S04", "S05"}
+    }
+    assert actual == reviewed
 
 
 # ---------------------------------------------------------------------------
@@ -400,7 +445,10 @@ def test_entry_matches_calendar_task_card_and_table(entry) -> None:  # type: ign
     assert entry["packages"] == list(command.packages)
     assert entry["player"] == command.player
     assert entry["presentation"] == row.presentation
-    gets_moon_meadow = mission_presentation(entry["missionId"]) is not None
+    gets_moon_meadow = (
+        mission_presentation(entry["missionId"], package_ids=journey.package_ids(command.packages))
+        is not None
+    )
     assert gets_moon_meadow == (entry["presentation"] == MOON_MEADOW)
     assert entry["fixture"] == (journey.describe(moment.fixture) if moment.fixture else None)
     assert entry["captureCommand"] == row.command
@@ -446,9 +494,9 @@ def test_runtime_commit_really_contains_the_captured_runtime() -> None:
         digest = journey.runtime_digest(files)
         for entry in ENTRIES:
             if entry["runtimeCommit"] == commit:
-                assert (
-                    entry["fingerprintParts"]["runtime"] == digest
-                ), f"{_entry_id(entry)}: the runtime pin {commit} does not draw this snapshot"
+                assert entry["fingerprintParts"]["runtime"] == digest, (
+                    f"{_entry_id(entry)}: the runtime pin {commit} does not draw this snapshot"
+                )
 
 
 # ---------------------------------------------------------------------------

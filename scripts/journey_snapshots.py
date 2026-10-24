@@ -464,9 +464,9 @@ SESSIONS: Final[tuple[Session, ...]] = (
         session="S06",
         mission_id="build-an-object-collection",
         player=NOVA,
-        presentation=STANDARD,
-        # The standard Trail: Nova and exactly the three package objects, with
-        # no Moon Meadow cast or presentation dependency.
+        presentation=MOON_MEADOW,
+        # The Moon Meadow continues with Nova and exactly the three package
+        # objects; no prior cast member or later mechanic joins the scene.
         must_show=(NOVA, *S06_OBJECTS),
         must_not_show=(PIXEL, LANTERN, S02_COMPASS, S03_COMPASS, GUIDE, S05_GUIDE),
         moments=(
@@ -491,9 +491,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
                     target=S06_OBJECTS[2],
                     visited=S06_OBJECTS[:2],
                     complete=False,
-                    texts=(
-                        PackageText(S06_PACKAGE, "objects/wind-flower.yaml", "when_near"),
-                    ),
+                    texts=(PackageText(S06_PACKAGE, "objects/wind-flower.yaml", "when_near"),),
                 ),
             ),
         ),
@@ -680,6 +678,18 @@ def package_root(argument: str) -> Path:
     if path.is_absolute() or ".." in path.parts:
         raise ValueError(f"{argument} is outside the Course Kit and has no known seed")
     return REPO / path
+
+
+def package_ids(arguments: Iterable[str]) -> tuple[str, ...]:
+    """Return the validated package identities selected by task-card arguments."""
+    import yaml
+
+    return tuple(
+        yaml.safe_load((package_root(argument) / "manifest.yaml").read_text("utf-8"))["package"][
+            "id"
+        ]
+        for argument in arguments
+    )
 
 
 def runtime_pin() -> str:
