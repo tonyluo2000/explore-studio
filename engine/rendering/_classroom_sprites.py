@@ -39,6 +39,15 @@ MOON_COMPASS_QUALIFIED_ID = "moon-compass:compass"
 CRYSTAL_LANTERN_QUALIFIED_ID = "crystal-lantern:lantern"
 #: The canonical S04 Guide (``lessons/sessions/s04/student/explorer-package``).
 MOONLIT_GUIDE_QUALIFIED_ID = "moonlit-guide:guide"
+#: Private visual roles used only by S06's package-scoped presentation aliases.
+#: They are procedural presentation primitives, not student-authored ids or a
+#: new package asset pipeline.
+SUN_SEED_PRESENTATION_ID: Final = "moon-meadow-presentation:sun-seed"
+RAIN_BELL_PRESENTATION_ID: Final = "moon-meadow-presentation:rain-bell"
+WIND_FLOWER_PRESENTATION_ID: Final = "moon-meadow-presentation:wind-flower"
+PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
+    {SUN_SEED_PRESENTATION_ID, RAIN_BELL_PRESENTATION_ID, WIND_FLOWER_PRESENTATION_ID}
+)
 
 
 class _SpriteRenderer(Protocol):
@@ -419,6 +428,116 @@ def _draw_crystal_lantern(
     renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
 
 
+def _draw_sun_seed(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """Draw S06's warm first breadcrumb as a sprouting, sunlit seed."""
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 20))
+    box = _Box(x, y + bob, width, height)
+    base = _Box(x, y, width, height)
+    outline = _mix(accent, (54, 31, 30), 0.7)
+    glow_color = _mix(accent, _WHITE, 0.48)
+    leaf = _mix(accent, (66, 154, 100), 0.72)
+    seed = _mix(accent, (104, 54, 36), 0.5)
+
+    base.shadow(renderer, 50, 29)
+    center_x, center_y = box.point(50, 46)
+    for index in range(10):
+        angle = math.tau * index / 10
+        renderer.draw_line(
+            center_x + round(21 * math.cos(angle)),
+            center_y + round(16 * math.sin(angle)),
+            center_x + round(29 * math.cos(angle)),
+            center_y + round(23 * math.sin(angle)),
+            glow_color,
+            2,
+        )
+    renderer.draw_circle(center_x, center_y, box.radius(25), outline)
+    renderer.draw_circle(center_x, center_y, box.radius(21), accent)
+    renderer.draw_circle(*box.point(44, 39), box.radius(6), glow_color)
+    box.polygon(renderer, ((50, 57), (66, 72), (55, 91), (39, 75)), outline)
+    box.polygon(renderer, ((50, 61), (61, 73), (54, 86), (43, 75)), seed)
+    renderer.draw_line(*box.point(50, 62), *box.point(50, 50), leaf, 3)
+    box.polygon(renderer, ((49, 58), (31, 52), (36, 69)), leaf)
+    box.polygon(renderer, ((51, 57), (69, 48), (66, 66)), _mix(leaf, _WHITE, 0.18))
+
+
+def _draw_rain_bell(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """Draw S06's middle breadcrumb as a blue bell holding a rain drop."""
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 20))
+    box = _Box(x, y + bob, width, height)
+    base = _Box(x, y, width, height)
+    outline = _mix(accent, (18, 28, 64), 0.74)
+    shade = _mix(accent, (24, 42, 90), 0.4)
+    shine = _mix(accent, _WHITE, 0.58)
+    silver = (214, 232, 246)
+
+    base.shadow(renderer, 50, 29)
+    renderer.draw_circle(*box.point(50, 18), box.radius(9), outline)
+    renderer.draw_circle(*box.point(50, 18), box.radius(5), silver)
+    box.polygon(renderer, ((50, 23), (31, 40), (24, 73), (76, 73), (69, 40)), outline)
+    box.polygon(renderer, ((50, 27), (35, 43), (29, 68), (71, 68), (65, 43)), accent)
+    box.polygon(renderer, ((40, 38), (48, 31), (43, 64), (34, 64)), shine)
+    box.rect(renderer, 21, 70, 79, 78, outline)
+    box.rect(renderer, 27, 70, 73, 74, silver)
+    renderer.draw_line(*box.point(50, 75), *box.point(50, 84), outline, 3)
+    renderer.draw_circle(*box.point(50, 87), box.radius(7), shade)
+    # One unmistakable falling drop below the clapper.
+    box.polygon(renderer, ((78, 35), (71, 49), (78, 55), (85, 49)), shine)
+
+
+def _draw_wind_flower(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """Draw S06's final breadcrumb as a flower bending into the wind."""
+    bob = 0 if pose is None else max(0, min(pose.bob, height // 20))
+    box = _Box(x, y + bob, width, height)
+    base = _Box(x, y, width, height)
+    outline = _mix(accent, (52, 24, 72), 0.72)
+    petal = _mix(accent, _WHITE, 0.25)
+    center = _mix(accent, (255, 224, 116), 0.78)
+    stem = _mix(accent, (48, 144, 104), 0.75)
+    breeze = _mix(accent, (190, 234, 246), 0.72)
+
+    base.shadow(renderer, 49, 30)
+    renderer.draw_line(*box.point(51, 51), *box.point(46, 94), stem, 4)
+    box.polygon(renderer, ((48, 73), (26, 67), (43, 84)), stem)
+    box.polygon(renderer, ((48, 81), (69, 72), (53, 91)), _mix(stem, _WHITE, 0.12))
+    flower_x, flower_y = box.point(53, 40)
+    for index in range(6):
+        angle = math.tau * index / 6
+        px = flower_x + round(17 * math.cos(angle))
+        py = flower_y + round(14 * math.sin(angle))
+        renderer.draw_circle(px, py, box.radius(13), outline)
+        renderer.draw_circle(px, py, box.radius(10), petal)
+    renderer.draw_circle(flower_x, flower_y, box.radius(12), outline)
+    renderer.draw_circle(flower_x, flower_y, box.radius(8), center)
+    # Curved-looking wind ribbons, built from the renderer's existing lines.
+    for offset in (0, 11):
+        renderer.draw_line(*box.point(72, 25 + offset), *box.point(91, 21 + offset), breeze, 2)
+        renderer.draw_line(*box.point(75, 30 + offset), *box.point(94, 27 + offset), breeze, 2)
+
+
 def _draw_moonlit_guide(
     renderer: _SpriteRenderer,
     x: int,
@@ -473,6 +592,9 @@ _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
     MOON_COMPASS_QUALIFIED_ID: _draw_moon_compass,
     CRYSTAL_LANTERN_QUALIFIED_ID: _draw_crystal_lantern,
     MOONLIT_GUIDE_QUALIFIED_ID: _draw_moonlit_guide,
+    SUN_SEED_PRESENTATION_ID: _draw_sun_seed,
+    RAIN_BELL_PRESENTATION_ID: _draw_rain_bell,
+    WIND_FLOWER_PRESENTATION_ID: _draw_wind_flower,
 }
 #: Identities with no static drawing: without a pose they keep the rectangle.
 _POSED_ONLY: Final = frozenset({MOONLIT_GUIDE_QUALIFIED_ID})

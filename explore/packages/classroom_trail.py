@@ -437,6 +437,7 @@ def create_classroom_trail_scene(
         player_qualified_id=plan.player.qualified_id,
         audio=audio,  # type: ignore[arg-type]
         story_presentation=explicit_mission,
+        presentation_package_ids=tuple(package.package_id for package in plan.packages),
     )
 
 

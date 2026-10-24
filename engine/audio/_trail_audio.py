@@ -91,8 +91,10 @@ class TrailAudio:
         mission_id: str | None,
         sink: AudioSink | None,
         start: tuple[float, float] | None = None,
+        *,
+        package_ids: tuple[str, ...] = (),
     ) -> None:
-        policy = mission_presentation(mission_id)
+        policy = mission_presentation(mission_id, package_ids=package_ids)
         self.active = sink is not None and policy is not None and policy.meadow_audio
         self._sink = sink if self.active else None
         self._aliases = policy.sprite_aliases if policy is not None else {}

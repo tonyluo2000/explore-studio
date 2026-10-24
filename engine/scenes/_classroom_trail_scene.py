@@ -459,6 +459,7 @@ class ClassroomTrailScene(Scene):
         player_qualified_id: str | None = None,
         audio: AudioSink | None = None,
         story_presentation: bool = True,
+        presentation_package_ids: tuple[str, ...] = (),
     ) -> None:
         """*story_presentation* ``False`` keeps the plain Trail whatever the mission.
 
@@ -482,6 +483,11 @@ class ClassroomTrailScene(Scene):
             not isinstance(player_qualified_id, str) or not player_qualified_id.strip()
         ):
             raise ValueError("player_qualified_id must be a non-empty string when present")
+        if not isinstance(presentation_package_ids, tuple) or any(
+            not isinstance(package_id, str) or not package_id.strip()
+            for package_id in presentation_package_ids
+        ):
+            raise ValueError("presentation_package_ids must contain non-empty package ids")
         qualified_ids = tuple(item.qualified_id for item in (*objects, *npcs))
         if len(qualified_ids) != len(set(qualified_ids)):
             raise ValueError("objects and npcs must have unique qualified IDs")
@@ -517,14 +523,20 @@ class ClassroomTrailScene(Scene):
         self._conversation_positions = {npc.qualified_id: 0 for npc in self._npcs}
         # The mission whose presentation this Trail wears; None is the plain Trail.
         self._presentation_mission_id = mission.mission_id if story_presentation else None
-        # Cosmetic only and M01-M05-only: observes state after update, never writes it.
+        self._presentation_package_ids = presentation_package_ids if story_presentation else ()
+        # Cosmetic only: observes state after update, never writes it.
         self._presentation = TrailPresentation(
-            self._presentation_mission_id, start=(player.x_float, player.y_float)
+            self._presentation_mission_id,
+            start=(player.x_float, player.y_float),
+            package_ids=self._presentation_package_ids,
         )
-        # Audio only, M02-M05-only, and only with a manager: observes the same
+        # Audio only, and only with a manager: observes the same
         # transitions as the presentation and never writes state either.
         self._audio = TrailAudio(
-            self._presentation_mission_id, audio, start=(player.x_float, player.y_float)
+            self._presentation_mission_id,
+            audio,
+            start=(player.x_float, player.y_float),
+            package_ids=self._presentation_package_ids,
         )
         objects_by_id = {item.qualified_id: item for item in self._objects}
         for npc in self._npcs:
@@ -960,7 +972,11 @@ class ClassroomTrailScene(Scene):
         # player, overlay effects and panels, HUD, overlay text. Everything
         # between the backdrop and the HUD beyond the sprites is M01-M05-only.
         presentation = self._presentation
-        draw_classroom_backdrop(self._renderer, self._presentation_mission_id)
+        draw_classroom_backdrop(
+            self._renderer,
+            self._presentation_mission_id,
+            package_ids=self._presentation_package_ids,
+        )
         presentation.draw_ground(self._renderer)
         for item in self._objects:
             world_object = item.world_object
@@ -989,7 +1005,7 @@ class ClassroomTrailScene(Scene):
             _PROGRESS_FONT_SIZE,
         )
         self._renderer.draw_text(
-            self._mission.instructions,
+            presentation.fit_instruction(self._renderer, self._mission.instructions),
             _MISSION_X,
             _MISSION_INSTRUCTIONS_Y,
             _TEXT_COLOR,
@@ -1033,7 +1049,7 @@ class ClassroomTrailScene(Scene):
         entity: Character | WorldObject,
         color: tuple[int, int, int],
     ) -> None:
-        """Draw one entity at its authoritative bounds, with M01-M05 effects."""
+        """Draw one entity at its authoritative bounds, with presentation effects."""
         presentation = self._presentation
         presentation.draw_under(self._renderer, qualified_id, entity, color)
         with classroom_sprite_pose(presentation.pose_for(qualified_id)):
