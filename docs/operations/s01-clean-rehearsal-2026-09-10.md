@@ -51,7 +51,11 @@ mission-aware Trail progress row and completion banner (S04 shows `Spoken to 1 /
 the frozen Moon Meadow on top of that HUD: the S05 package's Moonlit Guide wears the trusted
 Guide art, each conversation line gets the existing dialogue bubble, and the existing talk cue
 and audio are reused. The original S01 rehearsal inputs and result above remain an unchanged historical
-record.
+record. On 2026-10-24 the pin advanced to
+`8811a5ceff647d4a6f408bb1aa9764b5cd64c607` for S06's package-scoped Moon Meadow
+presentation: the canonical Sun Seed, Rain Bell, and Wind Flower receive distinct
+polished marker primitives while later M06 reuse sessions stay on their existing
+presentation.
 
 ## Student flow exercised
 

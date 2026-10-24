@@ -1,2 +1,2 @@
 -e .[dev]
-explore-studio @ git+https://github.com/tonyluo2000/explore-studio.git@2692c2f1a7c07d1576b7837c2a91e542b73bd3e0
+explore-studio @ git+https://github.com/tonyluo2000/explore-studio.git@8811a5ceff647d4a6f408bb1aa9764b5cd64c607

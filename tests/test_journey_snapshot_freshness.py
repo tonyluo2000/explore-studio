@@ -144,8 +144,8 @@ STALE_MUTATIONS = (
     (
         "trail-construction",
         "explore/packages/classroom_trail.py",
-        "x=player.x,",
-        "x=player.x + 1,",
+        "x=player_x,",
+        "x=player_x + 1,",
         "runtime",
     ),
     # 5. Colours.

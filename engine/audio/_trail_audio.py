@@ -1,4 +1,4 @@
-"""Moon Meadow audio for the S02-S05 (M02-M05) Classroom Trail.
+"""Moon Meadow audio for presentation-allow-listed Classroom Trails.
 
 Like ``TrailPresentation``, this layer only *observes* the scene after each
 update and never writes to it. It turns real state transitions into semantic
@@ -18,9 +18,10 @@ cues for an :class:`~engine.audio._manager.AudioManager`:
   a beat after the interaction that caused it.
 
 Audio is allow-listed by the mission presentation policy (``meadow_audio``):
-M02-M05 only, so S01 and S06+ stay silent. Every cue has a visual twin, so a
-muted or soundless Trail loses nothing. A small "Audio" indicator (M to
-toggle) is drawn only while a mixer is actually open.
+M02-M05 and the package-scoped S06 presentation opt in; S01 and later plain
+M06 reuses stay silent. Every cue has a visual twin, so a muted or soundless
+Trail loses nothing. A small "Audio" indicator (M to toggle) is drawn only
+while a mixer is actually open.
 
 Internal module — not part of the Student API.
 """
@@ -91,8 +92,10 @@ class TrailAudio:
         mission_id: str | None,
         sink: AudioSink | None,
         start: tuple[float, float] | None = None,
+        *,
+        package_ids: tuple[str, ...] = (),
     ) -> None:
-        policy = mission_presentation(mission_id)
+        policy = mission_presentation(mission_id, package_ids=package_ids)
         self.active = sink is not None and policy is not None and policy.meadow_audio
         self._sink = sink if self.active else None
         self._aliases = policy.sprite_aliases if policy is not None else {}

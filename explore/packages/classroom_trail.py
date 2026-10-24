@@ -223,6 +223,7 @@ def create_classroom_trail_scene(
     """
     from engine.entities import Character as EngineCharacter
     from engine.entities import WorldObject as EngineWorldObject
+    from engine.rendering._mission_presentation import mission_presentation
     from engine.scenes import (
         ClassroomTrailNPC,
         ClassroomTrailNPCConditionalResponse,
@@ -255,6 +256,7 @@ def create_classroom_trail_scene(
         sorted(package.package_id for package in plan.packages)
     ):
         raise ValueError("plan.packages must be ordered by package ID")
+    package_ids = tuple(package.package_id for package in plan.packages)
     canonical_entries = tuple(
         entry for package in plan.packages for entry in package.registration_plan.entries
     )
@@ -304,10 +306,20 @@ def create_classroom_trail_scene(
                 "distinct world objects"
             )
     player = plan.player.character
+    presentation = (
+        mission_presentation(mission.mission_id, package_ids=package_ids)
+        if explicit_mission
+        else None
+    )
+    player_x, player_y = (
+        presentation.player_start
+        if presentation is not None and presentation.player_start is not None
+        else (player.x, player.y)
+    )
     engine_player = EngineCharacter(
         name=player.name,
-        x=player.x,
-        y=player.y,
+        x=player_x,
+        y=player_y,
         width=100,
         height=100,
         color=resolve_color(player.color),
@@ -437,6 +449,7 @@ def create_classroom_trail_scene(
         player_qualified_id=plan.player.qualified_id,
         audio=audio,  # type: ignore[arg-type]
         story_presentation=explicit_mission,
+        presentation_package_ids=package_ids,
     )
 
 

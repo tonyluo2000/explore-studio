@@ -12,6 +12,11 @@ launched without ``--mission-id`` keeps M01's completion rule on the plain
 Trail (see ``explore.packages.classroom_trail``), so M01's entry here never
 leaks into free-play runs.
 
+Most presentations are mission-wide. Reused missions can instead opt in one
+exact package identity through :data:`PACKAGE_SCOPED_PRESENTATIONS`. That is
+the session boundary for S06: later sessions reuse M06 with different packages
+and therefore keep the plain Trail until they are migrated deliberately.
+
 Presentation never changes gameplay. Per-mission options only *withhold*
 story beats that belong to one session, and alias a mission's canonical
 package identity onto the trusted art it should wear.
@@ -29,6 +34,9 @@ from typing import Final
 from engine.rendering._classroom_sprites import (
     MOON_COMPASS_QUALIFIED_ID,
     MOONLIT_GUIDE_QUALIFIED_ID,
+    RAIN_BELL_PRESENTATION_ID,
+    SUN_SEED_PRESENTATION_ID,
+    WIND_FLOWER_PRESENTATION_ID,
 )
 
 #: Match ``explore.curriculum.MISSION_01_ID`` .. ``MISSION_05_ID`` without
@@ -38,6 +46,7 @@ S02_MISSION_ID: Final = "create-a-classroom-object"
 S03_MISSION_ID: Final = "make-your-object-respond"
 S04_MISSION_ID: Final = "introduce-your-character"
 S05_MISSION_ID: Final = "write-a-short-conversation"
+S06_MISSION_ID: Final = "build-an-object-collection"
 
 #: The canonical S03 package (``lessons/sessions/s03/student/explorer-package``)
 #: ships the same Moon Compass under its own package id.
@@ -45,6 +54,14 @@ S03_MOON_COMPASS_QUALIFIED_ID: Final = "moon-compass-response:compass"
 #: The canonical S05 package (``lessons/sessions/s05/student/explorer-package``)
 #: ships the same Moonlit Guide under its own package id.
 S05_MOONLIT_GUIDE_QUALIFIED_ID: Final = "moonlit-conversation:guide"
+
+#: The canonical S06 package and its three authored objects. The presentation
+#: aliases are private visual roles; package names and response text still come
+#: from the validated YAML registrations.
+S06_PACKAGE_ID: Final = "starlight-garden"
+S06_SUN_SEED_QUALIFIED_ID: Final = f"{S06_PACKAGE_ID}:sun-seed"
+S06_RAIN_BELL_QUALIFIED_ID: Final = f"{S06_PACKAGE_ID}:rain-bell"
+S06_WIND_FLOWER_QUALIFIED_ID: Final = f"{S06_PACKAGE_ID}:wind-flower"
 
 
 @dataclass(frozen=True)
@@ -75,6 +92,12 @@ class MissionPresentation:
     #: The Moon Meadow ambience and its interaction, step, and completion cues
     #: (``engine.audio``). Off unless a mission opts in; never gameplay.
     meadow_audio: bool = False
+    #: Give long object near/interacted responses a wrapped lower-screen card.
+    #: The response still comes directly from the package-backed scene state.
+    object_feedback_focus: bool = False
+    #: Optional presentation-only player spawn. This is package-scoped when a
+    #: reused mission needs a coherent visual route without moving authored objects.
+    player_start: tuple[int, int] | None = None
     #: Package qualified id -> the trusted-art identity it is drawn and posed as.
     sprite_aliases: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -116,6 +139,50 @@ MISSION_PRESENTATIONS: Final[Mapping[str, MissionPresentation]] = MappingProxyTy
 )
 
 
-def mission_presentation(mission_id: str | None) -> MissionPresentation | None:
-    """Return the mission's presentation, or ``None`` for the plain Trail."""
-    return MISSION_PRESENTATIONS.get(mission_id) if isinstance(mission_id, str) else None
+PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation]] = (
+    MappingProxyType(
+        {
+            # S06 alone continues the Moonlit expedition. M06 is reused by
+            # S16/S17/S21/S27, whose package ids intentionally do not match.
+            (S06_MISSION_ID, S06_PACKAGE_ID): MissionPresentation(
+                celebration=True,
+                meadow_audio=True,
+                object_feedback_focus=True,
+                player_start=(80, 180),
+                sprite_aliases=MappingProxyType(
+                    {
+                        S06_SUN_SEED_QUALIFIED_ID: SUN_SEED_PRESENTATION_ID,
+                        S06_RAIN_BELL_QUALIFIED_ID: RAIN_BELL_PRESENTATION_ID,
+                        S06_WIND_FLOWER_QUALIFIED_ID: WIND_FLOWER_PRESENTATION_ID,
+                    }
+                ),
+            )
+        }
+    )
+)
+
+
+def mission_presentation(
+    mission_id: str | None, *, package_ids: tuple[str, ...] = ()
+) -> MissionPresentation | None:
+    """Return this exact Trail's presentation, or ``None`` for the plain Trail.
+
+    Mission-wide entries remain the normal policy. A package-scoped entry is
+    selected only when the canonical package is actually loaded, preventing a
+    reused mission id from silently changing later curriculum sessions.
+    """
+    if not isinstance(mission_id, str):
+        return None
+    policy = MISSION_PRESENTATIONS.get(mission_id)
+    if policy is not None:
+        return policy
+    if not isinstance(package_ids, tuple) or any(
+        not isinstance(package_id, str) for package_id in package_ids
+    ):
+        return None
+    matches = [
+        policy
+        for (scoped_mission, package_id), policy in PACKAGE_SCOPED_PRESENTATIONS.items()
+        if scoped_mission == mission_id and package_id in package_ids
+    ]
+    return matches[0] if len(matches) == 1 else None

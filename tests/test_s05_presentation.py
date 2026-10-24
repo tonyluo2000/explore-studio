@@ -185,7 +185,9 @@ def test_each_press_shows_the_next_line_and_m05_completes_on_the_final_line() ->
 
 def _gameplay_trace(monkeypatch: pytest.MonkeyPatch, *, presented: bool) -> list[object]:
     if not presented:
-        monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id: None)
+        monkeypatch.setattr(
+            presentation_module, "mission_presentation", lambda _id, **_kwargs: None
+        )
     renderer = AccentRenderer()
     scene = _s05(renderer)
     assert scene._presentation.active is presented

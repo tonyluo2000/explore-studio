@@ -102,13 +102,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:a8906eb30304a52f0c3413d97ed9e81d53c51edf8bb818817a5d29970faab844",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:e390ccc095a02cca1cff674b8477857eec7061b045c592566872a835e12ac8a7",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "0c842405a3b976f419196e5a11b3bcc9f83b02c268222a288238acedbeb547c8",
         "captureRecipe": "9215e2b8a8a5b27cb79c9ee07f3446e84d1cb60a5ea4bd8e75c4204884e215cd",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "7aed2bd8fa53ecb851de1370b8338be1712bb410a2ad662a7f05b8e640b3453b",
       "images": {
@@ -152,13 +152,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:c40342978e03d442b85c26e6a21f4dee00f9e505cda0d11578586f3b151aba94",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:46c6651a42a0b1718e7d1e4c8c8bdc0bd2a2458c321220f9fceac9284afa09f6",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
         "captureRecipe": "64ca9fe21704f1bc13f1ea7f39dbe76d2235be5027715e47c2bd5734f970a051",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "f2a982b92f93ca14d4434de63471ff77c5333cfd1299ade48ceb8b746d394e8b",
       "images": {
@@ -210,13 +210,13 @@
           "y": 360
         }
       },
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:ae50de08a57f5b4bf5c8eefeaef4856bc063d014c9a6a9ad20b3817e810aadae",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:68355b1ea59d6c5806bc04833a5c3375ac0900f89e32b24e3b4dcd5dbc843e1e",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "b7f6a383052df4755aae18e1691cc5fb345f100a29b2b49f6c581b5c739217d4",
         "captureRecipe": "2793ada298bf128dfd0f2ad76c93b705a1c821073871e5ea166102cf572dd04c",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "6700154d9667ddab9e6d5b1878501b12ad0f453ba18e382c57645442c40f8342",
       "images": {
@@ -258,13 +258,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:82b04d09cf0b01e03ead9bb24476d9de9e30dd978b4f4481b35d1c718bc4ca2d",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:6863df415b6df5848544e4c72488052e678c969028cd688367dc2baa6c1ebbb4",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
         "captureRecipe": "0bf1465e6ae1c7ab15fb2c42b16f751ad270e115d65b3d2592d78a9503880a71",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "8a781048fef91c8e0cf1e52802537d97e3370ae9fbd2cc2203e60d423f3847b5",
       "images": {
@@ -306,13 +306,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:4b948ad9d2dc825e7b3e07a235bc89c4267b8cd69040a067ee25e33b639605ef",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:37ee0c99ae8f7174d2191dfdf54738fff905be5b1d5e3683fc2d6a96d6547165",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "5b4a25fe9cce945da489f7cd80dd9b57d439c3b8ee8c2405d1156435ef385d25",
         "captureRecipe": "075e46c59fbd0742c6a3c144acdfc9d776eb95c2984356c30732920a0fef4257",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "64ac64822cfdf68ca7378b182a634479a19eb31343506aa6131fe25a30114b8a",
       "images": {
@@ -355,13 +355,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:e9c2dbcedebf316cf53f25d6c51b0f10f0d7e695eae492e7a26fac3661086889",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:5d87d44d7ce3252a8658ba2f343837d39fdc62f241c29b587a9387c3ed3ee9e8",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "4c3f6d5d410b03c1c91aacb7a85bd7a8a1f487e95bf497a55a6b40a70a593e8d",
         "captureRecipe": "128650d7259fc580fe9e17d096c0511fa36dd065dd43d9293b00a6ba4698da9d",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "e219db32b2c14e9b7492ab26d52d3cf65ade3898471c728693b26642123eca1f",
       "images": {
@@ -404,13 +404,13 @@
       "player": "nova-character:nova",
       "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:07e8c91c43beb37ad0b7fbecdfbb4b07100292679c1657440ae9c8fe9a18a29d",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:3a6e7f96001ea9854ee927c343c9e806d6bc635ffb6f3f91fc95f0e6279c3fe2",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "55644a07677758dfaf3278d35e06f9671ddb833e77eb11f770f3660812f58893",
         "captureRecipe": "ef2ae4bae156429452aed7dfef72d4c04b3418ca7065fdd9d9ba3601c0cee0cb",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
       "sourceRgbSha256": "775bd9da3f37b2c2178f0413b87a5f243bdf01cf7913c3e9e771012ba901dd75",
       "images": {
@@ -450,31 +450,31 @@
         "lessons/sessions/s06/student/explorer-package"
       ],
       "player": "nova-character:nova",
-      "presentation": "standard",
+      "presentation": "moon-meadow",
       "fixture": null,
-      "runtimeCommit": "2692c2f1a7c07d1576b7837c2a91e542b73bd3e0",
-      "presentationFingerprint": "sha256:6d3b8226d2d067c92c7366d2d241cce7ae67cf0fcf3f7583e127260e0ca60ccc",
+      "runtimeCommit": "8811a5ceff647d4a6f408bb1aa9764b5cd64c607",
+      "presentationFingerprint": "sha256:e3111b9a775cfc6f2f8e3556d8ecded1f1e49e088a7dc6ee888bf7a385d41de1",
       "fingerprintParts": {
-        "runtime": "534df6c6a89055b52f86e5c0434ede825da7a1c559860277a2bf92b1845eb8ce",
+        "runtime": "ebf68b86e9c0f37053e1c209e48cc5051af5e9295bd7238c3c2c4ab575cfa523",
         "packages": "68153f5b4b1e6e707bd45a132742cb0d81a74edc1d2e142d2bda957a6af23cc6",
-        "captureRecipe": "5b2b727c967f43b10a79cc288ceb64e31cdd8f5aa06af3a59d14d94d881e157e",
-        "captureImplementation": "94f4c4bc7493af3397940744210cab0e8be21918d26298f0fdcc2ead1e12404d"
+        "captureRecipe": "904afd8da9e83106ece87c8329d93e4cb8e1f4f01f07a05198951f13683bd4f1",
+        "captureImplementation": "2391b91ab840c6cc8a7ab0fccf9f193f0e172ee1ea52ad3b8721fb2fd511db52"
       },
-      "sourceRgbSha256": "f867134591f5b8e202cd0b04d0ecafdfc75ff258bfa418aa33c179d821a557e1",
+      "sourceRgbSha256": "d8d3afcc8de5fc9f7a442c31eaf5c9a4962315ba50ea3d6e3a3f4706a273b10f",
       "images": {
         "960": {
           "src": "/journey/s06/hero.webp",
           "width": 960,
           "height": 640,
-          "bytes": 18856,
-          "sha256": "578a989540dc75cae0ccd3e0c6f83013d376696ed0f65edab3ba37b398e885c2"
+          "bytes": 94252,
+          "sha256": "34a57ed862c5d2f9df3c3ccf80acf1240b0bf35d9a0cb595a7420e36c44f0806"
         },
         "480": {
           "src": "/journey/s06/hero-480.webp",
           "width": 480,
           "height": 320,
-          "bytes": 8314,
-          "sha256": "6e2cfe64e8ef4f699c8830d8853ee989c19bd2345d3d3b51657b05c3ea5ebafa"
+          "bytes": 34574,
+          "sha256": "922e5f28e5424f23fc6258715823f093d579530a7f9398efe34279a9365a4f07"
         }
       },
       "toolchain": {

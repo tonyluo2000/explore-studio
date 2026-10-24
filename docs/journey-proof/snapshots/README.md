@@ -27,7 +27,7 @@ every required entity, and no art or entity from a later session.
 | S03 | `S03_NEAR_CLUE` | LEARNING_MOMENT | `journey/s03/near-clue.webp` | 92,898 B | 34,356 B |
 | S04 | `S04_DIALOGUE` | HERO | `journey/s04/hero.webp` | 97,086 B | 35,678 B |
 | S05 | `S05_CONVERSATION` | HERO | `journey/s05/hero.webp` | 96,206 B | 35,698 B |
-| S06 | `S06_BREADCRUMB_TRAIL` | HERO | `journey/s06/hero.webp` | 18,856 B | 8,314 B |
+| S06 | `S06_BREADCRUMB_TRAIL` | HERO | `journey/s06/hero.webp` | 93,878 B | 34,206 B |
 
 What each check verifies:
 
@@ -68,20 +68,21 @@ What each check verifies:
   S06's collection (`starlight-garden:*`), and there is no completion banner.
   The progress row reads `Conversations 0 / 1` (the mission-aware HUD).
 - **S06 HERO:** the breadcrumb collection in progress, not completion, in the
-  mission's standard/plain Trail presentation. Nova interacts with Sun Seed
-  and Rain Bell, then walks beside Wind Flower. The frame is accepted only
-  with Wind Flower targeted, exactly the first two package objects visited,
-  M06 Incomplete, and Wind Flower's package-authored `when_near` text drawn.
-  Nova and all three `starlight-garden:*` objects are present; Pixel, the
-  Lantern, both Compasses, and both Guide packages are absent. The progress row
-  reads `Visited 2 / 3`. No Moon Meadow presentation or NPC is required.
+  polished Moon Meadow. Nova interacts with Sun Seed and Rain Bell, then walks
+  beside Wind Flower. The frame is accepted only with Wind Flower targeted,
+  exactly the first two package objects visited, M06 Incomplete, and Wind
+  Flower's complete package-authored `when_near` text drawn in the wrapped
+  response card. Nova uses trusted art, and the three `starlight-garden:*`
+  objects use distinct gold-seed, blue-bell, and pink-flower presentation
+  primitives. Pixel, the Lantern, both Compasses, both Guide packages, and
+  every later-session entity are absent. The progress row reads `Visited 2 / 3`.
 
 ## Provenance
 
-- Base: `origin/main` at `27d45a01ac8b6c8c1e49d8b42c1fe9fadf61b0cf`.
+- Base: `origin/main` at `fbf4b53c94bc1e47d61a60288898b0062868b41e`.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0` (S05 in the Moon Meadow on the
-  mission-aware Trail HUD; previously `b875c52b76cfd4e1d72be4c77aef595475da79de`).
+  `8811a5ceff647d4a6f408bb1aa9764b5cd64c607` (S06's package-scoped Moon Meadow
+  runtime; previously `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0`).
   The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from
@@ -119,19 +120,18 @@ What each check verifies:
   The same moment as before the merge; the only pixel change is #118's
   progress row (`Visited 0 / 1` became `Conversations 0 / 1`).
 - S06 hashes (darwin-arm64, Pillow 11.2.1, libwebp 1.5.0): source frame
-  `f867134591f5b8e202cd0b04d0ecafdfc75ff258bfa418aa33c179d821a557e1`;
-  `hero.webp` `578a989540dc75cae0ccd3e0c6f83013d376696ed0f65edab3ba37b398e885c2`;
-  `hero-480.webp` `6e2cfe64e8ef4f699c8830d8853ee989c19bd2345d3d3b51657b05c3ea5ebafa`.
-- S01–S05 remain byte-identical to their reviewed files. Their manifest
-  fingerprints changed only because the table now explicitly excludes S06
-  objects from earlier frames and the harness now accepts the standard Trail's
-  intentional rectangle fallback. Runtime and package fingerprints are
-  unchanged.
-- Presentation fingerprints, per moment: `S01_ARRIVAL` `a8906eb30304…`,
-  `S02_COMPASS_PROMPT` `c40342978e03…`, `S02_MOVED_COMPASS` `ae50de08a57f…`,
-  `S03_REVEAL` `82b04d09cf0b…`, `S03_NEAR_CLUE` `4b948ad9d2dc…`, `S04_DIALOGUE`
-  `e9c2dbcedebf…`, `S05_CONVERSATION` `07e8c91c43be…`,
-  `S06_BREADCRUMB_TRAIL` `6d3b8226d2d0…`. The full values are in the manifest.
+  `1152b14d94baa2a233526eaa66dada280360d985cbdeafca7d4f0f4a79aafad2`;
+  `hero.webp` `e8534a21168c4b58411cbe769aa3268df15d73ab546845ca0855f775c6f8e1ab`;
+  `hero-480.webp` `f44a1f765ecd69c6f829162ceaffaaafff6d947727010122e7c5b7a488c34848`.
+- S01–S05 remain byte-identical to their reviewed files. The publisher drove
+  each retained moment in memory and refreshed its runtime/harness provenance
+  only after the source RGB and both WebPs matched exactly; it did not rewrite
+  those image files.
+- Presentation fingerprints, per moment: `S01_ARRIVAL` `cd41c65660f8…`,
+  `S02_COMPASS_PROMPT` `a5be9d6368e3…`, `S02_MOVED_COMPASS` `0f653be09425…`,
+  `S03_REVEAL` `f31f8aff149e…`, `S03_NEAR_CLUE` `16b1b720dc99…`, `S04_DIALOGUE`
+  `ee771735ddbf…`, `S05_CONVERSATION` `e614cc1a8f6b…`,
+  `S06_BREADCRUMB_TRAIL` `93e83ad15785…`. The full values are in the manifest.
 - A fingerprint hashes four parts. The manifest's `fingerprintInputs` lists
   exactly what each one covers:
   - **runtime** (`RUNTIME_GROUPS` in `scripts/journey_snapshots.py`):
@@ -161,8 +161,8 @@ What each check verifies:
     `scripts/capture_journey_snapshots.py`, `scripts/journey_snapshots.py`,
     and `scripts/trail_driver.py`. These hold the fixed time step, real
     input, frame selection, acceptance checks, and encoding. Any edit to
-    these files needs a recapture, which only refreshes the manifest when
-    the frames are unchanged.
+    these files needs a byte-checked in-memory capture. Retained metadata is
+    refreshed only when its RGB and both WebPs are unchanged.
 
   When any part changes, `--check` and `tests/test_journey_snapshots.py` fail
   with a message that names the part, for example: "Journey snapshot for S03
@@ -210,7 +210,7 @@ What each check verifies:
 The committed files were produced by exactly these commands, in order:
 
 ```bash
-python scripts/capture_journey_snapshots.py --all-published
+python scripts/capture_journey_snapshots.py --session S06
 python scripts/capture_journey_snapshots.py --contact-sheet docs/journey-proof/snapshots/contact-sheet.png
 python scripts/capture_journey_snapshots.py --check
 python scripts/capture_journey_snapshots.py --all-published --dry-run

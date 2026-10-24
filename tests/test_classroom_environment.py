@@ -205,9 +205,9 @@ def test_render_layers_backdrop_objects_npc_player_then_hud(monkeypatch) -> None
     real_backdrop = trail_scene_module.draw_classroom_backdrop
     real_sprite = trail_scene_module.draw_classroom_sprite
 
-    def backdrop(target, mission_id):
+    def backdrop(target, mission_id, **kwargs):
         target.operations.append(("layer", ("backdrop",)))
-        return real_backdrop(target, mission_id)
+        return real_backdrop(target, mission_id, **kwargs)
 
     def sprite(target, qualified_id, *values):
         target.operations.append(("layer", (qualified_id,)))

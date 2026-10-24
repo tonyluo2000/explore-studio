@@ -62,6 +62,15 @@ Each lesson follows a consistent structure:
 4. **Extension** — optional deeper exploration.
 5. **Reflection** — students articulate what they learned.
 
+## Trail presentation policy
+
+From S06 forward, every newly published primary course session uses the
+polished world presentation by default. The STANDARD/plain Trail is a bounded,
+lesson-specific exception, and its reason must be recorded in the mission
+presentation contract before that session is published. Existing unpublished
+S07–S30 mappings are not implicitly migrated by this policy; each session is
+reviewed when its runtime presentation is implemented.
+
 ## Assessment
 
 *To be defined during Phase 2.*

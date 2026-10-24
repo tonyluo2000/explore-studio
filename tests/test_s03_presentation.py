@@ -256,7 +256,9 @@ def test_s03_near_clue_then_reveal_then_completion() -> None:
 
 def _gameplay_trace(monkeypatch: pytest.MonkeyPatch, *, presented: bool) -> list[object]:
     if not presented:
-        monkeypatch.setattr(presentation_module, "mission_presentation", lambda _id: None)
+        monkeypatch.setattr(
+            presentation_module, "mission_presentation", lambda _id, **_kwargs: None
+        )
     renderer = ArtRenderer()
     scene = _scene(renderer)
     assert scene._presentation.active is presented

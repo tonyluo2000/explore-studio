@@ -6,12 +6,13 @@ art is keyed by exact package qualified ids, so a session can silently fall
 back to the plain Trail. This module pins, per session, what the canonical
 ``explore-package trail`` command on the student task card must show.
 
-The standard Trail is a legitimate choice: only listed ``moon-meadow`` sessions
-must show Moon Meadow. A Trail launched without ``--mission-id`` is always the
-standard Trail, even though it runs M01's completion rule. To opt a session
-(S06+) in deliberately:
+The standard Trail is a legitimate lesson-specific exception: only listed
+``moon-meadow`` sessions must show Moon Meadow. A Trail launched without
+``--mission-id`` is always the standard Trail, even though it runs M01's
+completion rule. To opt a session in deliberately:
 
-1. add its mission to ``MISSION_PRESENTATIONS`` (with any ``sprite_aliases``);
+1. add its mission to ``MISSION_PRESENTATIONS`` or its exact mission/package
+   pair to ``PACKAGE_SCOPED_PRESENTATIONS`` (with any ``sprite_aliases``);
 2. change its row in ``EXPECTED_PRESENTATION`` to ``MOON_MEADOW``;
 3. list the qualified ids that must wear trusted art in ``REQUIRED_TRUSTED_ART``.
 
@@ -25,6 +26,7 @@ import shlex
 from pathlib import Path
 
 import pytest
+import yaml
 
 from engine.assets import TrustedArtCatalog
 from engine.rendering._classroom_environment import MEADOW_BACKDROP
@@ -49,7 +51,12 @@ from tests.test_s02_art_pass import ArtRenderer
 REPO = Path(__file__).resolve().parents[1]
 SESSIONS = REPO / "lessons/sessions"
 SLIDES = REPO / "course4teen-website/app/students/slides"
+CALENDAR = REPO / "course4teen-website/lib/calendar.ts"
 STANDARD, MOON_MEADOW = "standard", "moon-meadow"
+
+#: Published S06+ sessions may use STANDARD only with a reviewed, lesson-specific
+#: reason here. Empty today: S06 is polished and S07+ is not published.
+PUBLISHED_STANDARD_EXCEPTIONS: dict[str, str] = {}
 
 #: session -> (canonical --mission-id, presentation the runtime gives it today).
 EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
@@ -58,7 +65,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s03": ("make-your-object-respond", MOON_MEADOW),
     "s04": ("introduce-your-character", MOON_MEADOW),
     "s05": ("write-a-short-conversation", MOON_MEADOW),
-    "s06": ("build-an-object-collection", STANDARD),
+    "s06": ("build-an-object-collection", MOON_MEADOW),
     "s07": ("toggle-an-object-state", STANDARD),
     "s08": ("respond-to-object-state", STANDARD),
     "s09": ("count-object-interactions", STANDARD),
@@ -95,6 +102,9 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
     "s03": (NOVA_QUALIFIED_ID, "moon-compass-response:compass"),
     "s04": (NOVA_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID, MOONLIT_GUIDE_QUALIFIED_ID),
     "s05": (NOVA_QUALIFIED_ID, CRYSTAL_LANTERN_QUALIFIED_ID, "moonlit-conversation:guide"),
+    # S06's markers use bounded procedural presentation primitives; Nova must
+    # still use the trusted course art.
+    "s06": (NOVA_QUALIFIED_ID,),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.
@@ -142,10 +152,19 @@ def _package_root(argument: str) -> Path:
     path = Path(argument)
     if path in STUDENT_COPY_SEEDS:
         return STUDENT_COPY_SEEDS[path]
-    assert (
-        not path.is_absolute() and ".." not in path.parts
-    ), f"{argument} is outside the Course Kit; map it to its seed in STUDENT_COPY_SEEDS"
+    assert not path.is_absolute() and ".." not in path.parts, (
+        f"{argument} is outside the Course Kit; map it to its seed in STUDENT_COPY_SEEDS"
+    )
     return REPO / path
+
+
+def _package_ids(arguments: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(
+        yaml.safe_load((_package_root(argument) / "manifest.yaml").read_text("utf-8"))["package"][
+            "id"
+        ]
+        for argument in arguments
+    )
 
 
 class AccentCheckingRenderer(ArtRenderer):
@@ -185,14 +204,32 @@ def test_every_canonical_trail_command_has_an_explicit_expectation() -> None:
 def test_runtime_presentation_matches_the_contract(session: str) -> None:
     mission_id, kind = EXPECTED_PRESENTATION[session]
     assert kind in (STANDARD, MOON_MEADOW)
-    gets_moon_meadow = mission_presentation(mission_id) is not None
+    packages, _ = CANONICAL[session]
+    package_ids = _package_ids(packages)
+    gets_moon_meadow = mission_presentation(mission_id, package_ids=package_ids) is not None
     assert gets_moon_meadow == (kind == MOON_MEADOW), (session, mission_id)
-    assert TrailPresentation(mission_id).active == gets_moon_meadow
+    assert TrailPresentation(mission_id, package_ids=package_ids).active == gets_moon_meadow
 
 
 def test_required_art_is_declared_for_exactly_the_moon_meadow_sessions() -> None:
     assert sorted(REQUIRED_TRUSTED_ART) == MOON_MEADOW_SESSIONS
     assert all(REQUIRED_TRUSTED_ART.values())
+
+
+def test_new_primary_sessions_default_to_polished_when_published() -> None:
+    source = CALENDAR.read_text(encoding="utf-8")
+    match = re.search(r"sessionsWithSlides[^=]*= \[([^\]]*)\]", source)
+    assert match
+    published = re.findall(r'"(S\d\d)"', match.group(1))
+    for session in published:
+        if int(session[1:]) < 6:
+            continue
+        kind = EXPECTED_PRESENTATION[session.lower()][1]
+        assert kind == MOON_MEADOW or PUBLISHED_STANDARD_EXCEPTIONS.get(session), (
+            f"{session} is published with STANDARD presentation; add a reviewed "
+            "lesson-specific reason or implement its polished world presentation"
+        )
+    assert all(reason.strip() for reason in PUBLISHED_STANDARD_EXCEPTIONS.values())
 
 
 def test_omitting_the_mission_id_is_always_the_standard_trail() -> None:
@@ -218,7 +255,10 @@ def test_omitting_the_mission_id_is_always_the_standard_trail() -> None:
 
 @pytest.mark.parametrize("session", MOON_MEADOW_SESSIONS)
 def test_required_objects_resolve_to_trusted_sprite_identities(session: str) -> None:
-    presentation = TrailPresentation(EXPECTED_PRESENTATION[session][0])
+    packages, _ = CANONICAL[session]
+    presentation = TrailPresentation(
+        EXPECTED_PRESENTATION[session][0], package_ids=_package_ids(packages)
+    )
     for qualified_id in REQUIRED_TRUSTED_ART[session]:
         identity = presentation.sprite_identity(qualified_id)
         assert _trusted_sheet(identity) is not None, (session, qualified_id, identity)
@@ -243,7 +283,10 @@ def test_canonical_command_draws_moon_meadow_and_trusted_art(session: str) -> No
     entities = {options["--player"]: scene.player}
     entities.update((npc.qualified_id, npc.character) for npc in scene.npcs)
     entities.update((item.qualified_id, item.world_object) for item in scene.objects)
-    presentation = TrailPresentation(options["--mission-id"])
+    presentation = TrailPresentation(
+        options["--mission-id"],
+        package_ids=tuple(package.package_id for package in planned.plan.packages),
+    )
     for qualified_id in REQUIRED_TRUSTED_ART[session]:
         assert qualified_id in entities, f"{session}: {qualified_id} is not in the scene"
         entity = entities[qualified_id]
@@ -268,7 +311,7 @@ def test_only_moon_meadow_sessions_promise_moon_meadow_on_their_slides() -> None
             continue
         checked += 1
         if "Moon Meadow" in page.read_text(encoding="utf-8"):
-            assert (
-                EXPECTED_PRESENTATION[session][1] == MOON_MEADOW
-            ), f"{page} names Moon Meadow but {session} uses the standard Trail"
+            assert EXPECTED_PRESENTATION[session][1] == MOON_MEADOW, (
+                f"{page} names Moon Meadow but {session} uses the standard Trail"
+            )
     assert checked, "no student slide pages were found"

@@ -1,4 +1,4 @@
-"""Cosmetic presentation layer for the S01-S05 (M01-M05) Classroom Trail.
+"""Cosmetic presentation layer for the polished Classroom Trail sessions.
 
 The scene owns gameplay. This layer only *observes* the scene after each
 update (player position, current target, interaction pulse, visited set,
@@ -18,6 +18,9 @@ mission completion) and turns that into animation poses and short effects:
 * In S05 the same Guide continues the conversation: each line of its 2-3-line
   conversation gets that bubble as it is spoken, and the speech cue stays
   until the final line has been shown.
+* S06's package-scoped presentation gives the Sun Seed, Rain Bell, and Wind
+  Flower distinct animated marker silhouettes while their authored positions,
+  colors, names, and responses remain authoritative.
 
 It is allow-listed by ``_mission_presentation``: M01 gets only the shared
 layers (no Lantern destination marker, label, celebration, or talk cue; the
@@ -26,9 +29,10 @@ gets the shared ones (no discovery label or celebration, since the student's
 own clue and reveal tell that story) and draws its canonical Compass with the
 same trusted art, and M04 gets the shared ones plus the Guide's talk cue and
 dialogue focus, without the Lantern's destination marker. M05 gets M04's
-layers and draws its canonical Guide with the same trusted art. For every other
-Trail it is inert, so S06+ rendering, and any Trail launched without an
-explicit mission, is unchanged. It never mutates
+layers and draws its canonical Guide with the same trusted art. S06 is enabled
+only for its canonical ``starlight-garden`` package, so later M06 reuse
+sessions remain unchanged. For every other Trail, and any Trail launched
+without an explicit mission, it is inert. It never mutates
 the scene, never raises into gameplay, and bounds every effect count.
 
 Internal module — not part of the Student API.
@@ -57,6 +61,9 @@ from engine.rendering._classroom_sprites import (
     MOONLIT_GUIDE_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
     PIXEL_QUALIFIED_ID,
+    RAIN_BELL_PRESENTATION_ID,
+    SUN_SEED_PRESENTATION_ID,
+    WIND_FLOWER_PRESENTATION_ID,
 )
 from engine.rendering._effects import (
     Color,
@@ -146,6 +153,10 @@ _LABEL_FONT: Final = 24
 _BANNER_FONT: Final = 34
 _BUBBLE_TEXT_WIDTH: Final = 230
 _BUBBLE_MAX_LINES: Final = 4
+_OBJECT_FEEDBACK_X: Final = 350
+_OBJECT_FEEDBACK_WIDTH: Final = 584
+_OBJECT_FEEDBACK_FONT: Final = 22
+_OBJECT_FEEDBACK_BOTTOM: Final = 622
 #: Dialogue focus: a larger font that stays legible at a half-scale share,
 #: a wider column, and up to six lines before an explicit ellipsis.
 _DIALOGUE_FONT: Final = 24
@@ -471,8 +482,14 @@ def place_clear_panel(
 class TrailPresentation:
     """Observe one Trail scene and draw its mission-gated cosmetic layer."""
 
-    def __init__(self, mission_id: str | None, start: tuple[float, float] | None = None) -> None:
-        policy = mission_presentation(mission_id)
+    def __init__(
+        self,
+        mission_id: str | None,
+        start: tuple[float, float] | None = None,
+        *,
+        package_ids: tuple[str, ...] = (),
+    ) -> None:
+        policy = mission_presentation(mission_id, package_ids=package_ids)
         self.active = policy is not None
         #: Inactive missions get the empty policy: no extras and no aliases.
         self.policy = policy or MissionPresentation()
@@ -493,6 +510,7 @@ class TrailPresentation:
         self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
         self._failed_layers: set[str] = set()
+        self._object_feedback_drawn = False
 
     # ------------------------------------------------------------------
     # Observation (called after every scene update)
@@ -606,7 +624,7 @@ class TrailPresentation:
         return self.policy.sprite_aliases.get(qualified_id, qualified_id)
 
     def pose_for(self, qualified_id: str | None) -> SpritePose | None:
-        """Return this frame's cosmetic pose, or ``None`` outside M01-M05."""
+        """Return this frame's cosmetic pose, or ``None`` outside a presentation."""
         if not self.active or qualified_id is None:
             return None
         role = self.sprite_identity(qualified_id)
@@ -625,6 +643,17 @@ class TrailPresentation:
                 needle_angle=self.needle_angle(qualified_id),
                 bob=round(1 + math.sin(self.clock * 1.8)),
             )
+        if role in (
+            SUN_SEED_PRESENTATION_ID,
+            RAIN_BELL_PRESENTATION_ID,
+            WIND_FLOWER_PRESENTATION_ID,
+        ):
+            phase = {
+                SUN_SEED_PRESENTATION_ID: 0.0,
+                RAIN_BELL_PRESENTATION_ID: 1.8,
+                WIND_FLOWER_PRESENTATION_ID: 3.4,
+            }[role]
+            return SpritePose(bob=round(1 + math.sin(self.clock * 1.7 + phase)))
         return None
 
     def _nova_pose(self) -> SpritePose:
@@ -880,6 +909,29 @@ class TrailPresentation:
                 mix(color, _WHITE, 0.4),
                 0.42 + 0.1 * flicker + 0.4 * flare,
             )
+        elif role in (
+            SUN_SEED_PRESENTATION_ID,
+            RAIN_BELL_PRESENTATION_ID,
+            WIND_FLOWER_PRESENTATION_ID,
+        ):
+            cx, cy = x + width / 2, y + height * 0.52
+            soft_shadow(
+                renderer,
+                cx,
+                y + height * 0.96,
+                width * 29 // 100,
+                max(2, height * 6 // 100),
+                105,
+            )
+            pulse = 0.5 + 0.5 * math.sin(self.clock * 1.9)
+            glow(
+                renderer,
+                cx,
+                cy,
+                max(width, height) * 72 // 100,
+                mix(color, _WHITE, 0.28),
+                0.16 + 0.07 * pulse,
+            )
 
     def _draw_step_dust(self, renderer: object, foot_x: float, foot_y: float) -> None:
         """One soft puff kicked up behind Nova at each foot contact."""
@@ -961,6 +1013,25 @@ class TrailPresentation:
                 _ORB_LIGHT,
                 0.2 + 0.07 * math.sin(self.clock * 1.9) + 0.3 * cheer,
             )
+        elif role in (
+            SUN_SEED_PRESENTATION_ID,
+            RAIN_BELL_PRESENTATION_ID,
+            WIND_FLOWER_PRESENTATION_ID,
+        ):
+            cx, cy = x + width / 2, y + height * 0.48
+            phase = {
+                SUN_SEED_PRESENTATION_ID: 0.0,
+                RAIN_BELL_PRESENTATION_ID: 1.7,
+                WIND_FLOWER_PRESENTATION_ID: 3.2,
+            }[role]
+            twinkle = 0.5 + 0.5 * math.sin(self.clock * 2.1 + phase)
+            sparkle(
+                renderer,
+                cx + width * 0.42,
+                cy - height * (0.28 + 0.05 * twinkle),
+                2 + 3 * twinkle,
+                mix(color, _WHITE, 0.72),
+            )
 
     def _draw_lantern_over(
         self, renderer: object, qualified_id: str, x: int, y: int, width: int, height: int
@@ -1041,6 +1112,7 @@ class TrailPresentation:
 
     def draw_overlay(self, renderer: object, view: TrailView) -> tuple[TextOp, ...]:
         """Draw overlay shapes; return overlay text to draw after the HUD."""
+        self._object_feedback_drawn = False
         if not self.active:
             return ()
         self._guard("foreground", draw_scenery_plate, renderer, MEADOW_FOREGROUND)
@@ -1052,8 +1124,13 @@ class TrailPresentation:
         if not supports(renderer, "draw_rounded_rect", "measure_text", "draw_text"):
             return ()
         self._guard("hud-panel", self._draw_hud_panel, renderer, view)
-        self._guard("feedback-panel", self._draw_feedback_panel, renderer, view)
         texts: list[TextOp] = []
+        focused_feedback = self._guard(
+            "object-feedback", self._draw_object_feedback, renderer, view
+        )
+        if focused_feedback:
+            texts.extend(focused_feedback)  # type: ignore[arg-type]
+        self._guard("feedback-panel", self._draw_feedback_panel, renderer, view)
         for layer, draw in (
             ("prompt", self._draw_prompt),
             ("bubble", self._draw_bubble),
@@ -1220,7 +1297,7 @@ class TrailPresentation:
         rows = (
             progress,
             f"Mission: {view.mission.title}",
-            view.mission.instructions,
+            self.fit_instruction(renderer, view.mission.instructions),
             f"Mission state: {state}",
         )
         widths = [renderer.measure_text(text, HUD_FONT)[0] for text in rows]
@@ -1275,6 +1352,8 @@ class TrailPresentation:
         ellipsis, since the speech bubble already shows every word. The
         scene's ``feedback_message`` state itself is never changed.
         """
+        if self.active and self.policy.object_feedback_focus and self._object_feedback_drawn:
+            return None
         if (
             not self.active
             or not self.policy.dialogue_focus
@@ -1294,6 +1373,72 @@ class TrailPresentation:
         except Exception:
             self._log_once("feedback-fit")
             return message
+
+    def fit_instruction(self, renderer: object, instruction: str) -> str:
+        """Fit a polished Trail's mission instruction inside the HUD width."""
+        if (
+            not self.active
+            or not self.policy.object_feedback_focus
+            or not supports(renderer, "measure_text")
+        ):
+            return instruction
+        try:
+            return self._layout(  # type: ignore[return-value]
+                ("instruction", instruction),
+                lambda: fit_line(
+                    instruction,
+                    SCREEN_WIDTH - 8 - HUD_TEXT_X,
+                    lambda line: renderer.measure_text(line, HUD_FONT),  # type: ignore[attr-defined]
+                ),
+            )
+        except Exception:
+            self._log_once("instruction-fit")
+            return instruction
+
+    def _draw_object_feedback(self, renderer: object, view: TrailView) -> tuple[TextOp, ...]:
+        """Draw S06's complete package-authored response in a wrapped card."""
+        if not self.policy.object_feedback_focus:
+            return ()
+        message = getattr(view, "feedback_message", None)
+        if (
+            not isinstance(message, str)
+            or not message.strip()
+            or not supports(renderer, "measure_text", "draw_translucent_panel")
+        ):
+            return ()
+
+        def measure(line: str) -> tuple[int, int]:
+            return renderer.measure_text(line, _OBJECT_FEEDBACK_FONT)
+
+        lines = self._layout(
+            ("object-feedback", message),
+            lambda: wrap_text(message, _OBJECT_FEEDBACK_WIDTH - 28, measure, max_lines=3),
+        )
+        assert isinstance(lines, tuple)
+        line_height = measure("Ag")[1]
+        gap = 4
+        height = len(lines) * line_height + max(0, len(lines) - 1) * gap + 16
+        top = _OBJECT_FEEDBACK_BOTTOM - height
+        renderer.draw_translucent_panel(  # type: ignore[attr-defined]
+            ((_OBJECT_FEEDBACK_X, top, _OBJECT_FEEDBACK_WIDTH, height),),
+            _FEEDBACK_PANEL,
+            170,
+            14,
+            _HUD_EDGE,
+            52,
+            True,
+        )
+        self._object_feedback_drawn = True
+        return tuple(
+            (
+                line,
+                _OBJECT_FEEDBACK_X + 14,
+                top + 8 + index * (line_height + gap),
+                _PANEL_TEXT,
+                _OBJECT_FEEDBACK_FONT,
+            )
+            for index, line in enumerate(lines)
+        )
 
     def _draw_feedback_panel(self, renderer, view: TrailView) -> None:  # type: ignore[no-untyped-def]
         if not supports(renderer, "draw_translucent_panel", "measure_text"):
