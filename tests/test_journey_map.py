@@ -973,7 +973,7 @@ def test_every_stop_shows_its_manifest_hero(journey_run) -> None:  # type: ignor
         assert stop["hero"]["alt"].startswith(f"The Trail in {sid}:")
 
 
-def test_s06_separates_journey_storytelling_from_runtime_evidence() -> None:
+def test_s06_uses_the_journey_visual_and_links_runtime_evidence() -> None:
     page = _read(PAGE)
     assert 'const isS06JourneyStop = stop.session.id === "S06";' in page
     assert page.count("{isS06JourneyStop ? (") == 2
@@ -981,13 +981,16 @@ def test_s06_separates_journey_storytelling_from_runtime_evidence() -> None:
     assert 'focus="current-stop"' in page
     assert "Journey illustration" in page
     assert "Sun Seed" in page and "Rain Bell" in page and "Wind Flower" in page
-    assert 'className="journey-runtime-evidence"' in page
-    assert "Actual Trail / lesson evidence" in page
-    assert "STANDARD presentation" in page and "Visited 2 / 3" in page
-    assert 'src={stop.hero.small.src}' in page
     assert 'className="journey-stop-shot"' in page
     assert 'href={stop.hero.full.src}' in page
-    assert 'aria-label="Open the full S06 Trail evidence image"' in page
+    assert "View actual Trail screenshot" in page
+    for removed in (
+        "journey-runtime-evidence",
+        "Actual Trail / lesson evidence",
+        "STANDARD presentation",
+        "Visited 2 / 3",
+    ):
+        assert removed not in page
 
 
 def test_non_s06_current_stop_keeps_the_default_snapshot_treatment() -> None:
@@ -1000,6 +1003,8 @@ def test_non_s06_current_stop_keeps_the_default_snapshot_treatment() -> None:
     assert '{isCurrent ? <span className="journey-stop-flag">Current stop</span> : null}' in loop
     assert "{isS06JourneyStop ? (" in loop
     assert loop.count("{isS06JourneyStop ? (") == 2
+    evidence_link = loop.split("View actual Trail screenshot", 1)[0]
+    assert evidence_link.rfind("{isS06JourneyStop ? (") > evidence_link.rfind('<p className="journey-stop-links">')
 
 
 def test_current_stop_focus_reuses_the_journey_map_language() -> None:
@@ -1010,7 +1015,7 @@ def test_current_stop_focus_reuses_the_journey_map_language() -> None:
     assert 'className="jm-marker-frontier"' in journey_map
     css = _read(CSS)
     assert ".jm-marker-frontier" in css
-    assert ".journey-runtime-evidence-window" in css
+    assert ".journey-runtime-evidence" not in css
 
 
 def test_mobile_map_labels_and_badges_are_scoped_by_focus() -> None:
@@ -1167,21 +1172,22 @@ def test_rendered_journey_page_shows_s06_and_nothing_later() -> None:
     text = _visible(html)
     assert "S06 · Garden Markers" in text
     assert re.search(r"6\s*/\s*30", text)
-    for sid in ("s01", "s02", "s03", "s04", "s05", "s06"):
+    for sid in ("s01", "s02", "s03", "s04", "s05"):
         assert f"/journey/{sid}/hero-480.webp" in html
+    for sid in ("s01", "s02", "s03", "s04", "s05", "s06"):
         assert f'href="/students/slides/{sid}/"' in html
         assert f'href="/students/learn/{sid}/"' in html
     assert "/journey/s07" not in html
     assert "/students/slides/s07/" not in html
     assert "/students/learn/s07/" not in html
     assert 'class="journey-stop-visual"' in html
-    assert 'class="journey-runtime-evidence"' in html
     assert 'class="jm-svg jm-svg-focused"' in html
-    assert 'aria-label="Open the full S06 Trail evidence image"' in html
     assert 'href="/journey/s06/hero.webp"' in html
+    assert "/journey/s06/hero-480.webp" not in html
     assert "Journey illustration" in text
-    assert "Actual Trail / lesson evidence" in text
-    assert "STANDARD presentation · Visited 2 / 3" in text
+    assert "View actual Trail screenshot" in text
+    for removed in ("Actual Trail / lesson evidence", "STANDARD presentation", "Visited 2 / 3"):
+        assert removed not in text
     calendar = _calendar()
     # The next session is its public calendar title and date only.
     assert f"S07 · {calendar['S07']['title']}" in text
