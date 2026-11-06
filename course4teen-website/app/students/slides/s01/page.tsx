@@ -4,6 +4,7 @@ import Link from "next/link";
 import SiteHeader from "../../../components/SiteHeader";
 import SiteFooter from "../../../components/SiteFooter";
 import JourneyContext from "../../../components/JourneyContext";
+import PythonJourney from "../../../components/PythonJourney";
 import NovaPixelScene from "../../../components/NovaPixelScene";
 import { classSessions, formatSessionDate } from "../../../../lib/calendar";
 
@@ -212,7 +213,10 @@ export default function S01SlidesPage() {
             Student slides for session {session.id}. Use these to follow
             along in class or to recap what to try before next time.
           </p>
-          <JourneyContext session={session.id} />
+          <div className="journey-companions">
+            <JourneyContext session={session.id} />
+            <PythonJourney session={session.id} mode="compact" />
+          </div>
         </section>
 
         <section className="section slide-deck">

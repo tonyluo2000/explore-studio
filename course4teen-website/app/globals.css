@@ -486,6 +486,41 @@ kbd { background: var(--cream); border: 1px solid var(--line); border-radius: .3
 .journey-context-link { font-weight: 800; border-bottom: 1px solid currentColor; }
 .journey-context-link:focus-visible, .journey-key a:focus-visible { outline-color: #ffcc54; }
 
+/* Parallel world and Python companions; keep every step readable on phones. */
+.slides-hero:has(.journey-companions) { max-width: 1100px; }
+.slides-hero > .calendar-lede { max-width: 720px; }
+.journey-companions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; margin-top: 1.6rem; align-items: start; }
+.journey-companions > * { min-width: 0; margin-top: 0; max-width: none; }
+.journey-context-label { font-size: .71rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: #ffcc54; margin-bottom: 1rem; }
+.journey-companions .journey-context dl > div { grid-template-columns: 1fr; gap: .15rem; }
+.python-journey { min-width: 0; padding: 1.2rem; background: #e6f4ef; border: 1px solid #b2d7cf; border-left: 4px solid #286e77; border-radius: .8rem; color: var(--ink); overflow-wrap: anywhere; }
+.python-journey-label { font-size: .71rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: #235d66; margin-bottom: .7rem; }
+.python-journey h2 { font-family: Arial, Helvetica, sans-serif; font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.15; letter-spacing: -.035em; margin-bottom: .7rem; }
+.python-journey-progress { font-size: .88rem; line-height: 1.6; }
+.python-journey-progress strong { font: 800 1rem/1.6 monospace; }
+.python-journey-concepts { display: flex; flex-wrap: wrap; gap: .4rem; padding: 0; margin: .8rem 0; list-style: none; }
+.python-journey-concepts li { padding: .25rem .5rem; border: 1px solid #8db9b5; background: #f6fbfa; border-radius: .35rem; font: .83rem/1.4 monospace; max-width: 100%; }
+.python-journey-capability, .python-journey-intro, .python-journey-next { font-size: .95rem; line-height: 1.6; }
+.python-journey h3 { font-size: .88rem; margin: 1.2rem 0 .7rem; }
+.python-journey-steps { margin: 0 0 1rem; padding: 0 0 0 1.1rem; list-style: none; }
+.python-journey-steps > li { position: relative; padding: .5rem 0 .8rem 1.1rem; border-left: 2px solid #78aaa8; }
+.python-journey-steps > li::before { content: ""; position: absolute; left: -.35rem; top: .9rem; width: .6rem; height: .6rem; border: 2px solid #286e77; border-radius: 50%; background: #e6f4ef; }
+.python-journey-steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.python-journey-step-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .6rem; font-size: .9rem; line-height: 1.5; }
+.python-journey-id { font: 700 .8rem/1.5 monospace; color: #235d66; }
+.python-journey-current { display: inline-block; padding: .1rem .45rem; border: 1px solid #286e77; border-radius: .3rem; font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+.python-journey-steps > li[aria-current="step"]::before { background: #286e77; outline: 2px solid #286e77; outline-offset: 2px; }
+.python-journey-link { display: inline-block; font-size: .88rem; font-weight: 800; line-height: 1.6; text-decoration: underline; text-underline-offset: .2em; }
+.python-journey-link:focus-visible { outline: 3px solid #235d66; outline-offset: 4px; }
+.python-journey-full { padding: clamp(1.2rem, 4vw, 3rem); }
+.python-journey-full .python-journey-steps > li { padding-bottom: 2rem; }
+.python-journey-full .python-journey-step-heading { font-size: 1.15rem; }
+.python-journey-full .python-journey-capability { margin-bottom: .5rem; }
+.python-journey-next { margin: 0; padding-top: 1rem; border-top: 1px solid #b2d7cf; }
+@media (min-width: 900px) {
+  .journey-companions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
 .slides-journey-link { margin-top: 1.4rem; }
 .slides-place { grid-column: 2; font-size: .82rem; color: var(--ink-soft); }
 .home-journey-cta { margin-top: 2.2rem; }
