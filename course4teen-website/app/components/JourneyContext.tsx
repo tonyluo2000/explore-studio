@@ -10,7 +10,7 @@ export default function JourneyContext({ session }: { session: string }) {
   if (!stop) return null;
   return (
     <aside className="journey-context" aria-label={`${stop.session.id} in the class Journey`}>
-      <p className="journey-context-label">World Journey</p>
+      <p className="journey-context-label">Explorer Journey</p>
       <dl>
         <div>
           <dt>Where we are</dt>

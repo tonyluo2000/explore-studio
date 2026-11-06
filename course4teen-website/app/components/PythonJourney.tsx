@@ -17,11 +17,14 @@ export default function PythonJourney(props: Props) {
   const steps = compact ? pythonJourneyThrough(props.session) : publishedPythonSteps;
   const current = steps.at(-1);
   if (!current) return null;
+  const visibleSteps = compact && steps.length > 8 ? steps.slice(-5) : steps;
+  const earlierCount = steps.length - visibleSteps.length;
+  const Container = compact ? "aside" : "div";
 
   return (
-    <aside
+    <Container
       className={`python-journey python-journey-${props.mode}`}
-      aria-label={compact ? `${current.id} Python Journey` : "Published Python Journey"}
+      aria-label={compact ? `${current.id} Python Journey` : undefined}
       data-python-current={current.id}
     >
       <p className="python-journey-label">Python Journey</p>
@@ -43,8 +46,9 @@ export default function PythonJourney(props: Props) {
         <p className="python-journey-intro">Each session builds on the Python we already know.</p>
       )}
 
-      <ol className="python-journey-steps" role="list" aria-label="Python Journey so far">
-        {steps.map((step) => {
+      {earlierCount > 0 ? <p className="python-journey-progress">+ {earlierCount} earlier Python steps</p> : null}
+      <ol className="python-journey-steps" role="list" start={earlierCount > 0 ? earlierCount + 1 : undefined}>
+        {visibleSteps.map((step) => {
           const isCurrent = step.id === current.id;
           return (
             <li key={step.id} data-python-step={step.id} aria-current={isCurrent ? "step" : undefined}>
@@ -74,6 +78,6 @@ export default function PythonJourney(props: Props) {
       ) : steps.length < totalPythonSteps ? (
         <p className="python-journey-next">Next: coming soon. New Python steps appear when their slides are published.</p>
       ) : null}
-    </aside>
+    </Container>
   );
 }

@@ -25,7 +25,7 @@ const pythonJourneySteps: Record<string, PythonJourneyStep> = {
       "string literals",
       "matching quotes"
     ],
-    "capability": "Store observations as text and print them."
+    "capability": "Record observations as text and print them."
   },
   "S02": {
     "id": "S02",

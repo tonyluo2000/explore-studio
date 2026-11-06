@@ -69,17 +69,24 @@ def visible(html: str) -> str:
 
 
 def panel(html: str) -> str:
-    found = re.findall(r'<aside\b[^>]*class="python-journey [^"]*".*?</aside>', html, flags=re.S)
-    assert len(found) == 1
-    return found[0]
+    opening = re.search(r'<(aside|div)\b[^>]*class="python-journey [^"]*"[^>]*>', html)
+    assert opening
+    tag = opening.group(1)
+    depth = 1
+    for token in re.finditer(rf'</?{tag}\b[^>]*>', html[opening.end():]):
+        depth += -1 if token.group().startswith("</") else 1
+        if depth == 0:
+            return html[opening.start():opening.end() + token.end()]
+    raise AssertionError("Unclosed Python Journey panel")
 
 
-def assert_steps(html: str, ids: list[str]) -> None:
+def assert_steps(html: str, ids: list[str], *, cumulative_count: int | None = None) -> None:
     assert re.findall(r'data-python-step="([^"]+)"', html) == ids
     assert re.findall(r'data-python-current="([^"]+)"', html) == ids[-1:]
     assert html.count('aria-current="step"') == 1
-    assert 'aria-label="Python Journey so far"' in html
-    assert re.search(rf"{len(ids)}\s*/\s*30", visible(html))
+    assert '<ol class="python-journey-steps" role="list"' in html
+    assert 'aria-label="Python Journey so far"' not in html
+    assert re.search(rf"{cumulative_count or len(ids)}\s*/\s*30", visible(html))
     assert "You are here" in visible(html)
 
 
@@ -91,7 +98,7 @@ def test_all_30_canonical_steps_exist_once_and_have_objectives():
     for step in steps.values():
         assert step["capability"].strip()
         assert step["concepts"] and all(concept.strip() for concept in step["concepts"])
-    assert steps["S01"]["capability"] == "Store observations as text and print them."
+    assert steps["S01"]["capability"] == "Record observations as text and print them."
     assert steps["S06"]["capability"] == "Model structured records and process a collection with one loop."
     assert {"dictionaries", "for loop", "list of dictionaries", "KeyError"} <= set(steps["S06"]["concepts"])
 
@@ -150,6 +157,68 @@ def test_a_later_release_reveals_s07_only_when_published(rendered):
     assert future["compact"]["S06"] == rendered["compact"]["S06"]
 
 
+@pytest.fixture(scope="module")
+def all_published(rendered):
+    # Publication is simulated in the probe process only. The real site stays S06.
+    ids = [f"S{i:02}" for i in range(1, 31)]
+    return probe(published=ids, sessions=ids)
+
+
+@pytest.mark.parametrize("count", range(1, 31))
+def test_compact_history_is_bounded_and_session_local(all_published, count):
+    sid = f"S{count:02}"
+    html = all_published["compact"][sid]
+    start = 1 if count <= 8 else count - 4
+    ids = [f"S{i:02}" for i in range(start, count + 1)]
+    assert_steps(html, ids, cumulative_count=count)
+    if count <= 8:
+        assert "earlier Python steps" not in html
+        assert 'start="' not in html
+    else:
+        assert f"+ {count - 5} earlier Python steps" in visible(html)
+        assert f'start="{start}"' in html
+    assert visible(html).count("Python Journey so far") == 1
+    for step in list(source_steps().values())[count:]:
+        assert step["topic"] not in unescape(html)
+        assert step["capability"] not in unescape(html)
+
+
+def test_full_history_is_never_bounded(all_published):
+    assert_steps(all_published["full"], [f"S{i:02}" for i in range(1, 31)])
+    assert "earlier Python steps" not in all_published["full"]
+
+
+def test_long_history_still_rejects_unpublished_sessions(rendered):
+    ids = [f"S{i:02}" for i in range(1, 21)]
+    future = probe(published=ids, sessions=["S20", "S21", "S30"])
+    assert_steps(future["compact"]["S20"], ids[-5:], cumulative_count=20)
+    assert future["compact"]["S21"] == future["compact"]["S30"] == ""
+    for html in [future["full"], future["compact"]["S20"]]:
+        for step in list(source_steps().values())[20:]:
+            assert step["topic"] not in unescape(html)
+            assert step["capability"] not in unescape(html)
+
+
+def test_history_heading_is_not_repeated_as_a_list_label(rendered):
+    html = rendered["compact"]["S06"]
+    assert html.count("Python Journey so far") == 1
+    assert '<ol class="python-journey-steps" role="list">' in html
+
+
+def test_full_history_is_primary_content_inside_the_existing_section(rendered):
+    assert rendered["full"].startswith('<div class="python-journey python-journey-full"')
+    assert "<aside" not in rendered["full"]
+    assert "Published Python Journey" not in rendered["full"]
+    assert "<h2>What we can do with Python</h2>" in rendered["full"]
+
+
+def test_explorer_track_naming_is_consistent():
+    context = (WEBSITE / "app/components/JourneyContext.tsx").read_text()
+    assert '>Explorer Journey</p>' in context
+    for path in (WEBSITE / "app").rglob("*.tsx"):
+        assert "World Journey" not in path.read_text(), path
+
+
 @pytest.mark.parametrize("sid", PUBLISHED)
 def test_all_published_slides_use_the_shared_companion_panel(sid):
     page = (WEBSITE / f"app/students/slides/{sid.lower()}/page.tsx").read_text()
@@ -191,6 +260,7 @@ def test_fresh_build_journey_has_exactly_s01_through_s06():
     assert "Two journeys, one course." in visible(html)
     assert "Explorer Journey" in visible(html) and "Python Journey" in visible(html)
     assert_steps(panel(html), PUBLISHED)
+    assert panel(html).startswith('<div class="python-journey python-journey-full"')
     assert "Boolean state" not in html and "Boolean AND" not in html
     for step in list(source_steps().values())[6:]:
         assert step["topic"] not in unescape(panel(html))
@@ -208,7 +278,8 @@ def test_fresh_build_session_context_has_no_later_objectives(sid, kind):
     context = panel(html)
     ids = PUBLISHED[:PUBLISHED.index(sid) + 1]
     assert_steps(context, ids)
-    assert "World Journey" in visible(html)
+    assert "Explorer Journey" in visible(html)
+    assert "World Journey" not in visible(html)
     assert "Boolean state" not in html
     for step in list(source_steps().values())[len(ids):]:
         assert step["topic"] not in unescape(context)
