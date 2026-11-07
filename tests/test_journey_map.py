@@ -139,7 +139,7 @@ def _by_id(items: list[dict]) -> dict[str, dict]:  # type: ignore[type-arg]
 
 def test_journey_route_exists_with_title_and_canonical() -> None:
     page = _read(PAGE)
-    assert 'title: "Journey Map · The Class Expedition | Course4Teen"' in page
+    assert 'title: "Explorer & Python Journeys | Course4Teen"' in page
     assert "alternates: { canonical: JOURNEY_HREF }" in page
     assert 'export const JOURNEY_HREF = "/students/journey/";' in _read(JOURNEY_LIB)
 

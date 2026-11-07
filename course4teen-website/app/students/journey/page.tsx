@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
+import PythonJourney from "../../components/PythonJourney";
 import JourneyMap, { landmarkNumbers } from "../../components/JourneyMap";
 import { classSessions, formatSessionDate } from "../../../lib/calendar";
 import { currentJourney, frontierTeaser, JOURNEY_HREF, journeyMapSize } from "../../../lib/journey";
 
 export const metadata: Metadata = {
-  title: "Journey Map · The Class Expedition | Course4Teen",
+  title: "Explorer & Python Journeys | Course4Teen",
   description:
-    "The Course4Teen class Journey: an illustrated map of Nova's world that reveals new ground as each session is taught, with the Trail snapshot, slides, and Python notes for every stop.",
+    "Two journeys, one Python course: explore Nova's world and follow the programming skills our class has built, session by session.",
   alternates: { canonical: JOURNEY_HREF },
 };
 
@@ -30,9 +31,10 @@ export default function JourneyPage() {
       <main id="main">
         <section className="section journey-hero">
           <p className="kicker">Course Journey</p>
-          <h1>One expedition, session by session.</h1>
+          <h1>Two journeys, one course.</h1>
           <p className="calendar-lede">
-            Our class&rsquo;s shared map of Nova&rsquo;s world. New ground
+            The Explorer Journey shows where Nova and our world have gone.
+            The Python Journey shows the programming skills our class has built. New ground
             appears as each session is taught, so the map shows where the whole
             class has travelled together, not any one student&rsquo;s progress.
           </p>
@@ -67,7 +69,7 @@ export default function JourneyPage() {
         <section className="journey-map-section" aria-labelledby="journey-map-heading">
           <div className="journey-map-inner">
             <h2 id="journey-map-heading" className="journey-map-heading">
-              The map so far
+              Explorer Journey · The map so far
             </h2>
             <figure className="journey-map-figure">
               <div className="journey-map-frame">
@@ -120,6 +122,10 @@ export default function JourneyPage() {
               </figcaption>
             </figure>
           </div>
+        </section>
+
+        <section className="section python-journey-section" id="python-journey" aria-label="Python Journey">
+          <PythonJourney mode="full" />
         </section>
 
         <section className="section journey-stops" aria-labelledby="journey-stops-heading">
