@@ -45,8 +45,14 @@ MOONLIT_GUIDE_QUALIFIED_ID = "moonlit-guide:guide"
 SUN_SEED_PRESENTATION_ID: Final = "moon-meadow-presentation:sun-seed"
 RAIN_BELL_PRESENTATION_ID: Final = "moon-meadow-presentation:rain-bell"
 WIND_FLOWER_PRESENTATION_ID: Final = "moon-meadow-presentation:wind-flower"
+SKY_LANTERN_PRESENTATION_ID: Final = "moon-meadow-presentation:sky-lantern"
 PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
-    {SUN_SEED_PRESENTATION_ID, RAIN_BELL_PRESENTATION_ID, WIND_FLOWER_PRESENTATION_ID}
+    {
+        SUN_SEED_PRESENTATION_ID,
+        RAIN_BELL_PRESENTATION_ID,
+        WIND_FLOWER_PRESENTATION_ID,
+        SKY_LANTERN_PRESENTATION_ID,
+    }
 )
 
 
@@ -387,7 +393,9 @@ def _draw_crystal_lantern(
     pose: SpritePose | None = None,
 ) -> None:
     """Draw a framed lantern inside a layered glow that fills its bounds."""
-    del pose
+    # The S07 visual role shares this framed primitive, with an empty OFF glass.
+    # Existing Crystal Lantern draws exactly as before.
+    unlit = pose is not None and pose.row == "off"
     box = _Box(x, y, width, height)
     night = (38, 46, 60)
     frame = _mix(accent, (76, 47, 22), 0.68)
@@ -397,11 +405,11 @@ def _draw_crystal_lantern(
     ray = _mix(accent, _WHITE, 0.3)
     center_x = box.px(50)
     center_y = box.py(50)
-    halo = max(2, box.small // 2)
+    halo = max(2, box.small // (4 if unlit else 2))
 
     renderer.draw_circle(center_x, center_y, halo, _mix(accent, night, 0.6))
     renderer.draw_circle(center_x, center_y, max(1, halo * 4 // 5), _mix(accent, night, 0.36))
-    for index in range(8):
+    for index in range(0 if unlit else 8):
         angle = math.tau * index / 8 + math.tau / 16
         renderer.draw_line(
             center_x + round(halo * 0.84 * math.cos(angle)),
@@ -411,21 +419,27 @@ def _draw_crystal_lantern(
             ray,
             2,
         )
-    _sparkle(renderer, *box.point(8, 18), box.radius(9), core)
-    _sparkle(renderer, *box.point(92, 22), box.radius(8), core)
-    _sparkle(renderer, *box.point(10, 82), box.radius(6), ray)
-    _sparkle(renderer, *box.point(90, 80), box.radius(6), ray)
+    if not unlit:
+        _sparkle(renderer, *box.point(8, 18), box.radius(9), core)
+        _sparkle(renderer, *box.point(92, 22), box.radius(8), core)
+        _sparkle(renderer, *box.point(10, 82), box.radius(6), ray)
+        _sparkle(renderer, *box.point(90, 80), box.radius(6), ray)
     renderer.draw_line(*box.point(40, 15), *box.point(44, 4), frame, 2)
     renderer.draw_line(*box.point(44, 4), *box.point(56, 4), frame, 2)
     renderer.draw_line(*box.point(56, 4), *box.point(60, 15), frame, 2)
     box.polygon(renderer, ((27, 25), (73, 25), (62, 13), (38, 13)), frame)
     box.rect(renderer, 28, 24, 72, 80, frame)
     box.rect(renderer, 32, 28, 68, 76, glass)
-    box.polygon(renderer, ((50, 30), (61, 52), (50, 74), (39, 52)), core)
-    box.polygon(renderer, ((50, 40), (54, 52), (50, 64), (46, 52)), accent)
+    if unlit:
+        box.rect(renderer, 35, 33, 65, 72, _mix(accent, night, 0.35))
+        box.rect(renderer, 43, 65, 57, 71, accent)
+    else:
+        box.polygon(renderer, ((50, 30), (61, 52), (50, 74), (39, 52)), core)
+        box.polygon(renderer, ((50, 40), (54, 52), (50, 64), (46, 52)), accent)
     box.rect(renderer, 23, 79, 77, 88, frame)
     box.rect(renderer, 31, 88, 69, 94, frame_dark)
-    renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
+    if not unlit:
+        renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
 
 
 def _draw_sun_seed(
@@ -591,6 +605,7 @@ _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
     PIXEL_QUALIFIED_ID: _draw_pixel,
     MOON_COMPASS_QUALIFIED_ID: _draw_moon_compass,
     CRYSTAL_LANTERN_QUALIFIED_ID: _draw_crystal_lantern,
+    SKY_LANTERN_PRESENTATION_ID: _draw_crystal_lantern,
     MOONLIT_GUIDE_QUALIFIED_ID: _draw_moonlit_guide,
     SUN_SEED_PRESENTATION_ID: _draw_sun_seed,
     RAIN_BELL_PRESENTATION_ID: _draw_rain_bell,

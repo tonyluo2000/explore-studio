@@ -66,7 +66,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s04": ("introduce-your-character", MOON_MEADOW),
     "s05": ("write-a-short-conversation", MOON_MEADOW),
     "s06": ("build-an-object-collection", MOON_MEADOW),
-    "s07": ("toggle-an-object-state", STANDARD),
+    "s07": ("toggle-an-object-state", MOON_MEADOW),
     "s08": ("respond-to-object-state", STANDARD),
     "s09": ("count-object-interactions", STANDARD),
     "s10": ("compare-a-counter-to-its-goal", STANDARD),
@@ -105,6 +105,7 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
     # S06's markers use bounded procedural presentation primitives; Nova must
     # still use the trusted course art.
     "s06": (NOVA_QUALIFIED_ID,),
+    "s07": (NOVA_QUALIFIED_ID,),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.
@@ -152,9 +153,9 @@ def _package_root(argument: str) -> Path:
     path = Path(argument)
     if path in STUDENT_COPY_SEEDS:
         return STUDENT_COPY_SEEDS[path]
-    assert not path.is_absolute() and ".." not in path.parts, (
-        f"{argument} is outside the Course Kit; map it to its seed in STUDENT_COPY_SEEDS"
-    )
+    assert (
+        not path.is_absolute() and ".." not in path.parts
+    ), f"{argument} is outside the Course Kit; map it to its seed in STUDENT_COPY_SEEDS"
     return REPO / path
 
 
@@ -311,7 +312,7 @@ def test_only_moon_meadow_sessions_promise_moon_meadow_on_their_slides() -> None
             continue
         checked += 1
         if "Moon Meadow" in page.read_text(encoding="utf-8"):
-            assert EXPECTED_PRESENTATION[session][1] == MOON_MEADOW, (
-                f"{page} names Moon Meadow but {session} uses the standard Trail"
-            )
+            assert (
+                EXPECTED_PRESENTATION[session][1] == MOON_MEADOW
+            ), f"{page} names Moon Meadow but {session} uses the standard Trail"
     assert checked, "no student slide pages were found"
