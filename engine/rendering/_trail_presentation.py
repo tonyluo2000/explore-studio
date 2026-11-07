@@ -62,8 +62,8 @@ from engine.rendering._classroom_sprites import (
     NOVA_QUALIFIED_ID,
     PIXEL_QUALIFIED_ID,
     RAIN_BELL_PRESENTATION_ID,
-    SUN_SEED_PRESENTATION_ID,
     SKY_LANTERN_PRESENTATION_ID,
+    SUN_SEED_PRESENTATION_ID,
     WIND_FLOWER_PRESENTATION_ID,
 )
 from engine.rendering._effects import (
@@ -280,6 +280,9 @@ class TrailView(Protocol):
 
     @property
     def did_interact_this_frame(self) -> bool: ...
+
+    @property
+    def toggle_on_qualified_ids(self) -> frozenset[str]: ...
 
     @property
     def visited_qualified_ids(self) -> frozenset[str]: ...

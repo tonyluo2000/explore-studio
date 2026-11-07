@@ -12,7 +12,6 @@ from engine.rendering._mission_presentation import (
     S07_SKY_LANTERN_QUALIFIED_ID,
     mission_presentation,
 )
-from engine.rendering._trail_presentation import TrailPresentation
 from explore._colors import resolve_color
 from explore.packages.classroom_trail import (
     create_classroom_trail_scene,
@@ -20,8 +19,8 @@ from explore.packages.classroom_trail import (
 )
 from scripts.trail_driver import Trail
 from tests.test_mission_presentation_contract import (
-    AccentCheckingRenderer,
     CANONICAL,
+    AccentCheckingRenderer,
     _package_root,
 )
 
@@ -107,13 +106,13 @@ def test_repeated_toggle_after_completion_and_distinct_pixels():
 
 @pytest.mark.parametrize("colors", [("blue", "gold"), ("pink", "green")])
 def test_authored_colors_drive_both_visual_states(colors):
-    from engine.rendering._classroom_sprites import classroom_sprite_pose, draw_classroom_sprite
     from engine.animation import SpritePose
+    from engine.rendering._classroom_sprites import classroom_sprite_pose, draw_classroom_sprite
 
     # The shared lantern primitive accepts both authored colors without the
     # accent restriction of the fixed-gold Crystal Lantern sprite sheet.
     frames = []
-    for state, color in zip(("off", "on"), colors):
+    for state, color in zip(("off", "on"), colors, strict=True):
         renderer = AccentCheckingRenderer()
         with classroom_sprite_pose(SpritePose(row=state)):
             assert draw_classroom_sprite(
