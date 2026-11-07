@@ -5,7 +5,7 @@ import SiteFooter from "../../components/SiteFooter";
 import PythonJourney from "../../components/PythonJourney";
 import JourneyMap, { landmarkNumbers } from "../../components/JourneyMap";
 import { classSessions, formatSessionDate } from "../../../lib/calendar";
-import { currentJourney, frontierTeaser, JOURNEY_HREF, journeyMapSize } from "../../../lib/journey";
+import { currentJourney, journeyThrough, frontierTeaser, JOURNEY_HREF, journeyMapSize } from "../../../lib/journey";
 
 export const metadata: Metadata = {
   title: "Explorer & Python Journeys | Course4Teen",
@@ -144,7 +144,7 @@ export default function JourneyPage() {
                   {isS06JourneyStop ? (
                     <figure className="journey-stop-visual">
                       <JourneyMap
-                        state={journey}
+                        state={journeyThrough(stop.session.id)}
                         width={journeyMapSize.width}
                         height={journeyMapSize.height}
                         idPrefix="current-stop"

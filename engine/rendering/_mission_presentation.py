@@ -35,6 +35,7 @@ from engine.rendering._classroom_sprites import (
     MOON_COMPASS_QUALIFIED_ID,
     MOONLIT_GUIDE_QUALIFIED_ID,
     RAIN_BELL_PRESENTATION_ID,
+    SKY_LANTERN_PRESENTATION_ID,
     SUN_SEED_PRESENTATION_ID,
     WIND_FLOWER_PRESENTATION_ID,
 )
@@ -47,6 +48,9 @@ S03_MISSION_ID: Final = "make-your-object-respond"
 S04_MISSION_ID: Final = "introduce-your-character"
 S05_MISSION_ID: Final = "write-a-short-conversation"
 S06_MISSION_ID: Final = "build-an-object-collection"
+S07_MISSION_ID: Final = "toggle-an-object-state"
+S07_PACKAGE_ID: Final = "sky-lantern-switch"
+S07_SKY_LANTERN_QUALIFIED_ID: Final = f"{S07_PACKAGE_ID}:sky-lantern"
 
 #: The canonical S03 package (``lessons/sessions/s03/student/explorer-package``)
 #: ships the same Moon Compass under its own package id.
@@ -156,7 +160,17 @@ PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation
                         S06_WIND_FLOWER_QUALIFIED_ID: WIND_FLOWER_PRESENTATION_ID,
                     }
                 ),
-            )
+            ),
+            # Only S07: later toggle/style sessions retain their own presentation.
+            (S07_MISSION_ID, S07_PACKAGE_ID): MissionPresentation(
+                celebration=True,
+                meadow_audio=True,
+                object_feedback_focus=True,
+                player_start=(240, 300),
+                sprite_aliases=MappingProxyType(
+                    {S07_SKY_LANTERN_QUALIFIED_ID: SKY_LANTERN_PRESENTATION_ID}
+                ),
+            ),
         }
     )
 )

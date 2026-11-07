@@ -77,12 +77,18 @@ What each check verifies:
   primitives. Pixel, the Lantern, both Compasses, both Guide packages, and
   every later-session entity are absent. The progress row reads `Visited 2 / 3`.
 
+- **S07 HERO:** Nova beside the Sky Lantern in polished Moon Meadow after the
+  first interaction. The acceptance check requires the canonical lantern ON and
+  M07 complete, with its authored interaction text. OFF has dim glass; ON has a
+  bright core, a larger glow, and sparks. Completion records at least one toggle
+  change and does not verify a final ON state. There is no NPC or gate entity.
+
 ## Provenance
 
 - Base: `origin/main` at `fbf4b53c94bc1e47d61a60288898b0062868b41e`.
 - Runtime pin (Course Kit `COURSE_PLATFORM_COMMIT`):
-  `8811a5ceff647d4a6f408bb1aa9764b5cd64c607` (S06's package-scoped Moon Meadow
-  runtime; previously `2692c2f1a7c07d1576b7837c2a91e542b73bd3e0`).
+  `f2cda35dee4929f98c48eab8c48790ea24c7640a` (S06 and S07 package-scoped
+  Moon Meadow runtime; previously `8811a5ceff647d4a6f408bb1aa9764b5cd64c607`).
   The harness refuses to publish
   unless the working tree's presentation runtime (every `runtime` file below)
   is byte-identical to the runtime at the pin. A test re-reads the pin from

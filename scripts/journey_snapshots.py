@@ -233,6 +233,7 @@ class Expect:
     complete: bool = False
     texts: tuple[str | PackageText, ...] = ()
     positions: tuple[tuple[str, int, int], ...] = ()
+    toggle_on: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -300,6 +301,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
         must_not_show=(
+            "sky-lantern-switch:sky-lantern",
             S02_COMPASS,
             S03_COMPASS,
             GUIDE,
@@ -327,7 +329,13 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
-        must_not_show=(S03_COMPASS, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "sky-lantern-switch:sky-lantern",
+            S03_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             Moment(
                 name="S02_COMPASS_PROMPT",
@@ -355,7 +363,15 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
-        must_not_show=(PIXEL, LANTERN, S02_COMPASS, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "sky-lantern-switch:sky-lantern",
+            PIXEL,
+            LANTERN,
+            S02_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             Moment(
                 name="S03_REVEAL",
@@ -390,7 +406,14 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
-        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "sky-lantern-switch:sky-lantern",
+            PIXEL,
+            S02_COMPASS,
+            S03_COMPASS,
+            S05_GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             Moment(
                 name="S04_DIALOGUE",
@@ -418,7 +441,14 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # Guide only), an earlier session's Compass or Pixel, or S06's
         # collection.
         must_show=(NOVA, LANTERN, S05_GUIDE),
-        must_not_show=(PIXEL, S02_COMPASS, S03_COMPASS, GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "sky-lantern-switch:sky-lantern",
+            PIXEL,
+            S02_COMPASS,
+            S03_COMPASS,
+            GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             # The conversation in progress, not completion: the middle line
             # (dialogue[1]) in the Guide's bubble and the HUD echo, so the
@@ -468,7 +498,15 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # The Moon Meadow continues with Nova and exactly the three package
         # objects; no prior cast member or later mechanic joins the scene.
         must_show=(NOVA, *S06_OBJECTS),
-        must_not_show=(PIXEL, LANTERN, S02_COMPASS, S03_COMPASS, GUIDE, S05_GUIDE),
+        must_not_show=(
+            "sky-lantern-switch:sky-lantern",
+            PIXEL,
+            LANTERN,
+            S02_COMPASS,
+            S03_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+        ),
         moments=(
             # A useful learning/story moment: Sun Seed and Rain Bell have been
             # visited, Wind Flower is targeted, and M06 is still incomplete.
@@ -492,6 +530,41 @@ SESSIONS: Final[tuple[Session, ...]] = (
                     visited=S06_OBJECTS[:2],
                     complete=False,
                     texts=(PackageText(S06_PACKAGE, "objects/wind-flower.yaml", "when_near"),),
+                ),
+            ),
+        ),
+    ),
+    Session(
+        session="S07",
+        mission_id="toggle-an-object-state",
+        player=NOVA,
+        presentation=MOON_MEADOW,
+        must_show=(NOVA, "sky-lantern-switch:sky-lantern"),
+        must_not_show=(PIXEL, LANTERN, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        moments=(
+            Moment(
+                name="S07_LANTERN_ON",
+                kind=HERO,
+                slug="hero",
+                steps=(
+                    ("hold", 0.3),
+                    ("walk_to", 290, 300),
+                    ("hold", 0.4),
+                    ("press",),
+                    ("hold", 0.35),
+                ),
+                expect=Expect(
+                    target="sky-lantern-switch:sky-lantern",
+                    visited=("sky-lantern-switch:sky-lantern",),
+                    complete=True,
+                    toggle_on=("sky-lantern-switch:sky-lantern",),
+                    texts=(
+                        PackageText(
+                            "lessons/sessions/s07/student/explorer-package",
+                            "objects/sky-lantern.yaml",
+                            "when_interacted",
+                        ),
+                    ),
                 ),
             ),
         ),

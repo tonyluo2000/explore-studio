@@ -43,7 +43,7 @@ def _published() -> list[str]:
 
 
 def _s06_notes() -> str:
-    return _read(LEARN).split('id: "S06"', 1)[1]
+    return _read(LEARN).split('id: "S06"', 1)[1].split('id: "S07"', 1)[0]
 
 
 def _js_string(source: str, key: str) -> str:
@@ -52,12 +52,12 @@ def _js_string(source: str, key: str) -> str:
     return match.group(1)
 
 
-def test_s06_is_published_without_s07() -> None:
-    assert _published() == ["S01", "S02", "S03", "S04", "S05", "S06"]
+def test_s06_remains_published_with_s07() -> None:
+    assert _published() == ["S01", "S02", "S03", "S04", "S05", "S06", "S07"]
     assert SLIDES.is_file()
     assert re.findall(r'^\s+id: "(S\d\d)"', _read(LEARN), re.MULTILINE) == _published()
-    assert not (WEBSITE / "app" / "students" / "slides" / "s07").exists()
-    assert not (WEBSITE / "public" / "journey" / "s07").exists()
+    assert not (WEBSITE / "app" / "students" / "slides" / "s08").exists()
+    assert not (WEBSITE / "public" / "journey" / "s08").exists()
 
 
 def test_s06_title_date_and_next_session_are_calendar_derived() -> None:

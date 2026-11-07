@@ -62,6 +62,7 @@ from engine.rendering._classroom_sprites import (
     NOVA_QUALIFIED_ID,
     PIXEL_QUALIFIED_ID,
     RAIN_BELL_PRESENTATION_ID,
+    SKY_LANTERN_PRESENTATION_ID,
     SUN_SEED_PRESENTATION_ID,
     WIND_FLOWER_PRESENTATION_ID,
 )
@@ -279,6 +280,9 @@ class TrailView(Protocol):
 
     @property
     def did_interact_this_frame(self) -> bool: ...
+
+    @property
+    def toggle_on_qualified_ids(self) -> frozenset[str]: ...
 
     @property
     def visited_qualified_ids(self) -> frozenset[str]: ...
@@ -506,6 +510,7 @@ class TrailPresentation:
         self._previous_position: tuple[float, float] | None = start
         self._previous_complete: bool | None = None
         self._visited: frozenset[str] = frozenset()
+        self._toggle_on: frozenset[str] = frozenset()
         self._spoken: frozenset[str] = frozenset()
         self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
@@ -553,6 +558,7 @@ class TrailPresentation:
             self.celebration_start = self.clock
         self._previous_complete = complete
         self._visited = view.visited_qualified_ids
+        self._toggle_on = getattr(view, "toggle_on_qualified_ids", frozenset())
         # Read-only NPC evidence (M04's and M05's completion state); views
         # without it simply show every talk cue.
         spoken = getattr(view, "spoken_npc_ids", None)
@@ -634,6 +640,8 @@ class TrailPresentation:
             return self._pixel_pose(qualified_id)
         if role == MOONLIT_GUIDE_QUALIFIED_ID:
             return self._guide_pose(qualified_id)
+        if role == SKY_LANTERN_PRESENTATION_ID:
+            return SpritePose(row="on" if qualified_id in self._toggle_on else "off")
         if role == CRYSTAL_LANTERN_QUALIFIED_ID:
             return SpritePose(row="glow", column=LANTERN_FLICKER.frame_at(self.clock))
         if role == MOON_COMPASS_QUALIFIED_ID:
@@ -909,6 +917,17 @@ class TrailPresentation:
                 mix(color, _WHITE, 0.4),
                 0.42 + 0.1 * flicker + 0.4 * flare,
             )
+        elif role == SKY_LANTERN_PRESENTATION_ID:
+            lit = qualified_id in self._toggle_on
+            soft_shadow(renderer, x + width / 2, y + height, width // 3, 4, 100)
+            glow(
+                renderer,
+                x + width / 2,
+                y + height / 2,
+                max(width, height) * (2 if lit else 1),
+                color,
+                0.5 if lit else 0.08,
+            )
         elif role in (
             SUN_SEED_PRESENTATION_ID,
             RAIN_BELL_PRESENTATION_ID,
@@ -1013,6 +1032,17 @@ class TrailPresentation:
                 _ORB_LIGHT,
                 0.2 + 0.07 * math.sin(self.clock * 1.9) + 0.3 * cheer,
             )
+        elif role == SKY_LANTERN_PRESENTATION_ID and qualified_id in self._toggle_on:
+            # Light and rising sparks distinguish ON without depending on hue.
+            for index in range(3):
+                phase = (self.clock * 0.6 + index / 3) % 1
+                sparkle(
+                    renderer,
+                    x + width / 2 + 10 * math.sin(index + phase * 4),
+                    y - phase * 35,
+                    2 + 2 * math.sin(math.pi * phase),
+                    mix(color, _WHITE, 0.5),
+                )
         elif role in (
             SUN_SEED_PRESENTATION_ID,
             RAIN_BELL_PRESENTATION_ID,

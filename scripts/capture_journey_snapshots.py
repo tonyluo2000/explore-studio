@@ -187,6 +187,8 @@ def _verify(trail, row: Session, moment: Moment, command: TrailCommand) -> list[
     if set(scene.visited_qualified_ids) != set(expect.visited):
         visited = sorted(scene.visited_qualified_ids)
         problems.append(f"visited {visited}, expected {list(expect.visited)}")
+    if expect.toggle_on is not None and set(scene.toggle_on_qualified_ids) != set(expect.toggle_on):
+        problems.append(f"toggle ON state differs from {expect.toggle_on}")
     if scene.mission_is_complete != expect.complete:
         complete = scene.mission_is_complete
         problems.append(f"mission complete is {complete}, expected {expect.complete}")

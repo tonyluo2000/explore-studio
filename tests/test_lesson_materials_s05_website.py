@@ -50,10 +50,10 @@ def _js_string(source: str, key: str) -> str:
     return match.group(1)
 
 
-def test_s05_remains_published_when_s06_is_added():
-    assert _slides_published() == ["S01", "S02", "S03", "S04", "S05", "S06"]
+def test_s05_remains_published_through_s07():
+    assert _slides_published() == ["S01", "S02", "S03", "S04", "S05", "S06", "S07"]
     learn_ids = re.findall(r'^\s+id: "(S\d\d)"', _read(LEARN), re.MULTILINE)
-    assert learn_ids == ["S01", "S02", "S03", "S04", "S05", "S06"]
+    assert learn_ids == ["S01", "S02", "S03", "S04", "S05", "S06", "S07"]
     assert (WEBSITE / "app" / "students" / "slides" / "s06" / "page.tsx").is_file()
     assert (WEBSITE / "public" / "journey" / "s06" / "hero.webp").is_file()
     slides = _read(SLIDES)
