@@ -239,7 +239,7 @@ def test_s06_hero_is_polished_and_contains_no_later_session_content() -> None:
         assert word not in text, word
 
 
-def test_s01_through_s05_snapshot_image_bytes_did_not_change_for_s06() -> None:
+def test_s01_through_s06_snapshot_image_bytes_did_not_change_for_s07() -> None:
     reviewed = {
         ("S01", "S01_ARRIVAL"): (
             "d651f128a98319a27b8f6d764470a697ec6c567006f847dc0f89c1b0edf9d6c6",
@@ -269,6 +269,10 @@ def test_s01_through_s05_snapshot_image_bytes_did_not_change_for_s06() -> None:
             "062248376f28223d779949f42da2d73dabecd45e244d61bf7eedb0c314640fd2",
             "0cef46cada24c7105a92cd7638cd803919a72493dbf44eb9c9b7ff9bd68ee05d",
         ),
+        ("S06", "S06_BREADCRUMB_TRAIL"): (
+            "34a57ed862c5d2f9df3c3ccf80acf1240b0bf35d9a0cb595a7420e36c44f0806",
+            "922e5f28e5424f23fc6258715823f093d579530a7f9398efe34279a9365a4f07",
+        ),
     }
     actual = {
         (entry["session"], entry["moment"]): (
@@ -276,7 +280,7 @@ def test_s01_through_s05_snapshot_image_bytes_did_not_change_for_s06() -> None:
             entry["images"]["480"]["sha256"],
         )
         for entry in ENTRIES
-        if entry["session"] in {"S01", "S02", "S03", "S04", "S05"}
+        if entry["session"] in {"S01", "S02", "S03", "S04", "S05", "S06"}
     }
     assert actual == reviewed
 
@@ -350,6 +354,7 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
         *journey.S06_OBJECTS,
         journey.FERN,
         journey.FOUNTAIN,
+        "sky-lantern-switch:sky-lantern",
     }
     assert [moment.kind for moment in S01.moments] == [HERO]
     # The world, not completion: no prompt, nothing visited, not complete.
@@ -385,7 +390,7 @@ def test_harness_refuses_deferred_and_unpublished_sessions(
     with pytest.raises(CaptureError, match="S01 is deferred"):
         publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
-        publish(["S07"])
+        publish(["S08"])
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +433,7 @@ def test_published_snapshot_set_is_the_reviewed_one() -> None:
         "S04": [(HERO, "S04_DIALOGUE")],
         "S05": [(HERO, "S05_CONVERSATION")],
         "S06": [(HERO, "S06_BREADCRUMB_TRAIL")],
+        "S07": [(HERO, "S07_LANTERN_ON")],
     }
 
 
@@ -494,9 +500,9 @@ def test_runtime_commit_really_contains_the_captured_runtime() -> None:
         digest = journey.runtime_digest(files)
         for entry in ENTRIES:
             if entry["runtimeCommit"] == commit:
-                assert entry["fingerprintParts"]["runtime"] == digest, (
-                    f"{_entry_id(entry)}: the runtime pin {commit} does not draw this snapshot"
-                )
+                assert (
+                    entry["fingerprintParts"]["runtime"] == digest
+                ), f"{_entry_id(entry)}: the runtime pin {commit} does not draw this snapshot"
 
 
 # ---------------------------------------------------------------------------

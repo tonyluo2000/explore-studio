@@ -87,6 +87,20 @@
       "x": 760,
       "y": 278,
       "reveal": [{ "from": "S06", "state": "revealed" }]
+    },
+    {
+      "id": "sky-signal",
+      "name": "Sky Lantern",
+      "region": "moonlit-ridge",
+      "icon": "lantern",
+      "x": 860,
+      "y": 224,
+      "reveal": [
+        {
+          "from": "S07",
+          "state": "revealed"
+        }
+      ]
     }
   ],
   "paths": [
@@ -124,6 +138,19 @@
       "to": "garden-markers",
       "d": "M570 272C632 246 700 250 744 270",
       "reveal": [{ "from": "S06", "state": "revealed" }]
+    },
+    {
+      "id": "trail-markers-signal",
+      "kind": "trail",
+      "from": "garden-markers",
+      "to": "sky-signal",
+      "d": "M780 270C810 256 824 232 846 228",
+      "reveal": [
+        {
+          "from": "S07",
+          "state": "revealed"
+        }
+      ]
     }
   ],
   "frontier": {
@@ -183,6 +210,15 @@
       "story": "Sun Seed, Rain Bell, and Wind Flower mark a trail toward a gate hidden in the sky.",
       "snapshot": "S06_BREADCRUMB_TRAIL",
       "snapshotAlt": "The Trail in S06: using its standard presentation, Nova has visited Sun Seed and Rain Bell and now stands beside Wind Flower, with M06 still incomplete."
+    },
+    {
+      "session": "S07",
+      "kind": "reveal",
+      "landmark": "sky-signal",
+      "headline": "landmark",
+      "story": "The breadcrumb trail reaches the Sky Lantern signal for a gate hidden in the sky.",
+      "snapshot": "S07_LANTERN_ON",
+      "snapshotAlt": "The actual S07 Moon Meadow Trail: Nova beside the glowing gold Sky Lantern after one toggle, with M07 complete. Completion records a change, not a final ON state."
     }
   ]
 }

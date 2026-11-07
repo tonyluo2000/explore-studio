@@ -591,6 +591,62 @@ print(broken_record["y"])`,
       "Match each Python record to its YAML object file and explain which side plans the data and which side drives the visible Trail.",
     ],
   },
+  {
+    id: "S07",
+    sourceFile: "task-card.md",
+    concepts: [
+      { term: "Boolean", meaning: "A value with two possibilities: True or False, written with capital first letters." },
+      { term: "state", meaning: "The value a variable holds at one moment. is_on models whether our lantern is on." },
+      { term: "assignment", meaning: "The equals sign stores a value. Assigning True changes the local state." },
+      { term: "toggle sequence", meaning: "Predict False → True → False → True, matching OFF → ON → OFF → ON." },
+      { term: "Python → YAML → Trail", meaning: "Local Python models the idea. YAML declares toggle.off_color and toggle.on_color. Trail owns runtime session state; every toggle starts off." },
+    ],
+    code: `off_color = "blue"
+on_color = "gold"
+
+is_on = False
+print(is_on, off_color)
+
+is_on = True
+print(is_on, on_color)`,
+    runCommand: "python lessons/sessions/s07/student/starter.py",
+    output: `False blue
+True gold`,
+    meanings: [
+      { term: 'off_color = "blue"', meaning: "Stores the color label for the off observation." },
+      { term: 'on_color = "gold"', meaning: "Stores the color label for the on observation." },
+      { term: "is_on = False", meaning: "Sets the local Boolean state to False." },
+      { term: "print(is_on, off_color)", meaning: "Reads and prints the state and off color; it does not change either value." },
+      { term: "is_on = True", meaning: "Changes the local variable to True before the second observation." },
+      { term: "print(is_on, on_color)", meaning: "Prints True gold after the repair. Printing a color string does not mutate is_on." },
+    ],
+    why: [
+      "Represent two states with a Boolean variable and predict how assignment changes that state.",
+      "Programs use Boolean state to model a light, a saved setting, or whether an action has happened.",
+      "The Sky Lantern signals toward the hidden gate. M07 completes after the toggle changes at least once. Final ON/gold is a story target confirmed by observation, not mission-checked.",
+    ],
+    debugged: {
+      broken: `is_on = False
+print(is_on, on_color)`,
+      error: "False gold (no Python exception)",
+      explanation: "The starter's second line prints gold but leaves is_on = False. Printing on_color does not change state. Repair the assignment before printing; local Python does not control Trail state.",
+      fixed: `is_on = True
+print(is_on, on_color)`,
+    },
+    keyWords: [
+      { term: "Boolean", meaning: "The two-value type used for True and False." },
+      { term: "True", meaning: "The Boolean value modeling ON in this lesson." },
+      { term: "False", meaning: "The Boolean value modeling OFF in this lesson." },
+      { term: "assignment", meaning: "Storing a value using =." },
+      { term: "state", meaning: "A value at a particular moment." },
+    ],
+    tryIt: [
+      "Predict all four rows before running: start False/blue, then True/gold, False/blue, True/gold.",
+      "Run the starter, explain False gold, repair only the second assignment, and check False blue then True gold.",
+      "Validate the package, then interact three times in the Trail. Does M07 remain complete when the lantern is OFF after interaction 2?",
+      "Explain the boundary: Python models state, YAML declares colors, and Trail owns runtime session state. Leave the lantern ON/gold for the story and ask your teacher to observe it.",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);

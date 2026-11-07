@@ -93,10 +93,12 @@ const pythonJourneySteps: Record<string, PythonJourneyStep> = {
     "id": "S07",
     "topic": "Boolean state",
     "concepts": [
+      "Boolean",
       "True",
       "False",
       "assignment",
-      "changing state"
+      "state",
+      "toggle sequence"
     ],
     "capability": "Represent two states and predict False → True → False changes."
   },

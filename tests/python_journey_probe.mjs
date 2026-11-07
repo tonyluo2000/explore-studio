@@ -25,7 +25,7 @@ const PythonJourney = requireSite("./app/components/PythonJourney.tsx").default;
 const { createElement } = requireSite("react");
 const { renderToStaticMarkup } = requireSite("react-dom/server");
 const render = (props) => renderToStaticMarkup(createElement(PythonJourney, props));
-const sessions = request.sessions ?? [...calendar.sessionsWithSlides, "S07", "S30", "unknown"];
+const sessions = request.sessions ?? [...calendar.sessionsWithSlides, "S08", "S30", "unknown"];
 process.stdout.write(JSON.stringify({
   published: journey.publishedPythonSteps,
   publication: calendar.sessionsWithSlides,

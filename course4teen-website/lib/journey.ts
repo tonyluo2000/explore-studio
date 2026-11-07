@@ -54,3 +54,8 @@ export const journeyMapSize = {
 export function journeyContext(sessionId: string): StopView | null {
   return journeyContextFor(journeyInputs, sessionId);
 }
+
+/** Frozen map state for a published session card. */
+export function journeyThrough(sessionId: string) {
+  return journeyState(journeyInputs, sessionId);
+}

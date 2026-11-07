@@ -371,12 +371,12 @@ def _copy_entry_as(session: str) -> Callable[[dict], None]:  # type: ignore[type
 BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # 13. A stray asset for a session the website does not publish.
     (
-        "stray-s07-asset",
+        "stray-s08-asset",
         lambda root: (
-            (root / "course4teen-website/public/journey/s07").mkdir(),
-            (root / "course4teen-website/public/journey/s07/hero.webp").write_bytes(b"RIFF"),
+            (root / "course4teen-website/public/journey/s08").mkdir(),
+            (root / "course4teen-website/public/journey/s08/hero.webp").write_bytes(b"RIFF"),
         ),
-        "public/journey/s07/hero.webp is published but not in the manifest",
+        "public/journey/s08/hero.webp is published but not in the manifest",
     ),
     (
         "stray-s01-asset",
@@ -389,8 +389,8 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     # a moment the table does not have.
     (
         "unpublished-session-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S07")),
-        "S07 is not published",
+        lambda root: _edit_manifest(root, _copy_entry_as("S08")),
+        "S08 is not published",
     ),
     (
         "deferred-session-entry",
@@ -405,11 +405,11 @@ BOUNDARY_MUTATIONS: tuple[tuple[str, Callable[[Path], None], str], ...] = (
     (
         "unknown-moment-entry",
         lambda root: _edit_manifest(root, _copy_entry_as("S01")),
-        "manifest entry S01 S06_BREADCRUMB_TRAIL: no such moment in the table",
+        "manifest entry S01 S07_LANTERN_ON: no such moment in the table",
     ),
     (
         "duplicate-entry",
-        lambda root: _edit_manifest(root, _copy_entry_as("S06")),
+        lambda root: _edit_manifest(root, _copy_entry_as("S07")),
         "is listed twice",
     ),
     # 15. Unsupported, unknown, and missing manifest schemas.

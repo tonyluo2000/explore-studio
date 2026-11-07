@@ -55,7 +55,10 @@ record. On 2026-10-24 the pin advanced to
 `8811a5ceff647d4a6f408bb1aa9764b5cd64c607` for S06's package-scoped Moon Meadow
 presentation: the canonical Sun Seed, Rain Bell, and Wind Flower receive distinct
 polished marker primitives while later M06 reuse sessions stay on their existing
-presentation.
+presentation. On 2026-11-06 the release-candidate pin advanced to
+`f2cda35dee4929f98c48eab8c48790ea24c7640a` for S07's package-scoped
+Sky Lantern presentation, preserving M07 first-change completion and later
+toggle-session presentation. This candidate does not replace the live Course Kit.
 
 ## Student flow exercised
 

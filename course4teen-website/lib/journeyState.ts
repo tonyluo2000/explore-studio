@@ -330,8 +330,8 @@ export function validateJourney(inputs: JourneyInputs): string[] {
   };
 
   // The frontier: exactly one generic, unnamed fog bank. It appears, fogged,
-  // only at the current (latest published) stop, carries no detail, holds no
-  // landmark, and its teaser only echoes that stop's published story.
+  // from the published story that introduces it onward, carries no detail,
+  // holds no landmark, and echoes both that story and the current stop.
   const frontiers = journey.regions.filter((region) => region.frontier === true);
   if (frontiers.length !== 1) {
     errors.push(`exactly one generic fog frontier is required; found ${frontiers.length}`);
@@ -340,8 +340,11 @@ export function validateJourney(inputs: JourneyInputs): string[] {
     if (region.frontier) {
       if (region.name !== undefined) errors.push(`frontier ${region.id} must stay unnamed`);
       const [step, ...more] = region.reveal;
-      if (more.length > 0 || step?.state !== "fogged" || step.from !== latest) {
-        errors.push(`frontier ${region.id} must appear once, fogged, at the current stop ${latest}`);
+      const originStory = words(journey.stops.find((stop) => stop.session === step?.from)?.story ?? "");
+      const originTeaser = words(journey.frontier.teaser);
+      if (more.length > 0 || step?.state !== "fogged" || !published.includes(step.from)
+        || !originTeaser || !` ${originStory} `.includes(` ${originTeaser} `)) {
+        errors.push(`frontier ${region.id} must appear once, fogged, from its published story handoff`);
       }
       if (region.reveal.some((item) => item.detail !== undefined)) {
         errors.push(`frontier ${region.id} may carry no reveal detail`);

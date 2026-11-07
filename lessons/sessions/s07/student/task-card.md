@@ -51,12 +51,7 @@ starts off.
 
    ```console
    explore-package validate lessons/sessions/s07/student/explorer-package
-   explore-package trail \
-     examples/explorer-packages/nova-character \
-     lessons/sessions/s07/student/explorer-package \
-     --player "nova-character:nova" \
-     --mission-id "toggle-an-object-state" \
-     --name "S07 Create a Two-State Prop"
+   explore-package trail examples/explorer-packages/nova-character lessons/sessions/s07/student/explorer-package --player "nova-character:nova" --mission-id "toggle-an-object-state" --name "S07 Create a Two-State Prop"
    ```
 
 3. Interact three times and record every color. Checkpoint: compare the trace
