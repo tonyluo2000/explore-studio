@@ -40,6 +40,10 @@ export function qualityRequirements({risk, complexity, taskType, history = {}} =
   return {risk: sensitive && effectiveRisk !== 'critical' ? 'high' : effectiveRisk, minimumEffort, independentReviewRequired, reasons, gates};
 }
 
+export function isRoutineDeepSeekImplementation({role,risk,complexity,reasoningEffort}) {
+  return role==='implementation' && risk==='low' && ['routine','simple'].includes(complexity) && reasoningEffort==='low';
+}
+
 export function assertQualityFloor({requestedEffort, effectiveEffort = requestedEffort, requirements}) {
   if (!requirements || !EFFORTS.includes(requestedEffort) || !EFFORTS.includes(effectiveEffort)
     || !EFFORTS.includes(requirements.minimumEffort)) fail('INVALID_QUALITY_EFFORT');

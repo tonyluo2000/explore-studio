@@ -14,7 +14,8 @@ export const MODEL_CATALOG = Object.freeze([
   {provider:'openai',model:'gpt-6-astra',family:'openai',efforts:['low','medium','high'],available:'unknown',source:'official-docs'},
   {provider:'anthropic',model:'claude-sonnet-5-5',family:'claude',efforts:['low','medium','high'],available:'unknown',source:'official-docs'},
   {provider:'anthropic',model:'claude-opus-5-5',family:'claude',efforts:['low','medium','high'],available:'unknown',source:'official-docs'},
-  {provider:'deepseek',model:'deepseek-v4-pro',family:'deepseek',efforts:['low','high'],available:'unknown',source:'official-docs'}
+  {provider:'deepseek',model:'deepseek-v4-pro',family:'deepseek',efforts:['low','high'],available:'unknown',source:'official-docs'},
+  {provider:'deepseek',model:'deepseek-flash',family:'deepseek',efforts:['low'],available:'unknown',source:'official-docs'}
 ]);
 
 function versionAtLeast(version, minimum) {

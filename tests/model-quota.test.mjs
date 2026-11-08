@@ -70,7 +70,7 @@ test('capability discovery narrows documented efforts and inspects no credential
     assert.deepEqual(commands,[['codex',['--version']],['claude',['--version']]]);
     const model=capabilities.models.find(value=>value.model==='gpt-6.1-sol');assert.equal(model.available,'verified');assert.deepEqual(model.efforts,['low']);
     assert.equal(capabilities.models.find(value=>value.model==='claude-sonnet-5-5').available,'unknown');
-    assert.ok(!MODEL_CATALOG.some(value=>value.model==='deepseek-flash'));
+    assert.deepEqual(MODEL_CATALOG.find(value=>value.model==='deepseek-flash').efforts,['low']);
   } finally {await rm(root,{recursive:true,force:true});}
 });
 test('missing or old agent CLIs do not advertise model availability',()=>{

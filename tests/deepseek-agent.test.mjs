@@ -4,10 +4,18 @@ import {mkdtemp,writeFile,mkdir,readFile,rm,symlink,realpath} from 'node:fs/prom
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {prepareImplementation as guardedPrepareImplementation,runImplementation as guardedRunImplementation,validateImplementationResponse,applyImplementation,createIsolatedWorktree,executeImplementationWithReceipt,finalizeImplementationResult} from '../scripts/deepseek-agent.mjs';
+import {createHash} from 'node:crypto';
+import {prepareImplementation as guardedPrepareImplementation,runImplementation as guardedRunImplementation,validateImplementationResponse,applyImplementation,createIsolatedWorktree,executeImplementationWithReceipt as executeProduction,createDeepSeekImplementationTestHarness,finalizeImplementationResult} from '../scripts/deepseek-agent.mjs';
 const constrainedQuota = () => ({codex:{state:'low',source:'owner',observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}});
-const prepareImplementation = options => guardedPrepareImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
-const runImplementation = options => guardedRunImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
+const ownerRequestFor = manifest => ({schema:'cross-project.deepseek-owner-request.v1',authorizationId:'owner-agent-test-001',repository:manifest.repository,taskId:manifest.taskId,role:'implementation',baseSha:manifest.baseSha,headSha:manifest.headSha,model:'deepseek-v4-pro',issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString(),authorizationReference:'owner:test'});
+const prepareImplementation = options => guardedPrepareImplementation({routingContext:{quota:constrainedQuota(),risk:'low',complexity:'routine'},ownerRequest:ownerRequestFor(options.manifest),...options});
+const runImplementation = options => guardedRunImplementation({routingContext:{quota:constrainedQuota(),risk:'low',complexity:'routine'},ownerRequest:ownerRequestFor(options.manifest),...options});
+function executeImplementationWithReceipt({run, ...options}) {
+  if (!run) return executeProduction(options);
+  const harness = createDeepSeekImplementationTestHarness({run});
+  return harness.executeImplementationWithReceipt(options);
+}
+const approvalFor=(prepared,ownerRequest)=>({...ownerRequest,schema:'cross-project.deepseek-call-authorization.v1',requestId:prepared.requestId,bodySha256:createHash('sha256').update(prepared.request.serializedBody).digest('hex'),reasoningEffort:prepared.route.reasoningEffort,maxCostUsd:prepared.maximumCostUsd,transferApproved:true,paymentApproved:true});
 async function fixture(t){
  const root=await realpath(await mkdtemp(path.join(tmpdir(),'deepseek-agent-'))); t.after(()=>rm(root,{recursive:true,force:true}));
  const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
@@ -51,7 +59,9 @@ test('rejects stale head, dirty source, symlinks and unapproved repository ident
 });
 test('live mode refuses absent exact-call approval before provider and caps cost',async t=>{
  const {root,manifest}=await fixture(t);let calls=0;
- await assert.rejects(runImplementation({root,manifest,mode:'live',providerCall:()=>{calls++;}}),/EXACT_CALL_APPROVAL_REQUIRED/);
+ const outside=await realpath(await mkdtemp(path.join(tmpdir(),'agent-preflight-')));t.after(()=>rm(outside,{recursive:true,force:true}));
+ const result=await executeProduction({root,manifest,mode:'live',ownerRequest:ownerRequestFor(manifest),routingContext:{risk:'low',complexity:'routine'},output:path.join(outside,'no-approval.json')});
+ assert.equal(result.errors[0].code,'CALL_AUTHORIZATION_REQUIRED');assert.equal(result.providerAttemptState,'NOT_STARTED');
  assert.equal(calls,0);
  await assert.rejects(prepareImplementation({root,manifest:{...manifest,maxCostUsd:1.01}}),/REQUEST_CAP_EXCEEDED/);
  await assert.rejects(prepareImplementation({root,manifest:{...manifest,tests:[{kind:'shell',files:['tests/x.py']}]}}),/INVALID_TESTS/);
@@ -75,16 +85,16 @@ test('new owned files are allowed without granting unowned creation',async t=>{
  assert.equal(await readFile(path.join(root,manifest.ownedPaths[0]),'utf8'),proposal.changes[0].content);
 });
 
-test('healthy and unknown primary quota refuse backup before any provider transmission',async t=>{
+test('all primary quota states refuse DeepSeek without an explicit owner request',async t=>{
  const {root,manifest}=await fixture(t);let calls=0;
- for(const quota of [{},{codex:{state:'healthy',source:'owner',observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}}]) {
-  await assert.rejects(guardedRunImplementation({root,manifest,mode:'live',routingContext:{quota},providerCall:()=>{calls++;}}));
+ for(const quota of [{},...['healthy','low','exhausted','rate_limited','imminent'].map(state=>({codex:{...constrainedQuota().codex,state}}))]) {
+  await assert.rejects(guardedPrepareImplementation({root,manifest,routingContext:{quota}}));
  }
  assert.equal(calls,0);
 });
-test('unknown source remains fail-closed under a valid backup quota trigger',async t=>{
+test('unknown source remains fail-closed under an explicit owner DeepSeek request',async t=>{
  const {root,manifest}=await fixture(t);let calls=0;
- await assert.rejects(runImplementation({root,manifest:{...manifest,ownedPaths:['mobile/private/health.json']},mode:'live',providerCall:()=>{calls++;}}),/PATH_NOT_ALLOWLISTED/);
+ await assert.rejects(prepareImplementation({root,manifest:{...manifest,ownedPaths:['mobile/private/health.json']}}),/PATH_NOT_ALLOWLISTED/);
  assert.equal(calls,0);
 });
 test('difficult backup tasks serialize high effort and never provider medium',async t=>{
@@ -97,13 +107,13 @@ test('difficult backup tasks serialize high effort and never provider medium',as
 test('implementation manifest cannot activate using a reviewer role or quota',async t=>{
  const {root,manifest}=await fixture(t);
  await assert.rejects(prepareImplementation({root,manifest:{...manifest,taskType:'review'}}),/IMPLEMENTATION_ROLE_REQUIRED/);
- await assert.rejects(prepareImplementation({root,manifest,routingContext:{ownerRequestedDeepSeek:true,role:'review',quota:constrainedQuota()}}),/IMPLEMENTATION_ROLE_REQUIRED/);
+ await assert.rejects(prepareImplementation({root,manifest,routingContext:{role:'review',quota:constrainedQuota()}}),/IMPLEMENTATION_ROLE_REQUIRED/);
 });
 
 
 test('control-plane ownership is denied without an override',async t=>{
  const {root,manifest}=await fixture(t);
- for(const filename of ['AGENTS.md','.github/workflows/release.yml','package.json','config/routing.json','scripts/deepseek-review-core.mjs','scripts/with-project-node.sh']) {
+ for(const filename of ['AGENTS.md','.github/workflows/release.yml','package.json','config/routing.json','scripts/deepseek-review-core.mjs','scripts/with-project-node.sh','scripts/agent-route.mjs','scripts/model-quota.mjs','scripts/model-quality.mjs','scripts/model-capabilities.mjs','scripts/model-telemetry.mjs']) {
   await assert.rejects(prepareImplementation({root,manifest:{...manifest,ownedPaths:[filename]}}),/CONTROL_PLANE_WRITE_DENIED/);
  }
 });
@@ -133,4 +143,59 @@ test('apply leaves model-authored code unexecuted and reports suggested argv onl
  const report={mode:'OFFLINE_TEST',requestId:prepared.requestId};
  const result={resolvedModel:prepared.route.model,usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2},parsed:{summary:'Bounded source change.',changes:[{path:'lib/average.mjs',original_sha256:prepared.sources[0].sha256,content:'throw new Error("must never execute model code");\n'}]}};
  await finalizeImplementationResult({root,prepared,report,result,apply:true});assert.equal(report.status,'APPLIED_UNTESTED');assert.equal(report.tests[0].status,'NOT_RUN');assert.ok(report.tests[0].argv.includes('tests/danger.test.mjs'));
+});
+
+test('model-only manifest cannot impersonate explicit owner DeepSeek selection',async t=>{
+ const {root,manifest}=await fixture(t);
+ for(const ownerRequestedDeepSeek of [undefined,false,'true']) {
+  await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,model:'deepseek-v4-pro'},routingContext:{ownerRequestedDeepSeek,quota:constrainedQuota(),risk:'low',complexity:'routine'}}),{code:'OWNER_TASK_REQUEST_REQUIRED'});
+ }
+});
+test('explicit owner request can prepare a bounded task when primary quota is unknown',async t=>{
+ const {root,manifest}=await fixture(t);
+ const prepared=await guardedPrepareImplementation({root,manifest,ownerRequest:ownerRequestFor(manifest),routingContext:{risk:'low',complexity:'routine'}});
+ assert.equal(prepared.route.model,'deepseek-v4-pro');assert.equal(prepared.request.requestBody.reasoning_effort,'low');
+});
+
+test('previous task owner request and model manifest injection cannot authorize another task',async t=>{
+ const {root,manifest}=await fixture(t);const ownerRequest=ownerRequestFor({...manifest,taskId:'previous-task'});let calls=0;
+ await assert.rejects(guardedPrepareImplementation({root,manifest,ownerRequest,routingContext:{risk:'low',complexity:'routine'}}),{code:'OWNER_TASK_SCOPE_MISMATCH'});
+ assert.equal(calls,0);
+ await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,ownerRequest:ownerRequestFor(manifest)}}),/INVALID_SCHEMA/);
+});
+
+test('production implementation export refuses live before clients, state or credential access',async()=>{
+ const touched=[];const originalFetch=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('must not transmit');};
+ try {
+  const options=new Proxy({mode:'live'},{get:(value,key)=>{if(key==='mode')return value.mode;touched.push(String(key));throw new Error('live arguments must not be read');}});
+  await assert.rejects(guardedRunImplementation(options),{code:'STATEFUL_EXECUTION_REQUIRED'});assert.deepEqual(touched,[]);assert.equal(calls,0);
+ } finally {globalThis.fetch=originalFetch;}
+});
+test('implementation request identity explicitly binds owner authorization and effective effort',async t=>{
+ const {root,manifest}=await fixture(t);const firstOwner=ownerRequestFor(manifest),secondOwner={...firstOwner,authorizationId:'owner-agent-test-002'};
+ const first=await prepareImplementation({root,manifest,ownerRequest:firstOwner});const second=await prepareImplementation({root,manifest,ownerRequest:secondOwner});
+ assert.equal(first.request.serializedBody,second.request.serializedBody);assert.notEqual(first.requestId,second.requestId);
+ const higher=await prepareImplementation({root,manifest,ownerRequest:firstOwner,routingContext:{risk:'high',complexity:'complex'}});assert.equal(higher.route.reasoningEffort,'high');assert.notEqual(first.requestId,higher.requestId);
+ for(const prepared of [first,second,higher]) assert.equal(prepared.requestId,createHash('sha256').update(JSON.stringify({manifest,authorizationId:prepared.route.authorizationId,effectiveEffort:prepared.route.effectiveEffort??prepared.route.reasoningEffort,body:prepared.request.serializedBody})).digest('hex'));
+ assert.notEqual(createHash('sha256').update(first.request.serializedBody).digest('hex'),createHash('sha256').update(higher.request.serializedBody).digest('hex'));
+});
+test('implementation durably records possibly-sent and response phases on ambiguous provider failure',async t=>{
+ const {root,manifest}=await fixture(t);const ownerRequest=ownerRequestFor(manifest);const prepared=await prepareImplementation({root,manifest,ownerRequest});const approval=approvalFor(prepared,ownerRequest);
+ const outside=await realpath(await mkdtemp(path.join(tmpdir(),'agent-attempt-state-')));t.after(()=>rm(outside,{recursive:true,force:true}));
+ for(const failure of ['network','http','usage']) {
+  let calls=0;const output=path.join(outside,failure+'.json');
+  const harness = createDeepSeekImplementationTestHarness({fetchImpl:async()=>{calls++;const before=JSON.parse(await readFile(output,'utf8'));assert.equal(before.status,'REQUEST_MAY_HAVE_BEEN_SENT');assert.equal(before.providerAttemptState,'REQUEST_MAY_HAVE_BEEN_SENT');assert.equal(before.requestMayHaveBeenSent,true);
+   if(failure==='network') throw Object.assign(new Error('synthetic connection reset'),{code:'ECONNRESET'});
+   if(failure==='http')return new Response('failure',{status:503});
+   return new Response(JSON.stringify({model:'deepseek-v4-pro',usage:{prompt_tokens:10,completion_tokens:5,total_tokens:99},choices:[{finish_reason:'stop',message:{content:'{}'}}]}),{status:200});
+  }});
+  const result=await harness.executeImplementationWithReceipt({root,manifest,mode:'live',ownerRequest,approval,routingContext:{risk:'low',complexity:'routine'},output});const receipt=JSON.parse(await readFile(output,'utf8'));
+  const phase=failure==='network'?'REQUEST_MAY_HAVE_BEEN_SENT':'PROVIDER_RESPONSE_RECEIVED';assert.equal(calls,1);assert.equal(result.status,phase);assert.equal(receipt.status,phase);assert.equal(receipt.providerAttemptState,phase);assert.equal(receipt.requestMayHaveBeenSent,true);assert.equal(receipt.chargeMayHaveOccurred,true);assert.equal(receipt.providerOutcome,'FAILED_OR_AMBIGUOUS');assert.equal(receipt.usage,null);assert.equal(receipt.actualModel,null);assert.equal(receipt.executionKind,'OFFLINE_TEST');assert.equal(receipt.providerModelAttestation,'FAKE_RESPONSE_ONLY');assert.equal(receipt.requestId,prepared.requestId);assert.equal(receipt.errors[0].code,failure==='network'?'API_NETWORK_ERROR':failure==='http'?'API_HTTP_503':'API_USAGE_INVALID');
+ }
+});
+test('implementation preflight cannot emit an attempt or use a caller provider override',async t=>{
+ const {root,manifest}=await fixture(t);const ownerRequest=ownerRequestFor(manifest);const outside=await realpath(await mkdtemp(path.join(tmpdir(),'agent-no-send-')));t.after(()=>rm(outside,{recursive:true,force:true}));let calls=0;
+ const output=path.join(outside,'preflight.json');const harness = createDeepSeekImplementationTestHarness({fetchImpl:async()=>{calls++;throw new Error('must not transmit');}});
+ const result=await harness.executeImplementationWithReceipt({root,manifest,mode:'live',ownerRequest,routingContext:{risk:'low',complexity:'routine'},output});assert.equal(result.status,'PREFLIGHT_FAILED');assert.equal(result.providerAttemptState,'NOT_STARTED');assert.equal(result.requestMayHaveBeenSent,false);assert.equal(result.chargeMayHaveOccurred,false);assert.equal(calls,0);
+ const production=await executeProduction({root,manifest,mode:'live',ownerRequest,routingContext:{risk:'low',complexity:'routine'},output:path.join(outside,'fixed-production.json'),run:async()=>{calls++;return {status:'BYPASSED'};},providerCall:async()=>{calls++;}});assert.equal(production.status,'PREFLIGHT_FAILED');assert.equal(production.errors[0].code,'CALL_AUTHORIZATION_REQUIRED');assert.equal(calls,0);
 });

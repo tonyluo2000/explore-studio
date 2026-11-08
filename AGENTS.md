@@ -1,17 +1,16 @@
 # Explore Studio model workflow
 
-November 7, 2026 final owner rule: always use Codex or Claude unless the
-owner explicitly requests DeepSeek Pro. Quota pressure, rate limits and cost
-never automatically select DeepSeek. See `config/ai-model-routing.json` and
-`docs/operations/MODEL_ROUTING.md`. Source transfer remains disabled pending
-independent review and separate exact-call transfer/payment authorization.
-All existing human review, privacy, financial verification and release gates
-remain mandatory.
+Use Codex or Claude by default. Use `scripts/agent-route.mjs` to choose the
+lowest suitable primary model and effort. Quota pressure never activates DeepSeek.
+For an explicit DeepSeek task, use `scripts/deepseek.mjs run` with the private
+owner-approved standing policy. Routine low-risk implementation uses Flash.
+Substantial implementation and independent review use Pro, at low or high effort.
+The runner checks source scope and cost and generates the exact request record.
+High-risk work retains separate authorization and independent exact-head review.
+Live DeepSeek requires reviewed activation and the existing provider credential.
 
 The separate guarded CLI does not replace Codex/Claude global configuration.
-All new source-transfer eligibility remains mock-only until independent review
-and separate exact-call source-transfer/payment authorization. Live budgets
-are ceilings, never spending approval. Use Node 22.13.0 or newer for the
+Use Node 22.13.0 or newer for the
 standalone dependency-free tooling tests documented in the workflow.
 
 Preserve licensing, content ownership, private learner-data and publishing

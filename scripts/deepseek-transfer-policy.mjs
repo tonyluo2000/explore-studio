@@ -2,21 +2,23 @@ import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
 import { containsRecognizedSecret, containsSuspiciousHighEntropy } from "./deepseek-source-scanner.mjs";
+import { assertSourceActivation } from "./model-activation.mjs";
 
-export const TRANSFER_POLICY_VERSION = "cross-project.source-transfer.v1";
-// Eligibility is implemented for mock qualification, not live activation. An independently
-// reviewed source change is required before this switch can change; CLI flags cannot do it.
-export const LIVE_TRANSFER_ENABLED = false;
-export function assertLiveTransferApproved() {
-  if (!LIVE_TRANSFER_ENABLED) throw Object.assign(new Error("independent transfer-policy review and separate live activation are required"), { code: "POLICY_REVIEW_REQUIRED" });
+export const TRANSFER_POLICY_VERSION = "cross-project.source-transfer.v2";
+// No global activation or automatic fallback. A reviewed, owner-approved record
+// can activate this exact source policy without editing the qualified source.
+export function assertLiveTransferApproved(options) {
+  return assertSourceActivation(options);
 }
 
 const WEB = [".cjs", ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".sh", ".sql", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml"];
 const ROOT_COMMON = [".gitignore", ".nvmrc", "AGENTS.md", "CLAUDE.md", "README.md", "package.json", "package-lock.json", "tsconfig.json", "pyproject.toml", "requirements.txt"];
+// Exact source-only routing configuration, never a config-directory wildcard.
+const ROUTING_CONFIGURATION = ["config/ai-model-routing.json", "config/deepseek-toolchain.json", "config/model-project.json"];
 const POLICIES = Object.freeze({
   "tonyluo2000/mile-commons": {
-    roots: [...ROOT_COMMON, "cloudflare-env.d.ts", "components.json", "drizzle.config.ts", "eslint.config.mjs", "next.config.ts", "postcss.config.mjs", "vite.config.ts", "mobile/App.tsx", "mobile/package.json", "mobile/package-lock.json", "mobile/app.json", "mobile/tsconfig.json", "mobile/babel.config.js", "mobile/metro.config.js"],
-    prefixes: [".github/workflows/", ".claude/agents/", "app/", "auth0/", "cloudflare/", "components/", "db/", "docs/", "drizzle/", "examples/", "hooks/", "lib/", "scripts/", "tests/", "worker/"],
+    roots: [...ROOT_COMMON, ...ROUTING_CONFIGURATION, ".github/workflows/deepseek-review.yml", "cloudflare-env.d.ts", "components.json", "drizzle.config.ts", "eslint.config.mjs", "next.config.ts", "postcss.config.mjs", "vite.config.ts", "mobile/App.tsx", "mobile/package.json", "mobile/package-lock.json", "mobile/app.json", "mobile/tsconfig.json", "mobile/babel.config.js", "mobile/metro.config.js"],
+    prefixes: [".claude/agents/", "app/", "auth0/", "cloudflare/", "components/", "db/", "docs/", "drizzle/", "examples/", "hooks/", "lib/", "scripts/", "tests/", "worker/"],
     extensions: WEB,
     native: [
       { prefix: "mobile/src/", extensions: [".ts", ".tsx"] },
@@ -29,12 +31,12 @@ const POLICIES = Object.freeze({
     ],
   },
   "briersystems/montefinance": {
-    roots: [...ROOT_COMMON, "pytest.ini", "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json"],
+    roots: [...ROOT_COMMON, ...ROUTING_CONFIGURATION, "pytest.ini", "frontend/package.json", "frontend/package-lock.json", "frontend/tsconfig.json"],
     prefixes: ["backend/", "frontend/src/", "frontend/app/", "frontend/components/", "frontend/lib/", "scripts/", "tests/", "docs/", ".ai/deepseek/"],
     extensions: [...WEB, ".py"], native: [],
   },
   "tonyluo2000/explore-studio": {
-    roots: [...ROOT_COMMON, "LICENSE"],
+    roots: [...ROOT_COMMON, ...ROUTING_CONFIGURATION, "LICENSE"],
     prefixes: ["engine/", "explore/", "scripts/", "tests/", "docs/", "classroom/my-world-template/", "course4teen-website/src/", "course4teen-website/app/", "course4teen-website/components/"],
     extensions: [...WEB, ".py"], native: [],
   },
@@ -71,13 +73,18 @@ export function projectPathPolicy(repository, filename) {
 // This only detects recognizable records. Human source classification and exact-call
 // authorization remain mandatory: arbitrary private data cannot be proven absent by regex.
 export function assertNoPrivateData(text) {
+  // Public GitHub SSH remotes are protocol syntax, not private email. Only the
+  // three approved repositories and the literal validated-source template are
+  // recognized. Similar domains, ordinary addresses and arbitrary remotes stay
+  // subject to the same personal-data denial below.
+  const candidate = String(text).replace(/(?<![A-Za-z0-9._%+-])git@github\.com:(?:\$\{(?:repository|task\.repository)\}(?:\.git)?|(?:tonyluo2000\/(?:mile-commons|explore-studio)|briersystems\/montefinance)(?:\.git)?)(?=["'`\s),\]])/g, "PUBLIC_GITHUB_SSH_REMOTE");
   const patterns = [
     /\b(?:latitude|longitude|lat|lng|heart[_-]?rate|blood[_-]?pressure|account[_-]?number|routing[_-]?number|social[_-]?security|ssn)["']?\s*[:=]\s*["']?-?\d+(?:\.\d+)?/i,
     /\b(?:runner|customer|learner|patient)[_-]?(?:name|email|record|address)["']?\s*[:=]\s*["'][^"'\n]+["']/i,
     /\b\d{3}-\d{2}-\d{4}\b/,
     /\b[A-Z0-9._%+-]+@(?!example\.(?:com|org|net)\b|localhost\b)[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
   ];
-  if (patterns.some(pattern => pattern.test(text))) throw Object.assign(new Error("recognizable personal, health, location or financial record is prohibited"), { code: "PRIVATE_DATA_DENIED" });
+  if (patterns.some(pattern => pattern.test(candidate))) throw Object.assign(new Error("recognizable personal, health, location or financial record is prohibited"), { code: "PRIVATE_DATA_DENIED" });
   if (String(text).includes("\0")) throw Object.assign(new Error("binary source is prohibited"), { code: "BINARY_SOURCE_DENIED" });
   return text;
 }

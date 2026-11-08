@@ -14,15 +14,15 @@ afterEach(() => {
   if (githubActionsAtTestStart === undefined) delete process.env.GITHUB_ACTIONS;
   else process.env.GITHUB_ACTIONS = githubActionsAtTestStart;
 });
-const identity = (id, repository = 'tonyluo2000/mile-commons') => ({ repository, provider: 'deepseek', actualModel: 'deepseek-v4-pro', taskType: 'review', requestId: id.toString(16).padStart(64, '0') });
+const identity = (id, repository = 'tonyluo2000/mile-commons') => ({ repository, provider: 'deepseek', actualModel: 'deepseek-v4-pro', taskType: 'review', taskId: 'synthetic-review', authorizationId: 'owner-call-' + id, reasoningEffort: 'high', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), requestId: id.toString(16).padStart(64, '0') });
 async function fixture(t) { const dir = await realpath(await mkdtemp(path.join(os.tmpdir(), 'deepseek-budget-'))); t.after(() => rm(dir, { recursive: true, force: true })); return dir; }
-test('shared cap covers three projects, retains reservations and refuses replay', async t => {
+test('fixed local pool covers three projects, retains reservations and refuses replay', async t => {
   const dir = await fixture(t);
   const repos = ['tonyluo2000/mile-commons', 'briersystems/montefinance', 'tonyluo2000/explore-studio'];
-  for (let i = 1; i <= 10; i++) await withBudget({ identity: identity(i, repos[i % 3]), maximumCostUsd: 1, ledgerDirectory: dir }, async () => ({ usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } }));
-  await assert.rejects(withBudget({ identity: identity(11), maximumCostUsd: 0.01, ledgerDirectory: dir }, () => assert.fail('must not send')), { code: 'SHARED_WEEKLY_CAP_EXCEEDED' });
+  for (let i = 1; i <= 5; i++) await withBudget({ identity: identity(i, repos[i % 3]), maximumCostUsd: 1, ledgerDirectory: dir }, async () => ({ usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } }));
+  await assert.rejects(withBudget({ identity: identity(6), maximumCostUsd: 0.01, ledgerDirectory: dir }, () => assert.fail('must not send')), { code: 'SHARED_WEEKLY_CAP_EXCEEDED' });
   await assert.rejects(withBudget({ identity: identity(1), maximumCostUsd: 1, ledgerDirectory: dir }, () => assert.fail()), { code: 'PAID_REQUEST_REPLAY_DENIED' });
-  assert.equal((await budgetReport({ ledgerDirectory: dir })).reservedUsd, 10);
+  assert.equal((await budgetReport({ ledgerDirectory: dir })).reservedUsd, 5);
 });
 test('one paid request at a time and ambiguous failure never refunds', async t => {
   const dir = await fixture(t);
@@ -61,10 +61,42 @@ test('shared ledger must remain private to the current OS user', async t => {
   await chmod(dir, 0o700);
 });
 
+test('one owner authorization cannot reserve a different body or another project', async t => {
+  const dir = await fixture(t); let calls = 0;
+  await withBudget({identity: identity(20), maximumCostUsd: 0.02, ledgerDirectory: dir}, async () => {calls++; return {};});
+  for (const repository of ['tonyluo2000/mile-commons', 'briersystems/montefinance']) {
+    await assert.rejects(withBudget({identity: {...identity(21, repository), authorizationId: identity(20).authorizationId}, maximumCostUsd: 0.02, ledgerDirectory: dir}, () => {calls++;}), {code:'PAID_AUTHORIZATION_REPLAY_DENIED'});
+  }
+  assert.equal(calls,1); assert.equal((await budgetReport({ledgerDirectory:dir})).reservedUsd,0.02);
+});
+test('missing task-scoped authorization identity fails before ledger reservation', async t => {
+  const dir = await fixture(t); let calls = 0;
+  for (const field of ['taskId','authorizationId','baseSha','headSha','reasoningEffort']) {
+    const value={...identity(30)}; delete value[field];
+    await assert.rejects(withBudget({identity:value,maximumCostUsd:0.02,ledgerDirectory:dir},()=>{calls++;}),{code:'LEDGER_IDENTITY_INVALID'});
+  }
+  assert.equal(calls,0); assert.equal((await budgetReport({ledgerDirectory:dir})).requests,0);
+});
+
+test('incomplete provider content retains already-attested usage without refund or verdict',async t=>{
+ const dir=await fixture(t);const usage={prompt_tokens:10,completion_tokens:8,total_tokens:18};
+ await assert.rejects(withBudget({identity:identity(40),maximumCostUsd:0.02,ledgerDirectory:dir},async()=>{throw Object.assign(new Error('incomplete'),{code:'API_INCOMPLETE_RESPONSE',providerReceipt:{schema:'cross-project.deepseek-provider-receipt.v1',resolvedModel:'deepseek-v4-pro',reasoningEffort:'high',usage},raw:'never store this'});}),{code:'API_INCOMPLETE_RESPONSE'});
+ const report=await budgetReport({ledgerDirectory:dir});assert.equal(report.reservedUsd,0.02);assert.equal(report.providerTokens,18);assert.equal(report.outcomes[0].status,'FAILED_OR_AMBIGUOUS');assert.equal(report.outcomes[0].resolvedModel,'deepseek-v4-pro');assert.ok(!JSON.stringify(report).includes('never store this'));
+});
+
 test('hosted execution refuses before a callback or reservation', async t => {
   const dir = await fixture(t); let calls = 0;
   process.env.GITHUB_ACTIONS = 'true';
   await assert.rejects(withBudget({identity:identity(90),maximumCostUsd:0.02,ledgerDirectory:dir},()=>{calls++;}), {code:'SHARED_LEDGER_UNAVAILABLE'});
   assert.equal(calls,0);
   assert.equal((await budgetReport({ledgerDirectory:dir})).requests,0);
+});
+
+test('local pool refuses hosted authorization identities before reserving or callback', async t => {
+  const dir = await fixture(t); let calls = 0;
+  await assert.rejects(withBudget({identity:{...identity(91),authorizationId:'gh-run-12345'},maximumCostUsd:0.02,ledgerDirectory:dir},()=>{calls++;}),{code:'HOSTED_ID_ON_LOCAL_LEDGER'});
+  const report = await budgetReport({ledgerDirectory:dir});
+  assert.equal(report.requests,0);assert.equal(calls,0);
+  assert.equal(report.localCapUsd,5);assert.equal(report.hostedCapUsd,5);assert.equal(report.sharedCapUsd,10);
+  assert.equal(report.hostedReservedUsd,null);
 });

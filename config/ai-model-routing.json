@@ -69,7 +69,7 @@
   },
   "automaticFallback": false,
   "releaseAuthority": "existing owner or release captain",
-  "policy": "codex-claude-default-deepseek-pro-explicit-owner-request-only",
+  "policy": "codex-claude-primary-deepseek-pro-task-scoped-owner-request-only",
   "quota": {
     "lowThresholdPercent": 20,
     "maxAgeMs": 900000,
@@ -83,7 +83,9 @@
       "low",
       "high"
     ],
-    "selection": "explicit-owner-request-only"
+    "activation": "fresh-task-scoped-owner-request-only",
+    "quotaActivation": false,
+    "requestSchema": "cross-project.deepseek-owner-request.v1"
   },
-  "automaticSelection": "primary-models-only"
+  "automaticSelection": "before-task-cli-wrapper-only"
 }

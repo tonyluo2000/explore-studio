@@ -6,11 +6,13 @@ export { containsRecognizedSecret, containsSuspiciousHighEntropy, redactSecrets 
 import { projectPathPolicy, assertNoPrivateData, assertLiveTransferApproved, TRANSFER_POLICY_VERSION } from "./deepseek-transfer-policy.mjs";
 import { withBudget } from "./deepseek-budget.mjs";
 import { resolveRoute } from "./deepseek-routing.mjs";
+import { assertOwnerTaskRequest, assertCallAuthorization } from "./model-authorization.mjs";
+import { classifyReviewSection } from "./deepseek-source-classification.mjs";
 
 export const REPORT_SCHEMA = "mile-commons.deepseek-review-report.v3";
 export const RESPONSE_SCHEMA = "mile-commons.deepseek-review-response.v1";
 export const PROMPT_VERSION = "mile-commons.deepseek-review-prompt.v1";
-export const REQUEST_POLICY_VERSION = "cross-project.deepseek-request-policy.v4";
+export const REQUEST_POLICY_VERSION = "cross-project.deepseek-request-policy.v5";
 export const PROVIDER = "DeepSeek official API";
 export const DEFAULT_MODEL = "deepseek-v4-pro";
 export const SUPPORTED_MODELS = new Set(["deepseek-flash", "deepseek-v4-pro"]);
@@ -18,6 +20,9 @@ export const DEFAULT_MAX_DIFF_CHARS = 120_000;
 export const DEFAULT_MAX_OUTPUT_TOKENS = 6_000;
 export const DEFAULT_MAX_REQUEST_BYTES = 160_000;
 export const DEFAULT_PROVIDER_RETRIES = 0;
+// Two authenticated historical high-effort reviews exhausted a 1,000-token
+// output envelope. Reject that tiny profile before reserving or transmitting.
+export const MIN_HIGH_REVIEW_OUTPUT_TOKENS = 4_000;
 export const PRICING_VERIFIED_ON = "2026-11-07";
 export const PRICING_SOURCE = "https://api-docs.deepseek.com/quick_start/pricing/";
 
@@ -163,7 +168,8 @@ function mergeCounts(target, additions) {
   for (const [kind, count] of Object.entries(additions)) target[kind] = (target[kind] ?? 0) + count;
 }
 
-export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIFF_CHARS, repository = "tonyluo2000/mile-commons" }) {
+export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIFF_CHARS, repository = "tonyluo2000/mile-commons", classificationContext }) {
+  if(classificationContext && (typeof classificationContext!=="object" || Array.isArray(classificationContext) || Object.keys(classificationContext).some(key=>!["root","baseSha","headSha"].includes(key)))) throw Object.assign(new Error("classification context may contain only local root and immutable comparison identities"),{code:"INVALID_CLASSIFICATION_CONTEXT"});
   if (!Array.isArray(files) || files.length === 0) throw new Error("GitHub returned no PR file inventory");
   if (!Number.isInteger(maxDiffChars) || maxDiffChars < 1) throw new Error("maxDiffChars must be a positive integer");
   const inventory = new Map();
@@ -192,6 +198,7 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
     throw error;
   }
   const redactionCounts = {};
+  const classificationCounts = {};
   const changedLines = {};
   const redactedSections = sections.map((section) => {
     changedLines[section.filename] = changedLinesForSection(section.text);
@@ -204,12 +211,18 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
       error.code = "DIFF_INCOMPLETE";
       throw error;
     }
-    assertNoPrivateData(section.text);
-    const redacted = redactSecrets(section.text);
-    mergeCounts(redactionCounts, redacted.counts);
-    const remaining = containsRecognizedSecret(redacted.text);
+    const classified=classificationContext ? classifyReviewSection({...classificationContext,repository,filename:section.filename,section:section.text}) : {scanText:section.text,transmittedText:section.text,counts:{}};
+    assertNoPrivateData(classified.scanText);
+    const scanned=redactSecrets(classified.scanText);
+    const redacted=redactSecrets(classified.transmittedText);
+    for(const [kind,count] of Object.entries(classified.counts)) {
+      if(kind==='synthetic-denial-fixture') mergeCounts(redactionCounts,{[kind]:count});
+      else mergeCounts(classificationCounts,{[kind]:count});
+    }
+    mergeCounts(redactionCounts,redacted.counts);
+    const remaining=containsRecognizedSecret(scanned.text) || containsRecognizedSecret(redacted.text);
     if (remaining) throw new Error(`secret redaction verification failed for ${section.filename}: ${remaining}`);
-    if (suspiciousUnknownSecret(redacted.text)) {
+    if (suspiciousUnknownSecret(scanned.text)) {
       const error = new Error(`review refused because ${section.filename} contains an unrecognized high-entropy value`);
       error.code = "SUSPICIOUS_SECRET";
       throw error;
@@ -230,6 +243,7 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
     originalCharacters: diff.length,
     transmittedCharacters: redactedDiff.length,
     redactionCounts,
+    classificationCounts,
     changedLines,
   };
 }
@@ -288,7 +302,7 @@ function cleanModelString(value, label, maxLength) {
 export function validateReviewResponse(value, reviewedFiles, changedLines = {}) {
   assertPlainObject(value, "DeepSeek response");
   exactKeys(value, ["schema_version", "summary", "findings"], "DeepSeek response");
-  if (value.schema_version !== RESPONSE_SCHEMA) throw new Error(`unexpected response schema ${JSON.stringify(value.schema_version)}`);
+  if (value.schema_version !== RESPONSE_SCHEMA) throw new Error("unexpected response schema");
   const summary = cleanModelString(value.summary, "summary", 4_000);
   if (!Array.isArray(value.findings) || value.findings.length > 200) throw new Error("findings must be an array with at most 200 entries");
   const fileSet = new Set(reviewedFiles);
@@ -332,6 +346,7 @@ export function makeIdempotencyKey({
   providerRetries = DEFAULT_PROVIDER_RETRIES,
   maxCostUsd = null,
   reasoningEffort = "low",
+  authorizationId = "",
 }) {
   return createHash("sha256").update([
     PROMPT_VERSION,
@@ -344,6 +359,7 @@ export function makeIdempotencyKey({
     model,
     mode,
     reasoningEffort,
+    authorizationId,
     maxDiffChars,
     maxOutputTokens,
     maxRequestBytes,
@@ -373,7 +389,7 @@ export function makeBaseReport({ repository, pullNumber, headSha, model, mode, r
     reservation_id: null,
     gate_effect: "NONE",
     stale: false,
-    coverage: { complete: false, files: [], file_count: 0, merge_base_sha: null, compare_status: null, total_commits: 0, original_characters: 0, transmitted_characters: 0, truncated: false, redactions: {} },
+    coverage: { complete: false, files: [], file_count: 0, merge_base_sha: null, compare_status: null, total_commits: 0, original_characters: 0, transmitted_characters: 0, truncated: false, redactions: {}, classifications:{} },
     budget: null,
     usage: null,
     summary: "Review did not complete.",
@@ -498,34 +514,53 @@ function validateProviderResult(result, { requestedModel, maxOutputTokens, maxIn
     safeUsage.prompt_cache_hit_tokens = hit;
     safeUsage.prompt_cache_miss_tokens = miss;
   }
-  return { ...result, resolvedModel: requestedModel, usage: safeUsage };
+  const providerRequestId=typeof result.providerRequestId==="string" && /^[A-Za-z0-9_-]{1,160}$/.test(result.providerRequestId) && !containsRecognizedSecret(result.providerRequestId) ? result.providerRequestId : null;
+  return { ...result, resolvedModel: requestedModel, providerRequestId, usage: safeUsage };
 }
 
-// Explicit provider choice is operator input, separate from untrusted task data.
-// Quota status never authorizes DeepSeek; enforce the opt-in again at transport.
-export function resolveBackupRoute({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {} }) {
-  if (routingContext.ownerRequestedDeepSeek !== true) throw Object.assign(new Error("DeepSeek Pro requires an explicit owner request"), { code: "DEEPSEEK_EXPLICIT_REQUEST_REQUIRED" });
-  if (model !== undefined && model !== "deepseek-v4-pro") throw Object.assign(new Error("only DeepSeek Pro is approved when explicitly requested"), { code: "BACKUP_MODEL_NOT_APPROVED" });
-  if (taskType === "review") {
-    if (!["openai", "claude", "deepseek"].includes(routingContext.implementerFamily)) throw Object.assign(new Error("review requires the actual implementer model family"), { code: "IMPLEMENTER_FAMILY_REQUIRED" });
-    if (routingContext.implementerFamily === "deepseek") throw Object.assign(new Error("DeepSeek cannot independently review its own model family"), { code: "INDEPENDENT_MODEL_REQUIRED" });
-  }
+export function validateProviderReceipt(receipt, policy) {
+  const keys=['schema','resolvedModel','providerRequestId','usage','attempts','reasoningEffort'];
+  if(!receipt || receipt.schema!=='cross-project.deepseek-provider-receipt.v1' || Object.keys(receipt).some(key=>!keys.includes(key)) || !['low','high'].includes(receipt.reasoningEffort)) throw Object.assign(new Error('invalid provider metadata receipt'),{code:'API_RECEIPT_INVALID'});
+  const verified=validateProviderResult(receipt,policy);
+  return {schema:'cross-project.deepseek-provider-receipt.v1',resolvedModel:verified.resolvedModel,providerRequestId:verified.providerRequestId,usage:verified.usage,attempts:verified.attempts,reasoningEffort:receipt.reasoningEffort};
+}
+function providerReceipt(result,reasoningEffort) {
+  return {schema:'cross-project.deepseek-provider-receipt.v1',resolvedModel:result.resolvedModel,providerRequestId:result.providerRequestId,usage:result.usage,attempts:result.attempts,reasoningEffort};
+}
+function retainReviewProviderReceipt(report,receipt) {
+  report.resolved_model=receipt.resolvedModel;report.provider_request_id=receipt.providerRequestId;report.attempts=receipt.attempts;report.usage=receipt.usage;
+  const upper=(receipt.usage.prompt_tokens*report.budget.input_price_usd_per_million+receipt.usage.completion_tokens*report.budget.output_price_usd_per_million)/1_000_000;
+  report.budget.reported_usage_cost_upper_bound_usd=Math.ceil(upper*1_000_000)/1_000_000;
+}
+
+// An explicit owner request is operator input, separate from untrusted source/task
+// manifests. Quota observations alone never authorize DeepSeek activation.
+function resolveBackupRouteAt({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {}, ownerRequest, scope }, validationNow) {
+  if (model !== undefined && !SUPPORTED_MODELS.has(model)) throw Object.assign(new Error("model is outside the DeepSeek toolchain"), { code: "BACKUP_MODEL_NOT_APPROVED" });
+  const owner = assertOwnerTaskRequest({request:ownerRequest,scope,now:validationNow});
+  if (model !== undefined && model !== owner.model) throw Object.assign(new Error("model differs from the explicit request"), { code: "BACKUP_MODEL_NOT_APPROVED" });
+  const role = taskType === "review" ? "review" : "implementation";
+  if(scope.repository !== repository || scope.role !== role) throw Object.assign(new Error("task role or repository does not match the host operation"),{code:"OWNER_TASK_SCOPE_MISMATCH"});
   const route = resolveRoute({
     ...routingContext,
-    ownerRequestedDeepSeek: true,
     repository,
     taskType,
-    role: taskType === "review" ? "review" : "implementation",
+    role,
+    taskId:scope.taskId,baseSha:scope.baseSha,headSha:scope.headSha,ownerRequest:owner,now:validationNow,
     overrides: {
       ...routingContext.overrides,
-      model: "deepseek-v4-pro",
+      ...(model === undefined ? {} : { model }),
       ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     },
   });
-  if (route.provider !== "deepseek" || route.model !== "deepseek-v4-pro" || route.backupReason !== "EXPLICIT_OWNER_REQUEST") throw Object.assign(new Error("DeepSeek Pro requires an explicit owner request"), { code: "DEEPSEEK_EXPLICIT_REQUEST_REQUIRED" });
+  if (route.provider !== "deepseek" || route.model !== owner.model || !route.backupReason) throw Object.assign(new Error("DeepSeek selection must match the explicit owner request"), { code: "DEEPSEEK_STANDBY" });
   if (!["low", "high"].includes(route.reasoningEffort)) throw Object.assign(new Error("DeepSeek effort must be low or high"), { code: "INVALID_DEEPSEEK_EFFORT" });
-  return route;
+  return {...route,authorizationId:owner.authorizationId};
 }
+
+export const resolveBackupRoute = options => resolveBackupRouteAt(options,Date.now());
+
+export const reviewTaskId = pullNumber => `pr-${pullNumber}-review`;
 
 // Production entry point always uses the fixed activation gate, provider transport,
 // and host-wide ledger. Caller properties cannot replace any of these controls.
@@ -544,7 +579,7 @@ export function createDeepSeekTestClient({ fetchImpl }) {
   assertTestContext();
   return options => {
     assertTestContext();
-    return executeDeepSeek(options, { fetchImpl, budgetCall: async (_policy, callback) => callback(), assertTransferApproved: () => {} });
+    return executeDeepSeek(options, { fetchImpl, budgetCall: async (_policy, callback) => callback(), assertTransferApproved: () => ({reviewedControlSha:"0".repeat(40)}) });
   };
 }
 
@@ -554,6 +589,9 @@ async function executeDeepSeek({
   messages,
   reasoningEffort,
   routingContext,
+  ownerRequest,
+  callAuthorization,
+  activation,
   repository,
   taskType = "implementation",
   maxOutputTokens = DEFAULT_MAX_OUTPUT_TOKENS,
@@ -569,14 +607,20 @@ async function executeDeepSeek({
   if (!apiKey) throw Object.assign(new Error("DEEPSEEK_API_KEY is required for live mode"), { code: "MISSING_API_KEY" });
   if (maxCostUsd === null) throw Object.assign(new Error("a maximum cost in USD is required before a DeepSeek API request"), { code: "MAX_COST_REQUIRED" });
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 180_000) throw new Error("timeout must be between 1 and 180000 milliseconds");
-  const route = resolveBackupRoute({ repository: repository ?? budgetIdentity?.repository, taskType, model, reasoningEffort, routingContext });
+  const scope={repository:repository??budgetIdentity?.repository,taskId:budgetIdentity?.taskId,role:taskType==='review'?'review':'implementation',baseSha:budgetIdentity?.baseSha,headSha:budgetIdentity?.headSha};
+  if(budgetIdentity?.repository!==scope.repository || budgetIdentity?.taskType!==scope.role || budgetIdentity?.provider!=='deepseek' || budgetIdentity?.actualModel!==model) throw Object.assign(new Error('transport identity must match the immutable task scope'),{code:'INVALID_TASK_AUTHORIZATION_SCOPE'});
+  const route = resolveBackupRoute({repository:scope.repository,taskType,model,reasoningEffort,routingContext,ownerRequest,scope});
+  if(scope.role==='review' && route.reasoningEffort==='high' && maxOutputTokens<MIN_HIGH_REVIEW_OUTPUT_TOKENS) throw Object.assign(new Error('high-effort review requires a qualified output envelope of at least 4000 tokens'),{code:'HIGH_REVIEW_OUTPUT_ENVELOPE_REQUIRED'});
   const planned = prepareDeepSeekRequest({ model, messages, reasoningEffort: route.reasoningEffort, maxOutputTokens, maxRequestBytes, retries, maxCostUsd });
   if (expectedBodySha256 !== undefined && (!/^[a-f0-9]{64}$/.test(expectedBodySha256)
     || createHash("sha256").update(planned.serializedBody).digest("hex") !== expectedBodySha256)) {
     throw Object.assign(new Error("serialized provider request differs from the exact authorized body"), { code: "REQUEST_BODY_HASH_MISMATCH" });
   }
-  assertTransferApproved();
-  return budgetCall({ identity: { ...budgetIdentity, actualModel: model, provider: "deepseek" }, maximumCostUsd: maxCostUsd }, async () => {
+  const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
+  const authorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:budgetIdentity.requestId,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd});
+  const validatedActivation = assertTransferApproved({repository:scope.repository,activation});
+  const callerBudgetIdentity=Object.fromEntries(Object.entries(budgetIdentity).filter(([key])=>key!=='reviewedControlSha'));
+  return budgetCall({ identity: { ...callerBudgetIdentity,...scope,...(validatedActivation?.reviewedControlSha?{reviewedControlSha:validatedActivation.reviewedControlSha}:{}),taskType:scope.role,actualModel:model,provider:'deepseek',authorizationId:authorization.authorizationId,reasoningEffort:route.reasoningEffort }, maximumCostUsd: maxCostUsd }, async () => {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     let response;
     try {
@@ -608,32 +652,22 @@ async function executeDeepSeek({
     } catch {
       throw Object.assign(new Error("DeepSeek API returned invalid JSON"), { code: "API_INVALID_JSON" });
     }
-    const choice = payload?.choices?.[0];
-    if (choice?.finish_reason !== "stop") {
-      throw Object.assign(new Error(`DeepSeek response was incomplete (finish_reason=${JSON.stringify(choice?.finish_reason)})`), { code: "API_INCOMPLETE_RESPONSE" });
-    }
-    if (typeof choice?.message?.content !== "string" || choice.message.content.trim() === "") {
-      throw Object.assign(new Error("DeepSeek response content was empty"), { code: "API_EMPTY_RESPONSE" });
-    }
-    let parsed;
+    // Attested metadata survives truncated or malformed model content. No raw
+    // response text is attached to errors, receipts, or the budget ledger.
+    const verified=validateProviderResult({providerRequestId:payload?.id,resolvedModel:payload?.model,usage:payload?.usage,attempts:attempt+1,budget:planned.budget},{requestedModel:model,maxOutputTokens,maxInputTokensUpperBound:planned.budget.serialized_request_bytes,maximumAttempts:retries+1});
+    const receipt=providerReceipt(verified,route.reasoningEffort);
     try {
-      parsed = JSON.parse(choice.message.content);
-    } catch {
-      throw Object.assign(new Error("DeepSeek message content was not valid JSON"), { code: "MODEL_INVALID_JSON" });
-    }
-    return validateProviderResult({
-      parsed,
-      providerRequestId: typeof payload.id === "string" ? payload.id : null,
-      resolvedModel: payload.model,
-      usage: payload.usage,
-      attempts: attempt + 1,
-      budget: planned.budget,
-    }, {
-      requestedModel: model,
-      maxOutputTokens,
-      maxInputTokensUpperBound: planned.budget.serialized_request_bytes,
-      maximumAttempts: retries + 1,
-    });
+      const choice=payload?.choices?.[0];
+      if(choice?.finish_reason!=='stop') {
+        const reason=['length','content_filter','tool_calls','function_call','insufficient_system_resource'].includes(choice?.finish_reason)?choice.finish_reason:'unknown';
+        throw Object.assign(new Error(`DeepSeek response was incomplete (finish_reason=${reason})`),{code:'API_INCOMPLETE_RESPONSE'});
+      }
+      if(typeof choice?.message?.content!=='string' || !choice.message.content.trim()) throw Object.assign(new Error('DeepSeek response content was empty'),{code:'API_EMPTY_RESPONSE'});
+      let parsed;
+      try {parsed=JSON.parse(choice.message.content);} catch {throw Object.assign(new Error('DeepSeek message content was not valid JSON'),{code:'MODEL_INVALID_JSON'});}
+      return {...verified,parsed};
+    } catch(error) {error.providerReceipt=receipt;throw error;}
+
   }
   throw new Error("unreachable DeepSeek retry state");
   });
@@ -678,9 +712,13 @@ function validateComparisonSnapshot(snapshot, baseSha, headSha) {
   }
 }
 
-export async function runReview({
+async function executeReview({
   repository,
   routingContext,
+  ownerRequest,
+  callAuthorization,
+  activation,
+  sourceRoot,
   reasoningEffort,
   pullNumber,
   headSha,
@@ -694,14 +732,13 @@ export async function runReview({
   maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
   providerRetries = DEFAULT_PROVIDER_RETRIES,
   maxCostUsd = null,
-  providerCall = callDeepSeek,
   onProviderAttemptState = async () => {},
-  now = () => new Date(),
   baseSha: pinnedBaseSha,
   reserveOnly = false,
   reservationId,
   resumeReservationId,
-}) {
+}, runtime, validationNow=Date.now()) {
+  const providerCall=runtime.providerCall;
   validateRepository(repository);
   asPositiveInteger(pullNumber, "pull number");
   validateHeadSha(headSha);
@@ -717,7 +754,8 @@ export async function runReview({
     throw new Error("provider reservations are only valid in live mode");
   }
   const reviewPolicy = { maxDiffChars, maxOutputTokens, maxRequestBytes, providerRetries, maxCostUsd, reasoningEffort };
-  const report = makeBaseReport({ repository, pullNumber, headSha, model, mode, reviewPolicy, now: now() });
+  const report = makeBaseReport({ repository, pullNumber, headSha, model, mode, reviewPolicy, now: new Date(validationNow) });
+  if(runtime.offline) {report.execution_kind="OFFLINE_TEST";report.provider="Offline fake DeepSeek protocol";report.independent_review_attested=false;report.provider_model_attestation="FAKE_RESPONSE_ONLY";}
   if (pinnedBaseSha) {
     report.exact_base_sha = pinnedBaseSha;
     report.idempotency_key = makeIdempotencyKey({ repository, pullNumber, headSha, baseSha: pinnedBaseSha, model, mode, ...reviewPolicy });
@@ -739,7 +777,7 @@ export async function runReview({
     report.idempotency_key = makeIdempotencyKey({ repository, pullNumber, headSha, baseSha, model, mode, ...reviewPolicy });
     const snapshot = await github.getComparison(repository, baseSha, headSha);
     validateComparisonSnapshot(snapshot, baseSha, headSha);
-    const prepared = prepareReviewInput({ diff: snapshot.diff, files: snapshot.files, maxDiffChars, repository });
+    const prepared = prepareReviewInput({ diff: snapshot.diff, files: snapshot.files, maxDiffChars, repository,classificationContext:sourceRoot?{root:sourceRoot,baseSha,headSha}:undefined });
     report.coverage = {
       complete: true,
       files: prepared.files,
@@ -751,10 +789,15 @@ export async function runReview({
       transmitted_characters: prepared.transmittedCharacters,
       truncated: false,
       redactions: prepared.redactionCounts,
+      classifications: prepared.classificationCounts,
     };
     const built = buildMessages({ repository, pullNumber, baseSha, headSha, title: pull.title, body: pull.body, prepared });
     mergeCounts(report.coverage.redactions, built.metadataRedactions);
-    const route = resolveBackupRoute({ repository, taskType: "review", model, reasoningEffort, routingContext });
+    const scope={repository,taskId:reviewTaskId(pullNumber),role:'review',baseSha,headSha};
+    const route = resolveBackupRouteAt({repository,taskType:'review',model,reasoningEffort,routingContext,ownerRequest,scope},validationNow);
+    if(route.reasoningEffort==='high' && maxOutputTokens<MIN_HIGH_REVIEW_OUTPUT_TOKENS) throw Object.assign(new Error('high-effort review requires a qualified output envelope of at least 4000 tokens'),{code:'HIGH_REVIEW_OUTPUT_ENVELOPE_REQUIRED'});
+    reviewPolicy.authorizationId=route.authorizationId;
+    report.authorization_id=route.authorizationId;report.task_id=scope.taskId;
     reviewPolicy.reasoningEffort = route.reasoningEffort;
     report.routing = route;
     report.requested_effort = route.requestedEffort ?? route.reasoningEffort;
@@ -770,6 +813,7 @@ export async function runReview({
       maxCostUsd,
     });
     report.budget = planned.budget;
+    report.request_body_sha256=createHash("sha256").update(planned.serializedBody).digest("hex");
     if (mode === "mock") {
       const current = await github.getPull(repository, pullNumber);
       assertPullIdentity(current, { headSha, baseSha, report, stage: "post-mock check" });
@@ -777,9 +821,13 @@ export async function runReview({
       report.summary = "Mock mode validated immutable base/head comparison retrieval, exact-SHA binding, path policy, redaction, prompt construction, and evidence generation. No DeepSeek API request was sent.";
       return report;
     }
-    if (!apiKey) {
-      throw Object.assign(new Error("DEEPSEEK_API_KEY is required for live mode"), { code: "MISSING_API_KEY" });
+    if (!apiKey && !reserveOnly) {
+      throw Object.assign(new Error("DEEPSEEK_API_KEY is required to resume a live provider attempt"), { code: "MISSING_API_KEY" });
     }
+    const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
+    const exactAuthorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:report.idempotency_key,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd,now:validationNow});
+    report.authorized_body_sha256=exactAuthorization.bodySha256;
+    runtime.assertActivation({repository,activation});
     const beforeCall = await github.getPull(repository, pullNumber);
     assertPullIdentity(beforeCall, { headSha, baseSha, report, stage: "pre-provider check" });
     if (reserveOnly) {
@@ -808,9 +856,13 @@ export async function runReview({
         model,
         reasoningEffort: route.reasoningEffort,
         routingContext,
+        ownerRequest,
+        callAuthorization:exactAuthorization,
+        activation,
+        expectedBodySha256:bodySha256,
         repository,
         taskType: "review",
-        budgetIdentity: { repository, pullNumber, headSha, baseSha, taskType: "review", requestId: report.idempotency_key },
+        budgetIdentity: { repository,taskId:scope.taskId,authorizationId:route.authorizationId,reasoningEffort:route.reasoningEffort,provider:"deepseek",actualModel:model,pullNumber, headSha, baseSha, taskType: "review", requestId: report.idempotency_key },
         messages: built.messages,
         maxOutputTokens,
         maxRequestBytes,
@@ -830,6 +882,9 @@ export async function runReview({
         onProviderAttemptState,
       );
     }
+    if(providerError?.providerReceipt) {
+      try {retainReviewProviderReceipt(report,validateProviderReceipt(providerError.providerReceipt,{requestedModel:model,maxOutputTokens,maxInputTokensUpperBound:planned.budget.serialized_request_bytes,maximumAttempts:providerRetries+1}));} catch { /* Ambiguous metadata remains unknown. */ }
+    }
     const current = await github.getPull(repository, pullNumber);
     try {
       assertPullIdentity(current, { headSha, baseSha, report, stage: "post-provider check" });
@@ -844,18 +899,10 @@ export async function runReview({
       maxInputTokensUpperBound: planned.budget.serialized_request_bytes,
       maximumAttempts: providerRetries + 1,
     });
+    retainReviewProviderReceipt(report,providerReceipt(verifiedResult,route.reasoningEffort));
     const validated = validateReviewResponse(verifiedResult.parsed, prepared.files, prepared.changedLines);
     report.review_status = "REVIEW_COMPLETE";
     report.request_status = "SUCCEEDED";
-    report.resolved_model = verifiedResult.resolvedModel;
-    report.provider_request_id = verifiedResult.providerRequestId;
-    report.attempts = verifiedResult.attempts;
-    report.usage = verifiedResult.usage;
-    const reportedUsageCostUsd = (
-      verifiedResult.usage.prompt_tokens * report.budget.input_price_usd_per_million
-      + verifiedResult.usage.completion_tokens * report.budget.output_price_usd_per_million
-    ) / 1_000_000;
-    report.budget.reported_usage_cost_upper_bound_usd = Math.ceil(reportedUsageCostUsd * 1_000_000) / 1_000_000;
     report.summary = validated.summary;
     report.findings = validated.findings;
     report.blocker_count = validated.findings.filter((finding) => finding.disposition === "blocker").length;
@@ -904,13 +951,14 @@ export function isRecoverablePreflightReceipt(receipt) {
     && receipt.errors[0]?.code === "MISSING_API_KEY";
 }
 
-function isMatchingProviderReservation(receipt, reservationId) {
+function isMatchingProviderReservation(receipt, reservationId, authorizationId) {
   return reservationId !== undefined
     && receipt?.schema_version === REPORT_SCHEMA
     && receipt?.review_status === "REVIEW_NOT_COMPLETE"
     && receipt?.request_status === "RESERVED"
     && receipt?.provider_attempt_state === PROVIDER_ATTEMPT_STATE.REQUEST_MAY_HAVE_BEEN_SENT
     && receipt?.reservation_id === reservationId
+    && receipt?.authorization_id === authorizationId
     && hasNoProviderEvidence(receipt)
     && Array.isArray(receipt?.errors)
     && receipt.errors.length === 0;
@@ -939,7 +987,10 @@ async function resolveReviewBase({ repository, pullNumber, headSha, github, base
   return pull.base.sha;
 }
 
-export async function runReviewWithState({ stateDirectory, reviewOptions }) {
+async function executeReviewWithState({ stateDirectory, reviewOptions }, runtime) {
+  const validationNow=Date.now();
+  const refusal=()=>{throw Object.assign(new Error("stateful preflight failed; provider access and reservations are forbidden"),{code:"STATEFUL_PREFLIGHT_FAILED"});};
+  const preflightRuntime={...runtime,assertActivation:refusal,providerCall:async()=>refusal()};
   if (!stateDirectory) throw new Error("stateDirectory is required");
   if (reviewOptions?.mode === "live" && !reviewOptions.reserveOnly && reviewOptions.resumeReservationId === undefined) {
     throw Object.assign(new Error("live stateful execution requires a durable provider reservation"), { code: "RESERVATION_REQUIRED" });
@@ -956,28 +1007,28 @@ export async function runReviewWithState({ stateDirectory, reviewOptions }) {
       getPull: async () => { throw resolutionError; },
       getComparison: (...args) => reviewOptions.github.getComparison(...args),
     };
-    const report = await runReview({ ...reviewOptions, github: guardedGithub });
+    const report = await executeReview({ ...reviewOptions, github: guardedGithub,onProviderAttemptState:async()=>{} },preflightRuntime,validationNow);
     return { report, receiptPath: null };
   }
 
   let route;
   try {
-    route = resolveBackupRoute({ repository: reviewOptions.repository, taskType: "review", model: reviewOptions.model ?? DEFAULT_MODEL, reasoningEffort: reviewOptions.reasoningEffort, routingContext: reviewOptions.routingContext });
+    route = resolveBackupRouteAt({ repository: reviewOptions.repository, taskType: "review", model: reviewOptions.model ?? DEFAULT_MODEL, reasoningEffort: reviewOptions.reasoningEffort, routingContext: reviewOptions.routingContext,ownerRequest:reviewOptions.ownerRequest,scope:{repository:reviewOptions.repository,taskId:reviewTaskId(reviewOptions.pullNumber),role:"review",baseSha,headSha:reviewOptions.headSha} },validationNow);
   } catch {
-    // Preserve an explicit incomplete report when explicit provider opt-in is absent.
-    // Normal preflight still accounts for source/GitHub errors; it cannot call
-    // a provider unless the same route validation succeeds there.
-    const report = await runReview({ ...reviewOptions, baseSha });
+    // Preserve an explicit incomplete report even when no standby route exists.
+    // Account for source/GitHub errors with a permanently non-transmitting
+    // runtime. No changed clock or input can turn this fallback into execution.
+    const report = await executeReview({ ...reviewOptions, baseSha,onProviderAttemptState:async()=>{} },preflightRuntime,validationNow);
     return { report, receiptPath: null };
   }
-  reviewOptions = { ...reviewOptions, reasoningEffort: route.reasoningEffort };
+  reviewOptions = { ...reviewOptions, reasoningEffort: route.reasoningEffort,authorizationId:route.authorizationId };
   const key = makeIdempotencyKey({ ...reviewOptions, baseSha });
   const receiptPath = path.join(stateDirectory, `${key}.json`);
   const lockPath = path.join(stateDirectory, `${key}.lock`);
   let existing = null;
   try {
     existing = JSON.parse(await readFile(receiptPath, "utf8"));
-    if (!isRecoverablePreflightReceipt(existing) && !isMatchingProviderReservation(existing, reviewOptions.resumeReservationId)) {
+    if (!isRecoverablePreflightReceipt(existing) && !isMatchingProviderReservation(existing, reviewOptions.resumeReservationId,route.authorizationId)) {
       const error = new Error(`duplicate invocation refused; receipt already exists at ${receiptPath}`);
       error.code = "DUPLICATE_INVOCATION";
       error.receipt = existing;
@@ -988,7 +1039,7 @@ export async function runReviewWithState({ stateDirectory, reviewOptions }) {
     if (error.code === "DUPLICATE_INVOCATION") throw error;
     if (error instanceof SyntaxError) throw Object.assign(new Error(`existing receipt is invalid JSON: ${receiptPath}`), { code: "INVALID_EXISTING_RECEIPT" });
   }
-  if (reviewOptions.resumeReservationId !== undefined && !isMatchingProviderReservation(existing, reviewOptions.resumeReservationId)) {
+  if (reviewOptions.resumeReservationId !== undefined && !isMatchingProviderReservation(existing, reviewOptions.resumeReservationId,route.authorizationId)) {
     throw Object.assign(new Error("matching durable provider reservation was not found"), { code: "RESERVATION_NOT_FOUND" });
   }
   let lock;
@@ -1000,17 +1051,34 @@ export async function runReviewWithState({ stateDirectory, reviewOptions }) {
   }
   try {
     await lock.writeFile(`${JSON.stringify({ pid: process.pid, started_at: new Date().toISOString() })}\n`);
-    const report = await runReview({
+    const report = await executeReview({
       ...reviewOptions,
       baseSha,
       onProviderAttemptState: async (stateReport) => {
         await writeReceiptAtomically(receiptPath, stateReport);
       },
-    });
+    },runtime,validationNow);
     await writeReceiptAtomically(receiptPath, report);
     return { report, receiptPath };
   } finally {
     await lock.close();
     await rm(lockPath, { force: true });
   }
+}
+
+const productionReviewRuntime=Object.freeze({providerCall:callDeepSeek,assertActivation:assertLiveTransferApproved,offline:false});
+export async function runReview(options) {
+  // Live reviews must pass through the durable state/lock/reservation wrapper.
+  // Refuse before reading provider, source, ledger or authorization arguments.
+  if(options?.mode==='live') throw Object.assign(new Error('live review requires runReviewWithState'),{code:'STATEFUL_EXECUTION_REQUIRED'});
+  return executeReview(options,productionReviewRuntime);
+}
+export const runReviewWithState = options => executeReviewWithState(options,productionReviewRuntime);
+// Offline protocol testing is isolated from production entry points. Fixtures do
+// not attest an actual provider model, completed independent review, or approval.
+export function createDeepSeekReviewTestHarness({providerCall}={}) {
+  const assertTest=()=>{if(process.env.NODE_TEST_CONTEXT!=="child-v8" || typeof providerCall!=="function" || providerCall===callDeepSeek) throw Object.assign(new Error('an offline fake provider inside the Node test runner is required'),{code:'TEST_REVIEW_CONTEXT_REQUIRED'});};
+  assertTest();
+  const runtime={providerCall:options=>{assertTest();return providerCall(options);},assertActivation:()=>{assertTest();},offline:true};
+  return {runReview:options=>{assertTest();return executeReview(options,runtime);},runReviewWithState:options=>{assertTest();return executeReviewWithState(options,runtime);}};
 }

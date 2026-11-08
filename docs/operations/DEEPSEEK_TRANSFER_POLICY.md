@@ -43,23 +43,28 @@ changed-file and changed-line accounting remains required; one denied file
 refuses the whole review. No source relocation, partial review, or omission
 can make a blocked delta eligible.
 
-Request policy v3 binds transfer-policy version, exact repository, PR, base,
-HEAD, requested model, mode and limits in receipts. API IDs remain exactly
-`deepseek-flash` and `deepseek-v4-pro`; returned model must match. Routine
-requests explicitly use low reasoning. Every request has zero retries and a
-maximum $1 cap, plus the host-shared budget ledger. Existing smaller manual
-review profile caps remain effective. Hosted Actions fails closed without the
-shared ledger; per-repository caches are not a cross-project budget service.
-Cache tokens are reported only when supplied consistently by the provider.
+Request policy v5 binds transfer-policy version, repository, PR/task role, base,
+HEAD, authorization ID, requested model/effort, exact body and limits in receipts.
+Paid profiles accept only `deepseek-v4-pro`; returned model must match. Effort
+is explicitly low or high, never medium. Every request has zero retries and a
+maximum $1 cap, plus the host-shared $10 rolling-week ledger. A reused request
+or owner authorization ID is rejected across projects even after that window.
+Existing stricter qualified profiles remain binding. Hosted Actions fails closed
+without shared accounting. Usage is retained on an incomplete response only
+when provider identity and counters validate; a partial verdict is never accepted.
 
-Live activation requires independent security review of this exact policy,
-focused denial/allow tests, per-repository source-only review/merge approval,
-and the distinct exact-call source-transfer/spend decision already required
-by the projects. `LIVE_TRANSFER_ENABLED` is a source constant set to false;
-there is no CLI flag or environment variable that turns it on. Changing that
-constant requires a separate reviewed change. Credentials are not created,
-copied or printed. Mock evidence remains `MOCK_ONLY` and
-`REVIEW_NOT_COMPLETE`, never a provider review or merge/release approval.
+Live capability activation requires independent Claude review of the executable
+source-policy digest and a separate owner-approved activation record. The
+`--activation FILE` input is validated by `model-activation.mjs`; there is no
+boolean or environment switch. Source adapters describe this policy and never
+claim that a record is installed. Any protected source change invalidates the
+record. Activation is reusable only while that source digest stays unchanged;
+it grants neither a fresh task request nor exact-call transfer/spending consent.
+Those remain separate scoped inputs for every call. No activation record is
+created or enabled by this change. Credentials are not created, copied or
+printed. Mock evidence remains `MOCK_ONLY` and `REVIEW_NOT_COMPLETE`, never a
+provider review or merge/release approval. Scan-only source classifications are
+reported separately from actual transmitted-data redactions.
 
 Focused qualification:
 

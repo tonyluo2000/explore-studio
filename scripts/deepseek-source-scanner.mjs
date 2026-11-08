@@ -15,12 +15,12 @@ const SECRET_PATTERNS = [
   { kind: "basic-auth-url", pattern: /(https?:\/\/)[^\s:/@]+:[^\s/@]+@/gi, replacement: "$1[REDACTED]@" },
   {
     kind: "quoted-assigned-secret",
-    pattern: /((?:api[_-]?key|access[_-]?token|auth(?:orization|[_-]?token)?|client[_-]?secret|cookie|credential|pass(?:word)?|private[_-]?key|pwd|secret(?:[_-]?access[_-]?key)?|token)[ \t]*[=:][ \t]*)(["'])(?!\[REDACTED)([^\r\n]*?)\2/gi,
+    pattern: /((?:api[_-]?key|access[_-]?token|auth(?:orization|[_-]?token)?|client[_-]?secret|cookie|credential|pass(?:word)?|private[_-]?key|pwd|secret(?:[_-]?access[_-]?key)?|token)[ \t]*[=:][ \t]*)(["'])(?!\[REDACTED(?::[a-z-]+)?\]\2)([^\r\n]*?)\2/gi,
     replacement: "$1$2[REDACTED]$2",
   },
   {
     kind: "assigned-secret",
-    pattern: /((?:api[_-]?key|access[_-]?token|auth(?:orization|[_-]?token)?|client[_-]?secret|cookie|credential|pass(?:word)?|private[_-]?key|pwd|secret(?:[_-]?access[_-]?key)?|token)[ \t]*[=:][ \t]*)(?!\[REDACTED)([^\s,;}{]+)/gi,
+    pattern: /((?:api[_-]?key|access[_-]?token|auth(?:orization|[_-]?token)?|client[_-]?secret|cookie|credential|pass(?:word)?|private[_-]?key|pwd|secret(?:[_-]?access[_-]?key)?|token)[ \t]*[=:][ \t]*)(?!\[REDACTED(?::[a-z-]+)?\](?=$|[\s,;}{]))([^\s,;}{]+)/gi,
     replacement: "$1[REDACTED]",
   },
 ];
@@ -45,7 +45,9 @@ export function redactSecrets(input) {
 }
 
 export function containsRecognizedSecret(input) {
-  const candidate = String(input ?? "").replace(/\[REDACTED(?::[a-z-]+)?\]/gi, "");
+  // Keep sentinels as boundaries. Deleting one reconnects an assignment to
+  // unrelated expression fragments and invents a second credential match.
+  const candidate = String(input ?? "");
   for (const entry of SECRET_PATTERNS) {
     entry.pattern.lastIndex = 0;
     if (entry.pattern.test(candidate)) {
@@ -86,7 +88,7 @@ function isCompoundSourceName(candidate) {
 }
 
 export function containsSuspiciousHighEntropy(input) {
-  const candidateText = String(input ?? "").replace(/\[REDACTED(?::[a-z-]+)?\]/gi, "");
+  const candidateText = String(input ?? "").replace(/\[REDACTED(?::[a-z-]+)?\]/gi, " ");
   // These compound values can be shorter than the opaque-token threshold.
   // Check context before allowing public UUIDs or readable source names.
   for (const match of candidateText.matchAll(/[A-Za-z0-9+/_-]{12,}={0,2}/g)) {

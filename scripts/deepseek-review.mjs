@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile, lstat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -25,8 +25,12 @@ Modes:
   --acknowledge-external-transfer      Confirms allowlisted, redacted source will leave GitHub for DeepSeek.
 
 Options:
-  --model MODEL                        deepseek-v4-pro (explicit owner request only)
-  --routing-context FILE               Operator choice: ownerRequestedDeepSeek=true and implementer family
+  --model MODEL                        deepseek-v4-pro (backup only)
+  --routing-context FILE               Risk, quota and implementer family (never owner permission)
+  --owner-request FILE                 Fresh owner request bound to this exact task/base/HEAD
+  --approval FILE                      Exact body/cost/transfer/payment permission for a live call
+  --activation FILE                   Independently reviewed owner-approved capability record
+  --source-root PATH                   Optional canonical local source for exact diff classification
   --reasoning-effort low|high           Optional effort override; cannot lower risk requirements
   --max-diff-chars NUMBER              Default: ${DEFAULT_MAX_DIFF_CHARS}
   --max-output-tokens NUMBER           Default: ${DEFAULT_MAX_OUTPUT_TOKENS}; maximum: 16000
@@ -98,6 +102,10 @@ export function parseArgs(argv) {
     else if (argument === "--base") options.baseSha = take();
     else if (argument === "--model") options.model = take();
     else if (argument === "--routing-context") options.routingContextPath = take();
+    else if (argument === "--owner-request") options.ownerRequestPath = take();
+    else if (argument === "--approval") options.approvalPath = take();
+    else if (argument === "--activation") options.activationPath = take();
+    else if (argument === "--source-root") options.sourceRoot = take();
     else if (argument === "--reasoning-effort") options.reasoningEffort = take();
     else if (argument === "--max-diff-chars") options.maxDiffChars = parseInteger(take(), "--max-diff-chars");
     else if (argument === "--max-output-tokens") options.maxOutputTokens = parseInteger(take(), "--max-output-tokens");
@@ -219,6 +227,18 @@ async function writeReport(output, report) {
   return destination;
 }
 
+async function readOperatorDocument(filename) {
+  try {
+    const resolved=path.resolve(filename),stat=await lstat(resolved);
+    if(!stat.isFile() || stat.isSymbolicLink() || stat.size>64000) throw new Error();
+    return JSON.parse(await readFile(resolved,'utf8'));
+  } catch {
+    // JSON parse diagnostics can echo the first bytes of an accidental secret
+    // file. Report only a fixed code; never print the document or filesystem path.
+    throw Object.assign(new Error('operator document is invalid or unavailable'),{code:'INVALID_OPERATOR_DOCUMENT'});
+  }
+}
+
 export async function main(argv) {
   let options;
   try {
@@ -231,17 +251,24 @@ export async function main(argv) {
     console.log(USAGE);
     return 0;
   }
+  const publicHostedSource = process.env.GITHUB_ACTIONS === 'true'
+    && process.env.GITHUB_REPOSITORY === 'tonyluo2000/mile-commons'
+    && options.repository === 'tonyluo2000/explore-studio';
   const reviewOptions = {
     repository: options.repository,
-    routingContext: options.routingContextPath ? JSON.parse(await readFile(path.resolve(options.routingContextPath), "utf8")) : undefined,
+    routingContext: options.routingContextPath ? await readOperatorDocument(options.routingContextPath) : undefined,
     reasoningEffort: options.reasoningEffort,
+    ownerRequest: options.ownerRequestPath ? await readOperatorDocument(options.ownerRequestPath) : undefined,
+    callAuthorization: options.approvalPath ? await readOperatorDocument(options.approvalPath) : undefined,
+    sourceRoot:options.sourceRoot,
+    activation:options.activationPath?await readOperatorDocument(options.activationPath):undefined,
     pullNumber: options.pullNumber,
     headSha: options.headSha,
     baseSha: options.baseSha,
     model: options.model,
     mode: options.mode,
     acknowledgeExternalTransfer: options.acknowledgeExternalTransfer,
-    github: createGitHubClient(),
+    github: createGitHubClient(publicHostedSource ? { token: '' } : undefined),
     apiKey: options.mode === "live" ? process.env.DEEPSEEK_API_KEY : undefined,
     maxDiffChars: options.maxDiffChars,
     maxOutputTokens: options.maxOutputTokens,
@@ -290,5 +317,6 @@ export async function main(argv) {
 // This file is an entry point. Tests import only the side-effect-free core and
 // exercise parseArgs by spawning the CLI when necessary.
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
-  process.exitCode = await main(process.argv.slice(2));
+  try {process.exitCode = await main(process.argv.slice(2));}
+  catch(error){console.error(`deepseek-review: ${/^[A-Z0-9_]+$/.test(error.code??'')?error.code:'REVIEW_FAILED'}`);process.exitCode=1;}
 }
