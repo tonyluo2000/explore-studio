@@ -17,8 +17,8 @@ const ROOT_COMMON = [".gitignore", ".nvmrc", "AGENTS.md", "CLAUDE.md", "README.m
 const ROUTING_CONFIGURATION = ["config/ai-model-routing.json", "config/deepseek-toolchain.json", "config/model-project.json"];
 const POLICIES = Object.freeze({
   "tonyluo2000/mile-commons": {
-    roots: [...ROOT_COMMON, ...ROUTING_CONFIGURATION, "cloudflare-env.d.ts", "components.json", "drizzle.config.ts", "eslint.config.mjs", "next.config.ts", "postcss.config.mjs", "vite.config.ts", "mobile/App.tsx", "mobile/package.json", "mobile/package-lock.json", "mobile/app.json", "mobile/tsconfig.json", "mobile/babel.config.js", "mobile/metro.config.js"],
-    prefixes: [".github/workflows/", ".claude/agents/", "app/", "auth0/", "cloudflare/", "components/", "db/", "docs/", "drizzle/", "examples/", "hooks/", "lib/", "scripts/", "tests/", "worker/"],
+    roots: [...ROOT_COMMON, ...ROUTING_CONFIGURATION, ".github/workflows/deepseek-review.yml", "cloudflare-env.d.ts", "components.json", "drizzle.config.ts", "eslint.config.mjs", "next.config.ts", "postcss.config.mjs", "vite.config.ts", "mobile/App.tsx", "mobile/package.json", "mobile/package-lock.json", "mobile/app.json", "mobile/tsconfig.json", "mobile/babel.config.js", "mobile/metro.config.js"],
+    prefixes: [".claude/agents/", "app/", "auth0/", "cloudflare/", "components/", "db/", "docs/", "drizzle/", "examples/", "hooks/", "lib/", "scripts/", "tests/", "worker/"],
     extensions: WEB,
     native: [
       { prefix: "mobile/src/", extensions: [".ts", ".tsx"] },

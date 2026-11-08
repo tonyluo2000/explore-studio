@@ -51,11 +51,19 @@ const SOURCE_WORDS = new Set([
   'remaining=containsRecognizedSecret', 'input_price_usd_per_million+receipt',
   'reported_usage_cost_upper_bound_usd=Math', 'independent_review_attested=false',
   'authorized_body_sha256=exactAuthorization', 'classified=classifyReviewSection',
+  'createDeepSeekImplementationTestHarness', 'createDeepSeekOperatorTestHarness',
+  'OPERATOR_RECORD_MUST_BE_EXTERNAL', 'EXACT_HOSTED_SOURCE_PAYMENT_APPROVAL_REQUIRED',
+  'HOSTED_REVIEW_PREPARATION_FAILED',
+  'implementation=createDeepSeekImplementationTestHarness',
+  'review=createDeepSeekReviewTestHarness',
+  'harness=createDeepSeekOperatorTestHarness', 'tonyluo2000/mile-commons/actions/runs/',
 ]);
 const TOOLING_PATHS = new Set([
   SELF_PATH, 'scripts/model-activation.mjs', 'tests/model-activation.test.mjs', 'scripts/deepseek-agent.mjs', 'scripts/deepseek-routing.mjs',
   'scripts/deepseek-review-core.mjs', 'scripts/deepseek-review.mjs',
   'scripts/deepseek-review-cache-policy.mjs',
+  'scripts/deepseek.mjs', 'scripts/deepseek-hosted-budget.mjs', 'scripts/deepseek-hosted-review.mjs',
+  'tests/deepseek-operator.test.mjs', 'tests/deepseek-hosted-budget.test.mjs', 'tests/deepseek-hosted-review.test.mjs',
   'scripts/deepseek-source-scanner.mjs', 'scripts/deepseek-transfer-policy.mjs',
   'scripts/deepseek-budget.mjs', 'scripts/agent-route.mjs', 'scripts/model-quality.mjs',
   'scripts/model-quota.mjs', 'scripts/model-capabilities.mjs', 'scripts/model-telemetry.mjs',
@@ -92,6 +100,35 @@ const GIT_TEST_PATHS = new Set(['tests/deepseek-agent.test.mjs', 'tests/agent-ro
 const REVIEW_TEST_PATH = 'tests/deepseek-review.test.mjs';
 // Exact invented account-number denial literal in the context-forgery test.
 const REVIEW_DENIAL_HASH = '8f7de0027218c582c71048deb1a3247aee79614d9f24a53382d4abdec9a933a6';
+
+// Reserved scan markers are not trustworthy repository input. Only these
+// exact source-definition/assertion lines may mention them. Historical lines
+// remain classified so a complete diff can review their removal. This grants
+// no exception to personal-data, recognized-secret, or entropy scanning.
+const MARKER_LINE_HASHES = new Map([
+  [SELF_PATH, new Set([
+    'a6dcc6db94a76fadff97831eef731d9de84150825d092282ac16afe1a9d81b29',
+    'f0eb2ce501907f7986f24e28526957c4feeb4e08c75c299a1919657fa504da5d',
+    'c4983c331ee8d4058280648e0125183c7968808900d5a1004ba947acc1ae787a',
+    'c69cb021bbbc5a7a61e199904bfd284430d30e8162c2ee11eb687cbdc48a041a',
+    '1c3af6949b08e175cb487069b170367a3a066ff90d8239b0cfdf9c049041091e',
+    '3959b34a0649db28508a7e0fe366abdf00ecbe3dcb039e9734e64e1ace80de7e',
+  ])],
+  ['tests/deepseek-source-classification.test.mjs', new Set([
+    'def51655131bf421417be8782279f4eb7b5c30981cbaf0e904fccfa896d67a6b',
+    '9910586a2c1c2e0c18db8361bdaccbca99ce376f2d5a229dd7562005b95b056b',
+    '1e2af8621d8df0296630550f6ad833f5039b2a87b09c8c9548b72b23e0d8cefd',
+  ])],
+]);
+
+function assertNoRawMarkers(filename, section) {
+  const marker = new RegExp('CLASSIFIED' + '_[A-Z_]+');
+  for (const line of section.split('\n')) {
+    if (!marker.test(line)) continue;
+    const sourceLine = /^[+ -]/.test(line) ? line.slice(1) : line;
+    if (!MARKER_LINE_HASHES.get(filename)?.has(digest(sourceLine))) fail('RAW_MARKER_DENIED');
+  }
+}
 
 function git(root, args, bytes = false) {
   return execFileSync('git', ['-C', root, ...args], {encoding: bytes ? undefined : 'utf8',
@@ -160,6 +197,7 @@ function verifiedManifestDigest(root, repository, sha, filename, value) {
 export function classifyReviewSection(context) {
   const root = verifySection(context);
   const {repository, filename, section, baseSha, headSha} = context;
+  assertNoRawMarkers(filename, section);
   const counts = {};
   const bump = kind => {counts[kind] = (counts[kind] ?? 0) + 1;};
   let transmittedText = section;
@@ -184,8 +222,9 @@ export function classifyReviewSection(context) {
   if (filename === SELF_PATH) {
     scanText = scanText.split('\n').map(line => replaceLiteralSpans(line, literal => {
       const value = literal.slice(1, -1);
-      if (!SYNTHETIC_SPAN_HASHES.has(value) && value !== GIT_TEST_IDENTITY_HASH && value !== REVIEW_DENIAL_HASH) return literal;
-      bump('synthetic-span-digest');
+      const markerLineDigest = [...MARKER_LINE_HASHES.values()].some(hashes => hashes.has(value));
+      if (!SYNTHETIC_SPAN_HASHES.has(value) && value !== GIT_TEST_IDENTITY_HASH && value !== REVIEW_DENIAL_HASH && !markerLineDigest) return literal;
+      bump(markerLineDigest ? 'source-line-digest' : 'synthetic-span-digest');
       return `${literal[0]}CLASSIFIED_SPAN_DIGEST${literal[0]}`;
     })).join('\n');
   }
@@ -205,10 +244,8 @@ export function classifyReviewSection(context) {
       verifiedManifestDigest(root, repository, sha, target, value);
       if (side === ' ') verifiedManifestDigest(root, repository, baseSha, target, value);
       bump('verified-source-digest');
-      return line.replace(value, 'CLASSIFIED_EXACT_SOURCE_DIGEST');
+      return line.replace(`"${target}"`, '"CLASSIFIED_SOURCE_PATH"').replace(value, 'CLASSIFIED_EXACT_SOURCE_DIGEST');
     }).join('\n');
-    // File keys are exact manifest entries whose actual blob was verified.
-    scanText = scanText.replace(/"([^"\n]+)"(?=\s*:\s*"CLASSIFIED_EXACT_SOURCE_DIGEST")/g, '"CLASSIFIED_SOURCE_PATH"');
   }
   if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs', 'tests/deepseek-review.test.mjs', 'tests/deepseek-source-classification.test.mjs'].includes(filename)) {
     for (const link of [

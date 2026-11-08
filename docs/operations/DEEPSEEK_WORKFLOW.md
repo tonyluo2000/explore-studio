@@ -17,6 +17,55 @@ comparison accounting, exact base/HEAD binding and durable review state. See
 shared accounting boundaries. All paid transport is disabled pending reviewed
 activation; mock reports grant no review, merge or deployment authority.
 
+## One operator entry point
+
+Use `scripts/deepseek.mjs` for both roles. Preparation performs bounded source
+checks and writes one compact, non-authorizing decision card. It sends no model
+request and installs no standing policy:
+
+```sh
+bash scripts/with-project-node.sh node scripts/deepseek.mjs prepare --task /absolute/task.json --card /absolute/private/card.json
+```
+
+The task uses `cross-project.deepseek-operator-task.v1`, an approved repository,
+`implementation` or `review`, exact base/head, a task ID, risk and an explicit
+low/high effort. Implementation supplies bounded owned/context paths and its
+owner-selected test plan. Review supplies the PR number and known author family.
+The card shows the complete inventory, destination, request/body SHA-256,
+application choice and maximum cost. Its owner-request, transfer and payment
+flags start false. A prepared card or a prior call is never consent.
+
+After the existing owner process approves that exact card, execute with the
+same task and the reusable reviewed standing-policy record:
+
+```sh
+bash scripts/with-project-node.sh node scripts/deepseek.mjs execute --task /absolute/task.json --card /absolute/private/card.json --standing-policy /absolute/private/policy.json --output /absolute/private/result.json
+```
+
+Approval files must be private, regular files outside the source checkout.
+Execution rechecks scope, source, body, effort, limits and policy identity, then
+uses the fixed durable role runner. There are no paid retries or fallback.
+The underlying owner/call grants are derived in memory; the operator does not
+prepare separate redundant manifests. No real standing record is installed by
+setup, a source-only task, or a mock. The final source profile must retain its
+required independent security qualification before activation.
+
+Implementation proposals remain isolated and report `APPLIED_UNTESTED` when
+applied. Codex reviews the diff, runs only the owner-selected focused test plan
+through the normal sandbox/project launcher, and integrates under existing
+review and CI gates. Suggested argv is data; arbitrary model-generated commands
+are never run automatically. Full provider/usage receipts preserve possible
+transfer and charge state on incomplete or ambiguous responses.
+
+Hosted review uses the existing owner-dispatched Mile Commons workflow and its
+one JSON request, not the local combined executor. It reserves and persists its
+receipt before the provider credential is exposed. Local key absence does not
+block this hosted path. The default workflow token covers Mile Commons and
+public Explore Studio; private MonteFinance remains permission-blocked unless
+an existing approved repository-reading credential is available. Do not export
+the hosted key or ask for it in chat. Local implementation uses the original
+credential through the documented secure custodian provisioning step.
+
 ## Project constraints
 
 - Mile Commons: native V1, workout sync, account lifecycle, events/clubs/routes,
@@ -66,9 +115,10 @@ success/failure, findings, acceptance/rework, merged functionality and resolved
 defects. Record Claude/Codex quota interruptions and CI runner-minutes where
 observable. Use `scripts/deepseek-usage.mjs` to report and annotate outcomes.
 Missing values remain unknown; no savings or throughput improvement is claimed
-without comparable observations. One paid call at a time; at most two local
-substantive lanes plus an isolated lightweight documentation lane. No idle
-agents or automatic paid comparison runs.
+without comparable observations. Each budget pool serializes its own paid
+calls. Run at most two local substantive lanes plus an isolated lightweight
+documentation lane. Keep agents assigned to active work and comparisons offline
+unless the owner authorizes a paid call.
 
 Current API pricing and exact model IDs were checked against the provider's
 [official pricing](https://api-docs.deepseek.com/quick_start/pricing/) and

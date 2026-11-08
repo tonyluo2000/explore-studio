@@ -16,13 +16,13 @@ afterEach(() => {
 });
 const identity = (id, repository = 'tonyluo2000/mile-commons') => ({ repository, provider: 'deepseek', actualModel: 'deepseek-v4-pro', taskType: 'review', taskId: 'synthetic-review', authorizationId: 'owner-call-' + id, reasoningEffort: 'high', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), requestId: id.toString(16).padStart(64, '0') });
 async function fixture(t) { const dir = await realpath(await mkdtemp(path.join(os.tmpdir(), 'deepseek-budget-'))); t.after(() => rm(dir, { recursive: true, force: true })); return dir; }
-test('shared cap covers three projects, retains reservations and refuses replay', async t => {
+test('fixed local pool covers three projects, retains reservations and refuses replay', async t => {
   const dir = await fixture(t);
   const repos = ['tonyluo2000/mile-commons', 'briersystems/montefinance', 'tonyluo2000/explore-studio'];
-  for (let i = 1; i <= 10; i++) await withBudget({ identity: identity(i, repos[i % 3]), maximumCostUsd: 1, ledgerDirectory: dir }, async () => ({ usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } }));
-  await assert.rejects(withBudget({ identity: identity(11), maximumCostUsd: 0.01, ledgerDirectory: dir }, () => assert.fail('must not send')), { code: 'SHARED_WEEKLY_CAP_EXCEEDED' });
+  for (let i = 1; i <= 5; i++) await withBudget({ identity: identity(i, repos[i % 3]), maximumCostUsd: 1, ledgerDirectory: dir }, async () => ({ usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } }));
+  await assert.rejects(withBudget({ identity: identity(6), maximumCostUsd: 0.01, ledgerDirectory: dir }, () => assert.fail('must not send')), { code: 'SHARED_WEEKLY_CAP_EXCEEDED' });
   await assert.rejects(withBudget({ identity: identity(1), maximumCostUsd: 1, ledgerDirectory: dir }, () => assert.fail()), { code: 'PAID_REQUEST_REPLAY_DENIED' });
-  assert.equal((await budgetReport({ ledgerDirectory: dir })).reservedUsd, 10);
+  assert.equal((await budgetReport({ ledgerDirectory: dir })).reservedUsd, 5);
 });
 test('one paid request at a time and ambiguous failure never refunds', async t => {
   const dir = await fixture(t);
@@ -90,4 +90,13 @@ test('hosted execution refuses before a callback or reservation', async t => {
   await assert.rejects(withBudget({identity:identity(90),maximumCostUsd:0.02,ledgerDirectory:dir},()=>{calls++;}), {code:'SHARED_LEDGER_UNAVAILABLE'});
   assert.equal(calls,0);
   assert.equal((await budgetReport({ledgerDirectory:dir})).requests,0);
+});
+
+test('local pool refuses hosted authorization identities before reserving or callback', async t => {
+  const dir = await fixture(t); let calls = 0;
+  await assert.rejects(withBudget({identity:{...identity(91),authorizationId:'gh-run-12345'},maximumCostUsd:0.02,ledgerDirectory:dir},()=>{calls++;}),{code:'HOSTED_ID_ON_LOCAL_LEDGER'});
+  const report = await budgetReport({ledgerDirectory:dir});
+  assert.equal(report.requests,0);assert.equal(calls,0);
+  assert.equal(report.localCapUsd,5);assert.equal(report.hostedCapUsd,5);assert.equal(report.sharedCapUsd,10);
+  assert.equal(report.hostedReservedUsd,null);
 });

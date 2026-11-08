@@ -251,6 +251,9 @@ export async function main(argv) {
     console.log(USAGE);
     return 0;
   }
+  const publicHostedSource = process.env.GITHUB_ACTIONS === 'true'
+    && process.env.GITHUB_REPOSITORY === 'tonyluo2000/mile-commons'
+    && options.repository === 'tonyluo2000/explore-studio';
   const reviewOptions = {
     repository: options.repository,
     routingContext: options.routingContextPath ? await readOperatorDocument(options.routingContextPath) : undefined,
@@ -265,7 +268,7 @@ export async function main(argv) {
     model: options.model,
     mode: options.mode,
     acknowledgeExternalTransfer: options.acknowledgeExternalTransfer,
-    github: createGitHubClient(),
+    github: createGitHubClient(publicHostedSource ? { token: '' } : undefined),
     apiKey: options.mode === "live" ? process.env.DEEPSEEK_API_KEY : undefined,
     maxDiffChars: options.maxDiffChars,
     maxOutputTokens: options.maxOutputTokens,

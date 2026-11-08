@@ -104,3 +104,36 @@ test('approved primary capability can launch without editing source, while DeepS
  const result=await routeTask({root,task:{...task,instruction:'Perform a synthetic task.'},activation,capabilities,execute:true,launch:async()=>{calls++;return {status:'succeeded',output:''};}});
  assert.equal(calls,1);assert.equal(result.route.provider,'openai');assert.equal(result.status,'succeeded');
 });
+
+
+test('adapter descriptions cannot select another activation schema or grant execution', async t => {
+  const {root,task} = await fixture(t);
+  await writeFile(path.join(root,'config/model-project.json'),JSON.stringify({
+    repository:REPO,
+    activationPolicy:'active',
+    primaryActivationRecordSchema:'cross-project.primary-routing-activation.v999',
+    sourcePolicy:'scripts/untrusted.mjs',
+    releaseAuthority:'synthetic description only',
+  }));
+  let calls = 0;
+  const launch = async () => { calls++; return {status:'succeeded',output:''}; };
+  const options = {root,task:{...task,instruction:'Perform a synthetic task.'},capabilities,execute:true,launch};
+  await assert.rejects(routeTask(options),{code:'ROUTING_ACTIVATION_APPROVAL_REQUIRED'});
+  const digest = sourcePolicyDigest();
+  const activation = {
+    schema:'cross-project.primary-routing-activation.v999',repository:REPO,
+    activationId:'synthetic-adapter-test',ownerApproved:true,
+    ownerApprovalReference:'synthetic:test-only',sourcePolicyDigest:digest,
+    roles:['implementation','review'],
+    independentReview:{provider:'anthropic',actualModel:'claude-opus-5-5',outcome:'clean',
+      substantiveDefects:0,participatedInImplementation:false,sourcePolicyDigest:digest,
+      baseSha:'a'.repeat(40),headSha:'b'.repeat(40),receiptSha256:'c'.repeat(64),sourceBundleSha256:'d'.repeat(64)},
+  };
+  await assert.rejects(routeTask({...options,activation}),{code:'ROUTING_ACTIVATION_APPROVAL_REQUIRED'});
+  assert.equal(calls,0);
+  activation.schema = 'cross-project.primary-routing-activation.v1';
+  const result = await routeTask({...options,activation});
+  assert.equal(result.status,'succeeded');
+  assert.equal(result.route.provider,'openai');
+  assert.equal(calls,1);
+});

@@ -2,17 +2,30 @@
 
 The guarded transport reserves the entire approved request ceiling before it
 can send a request. Hard limits are $1/request and $10 over the preceding 168
-hours, across all three approved repositories. The rolling window is stricter
-than a calendar-week reset. Existing $0.02/$0.15/$0.30 review profiles still
+hours, across all three approved repositories. The global ceiling is split into
+a fixed $5 local pool and $5 hosted-review pool; neither can borrow from the
+other. The rolling window is stricter than a calendar-week reset. Existing $0.02/$0.15/$0.30 review profiles still
 apply. A cap grants no payment or source-transfer authorization.
 
 All local copies use the same fixed store:
 `~/.local/state/deepseek-workflow`. There is no CLI or environment override.
 The `ledgerDirectory` library option exists for isolated offline tests, not
 operator routing. Separate OS accounts/hosts are not a shared budget authority;
-use one designated local execution host. GitHub Actions paid transport fails
-closed with `SHARED_LEDGER_UNAVAILABLE`. A common transactional accounting
-service is required before enabling multiple paid hosts.
+use one designated local execution host. Local calls reject hosted `gh-run-`
+authorization identities. GitHub Actions uses only the existing owner-dispatched
+Mile Commons review workflow, its reviewed control commit, attempt 1, one global
+concurrency group and one provider request per run. All other hosted contexts
+fail closed with `SHARED_LEDGER_UNAVAILABLE`.
+
+The hosted adapter reserves at most $0.50 per reviewed live run against its $5
+pool. It requires contiguous GitHub run history and declines live dispatches
+older than 30 minutes. The history lookback includes 40 extra minutes to cover
+the dispatch delay and job timeout. Reconciled historical receipts count at
+their verified ceilings. Unknown historical attempts reserve $1 each. Missing,
+duplicated or incomplete history blocks execution. A failed or ambiguous run
+stays reserved, and a rerun requires fresh task authorization through a new
+dispatch. Standing activation and exact-call consent are separate from
+reconciling history or preparing a mock.
 
 The transport holds one exclusive directory lock across each request. Events
 are exclusive-created, fsynced, read-only, chained by SHA-256, and contain no

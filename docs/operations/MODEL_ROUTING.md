@@ -32,9 +32,12 @@ it never enters decision logs.
 
 Selection is deterministic and does not call a model. `--execute` launches the
 selected installed primary CLI only when a separately supplied, reviewed owner
-activation record validates. Project adapters identify the required record schema;
-they do not represent current active/inactive state. No activation record is
-installed automatically. The CLI uses
+activation record validates. Adapter fields such as `primaryActivationRecordSchema`,
+`activationPolicy`, `sourcePolicy` and `releaseAuthority` are descriptions, not
+authority or switches. The wrapper reads the adapter repository identity and
+checks the Git origin; the imported validator fixes the activation schema. Editing
+an adapter cannot select another validator or grant execution. No activation
+record is installed automatically. The CLI uses
 explicit model and effort flags, starts one child, performs no retries and
 never switches a successful task mid-run. DeepSeek selection is a handoff to
 the guarded backup profile, not an unrestricted CLI invocation.

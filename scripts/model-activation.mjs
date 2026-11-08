@@ -12,6 +12,7 @@ const POLICY_FILES = Object.freeze([
   'scripts/deepseek-source-classification.mjs','scripts/deepseek-source-scanner.mjs',
   'scripts/deepseek-budget.mjs','scripts/deepseek-agent.mjs',
   'scripts/deepseek-review-core.mjs','scripts/deepseek-review.mjs',
+  'scripts/deepseek.mjs','scripts/deepseek-hosted-budget.mjs','scripts/deepseek-hosted-review.mjs',
   'scripts/agent-route.mjs','scripts/model-telemetry.mjs','scripts/deepseek-review-cache-policy.mjs',
 ]);
 const PROJECTS = new Set(['tonyluo2000/mile-commons','briersystems/montefinance','tonyluo2000/explore-studio']);
@@ -43,7 +44,7 @@ function validateActivation({activation,repository},schema) {
     || review.outcome!=='clean' || review.substantiveDefects!==0 || review.participatedInImplementation!==false
     || review.sourcePolicyDigest!==expected || !SHA.test(review.baseSha??'') || !SHA.test(review.headSha??'')
     || !HASH.test(review.receiptSha256??'') || !HASH.test(review.sourceBundleSha256??'')) fail('INDEPENDENT_POLICY_REVIEW_REQUIRED');
-  return {activationId:activation.activationId,sourcePolicyDigest:expected,repository};
+  return {activationId:activation.activationId,sourcePolicyDigest:expected,repository,reviewedControlSha:review.headSha};
 }
 
 export function assertSourceActivation(options={}) { return validateActivation(options,'cross-project.deepseek-activation.v1'); }

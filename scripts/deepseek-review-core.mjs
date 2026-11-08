@@ -578,7 +578,7 @@ export function createDeepSeekTestClient({ fetchImpl }) {
   assertTestContext();
   return options => {
     assertTestContext();
-    return executeDeepSeek(options, { fetchImpl, budgetCall: async (_policy, callback) => callback(), assertTransferApproved: () => {} });
+    return executeDeepSeek(options, { fetchImpl, budgetCall: async (_policy, callback) => callback(), assertTransferApproved: () => ({reviewedControlSha:"0".repeat(40)}) });
   };
 }
 
@@ -617,8 +617,9 @@ async function executeDeepSeek({
   }
   const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
   const authorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:budgetIdentity.requestId,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd});
-  assertTransferApproved({repository:scope.repository,activation});
-  return budgetCall({ identity: { ...budgetIdentity,...scope,taskType:scope.role,actualModel:model,provider:'deepseek',authorizationId:authorization.authorizationId,reasoningEffort:route.reasoningEffort }, maximumCostUsd: maxCostUsd }, async () => {
+  const validatedActivation = assertTransferApproved({repository:scope.repository,activation});
+  const callerBudgetIdentity=Object.fromEntries(Object.entries(budgetIdentity).filter(([key])=>key!=='reviewedControlSha'));
+  return budgetCall({ identity: { ...callerBudgetIdentity,...scope,...(validatedActivation?.reviewedControlSha?{reviewedControlSha:validatedActivation.reviewedControlSha}:{}),taskType:scope.role,actualModel:model,provider:'deepseek',authorizationId:authorization.authorizationId,reasoningEffort:route.reasoningEffort }, maximumCostUsd: maxCostUsd }, async () => {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     let response;
     try {
@@ -819,8 +820,8 @@ async function executeReview({
       report.summary = "Mock mode validated immutable base/head comparison retrieval, exact-SHA binding, path policy, redaction, prompt construction, and evidence generation. No DeepSeek API request was sent.";
       return report;
     }
-    if (!apiKey) {
-      throw Object.assign(new Error("DEEPSEEK_API_KEY is required for live mode"), { code: "MISSING_API_KEY" });
+    if (!apiKey && !reserveOnly) {
+      throw Object.assign(new Error("DEEPSEEK_API_KEY is required to resume a live provider attempt"), { code: "MISSING_API_KEY" });
     }
     const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
     const exactAuthorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:report.idempotency_key,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd,now:validationNow});
@@ -1065,7 +1066,12 @@ async function executeReviewWithState({ stateDirectory, reviewOptions }, runtime
 }
 
 const productionReviewRuntime=Object.freeze({providerCall:callDeepSeek,assertActivation:assertLiveTransferApproved,offline:false});
-export const runReview = options => executeReview(options,productionReviewRuntime);
+export async function runReview(options) {
+  // Live reviews must pass through the durable state/lock/reservation wrapper.
+  // Refuse before reading provider, source, ledger or authorization arguments.
+  if(options?.mode==='live') throw Object.assign(new Error('live review requires runReviewWithState'),{code:'STATEFUL_EXECUTION_REQUIRED'});
+  return executeReview(options,productionReviewRuntime);
+}
 export const runReviewWithState = options => executeReviewWithState(options,productionReviewRuntime);
 // Offline protocol testing is isolated from production entry points. Fixtures do
 // not attest an actual provider model, completed independent review, or approval.

@@ -27,6 +27,19 @@ test("only the three exact routing configuration paths become eligible",()=>{
   }
 });
 
+test("only Mile Commons' exact existing DeepSeek workflow is eligible",()=>{
+  const workflow=".github/workflows/deepseek-review.yml";
+  assert.equal(projectPathPolicy(MC,workflow).allowed,true);
+  for(const repository of [MF,ES]) assert.equal(projectPathPolicy(repository,workflow).allowed,false);
+  for(const repository of [MC,MF,ES]) for(const filename of [
+    ".github/workflows/other.yml", ".github/workflows/deepseek-review.yaml",
+    ".github/workflows/deepseek-review.yml.bak", ".github/workflows/deepseek-review-production.yml",
+    ".github/workflows/production.yml", ".github/workflows/deepseek-review.yml/production.yml",
+    ".github/workflows/nested/deepseek-review.yml", ".github/workflows/DeepSeek-review.yml",
+    ".github/workflows/../workflows/deepseek-review.yml", ".github/workflows/.env",
+  ]) assert.equal(projectPathPolicy(repository,filename).allowed,false,`${repository}:${filename}`);
+});
+
 test("public approved GitHub SSH protocol syntax is not private email, near matches still fail",()=>{
   for(const repository of [MC,MF,ES]) assert.doesNotThrow(()=>assertNoPrivateData(`const remote = 'git@github.com:${repository}.git';`));
   assert.doesNotThrow(()=>assertNoPrivateData('const remote = `git@github.com:${repository}`;'));

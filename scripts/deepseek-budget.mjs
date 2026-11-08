@@ -6,6 +6,10 @@ import path from 'node:path';
 
 export const REQUEST_CAP_USD = 1;
 export const SHARED_CAP_USD = 10;
+// Disjoint fixed pools keep all three local adapters plus the hosted gateway
+// within the existing global ceiling without adding a cross-host service.
+export const LOCAL_CAP_USD = 5;
+export const HOSTED_CAP_USD = 5;
 export const WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 export const DEFAULT_LEDGER_DIRECTORY = path.join(os.homedir(), '.local', 'state', 'deepseek-workflow');
 const REPOSITORIES = new Set(['tonyluo2000/mile-commons', 'briersystems/montefinance', 'tonyluo2000/explore-studio']);
@@ -91,8 +95,16 @@ function usageOf(result) {
 // The lock is held across the provider request. Never automatically steal a
 // stale lock: process death could mean a paid request is still in flight.
 export async function withBudget({ identity, maximumCostUsd, ledgerDirectory = DEFAULT_LEDGER_DIRECTORY }, callback) {
-  if (process.env.GITHUB_ACTIONS === 'true') fail('SHARED_LEDGER_UNAVAILABLE');
   const safeIdentity = validateIdentity(identity);
+  if (process.env.GITHUB_ACTIONS === 'true') {
+    let hosted;
+    try { hosted = await import('./deepseek-hosted-budget.mjs'); }
+    catch { fail('SHARED_LEDGER_UNAVAILABLE'); }
+    if (typeof hosted.withHostedBudget !== 'function') fail('SHARED_LEDGER_UNAVAILABLE');
+    return hosted.withHostedBudget({identity,maximumCostUsd},callback);
+  }
+  // Hosted run identities cannot be replayed against the separate local pool.
+  if (safeIdentity.authorizationId.startsWith('gh-run-')) fail('HOSTED_ID_ON_LOCAL_LEDGER');
   if (!Number.isFinite(maximumCostUsd) || maximumCostUsd <= 0 || maximumCostUsd > REQUEST_CAP_USD) fail('REQUEST_CAP_EXCEEDED');
   const directory = await safeDirectory(ledgerDirectory);
   const lock = path.join(directory, 'active.lock');
@@ -108,7 +120,7 @@ export async function withBudget({ identity, maximumCostUsd, ledgerDirectory = D
     if (history.some(event => event.timestamp > timestamp)) fail('LEDGER_CLOCK_ROLLBACK');
     const reservedMicros = micros(maximumCostUsd);
     const used = reservations.filter(event => event.timestamp >= timestamp - WINDOW_MS).reduce((sum, event) => sum + event.reservedMicros, 0);
-    if (used + reservedMicros > micros(SHARED_CAP_USD)) fail('SHARED_WEEKLY_CAP_EXCEEDED');
+    if (used + reservedMicros > micros(LOCAL_CAP_USD)) fail('SHARED_WEEKLY_CAP_EXCEEDED');
     await append(directory, history, { type: 'reservation', timestamp, identity: safeIdentity, reservedMicros });
     const started = Date.now();
     let result;
@@ -157,5 +169,5 @@ export async function budgetReport({ ledgerDirectory = DEFAULT_LEDGER_DIRECTORY,
   const recent = history.filter(event => event.timestamp >= now - WINDOW_MS);
   const reservations = recent.filter(event => event.type === 'reservation');
   const results = recent.filter(event => event.type === 'result');
-  return { window: 'rolling 168 hours (stricter than calendar-week reset)', requestCapUsd: REQUEST_CAP_USD, sharedCapUsd: SHARED_CAP_USD, reservedUsd: reservations.reduce((sum, event) => sum + event.reservedMicros, 0) / 1_000_000, requests: reservations.length, results: results.length, providerTokens: results.reduce((sum, event) => sum + (event.usage?.total_tokens ?? 0), 0), reportedCostUsd: null, reservations, outcomes: results, dispositions: recent.filter(event => event.type === 'outcome'), savings: 'NOT_MEASURED' };
+  return { window: 'rolling 168 hours (stricter than calendar-week reset)', requestCapUsd: REQUEST_CAP_USD, sharedCapUsd: SHARED_CAP_USD, localCapUsd: LOCAL_CAP_USD, hostedCapUsd: HOSTED_CAP_USD, budgetScope: 'fixed disjoint local/hosted pools; unknown hosted usage is never reported as zero', hostedReservedUsd: null, reservedUsd: reservations.reduce((sum, event) => sum + event.reservedMicros, 0) / 1_000_000, requests: reservations.length, results: results.length, providerTokens: results.reduce((sum, event) => sum + (event.usage?.total_tokens ?? 0), 0), reportedCostUsd: null, reservations, outcomes: results, dispositions: recent.filter(event => event.type === 'outcome'), savings: 'NOT_MEASURED' };
 }

@@ -155,15 +155,52 @@ test('forged manifest digest and arbitrary opaque hex in ordinary source remain 
   assert.equal(containsSuspiciousHighEntropy(redactSecrets(classified.scanText).text),true);
 });
 
-test('classification policy constants themselves retain full secret and private-data verification',t=>{
+test('unverified marker values cannot mask an email or opaque manifest key',t=>{
+  const filename='config/deepseek-toolchain.json';
+  const marker='CLASSIFIED_EXACT_SOURCE_DIGEST';
+  const keys=[['scripts/runner','github.com.mjs'].join('@'),hash('synthetic unclassified manifest key')];
+  for(const key of keys) {
+    const manifest=JSON.stringify({source_repository:repository,files:{[key]:marker}},null,2)+'\n';
+    const data=fixture(t,{[filename]:manifest});
+    assert.throws(()=>classifyReviewSection(data.context(filename)),{code:'RAW_MARKER_DENIED'});
+  }
+});
+
+test('raw marker injection is rejected in source, policy source and unrelated test files',t=>{
+  const source='const payload = "CLASSIFIED_SOURCE_WORD";\n';
+  for(const filename of ['scripts/deepseek-agent.mjs','scripts/deepseek-source-classification.mjs','tests/ordinary.test.mjs']) {
+    const data=fixture(t,{[filename]:source});
+    assert.throws(()=>classifyReviewSection(data.context(filename)),{code:'RAW_MARKER_DENIED'});
+  }
+});
+
+test('a known marker definition is bound to its exact path and line without masking adjacent bytes',t=>{
   const filename='scripts/deepseek-source-classification.mjs';
-  const source=readFileSync(new URL('../scripts/deepseek-source-classification.mjs',import.meta.url),'utf8');
-  const data=fixture(t,{[filename]:source});
-  const classified=classifyReviewSection(data.context(filename));
-  assert.doesNotThrow(()=>assertNoPrivateData(classified.scanText));
-  const redacted=redactSecrets(classified.scanText).text;
-  assert.equal(containsRecognizedSecret(redacted),null);
-  assert.equal(containsSuspiciousHighEntropy(redacted),false);
+  const policySource=readFileSync(new URL('../scripts/deepseek-source-classification.mjs',import.meta.url),'utf8');
+  const definition=policySource.split('\n').find(line=>line.includes('CLASSIFIED' + '_SOURCE_WORD'));
+  assert.ok(definition);
+  const allowed=fixture(t,{[filename]:definition+'\n'});
+  const context=allowed.context(filename),classified=classifyReviewSection(context);
+  assert.equal(classified.transmittedText,context.section);
+  assert.ok(classified.scanText.includes(definition));
+  const wrongPath='scripts/deepseek-agent.mjs';
+  const misplaced=fixture(t,{[wrongPath]:definition+'\n'});
+  assert.throws(()=>classifyReviewSection(misplaced.context(wrongPath)),{code:'RAW_MARKER_DENIED'});
+  const nearLine=fixture(t,{[filename]:definition+' const neighboring = 1;\n'});
+  assert.throws(()=>classifyReviewSection(nearLine.context(filename)),{code:'RAW_MARKER_DENIED'});
+});
+
+test('classification policy and its tests retain full secret and private-data verification',t=>{
+  const filenames=['scripts/deepseek-source-classification.mjs','tests/deepseek-source-classification.test.mjs'];
+  const files=Object.fromEntries(filenames.map(filename=>[filename,readFileSync(new URL('../'+filename,import.meta.url),'utf8')]));
+  const data=fixture(t,files);
+  for(const filename of filenames) {
+    const classified = classifyReviewSection(data.context(filename));
+    assert.doesNotThrow(()=>assertNoPrivateData(classified.scanText));
+    const redacted=redactSecrets(classified.scanText).text;
+    assert.equal(containsRecognizedSecret(redacted),null);
+    assert.equal(containsSuspiciousHighEntropy(redacted),false);
+  }
 });
 
 test('new task-scoped policy labels and cache source names have finite exact classifications',t=>{

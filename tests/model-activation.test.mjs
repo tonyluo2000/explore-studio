@@ -24,3 +24,12 @@ test('primary and DeepSeek activations are distinct and grant no task or spendin
  assert.throws(()=>assertPrimaryRoutingActivation({repository,activation:fixture()}),{code:'SOURCE_ACTIVATION_INVALID'});
  assert.equal(Object.hasOwn(primary,'paymentApproved'),false);assert.equal(Object.hasOwn(primary,'taskId'),false);
 });
+
+
+test('reviewed control identity comes only from the validated review record', () => {
+  const activation = fixture();
+  activation.reviewedControlSha = 'e'.repeat(40);
+  const validated = assertSourceActivation({repository,activation});
+  assert.equal(validated.reviewedControlSha,activation.independentReview.headSha);
+  assert.notEqual(validated.reviewedControlSha,activation.reviewedControlSha);
+});
