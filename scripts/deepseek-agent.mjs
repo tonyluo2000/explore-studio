@@ -6,7 +6,7 @@ import { readFile, mkdir, open, rm, lstat, realpath, rename } from 'node:fs/prom
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepareDeepSeekRequest, callDeepSeek, validateHeadSha, redactSecrets, resolveBackupRoute, validateProviderReceipt, createDeepSeekTestClient, PROVIDER_ATTEMPT_STATE } from './deepseek-review-core.mjs';
-import { qualityRequirements, assertQualityFloor } from './model-quality.mjs';
+import { qualityRequirements, assertQualityFloor, isRoutineDeepSeekImplementation } from './model-quality.mjs';
 import { assertCallAuthorization } from './model-authorization.mjs';
 import { projectPathPolicy, assertSafeSource, readSafeSource, assertLiveTransferApproved } from './deepseek-transfer-policy.mjs';
 
@@ -108,7 +108,10 @@ export function planImplementation({root,manifest,routingContext={},authorizatio
   const effort=reasoningEffort??(quality.minimumEffort==='low'?'low':'high');
   if(!['low','high'].includes(effort)) fail('INVALID_DEEPSEEK_EFFORT');
   assertQualityFloor({requestedEffort:effort,requirements:quality});
-  return prepareImplementationSource({root,manifest,routingContext},()=>({provider:'deepseek',model:'deepseek-v4-pro',family:'deepseek',reasoningEffort:effort,effectiveEffort:effort,authorizationId,planOnly:true,nonAuthorizing:true,ownerRequestedDeepSeek:false}));
+  const model=manifest.model??'deepseek-v4-pro';
+  if(model==='deepseek-flash' && !isRoutineDeepSeekImplementation({role:'implementation',risk:quality.risk,complexity:routingContext.complexity,reasoningEffort:effort}))
+    fail('FLASH_ROUTINE_IMPLEMENTATION_REQUIRED');
+  return prepareImplementationSource({root,manifest,routingContext},()=>({provider:'deepseek',model,family:'deepseek',reasoningEffort:effort,effectiveEffort:effort,authorizationId,planOnly:true,nonAuthorizing:true,ownerRequestedDeepSeek:false}));
 }
 
 export function validateImplementationResponse(value, prepared) {

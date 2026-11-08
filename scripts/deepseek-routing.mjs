@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { MODEL_CATALOG } from './model-capabilities.mjs';
 import { normalizeQuota, CONSTRAINED_QUOTA_STATES } from './model-quota.mjs';
 import { assertOwnerTaskRequest } from './model-authorization.mjs';
-import { qualityRequirements, assertQualityFloor } from './model-quality.mjs';
+import { qualityRequirements, assertQualityFloor, isRoutineDeepSeekImplementation } from './model-quality.mjs';
 
 const configuration = JSON.parse(readFileSync(new URL('../config/ai-model-routing.json', import.meta.url), 'utf8'));
 const families = new Set(['deepseek', 'openai', 'claude']);
@@ -63,7 +63,7 @@ export function resolveRoute({repository,taskType,role,implementerFamily,overrid
   const wantsDeepSeek=overrideModel?.provider==='deepseek'||overrides.provider==='deepseek'||overrides.family==='deepseek'||ownerRequestedDeepSeek===true||ownerRequest!==undefined;
   const ownerGrant=wantsDeepSeek ? assertOwnerTaskRequest({request:ownerRequest,scope:{repository,taskId,role:reviewing?'review':'implementation',baseSha,headSha},now}) : null;
   const ownerOptIn=!!ownerGrant;
-  if(ownerOptIn && (overrideModel && overrideModel.provider!=='deepseek' || overrides.provider && overrides.provider!=='deepseek' || overrides.family && overrides.family!=='deepseek')) fail('OWNER_REQUEST_MODEL_CONFLICT');
+  if(ownerOptIn && (overrideModel && overrideModel.model!==ownerGrant.model || overrides.provider && overrides.provider!=='deepseek' || overrides.family && overrides.family!=='deepseek')) fail('OWNER_REQUEST_MODEL_CONFLICT');
   if(!ownerOptIn && (overrideModel || overrides.provider)) {
     provider=overrideModel?.provider ?? overrides.provider;
     model=overrideModel?.model ?? (effort==='high' ? strongest(provider) : normalModel(provider));
@@ -71,8 +71,10 @@ export function resolveRoute({repository,taskType,role,implementerFamily,overrid
   let selected=candidate(model);
   const targetPrimary=ownerOptIn ? rolePrimary : primaryKey(provider);
   if(ownerOptIn) {
-    const backup=candidate(configuration.backup.model);
+    const backup=candidate(ownerGrant.model);
     const backupEffort=effort==='low' ? 'low' : 'high';
+    if(ownerGrant.model==='deepseek-flash' && !isRoutineDeepSeekImplementation({role:reviewing?'review':'implementation',risk:quality.risk,complexity,reasoningEffort:backupEffort}))
+      fail('FLASH_ROUTINE_IMPLEMENTATION_REQUIRED');
     if(overrides.reasoningEffort==='medium') fail('UNSUPPORTED_REASONING_EFFORT');
     if(!suitable(backup,backupEffort)) fail(reviewing&&backup?.family===implementerFamily ? 'INDEPENDENT_MODEL_REQUIRED' : 'NO_SUITABLE_BACKUP');
     selected=backup;effort=backupEffort;reason='EXPLICIT_OWNER_REQUEST';

@@ -11,7 +11,7 @@ const repository='tonyluo2000/mile-commons';
 async function fixture(t) {
  const root=await realpath(await mkdtemp(path.join(tmpdir(),'deepseek-operator-source-'))),outside=await realpath(await mkdtemp(path.join(tmpdir(),'deepseek-operator-records-')));t.after(()=>Promise.all([rm(root,{recursive:true,force:true}),rm(outside,{recursive:true,force:true})]));
  const git=(...args)=>execFileSync('git',['-C',root,'-c','core.hooksPath=/dev/null','-c','commit.gpgsign=false','-c','user.name=Synthetic','-c','user.email=fixture@example.com',...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trimEnd();
- git('init','-qb','codex/deepseek-operator');git('remote','add','origin',`https://github.com/${repository}`);await mkdir(path.join(root,'lib'));await writeFile(path.join(root,'lib/source.mjs'),'export const value = 1;\n');git('add','.');git('commit','-qm','Synthetic base');const baseSha=git('rev-parse','HEAD');await writeFile(path.join(root,'lib/source.mjs'),'export const value = 2;\n');git('add','.');git('commit','-qm','Synthetic task');const headSha=git('rev-parse','HEAD');
+ git('init','-qb','codex/deepseek-operator');git('remote','add','origin',`https://github.com/${repository}`);await mkdir(path.join(root,'lib'));await writeFile(path.join(root,'lib/source.mjs'),'export const value = 1;\n');await writeFile(path.join(root,'AGENTS.md'),'Synthetic control instructions.\n');git('add','.');git('commit','-qm','Synthetic base');const baseSha=git('rev-parse','HEAD');await writeFile(path.join(root,'lib/source.mjs'),'export const value = 2;\n');git('add','.');git('commit','-qm','Synthetic task');const headSha=git('rev-parse','HEAD');
  const implementation={schema:TASK_SCHEMA,repository,taskId:'synthetic-implementation',role:'implementation',baseSha,headSha,risk:'low',complexity:'routine',title:'Bounded source update',instruction:'Prepare a bounded source change.',ownedPaths:['lib/source.mjs'],tests:[{kind:'node-test',files:['tests/focused.test.mjs']}]};
  const review={schema:TASK_SCHEMA,repository,taskId:'pr-12-review',role:'review',pullNumber:12,baseSha,headSha,risk:'low',complexity:'routine',implementerFamily:'openai'};
  const diff=git('diff','--no-ext-diff','--no-textconv','--no-renames','--unified=3',baseSha,headSha)+'\n';const files=[{filename:'lib/source.mjs',additions:1,deletions:1}];
@@ -88,4 +88,32 @@ test('advisory hosted cards cannot invoke the local combined path or expose a cr
  const data=await fixture(t);const task={...data.implementation,executionEnvironment:'hosted',maxCostUsd:.5};const card=approve(await prepareDecisionCard({root:data.root,task}));const oldActions=process.env.GITHUB_ACTIONS,oldFetch=globalThis.fetch;let fetches=0;const output=path.join(data.outside,'hosted-forbidden.json');
  process.env.GITHUB_ACTIONS='true';globalThis.fetch=async()=>{fetches++;throw new Error('hosted dispatch must stay separate');};
  try {await assert.rejects(executeDecisionCard({root:data.root,task,approvedCard:card,standingPolicy:standing(),output}),{code:'HOSTED_DISPATCH_REQUIRED'});assert.equal(fetches,0);await assert.rejects(access(output),{code:'ENOENT'});}finally{if(oldActions===undefined)delete process.env.GITHUB_ACTIONS;else process.env.GITHUB_ACTIONS=oldActions;globalThis.fetch=oldFetch;}
+});
+
+test('standing policy runs routine Flash and substantial Pro without approval cards',async t=>{
+ const data=await fixture(t);
+ const standingPolicy={...standing(),ordinaryCalls:{approved:true,maxCostUsd:.15}};
+ const sent=[];
+ const harness=createDeepSeekOperatorTestHarness({fetchImpl:async(_url,options)=>{
+   const body=JSON.parse(options.body);
+   sent.push([body.model,body.reasoning_effort]);
+   const source=JSON.parse(body.messages[1].content).sources[0];
+   const proposal={summary:'Bounded proposal.',changes:[{path:source.path,original_sha256:source.sha256,content:'export const value = 3;\n'}]};
+   return new Response(JSON.stringify({model:body.model,id:'synthetic-standing',usage:{prompt_tokens:10,completion_tokens:5,total_tokens:15},choices:[{finish_reason:'stop',message:{content:JSON.stringify(proposal)}}]}),{status:200});
+ }});
+ const options={root:data.root,task:data.implementation,standingPolicy};
+ await assert.rejects(harness.executeStandingTask({...options,standingPolicy:standing()}),{code:'STANDING_DEEPSEEK_APPROVAL_REQUIRED'});
+ await assert.rejects(harness.executeStandingTask({...options,task:{...data.implementation,maxCostUsd:.2}}),{code:'STANDING_DEEPSEEK_COST_EXCEEDED'});
+ await assert.rejects(harness.executeStandingTask({...options,task:{...data.implementation,risk:'high'}}),{code:'STANDING_DEEPSEEK_SCOPE_DENIED'});
+ await assert.rejects(harness.executeStandingTask({...options,task:{...data.implementation,contextPaths:['AGENTS.md']}}),{code:'STANDING_DEEPSEEK_SCOPE_DENIED'});
+ await assert.rejects(harness.executeStandingTask({...options,task:{...data.implementation,complexity:'standard',model:'deepseek-flash'}}),{code:'OPERATOR_MODEL_NOT_ALLOWED'});
+ assert.equal(sent.length,0);
+ for(const [complexity,model] of [['routine','deepseek-flash'],['standard','deepseek-v4-pro']]){
+   const result=await harness.executeStandingTask({...options,task:{...data.implementation,complexity},output:path.join(data.outside,complexity+'.json')});
+   assert.equal(result.status,'PROPOSAL_READY');
+   assert.equal(result.actualModel,model);
+ }
+ const result=await harness.executeStandingTask({...options,task:{...data.implementation,model:'deepseek-v4-pro'},output:path.join(data.outside,'explicit-pro.json')});
+ assert.equal(result.actualModel,'deepseek-v4-pro');
+ assert.deepEqual(sent,[['deepseek-flash','low'],['deepseek-v4-pro','high'],['deepseek-v4-pro','low']]);
 });

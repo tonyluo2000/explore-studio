@@ -1,22 +1,16 @@
 # Explore Studio model workflow
 
-November 7, 2026 final owner policy: always use Codex or Claude unless the
-owner explicitly requests DeepSeek Pro. Quota pressure and rate limits never
-activate DeepSeek automatically. Use `scripts/agent-route.mjs` to choose the
-lowest suitable primary model/effort; routine work must not default to Sol-high.
-The separate `--owner-request FILE` input binds the owner request to one task,
-role, repository and exact base/HEAD. It never grants source-transfer or spending
-approval; those require a separate exact-body call authorization. A previous
-authorization cannot fund another call, even after its budget window expires. DeepSeek effort is low or justified
-high, never medium. Independent different-family review, exact-head evidence
-and all existing quality/release gates remain mandatory. Live DeepSeek transfer
-stays disabled pending reviewed activation and exact-call authorization.
-See `docs/operations/MODEL_ROUTING.md`.
+Use Codex or Claude by default. Use `scripts/agent-route.mjs` to choose the
+lowest suitable primary model and effort. Quota pressure never activates DeepSeek.
+For an explicit DeepSeek task, use `scripts/deepseek.mjs run` with the private
+owner-approved standing policy. Routine low-risk implementation uses Flash.
+Substantial implementation and independent review use Pro, at low or high effort.
+The runner checks source scope and cost and generates the exact request record.
+High-risk work retains separate authorization and independent exact-head review.
+Live DeepSeek requires reviewed activation and the existing provider credential.
 
 The separate guarded CLI does not replace Codex/Claude global configuration.
-All new source-transfer eligibility remains mock-only until independent review
-and separate exact-call source-transfer/payment authorization. Live budgets
-are ceilings, never spending approval. Use Node 22.13.0 or newer for the
+Use Node 22.13.0 or newer for the
 standalone dependency-free tooling tests documented in the workflow.
 
 Preserve licensing, content ownership, private learner-data and publishing

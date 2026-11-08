@@ -1,9 +1,9 @@
 import {createHash} from 'node:crypto';
 import {readFileSync,lstatSync} from 'node:fs';
 
-// A reusable capability activation is distinct from consent for a task or call.
-// The trusted operator supplies it only after independent review and owner
-// approval. It authenticates no person and never grants payment/source consent.
+import {qualityRequirements} from './model-quality.mjs';
+
+// The trusted operator supplies activation after independent review and owner approval.
 const POLICY_FILES = Object.freeze([
   'config/ai-model-routing.json',
   'scripts/model-activation.mjs','scripts/model-authorization.mjs',
@@ -48,4 +48,24 @@ function validateActivation({activation,repository},schema) {
 }
 
 export function assertSourceActivation(options={}) { return validateActivation(options,'cross-project.deepseek-activation.v1'); }
+export function assertOrdinaryDeepSeekCall({activation,repository,task,files,maxCostUsd}) {
+  const reviewed=assertSourceActivation({activation,repository});
+  const policy=activation.ordinaryCalls;
+  if(policy?.approved!==true || !Number.isFinite(policy.maxCostUsd) || policy.maxCostUsd<=0 || policy.maxCostUsd>.5)
+    fail('STANDING_DEEPSEEK_APPROVAL_REQUIRED');
+  if(!Number.isFinite(maxCostUsd) || maxCostUsd<=0 || maxCostUsd>policy.maxCostUsd)
+    fail('STANDING_DEEPSEEK_COST_EXCEEDED');
+  const quality=qualityRequirements(task);
+  if(!['low','medium'].includes(quality.risk) || quality.independentReviewRequired)
+    fail('STANDING_DEEPSEEK_SCOPE_DENIED');
+  if(!Array.isArray(files) || !files.length || files.some(filename=>
+    typeof filename!=='string' || POLICY_FILES.includes(filename) ||
+    /(?:^|\/)(?:\.github|\.claude|\.codex|\.ai|config|auth0|db|drizzle|migrations?|production)(?:\/|$)/i.test(filename) ||
+    /(?:^|\/)(?:AGENTS\.md|CLAUDE\.md|package(?:-lock)?\.json|pyproject\.toml|requirements[^/]*\.txt)$/i.test(filename) ||
+    /(?:^|[-_/])(?:auth(?:entication|orization)?|credential|deploy|financial|ingress|migration|payment|privacy|production|release|security|tax)(?:[-_./]|$)/i.test(filename) ||
+    /^scripts\/(?:deepseek|agent-route|model-|.*(?:guard|provenance|with-project-node))/i.test(filename)))
+    fail('STANDING_DEEPSEEK_SCOPE_DENIED');
+  return reviewed;
+}
+
 export function assertPrimaryRoutingActivation(options={}) { return validateActivation(options,'cross-project.primary-routing-activation.v1'); }

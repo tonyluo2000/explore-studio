@@ -32,7 +32,7 @@ async function safeDirectory(directory) {
 
 function validateIdentity(identity) {
   if (!identity || !REPOSITORIES.has(identity.repository) || identity.provider !== 'deepseek'
-    || identity.actualModel !== 'deepseek-v4-pro'
+    || (identity.actualModel !== 'deepseek-v4-pro' && !(identity.actualModel === 'deepseek-flash' && identity.taskType === 'implementation' && identity.reasoningEffort === 'low'))
     || !['review', 'implementation'].includes(identity.taskType)
     || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(identity.taskId ?? '')
     || !/^[a-z0-9][a-z0-9-]{7,95}$/.test(identity.authorizationId ?? '')

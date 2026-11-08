@@ -536,8 +536,9 @@ function retainReviewProviderReceipt(report,receipt) {
 // An explicit owner request is operator input, separate from untrusted source/task
 // manifests. Quota observations alone never authorize DeepSeek activation.
 function resolveBackupRouteAt({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {}, ownerRequest, scope }, validationNow) {
-  if (model !== undefined && model !== "deepseek-v4-pro") throw Object.assign(new Error("only DeepSeek Pro is approved as standby"), { code: "BACKUP_MODEL_NOT_APPROVED" });
+  if (model !== undefined && !SUPPORTED_MODELS.has(model)) throw Object.assign(new Error("model is outside the DeepSeek toolchain"), { code: "BACKUP_MODEL_NOT_APPROVED" });
   const owner = assertOwnerTaskRequest({request:ownerRequest,scope,now:validationNow});
+  if (model !== undefined && model !== owner.model) throw Object.assign(new Error("model differs from the explicit request"), { code: "BACKUP_MODEL_NOT_APPROVED" });
   const role = taskType === "review" ? "review" : "implementation";
   if(scope.repository !== repository || scope.role !== role) throw Object.assign(new Error("task role or repository does not match the host operation"),{code:"OWNER_TASK_SCOPE_MISMATCH"});
   const route = resolveRoute({
@@ -552,7 +553,7 @@ function resolveBackupRouteAt({ repository, taskType = "implementation", model, 
       ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     },
   });
-  if (route.provider !== "deepseek" || route.model !== "deepseek-v4-pro" || !route.backupReason) throw Object.assign(new Error("DeepSeek Pro selection must match the explicit owner request"), { code: "DEEPSEEK_STANDBY" });
+  if (route.provider !== "deepseek" || route.model !== owner.model || !route.backupReason) throw Object.assign(new Error("DeepSeek selection must match the explicit owner request"), { code: "DEEPSEEK_STANDBY" });
   if (!["low", "high"].includes(route.reasoningEffort)) throw Object.assign(new Error("DeepSeek effort must be low or high"), { code: "INVALID_DEEPSEEK_EFFORT" });
   return {...route,authorizationId:owner.authorizationId};
 }

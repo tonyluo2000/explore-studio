@@ -30,7 +30,7 @@ function validity(record, now, code) {
   return {issuedAt:new Date(issued).toISOString(),expiresAt:new Date(expires).toISOString()};
 }
 function identity(record, code) {
-  if(!ID.test(record.authorizationId??'') || record.model!=='deepseek-v4-pro' || typeof record.authorizationReference!=='string' || !/^[a-zA-Z0-9:/#._?-]{1,300}$/.test(record.authorizationReference)) fail(code);
+  if(!ID.test(record.authorizationId??'') || (record.model!=='deepseek-v4-pro' && !(record.model==='deepseek-flash' && record.role==='implementation')) || typeof record.authorizationReference!=='string' || !/^[a-zA-Z0-9:/#._?-]{1,300}$/.test(record.authorizationReference)) fail(code);
 }
 export function assertOwnerTaskRequest({request,scope,now=Date.now()}={}) {
   if(!request) fail('OWNER_TASK_REQUEST_REQUIRED');
@@ -48,6 +48,7 @@ export function assertCallAuthorization({authorization,ownerRequest,scope,reques
   if(authorization.schema!==CALL_AUTHORIZATION_SCHEMA) fail('INVALID_CALL_AUTHORIZATION');
   identity(authorization,'INVALID_CALL_AUTHORIZATION');
   if(authorization.authorizationId!==owner.authorizationId) fail('CALL_AUTHORIZATION_ID_MISMATCH');
+  if(authorization.model!==owner.model) fail('CALL_AUTHORIZATION_MODEL_MISMATCH');
   const safeScope=bindScope(authorization,scope,'CALL_AUTHORIZATION_SCOPE_MISMATCH');
   const valid=validity(authorization,now,'CALL_AUTHORIZATION_EXPIRED');
   if(timestamp(valid.issuedAt)<timestamp(owner.issuedAt) || timestamp(valid.expiresAt)>timestamp(owner.expiresAt)) fail('CALL_AUTHORIZATION_EXPIRED');

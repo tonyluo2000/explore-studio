@@ -116,7 +116,7 @@ test('owner override selects only documented providers models and supported effo
   assert.throws(()=>route({overrides:{model:'codex'}}),/UNSUPPORTED_MODEL/);
   assert.throws(()=>route({overrides:{provider:'untrusted'}}),/UNKNOWN_PROVIDER/);
   assert.throws(()=>route({overrides:{model:'gpt-6.1-sol',provider:'deepseek'}}),/PROVIDER_FAMILY_MISMATCH/);
-  assert.throws(()=>route({overrides:{model:'deepseek-flash'}}),/UNSUPPORTED_MODEL/);
+  assert.throws(()=>route({overrides:{model:'deepseek-flash'}}),/OWNER_TASK_REQUEST_REQUIRED/);
   assert.throws(()=>route({overrides:{approvalAuthority:'OWNER'}}),/INVALID_OVERRIDE/);
   assert.throws(()=>route({complexity:'unknown-or-untrusted'}),/INVALID_COMPLEXITY/);
 });
