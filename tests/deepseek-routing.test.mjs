@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {resolveRoute} from '../scripts/deepseek-routing.mjs';
+import {ownerQuotaReport} from '../scripts/model-quota.mjs';
+import {MODEL_CATALOG} from '../scripts/model-capabilities.mjs';
+const repository='tonyluo2000/mile-commons';
+const now=Date.parse('2026-11-08T02:00:00Z');
+const route=(options={})=>resolveRoute({repository,taskType:'implementation',risk:'low',now,...options});
+const report=state=>ownerQuotaReport(state,{now});
+const explicitPro = {ownerRequestedDeepSeek:true,overrides:{model:'deepseek-v4-pro'}};
+
+test('routine documentation formatting and simple tests use lightweight primary low effort',()=>{
+  for(const taskType of ['routine','documentation','formatting','simple-tests']) {
+    const selected=route({taskType});
+    assert.equal(selected.provider,'openai');assert.equal(selected.model,'gpt-6-luna');assert.equal(selected.reasoningEffort,'low');assert.equal(selected.backupReason,null);
+  }
+});
+test('ordinary code selects low or medium by complexity and task category',()=>{
+  assert.equal(route().effectiveEffort,'low');
+  for(const taskType of ['feature','bugfix','integration']) assert.equal(route({taskType}).effectiveEffort,'medium');
+  assert.equal(route({complexity:'standard'}).effectiveEffort,'medium');
+  assert.equal(route({complexity:'multi-file'}).effectiveEffort,'medium');
+});
+test('architecture and difficult debugging receive primary high reasoning',()=>{
+  for(const options of [{taskType:'architecture'},{taskType:'debugging',complexity:'difficult-debugging'}]) {
+    const selected=route(options);assert.equal(selected.model,'gpt-6-astra');assert.equal(selected.effectiveEffort,'high');
+  }
+});
+test('unknown risk defaults upward, and sensitive labels raise caller low risk',()=>{
+  assert.equal(resolveRoute({repository,taskType:'routine'}).risk,'high');
+  for(const taskType of ['security','privacy','financial','tax','authorization','migration','release-tooling']) {
+    const selected=route({taskType});assert.equal(selected.risk,'high');assert.equal(selected.effectiveEffort,'high');assert.equal(selected.independentReviewRequired,true);
+  }
+});
+test('healthy primary quota never activates DeepSeek regardless of cost or other role quota',()=>{
+  const quota={codex:report('healthy'),claude:report('low')};
+  assert.equal(route({quota}).provider,'openai');
+  assert.throws(()=>route({quota,overrides:{model:'deepseek-v4-pro'}}),/EXPLICIT_DEEPSEEK_PRO_REQUEST_REQUIRED/);
+  assert.equal(route({...explicitPro,quota}).backupReason,'EXPLICIT_OWNER_REQUEST');
+  assert.equal(route({taskType:'review',implementerFamily:'openai',quota:{codex:report('low'),claude:report('healthy')}}).provider,'anthropic');
+});
+test('quota constraints never select DeepSeek without an explicit owner request',()=>{
+  for(const state of ['low','exhausted','imminent','rate_limited']) {
+    const selected=route({quota:{codex:report(state)}});
+    assert.ok(['openai','anthropic'].includes(selected.provider));assert.equal(selected.backupReason,null);
+    const explicit=route({...explicitPro,quota:{codex:report(state)}});
+    assert.equal(explicit.model,'deepseek-v4-pro');assert.equal(explicit.backupReason,'EXPLICIT_OWNER_REQUEST');
+    assert.ok(explicit.gates.includes('PAID_CALL_AUTHORIZATION_REQUIRED'));assert.ok(explicit.gates.includes('EXTERNAL_TRANSFER_AUTHORIZATION_REQUIRED'));
+  }
+  assert.throws(()=>route({quota:{codex:report('exhausted'),claude:report('exhausted')}}),/NO_SUITABLE_MODEL/);
+});
+test('unknown unverified stale and future quota cannot activate a paid provider',()=>{
+  for(const codex of [undefined,{state:'low'}, {state:'low',source:'unavailable'}, {...report('low'),expiresAt:new Date(now-1).toISOString()}, {...report('low'),observedAt:new Date(now+1).toISOString()}]) {
+    assert.equal(route({quota:{codex}}).provider,'openai');
+  }
+});
+test('critical changes retain high reasoning and independent review under constrained quotas',()=>{
+  const selected=route({...explicitPro,risk:'critical',quota:{codex:report('exhausted'),claude:report('low')}});
+  assert.equal(selected.model,'deepseek-v4-pro');assert.equal(selected.effectiveEffort,'high');assert.equal(selected.independentReviewRequired,true);assert.equal(selected.reviewBlocked,true);
+  assert.ok(selected.gates.includes('OWNER_RELEASE_APPROVAL_REQUIRED'));
+  assert.throws(()=>route({risk:'critical',overrides:{reasoningEffort:'low'}}),/QUALITY_FLOOR_NOT_MET/);
+  assert.throws(()=>route({risk:'critical',overrides:{model:'gpt-6-luna'}}),/NO_SUITABLE_MODEL/);
+});
+test('DeepSeek medium is never emitted even for standard features',()=>{
+  const selected=route({...explicitPro,taskType:'feature',quota:{codex:report('low')}});
+  assert.equal(selected.effectiveEffort,'high');assert.equal(selected.requestedEffort,'medium');assert.equal(selected.reasoningEffort,'high');
+  assert.throws(()=>route({ownerRequestedDeepSeek:true,quota:{codex:report('low')},overrides:{model:'deepseek-v4-pro',reasoningEffort:'medium'}}),/UNSUPPORTED_REASONING_EFFORT/);
+});
+test('DeepSeek cannot independently review its own implementation',()=>{
+  assert.equal(route({taskType:'review',implementerFamily:'deepseek'}).provider,'anthropic');
+  assert.throws(()=>route({...explicitPro,taskType:'review',implementerFamily:'deepseek',quota:{claude:report('low')}}),/INDEPENDENT_MODEL_REQUIRED/);
+  const blocked=MODEL_CATALOG.map(entry=>({...entry,available:entry.provider==='deepseek'}));
+  assert.throws(()=>route({taskType:'review',implementerFamily:'deepseek',quota:{claude:report('low')},capabilities:{models:blocked}}),/INDEPENDENT_MODEL_REQUIRED/);
+  assert.throws(()=>route({taskType:'review'}),/IMPLEMENTER_FAMILY_REQUIRED/);
+});
+test('two grounded failures and substantive review defects escalate before provider change',()=>{
+  for(const history of [{failedAttempts:2},{repeatedDefect:true},{criticalInvariantFailed:true},{securityUncertain:true},{privacyUncertain:true},{financialUncertain:true},{substantiveReviewDefect:true}]) {
+    const selected=route({history,quota:{codex:report('healthy')}});assert.equal(selected.provider,'openai');assert.equal(selected.effectiveEffort,'high');
+  }
+});
+test('explicit owner intent, not quota recovery, controls Pro selection',()=>{
+  const active=route({...explicitPro,quota:{codex:report('healthy')}});
+  const next=route({quota:{codex:report('low')}});
+  assert.equal(active.provider,'deepseek');assert.equal(next.provider,'openai');
+  assert.throws(()=>route({ownerRequestedDeepSeek:true}),/EXPLICIT_DEEPSEEK_PRO_MODEL_REQUIRED/);
+  assert.throws(()=>route({ownerRequestedDeepSeek:'true',overrides:{model:'deepseek-v4-pro'}}),/INVALID_EXPLICIT_PROVIDER_REQUEST/);
+});
+test('owner override selects only documented providers models and supported efforts',()=>{
+  assert.equal(route({overrides:{model:'claude-sonnet-5-5',reasoningEffort:'low'}}).provider,'anthropic');
+  assert.throws(()=>route({overrides:{model:'codex'}}),/UNSUPPORTED_MODEL/);
+  assert.throws(()=>route({overrides:{provider:'untrusted'}}),/UNKNOWN_PROVIDER/);
+  assert.throws(()=>route({overrides:{model:'gpt-6.1-sol',provider:'deepseek'}}),/PROVIDER_FAMILY_MISMATCH/);
+  assert.throws(()=>route({overrides:{model:'deepseek-flash'}}),/UNSUPPORTED_MODEL/);
+  assert.throws(()=>route({overrides:{approvalAuthority:'OWNER'}}),/INVALID_OVERRIDE/);
+  assert.throws(()=>route({complexity:'unknown-or-untrusted'}),/INVALID_COMPLEXITY/);
+});
+test('unsupported capabilities fall back only to suitable primary and never initiate paid usage',()=>{
+  const unavailable=MODEL_CATALOG.map(entry=>({...entry,available:entry.provider!=='openai'}));
+  assert.equal(route({capabilities:{models:unavailable}}).provider,'anthropic');
+  const onlyBackup=MODEL_CATALOG.map(entry=>({...entry,available:entry.provider==='deepseek'}));
+  assert.throws(()=>route({capabilities:{models:onlyBackup}}),/NO_SUITABLE_MODEL/);
+  const lowOnly=MODEL_CATALOG.map(entry=>({...entry,efforts:['low']}));
+  assert.throws(()=>route({risk:'critical',quota:{codex:report('low')},capabilities:{models:lowOnly}}),/NO_SUITABLE_MODEL/);
+});
+test('release captain authority remains external and all project adapters share decisions',()=>{
+  assert.equal(route({taskType:'release'}).model,null);
+  for(const project of ['tonyluo2000/mile-commons','briersystems/montefinance','tonyluo2000/explore-studio']) {
+    assert.equal(route({repository:project}).model,'gpt-6.1-sol');assert.equal(route({repository:project}).approvalAuthority,'NONE');
+  }
+  assert.throws(()=>route({repository:'unknown/project'}),/UNAPPROVED_REPOSITORY/);
+});
+
+test('reviewer suggestions never automatically select DeepSeek on constrained reviewer quota',()=>{
+ const result=route({risk:'high',quota:{claude:report('exhausted')}});
+ assert.equal(result.reviewer,null);assert.equal(result.reviewBlocked,true);
+});
