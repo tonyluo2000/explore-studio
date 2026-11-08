@@ -28,10 +28,17 @@ async function safeDirectory(directory) {
 
 function validateIdentity(identity) {
   if (!identity || !REPOSITORIES.has(identity.repository) || identity.provider !== 'deepseek'
-    || !['deepseek-flash', 'deepseek-v4-pro'].includes(identity.actualModel)
+    || identity.actualModel !== 'deepseek-v4-pro'
     || !['review', 'implementation'].includes(identity.taskType)
+    || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(identity.taskId ?? '')
+    || !/^[a-z0-9][a-z0-9-]{7,95}$/.test(identity.authorizationId ?? '')
+    || !['low', 'high'].includes(identity.reasoningEffort)
+    || !/^[a-f0-9]{40}$/.test(identity.baseSha ?? '')
+    || !/^[a-f0-9]{40}$/.test(identity.headSha ?? '')
     || !/^[a-f0-9]{64}$/.test(identity.requestId ?? '')) fail('LEDGER_IDENTITY_INVALID');
-  const result = Object.fromEntries(['repository', 'provider', 'actualModel', 'taskType', 'requestId'].map(key => [key, identity[key]]));
+  // actualModel is the legacy expected-model identity of a reservation. Only
+  // the result's resolvedModel records the provider-attested model.
+  const result = Object.fromEntries(['repository', 'provider', 'actualModel', 'taskType', 'taskId', 'authorizationId', 'reasoningEffort', 'requestId'].map(key => [key, identity[key]]));
   for (const key of ['baseSha', 'headSha']) {
     if (identity[key] !== undefined) {
       if (!/^[a-f0-9]{40}$/.test(identity[key])) fail('LEDGER_IDENTITY_INVALID');
@@ -95,6 +102,9 @@ export async function withBudget({ identity, maximumCostUsd, ledgerDirectory = D
     const timestamp = Date.now();
     const reservations = history.filter(event => event.type === 'reservation');
     if (reservations.some(event => event.identity.requestId === safeIdentity.requestId)) fail('PAID_REQUEST_REPLAY_DENIED');
+    // An owner request authorizes one call, not a reusable provider preference.
+    // Retain this check across the entire ledger, including expired windows.
+    if (reservations.some(event => event.identity.authorizationId === safeIdentity.authorizationId)) fail('PAID_AUTHORIZATION_REPLAY_DENIED');
     if (history.some(event => event.timestamp > timestamp)) fail('LEDGER_CLOCK_ROLLBACK');
     const reservedMicros = micros(maximumCostUsd);
     const used = reservations.filter(event => event.timestamp >= timestamp - WINDOW_MS).reduce((sum, event) => sum + event.reservedMicros, 0);
@@ -105,7 +115,17 @@ export async function withBudget({ identity, maximumCostUsd, ledgerDirectory = D
     try {
       result = await callback();
     } catch (error) {
-      await append(directory, history, { type: 'result', timestamp: Date.now(), requestId: safeIdentity.requestId, status: 'FAILED_OR_AMBIGUOUS', resolvedModel: null, durationMs: Date.now() - started, accepted: null, rework: null, usage: null, reportedCostUsd: null });
+      // The fixed transport can attest identity/usage even when its content is
+      // truncated or fails schema validation. Keep that accounting without
+      // storing the raw response or treating the task as a completed review.
+      const receipt = error?.providerReceipt;
+      const usage = receipt?.usage;
+      const attested = receipt?.schema === 'cross-project.deepseek-provider-receipt.v1'
+        && receipt.resolvedModel === safeIdentity.actualModel && receipt.reasoningEffort === safeIdentity.reasoningEffort
+        && ['prompt_tokens','completion_tokens','total_tokens'].every(key=>Number.isSafeInteger(usage?.[key]) && usage[key]>=0)
+        && usage.total_tokens === usage.prompt_tokens + usage.completion_tokens;
+      const knownUsage = attested ? usageOf(receipt) : null;
+      await append(directory, history, { type: 'result', timestamp: Date.now(), requestId: safeIdentity.requestId, status: 'FAILED_OR_AMBIGUOUS', resolvedModel: knownUsage ? receipt.resolvedModel : null, durationMs: Date.now() - started, accepted: null, rework: null, usage: knownUsage, reportedCostUsd: null });
       throw error;
     }
     const rates = safeIdentity.actualModel === 'deepseek-v4-pro' ? { input: 1.32, output: 3.96 } : { input: 0.3, output: 1.2 };

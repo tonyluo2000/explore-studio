@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { routeTask, primaryCommand, parsePrimaryOutput } from '../scripts/agent-route.mjs';
+import { routeTask, primaryCommand, parsePrimaryOutput, main } from '../scripts/agent-route.mjs';
 
 const REPO='tonyluo2000/mile-commons';
 const capabilities={models:[{provider:'openai',model:'gpt-6-luna',family:'openai',efforts:['low','medium','high'],available:'verified',source:'synthetic-test'},{provider:'openai',model:'gpt-6.1-sol',family:'openai',efforts:['low','medium','high'],available:'verified',source:'synthetic-test'},{provider:'openai',model:'gpt-6-astra',family:'openai',efforts:['low','medium','high'],available:'verified',source:'synthetic-test'}]};
@@ -15,7 +15,7 @@ async function fixture(t) {
   git('init');git('config','user.name','Synthetic Test');git('config','user.email','test@example.invalid');git('remote','add','origin',`https://github.com/${REPO}.git`);
   await mkdir(path.join(root,'config'));await writeFile(path.join(root,'config/model-project.json'),JSON.stringify({repository:REPO,activation:'pending_review'}));
   git('add','.');git('commit','-m','synthetic adapter');
-  const task={repository:REPO,taskId:'synthetic-docs',taskType:'routine',risk:'low',complexity:'simple',headSha:git('rev-parse','HEAD')};
+  const task={repository:REPO,taskId:'synthetic-docs',taskType:'routine',risk:'low',complexity:'simple',baseSha:git('rev-parse','HEAD'),headSha:git('rev-parse','HEAD')};
   return {root,task,git};
 }
 test('default selects without launching; disabled activation refuses ordinary execution',async t=>{
@@ -58,5 +58,41 @@ test('task text cannot opt into DeepSeek, and quota pressure never activates it'
   const quota={codex:{state:'low',source:'owner',observedAt:now,expiresAt:now+60000}};
   const result=await routeTask({root,task:{...task,ownerRequestedDeepSeek:true},quota,capabilities,now});
   assert.equal(result.route.provider,'openai');
-  await assert.rejects(routeTask({root,task:{...task,overrides:{model:'deepseek-v4-pro'}},quota,now}),/DEEPSEEK_OWNER_REQUEST_REQUIRED/);
+  await assert.rejects(routeTask({root,task:{...task,overrides:{model:'deepseek-v4-pro'}},quota,now}),/OWNER_TASK_REQUEST_REQUIRED/);
+});
+
+const scopedRequest=(task,now=Date.now(),options={})=>({schema:'cross-project.deepseek-owner-request.v1',authorizationId:'owner-test-0001',repository:task.repository,taskId:task.taskId,role:'implementation',baseSha:task.baseSha,headSha:task.headSha,model:'deepseek-v4-pro',issuedAt:new Date(now).toISOString(),expiresAt:new Date(now+3600000).toISOString(),authorizationReference:'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6716279700',...options});
+test('fresh operator request selects guarded DeepSeek but untrusted task request cannot opt in',async t=>{
+  const {root,task}=await fixture(t);const now=Date.now();const ownerRequest=scopedRequest(task,now);
+  const untrusted=await routeTask({root,task:{...task,ownerRequest,ownerRequestedDeepSeek:true},capabilities,now});assert.equal(untrusted.route.provider,'openai');
+  await assert.rejects(routeTask({root,task,ownerRequestedDeepSeek:true,now}),/OWNER_TASK_REQUEST_REQUIRED/);
+  const selected=await routeTask({root,task,ownerRequest,now});assert.equal(selected.route.model,'deepseek-v4-pro');assert.equal(selected.route.ownerAuthorizationId,'owner-test-0001');
+  assert.ok(!JSON.stringify(selected.record).includes('authorizationReference'));
+  await assert.rejects(routeTask({root,task:{...task,taskId:'other-task'},ownerRequest,now}),/OWNER_TASK_SCOPE_MISMATCH/);
+  await assert.rejects(routeTask({root,task,ownerRequest:scopedRequest(task,now,{headSha:'a'.repeat(40)}),now}),/OWNER_TASK_SCOPE_MISMATCH/);
+});
+test('unverified availability and exhausted capacity refuse execution before child launch',async t=>{
+  const {root,task}=await fixture(t);let calls=0;const launch=async()=>{calls++;};
+  const unknown={models:capabilities.models.map(value=>({...value,available:'unknown'}))};
+  await assert.rejects(routeTask({root,task,capabilities:unknown,pilot:true,launch}),/MODEL_AVAILABILITY_UNVERIFIED/);assert.equal(calls,0);
+  const now=Date.now();const quota={codex:{state:'exhausted',source:'owner',observedAt:now,expiresAt:now+60000},claude:{state:'exhausted',source:'owner',observedAt:now,expiresAt:now+60000}};
+  await assert.rejects(routeTask({root,task,quota,capabilities,pilot:true,launch,now}),/NO_SUITABLE_MODEL/);assert.equal(calls,0);
+  assert.deepEqual(parsePrimaryOutput(JSON.stringify({type:'thread.started',thread:{model:'gpt-6-luna',reasoningEffort:'low'}}),'openai').execution,{});
+});
+test('CLI refuses obsolete broad opt-in flag and requires owner request filename',async()=>{
+  await assert.rejects(main(['--use-deepseek-pro']),/INVALID_ARGUMENT/);
+  await assert.rejects(main(['--owner-request']),/INVALID_ARGUMENT/);
+});
+test('CLI reads operator request separately and records only an advisory DeepSeek selection',async t=>{
+  const {root,task}=await fixture(t);const filename=path.join(root,'task.json');const requestFile=path.join(root,'owner-request.json');
+  await writeFile(filename,JSON.stringify(task));await writeFile(requestFile,JSON.stringify(scopedRequest(task)));
+  const originalCwd=process.cwd(),originalLog=console.log;const lines=[];
+  try {
+    process.chdir(root);console.log=value=>lines.push(value);
+    await main(['--task',filename,'--owner-request',requestFile]);
+  } finally {process.chdir(originalCwd);console.log=originalLog;}
+  assert.equal(lines.length,1);const receipt=JSON.parse(lines[0]);
+  assert.equal(receipt.status,'planned');assert.equal(receipt.requested.model,'deepseek-v4-pro');assert.equal(receipt.actual.model,null);
+  assert.equal(receipt.selectionAvailability,'unknown');assert.equal(receipt.limitation,'MODEL_AVAILABILITY_UNVERIFIED');
+  assert.ok(!lines[0].includes('authorizationReference'));
 });

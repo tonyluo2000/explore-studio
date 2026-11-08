@@ -45,6 +45,7 @@ export function decisionRecord({route, taskId, attempt = 1, timestamp = Date.now
   // DeepSeek Pro for this task; low or exhausted quotas never imply opt-in.
   const ownerRequestedDeepSeek = route.ownerRequestedDeepSeek === true || route.backupReason === 'EXPLICIT_OWNER_REQUEST';
   const backupReason = backupActive && ownerRequestedDeepSeek ? 'EXPLICIT_OWNER_REQUEST' : null;
+  const ownerAuthorizationId = backupActive && /^[a-z0-9][a-z0-9-]{7,95}$/.test(route.ownerAuthorizationId ?? '') ? route.ownerAuthorizationId : null;
   const reviewerIdentity = route.reviewer && identity(route.reviewer.provider, route.reviewer.model);
   return {
     schema: SCHEMA, timestamp, repository, taskId, attempt,
@@ -56,7 +57,9 @@ export function decisionRecord({route, taskId, attempt = 1, timestamp = Date.now
     selectedEffectiveEffort: requested?.efforts.includes(route.effectiveEffort ?? route.reasoningEffort) ? route.effectiveEffort ?? route.reasoningEffort : null,
     actual: {provider: actualVerified ? observed.provider : null, model: actualVerified ? observed.model : null,
       effort: effectiveEffort, identitySource: actualVerified ? execution.identitySource : null},
-    primaryQuota, backupActive, backupReason, ownerRequestedDeepSeek,
+    primaryQuota, backupActive, backupReason, ownerRequestedDeepSeek, ownerAuthorizationId,
+    selectionAvailability: oneOf(route.availability, new Set(['verified','unknown'])) ?? 'unknown',
+    reviewBlocked: bool(route.reviewBlocked),
     reviewer: reviewerIdentity ? {provider: reviewerIdentity.provider, model: reviewerIdentity.model} : null,
     gates: enumArray(route.gates, GATES), reasons: enumArray(route.reasons, REASONS),
     execution: {status, durationMs: count(execution.durationMs), exitCode: count(execution.exitCode)},
@@ -81,7 +84,8 @@ function sanitizeRecord(record) {
       provider: record.requested?.provider, model: record.requested?.model, requestedEffort: record.requested?.effort,
       effectiveEffort: record.selectedEffectiveEffort, quota: record.primaryQuota, reviewer: record.reviewer,
       gates: record.gates, reasons: record.reasons, ownerRequestedDeepSeek: record.ownerRequestedDeepSeek,
-      backupReason: record.backupReason},
+      backupReason: record.backupReason, ownerAuthorizationId: record.ownerAuthorizationId,
+      availability: record.selectionAvailability, reviewBlocked: record.reviewBlocked},
     execution: {...record.execution, provider: record.actual?.provider, actualModel: record.actual?.model,
       effectiveEffort: record.actual?.effort, identitySource: record.actual?.identitySource},
     usage: record.usage, cost: record.cost, quality: record.quality,

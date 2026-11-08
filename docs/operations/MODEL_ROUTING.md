@@ -66,12 +66,19 @@ account endpoints, read credential stores or invent weekly balances. Use a
 fresh explicit owner report when machine-readable visibility is unavailable.
 
 Low/exhausted/rate-limited evidence never selects DeepSeek. Suitable Codex/Claude
-capacity is selected or the task is held. `--use-deepseek-pro` is required for
+capacity is selected or the task is held. `--owner-request FILE` is required for
 explicit Pro selection, including when primary quota is healthy or unknown.
+The operator file uses `cross-project.deepseek-owner-request.v1` and binds
+repository, taskId, implementation/review role, exact base/HEAD, Pro model,
+non-sensitive authorization ID/reference and issue/expiry timestamps (at most
+24 hours). A config override, boolean, task-manifest field or previous task
+request cannot substitute for this fresh, separately supplied owner input.
 Missing source/payment authorization still blocks transmission. Owner model
 overrides remain subject to verified capabilities, minimum risk/effort and
 independent-review rules. The task JSON cannot activate DeepSeek by including
-a model name or owner flag: only the separate operator flag is forwarded.
+a model name or owner flag: only the separately supplied operator record is validated and forwarded.
+These records are supplied by the trusted local operator through the existing
+owner-approval process; they do not themselves authenticate a person.
 
 ## Quality, review and telemetry
 
@@ -98,17 +105,34 @@ classes with a measured baseline before claiming savings.
 
 ## Backup transfer and activation
 
-`deepseek-agent.mjs --routing-context FILE` and `deepseek-review.mjs
---routing-context FILE` accept the explicit backup context. See their `--help`
+`deepseek-agent.mjs --owner-request FILE --routing-context FILE` and
+`deepseek-review.mjs --owner-request FILE --routing-context FILE` accept the
+separate owner scope and classification context. The review task ID is
+`pr-N-review`, derived from its actual pull number. `--source-root` enables
+verified local exact-Git source classification for complete comparisons. See their `--help`
 and tests for exact schemas. DeepSeek requests are Pro with explicit low/high;
 medium and Flash are not automatic backup options. The transport revalidates
-explicit owner opt-in, per-call approvals, exact model identity and shared budget.
+owner scope, per-call approvals, exact model identity and shared budget. A
+`cross-project.deepseek-call-authorization.v1` record separately binds the owner
+request ID and exact repository/task/role/base/head to request ID, serialized
+body SHA-256, low/high effort, spending cap, expiry, and explicit source/payment
+approval. Neither a request-size ceiling nor reviewer selection grants payment.
+The shared ledger permanently refuses reuse of a request or authorization ID,
+even for another project or a changed body. It holds the lock throughout the
+paid request, retains ambiguous reservations and permits no automatic retries.
 
 `PATH_NOT_ALLOWLISTED`, complete diff accounting, exact HEAD/base, source
 classification, secrets/high-entropy scanning, size/token bounds and all private
 data exclusions remain binding. Native TypeScript, Swift and Kotlin eligibility
 uses explicit prefixes/extensions; there is no blanket `mobile/**` permission.
 Never rename, move or omit a blocked file to evade a guard.
+
+Only the three exact routing configuration paths are eligible; `config/**`
+remains denied. Local classifications verify repository identity, immutable
+base/HEAD and the complete raw file section before treating finite known source
+tokens, verified toolchain digests or individually classified synthetic test
+spans as source. No file is omitted; unknown opaque values and real private
+records remain denied.
 
 `LIVE_TRANSFER_ENABLED` remains false. Independent security review, authorized
 source-policy activation and exact-call source/payment approval are distinct

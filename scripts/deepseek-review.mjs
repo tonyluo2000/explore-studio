@@ -26,7 +26,10 @@ Modes:
 
 Options:
   --model MODEL                        deepseek-v4-pro (backup only)
-  --routing-context FILE               Explicit owner DeepSeek request and implementer family
+  --routing-context FILE               Risk, quota and implementer family (never owner permission)
+  --owner-request FILE                 Fresh owner request bound to this exact task/base/HEAD
+  --approval FILE                      Exact body/cost/transfer/payment permission for a live call
+  --source-root PATH                   Optional canonical local source for exact diff classification
   --reasoning-effort low|high           Optional effort override; cannot lower risk requirements
   --max-diff-chars NUMBER              Default: ${DEFAULT_MAX_DIFF_CHARS}
   --max-output-tokens NUMBER           Default: ${DEFAULT_MAX_OUTPUT_TOKENS}; maximum: 16000
@@ -98,6 +101,9 @@ export function parseArgs(argv) {
     else if (argument === "--base") options.baseSha = take();
     else if (argument === "--model") options.model = take();
     else if (argument === "--routing-context") options.routingContextPath = take();
+    else if (argument === "--owner-request") options.ownerRequestPath = take();
+    else if (argument === "--approval") options.approvalPath = take();
+    else if (argument === "--source-root") options.sourceRoot = take();
     else if (argument === "--reasoning-effort") options.reasoningEffort = take();
     else if (argument === "--max-diff-chars") options.maxDiffChars = parseInteger(take(), "--max-diff-chars");
     else if (argument === "--max-output-tokens") options.maxOutputTokens = parseInteger(take(), "--max-output-tokens");
@@ -235,6 +241,9 @@ export async function main(argv) {
     repository: options.repository,
     routingContext: options.routingContextPath ? JSON.parse(await readFile(path.resolve(options.routingContextPath), "utf8")) : undefined,
     reasoningEffort: options.reasoningEffort,
+    ownerRequest: options.ownerRequestPath ? JSON.parse(await readFile(path.resolve(options.ownerRequestPath),"utf8")) : undefined,
+    callAuthorization: options.approvalPath ? JSON.parse(await readFile(path.resolve(options.approvalPath),"utf8")) : undefined,
+    sourceRoot:options.sourceRoot,
     pullNumber: options.pullNumber,
     headSha: options.headSha,
     baseSha: options.baseSha,

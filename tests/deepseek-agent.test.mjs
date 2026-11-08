@@ -6,8 +6,9 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {prepareImplementation as guardedPrepareImplementation,runImplementation as guardedRunImplementation,validateImplementationResponse,applyImplementation,createIsolatedWorktree,executeImplementationWithReceipt,finalizeImplementationResult} from '../scripts/deepseek-agent.mjs';
 const constrainedQuota = () => ({codex:{state:'low',source:'owner',observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}});
-const prepareImplementation = options => guardedPrepareImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
-const runImplementation = options => guardedRunImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
+const ownerRequestFor = manifest => ({schema:'cross-project.deepseek-owner-request.v1',authorizationId:'owner-agent-test-001',repository:manifest.repository,taskId:manifest.taskId,role:'implementation',baseSha:manifest.baseSha,headSha:manifest.headSha,model:'deepseek-v4-pro',issuedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString(),authorizationReference:'owner:test'});
+const prepareImplementation = options => guardedPrepareImplementation({routingContext:{quota:constrainedQuota(),risk:'low',complexity:'routine'},ownerRequest:ownerRequestFor(options.manifest),...options});
+const runImplementation = options => guardedRunImplementation({routingContext:{quota:constrainedQuota(),risk:'low',complexity:'routine'},ownerRequest:ownerRequestFor(options.manifest),...options});
 async function fixture(t){
  const root=await realpath(await mkdtemp(path.join(tmpdir(),'deepseek-agent-'))); t.after(()=>rm(root,{recursive:true,force:true}));
  const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
@@ -51,7 +52,7 @@ test('rejects stale head, dirty source, symlinks and unapproved repository ident
 });
 test('live mode refuses absent exact-call approval before provider and caps cost',async t=>{
  const {root,manifest}=await fixture(t);let calls=0;
- await assert.rejects(runImplementation({root,manifest,mode:'live',providerCall:()=>{calls++;}}),/EXACT_CALL_APPROVAL_REQUIRED/);
+ await assert.rejects(runImplementation({root,manifest,mode:'live',providerCall:()=>{calls++;}}),/CALL_AUTHORIZATION_REQUIRED/);
  assert.equal(calls,0);
  await assert.rejects(prepareImplementation({root,manifest:{...manifest,maxCostUsd:1.01}}),/REQUEST_CAP_EXCEEDED/);
  await assert.rejects(prepareImplementation({root,manifest:{...manifest,tests:[{kind:'shell',files:['tests/x.py']}]}}),/INVALID_TESTS/);
@@ -138,11 +139,18 @@ test('apply leaves model-authored code unexecuted and reports suggested argv onl
 test('model-only manifest cannot impersonate explicit owner DeepSeek selection',async t=>{
  const {root,manifest}=await fixture(t);
  for(const ownerRequestedDeepSeek of [undefined,false,'true']) {
-  await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,model:'deepseek-v4-pro'},routingContext:{ownerRequestedDeepSeek,quota:constrainedQuota(),risk:'low',complexity:'routine'}}),{code:'DEEPSEEK_OWNER_REQUEST_REQUIRED'});
+  await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,model:'deepseek-v4-pro'},routingContext:{ownerRequestedDeepSeek,quota:constrainedQuota(),risk:'low',complexity:'routine'}}),{code:'OWNER_TASK_REQUEST_REQUIRED'});
  }
 });
 test('explicit owner request can prepare a bounded task when primary quota is unknown',async t=>{
  const {root,manifest}=await fixture(t);
- const prepared=await guardedPrepareImplementation({root,manifest,routingContext:{ownerRequestedDeepSeek:true,risk:'low',complexity:'routine'}});
+ const prepared=await guardedPrepareImplementation({root,manifest,ownerRequest:ownerRequestFor(manifest),routingContext:{risk:'low',complexity:'routine'}});
  assert.equal(prepared.route.model,'deepseek-v4-pro');assert.equal(prepared.request.requestBody.reasoning_effort,'low');
+});
+
+test('previous task owner request and model manifest injection cannot authorize another task',async t=>{
+ const {root,manifest}=await fixture(t);const ownerRequest=ownerRequestFor({...manifest,taskId:'previous-task'});let calls=0;
+ await assert.rejects(guardedRunImplementation({root,manifest,ownerRequest,mode:'live',routingContext:{risk:'low',complexity:'routine'},providerCall:()=>{calls++;}}),{code:'OWNER_TASK_SCOPE_MISMATCH'});
+ assert.equal(calls,0);
+ await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,ownerRequest:ownerRequestFor(manifest)}}),/INVALID_SCHEMA/);
 });

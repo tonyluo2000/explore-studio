@@ -69,7 +69,7 @@ export function parsePrimaryOutput(output, provider) {
   return result;
 }
 
-export async function routeTask({root=process.cwd(),task,quota={},ownerRequestedDeepSeek=false,execute=false,pilot=false,capabilities,launch=launchPrimary,now=Date.now()}) {
+export async function routeTask({root=process.cwd(),task,quota={},ownerRequestedDeepSeek=false,ownerRequest,execute=false,pilot=false,capabilities,launch=launchPrimary,now=Date.now()}) {
   root=path.resolve(root);
   if(await realpath(root)!==root)fail('NONCANONICAL_PROJECT_ROOT');
   const adapter=await readInput(path.join(root,'config/model-project.json'));
@@ -78,8 +78,12 @@ export async function routeTask({root=process.cwd(),task,quota={},ownerRequested
   if(![`https://github.com/${task.repository}`,`git@github.com:${task.repository}`].includes(remote))fail('REPOSITORY_IDENTITY_MISMATCH');
   if(!/^[0-9a-f]{40}$/.test(task.headSha??'')||git(root,['rev-parse','HEAD'])!==task.headSha)fail('STALE_HEAD');
   if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(task.taskId??''))fail('INVALID_TASK_ID');
-  if(pilot&&(task.taskType!=='routine'||task.risk!=='low'||task.complexity!=='simple'||task.overrides||task.history||ownerRequestedDeepSeek))fail('PILOT_REQUIRES_ROUTINE_SYNTHETIC_TASK');
-  const route=resolveRoute({repository:task.repository,taskType:task.taskType,risk:task.risk,complexity:task.complexity,history:task.history,implementerFamily:task.implementerFamily,overrides:task.overrides,ownerRequestedDeepSeek,quota,capabilities:capabilities??discoverCapabilities(),now});
+  if(pilot&&(task.taskType!=='routine'||task.risk!=='low'||task.complexity!=='simple'||task.overrides||task.history||ownerRequestedDeepSeek||ownerRequest))fail('PILOT_REQUIRES_ROUTINE_SYNTHETIC_TASK');
+  if(task.baseSha!==undefined) {
+    if(!/^[0-9a-f]{40}$/.test(task.baseSha))fail('INVALID_TASK_BASE');
+    try {git(root,['merge-base','--is-ancestor',task.baseSha,task.headSha]);} catch {fail('INVALID_TASK_BASE');}
+  }
+  const route=resolveRoute({repository:task.repository,taskId:task.taskId,baseSha:task.baseSha,headSha:task.headSha,role:task.role,taskType:task.taskType,risk:task.risk,complexity:task.complexity,history:task.history,implementerFamily:task.implementerFamily,overrides:task.overrides,ownerRequestedDeepSeek,ownerRequest,quota,capabilities:capabilities??discoverCapabilities(),now});
   if(task.taskType==='release')fail('EXISTING_RELEASE_CAPTAIN_REQUIRED');
   const record=(execution={},usage={})=>decisionRecord({route,taskId:task.taskId,attempt:task.attempt??1,timestamp:now,execution,usage});
   // Validate telemetry identity before starting any child.
@@ -87,6 +91,9 @@ export async function routeTask({root=process.cwd(),task,quota={},ownerRequested
   if(!execute&&!pilot)return {route,record:record({status:'planned'}),status:'planned'};
   if(!pilot&&adapter.activation!=='approved')fail('ROUTING_ACTIVATION_APPROVAL_REQUIRED');
   if(route.provider==='deepseek')fail('GUARDED_DEEPSEEK_PROFILE_REQUIRED');
+  if(route.availability!=='verified')fail('MODEL_AVAILABILITY_UNVERIFIED');
+  const selectedQuota=route.quota?.[route.provider==='openai'?'codex':'claude'];
+  if(['exhausted','rate_limited'].includes(selectedQuota?.state))fail('PRIMARY_CAPACITY_OWNER_DECISION_REQUIRED');
   const prompt=pilot?PILOT_PROMPT:task.instruction;
   if(typeof prompt!=='string'||!prompt.length||prompt.length>16000||containsRecognizedSecret(prompt)||containsSuspiciousHighEntropy(prompt))fail('UNSAFE_TASK_INSTRUCTION');
   if(git(root,['rev-parse','HEAD'])!==task.headSha)fail('STALE_HEAD');
@@ -101,18 +108,22 @@ export async function main(argv) {
   const options={};
   for(let i=0;i<argv.length;i++) {
     const key=argv[i];
-    if(key==='--help'){console.log('agent-route --task FILE [--quota FILE] [--refresh-quota] [--output LEDGER] [--use-deepseek-pro] [--pilot | --execute]. Default: Codex/Claude selection only. DeepSeek requires explicit operator flag and guarded profile. Pilot: fixed synthetic no-source task; production activation remains separate.');return;}
-    if(['--execute','--pilot','--refresh-quota','--use-deepseek-pro'].includes(key)){options[key.slice(2)]=true;continue;}
-    if(!['--task','--quota','--output'].includes(key)||!argv[i+1]||argv[i+1].startsWith('--'))fail('INVALID_ARGUMENT');
+    if(key==='--help'){console.log('agent-route --task FILE [--quota FILE] [--refresh-quota] [--output LEDGER] [--owner-request FILE] [--pilot | --execute]. Default: Codex/Claude selection only. DeepSeek requires a fresh task-scoped operator request file and the guarded profile. Pilot: fixed synthetic no-source task; production activation remains separate.');return;}
+    if(['--execute','--pilot','--refresh-quota'].includes(key)){options[key.slice(2)]=true;continue;}
+    if(!['--task','--quota','--output','--owner-request'].includes(key)||!argv[i+1]||argv[i+1].startsWith('--'))fail('INVALID_ARGUMENT');
     options[key.slice(2)]=argv[++i];
   }
   if(!options.task||options.pilot&&options.execute)fail('INVALID_MODE');
   const task=await readInput(path.resolve(options.task));
   const quota=options.quota?await readInput(path.resolve(options.quota)):{};
   if(options['refresh-quota'])quota.codex=await collectCodexQuota();
-  const result=await routeTask({task,quota,ownerRequestedDeepSeek:options['use-deepseek-pro']??false,execute:options.execute,pilot:options.pilot});
+  const ownerRequest=options['owner-request']?await readInput(path.resolve(options['owner-request'])):undefined;
+  const result=await routeTask({task,quota,ownerRequest,execute:options.execute,pilot:options.pilot});
   if(options.output)await appendDecisionRecord(path.resolve(options.output),result.record);
-  console.log(JSON.stringify({...result.record,status:result.status,pilot:result.pilot??false,outputValidated:result.outputValidated??null}));
+  console.log(JSON.stringify({...result.record,status:result.status,selectionAvailability:result.route.availability,
+    primaryQuotaWarning:result.route.quotaWarning,reviewBlocked:result.route.reviewBlocked,
+    limitation:result.route.availability!=='verified'?'MODEL_AVAILABILITY_UNVERIFIED':null,
+    pilot:result.pilot??false,outputValidated:result.outputValidated??null}));
   if(result.status==='failed')process.exitCode=1;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main(process.argv.slice(2)).catch(error=>{console.error(`agent-route: ${/^[A-Z_]+$/.test(error.code??'')?error.code:'ROUTING_FAILED'}`);process.exitCode=1;});

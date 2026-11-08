@@ -5,7 +5,8 @@ Codex, Claude Code or Copilot global configuration. Routing is configurable
 by project/task in `config/ai-model-routing.json`; overrides are explicit and
 never grant paid-call authority. Codex/Claude are primary. This guarded Pro
 profile requires an explicit owner request, supplied as
-`ownerRequestedDeepSeek: true` in the operator `--routing-context FILE`.
+a fresh task-scoped `cross-project.deepseek-owner-request.v1` operator record
+supplied by `--owner-request FILE`.
 Neither model names nor quota constraints provide that opt-in. DeepSeek uses explicit low or justified high
 reasoning, never medium. See `MODEL_ROUTING.md` for the final owner policy. DeepSeek reviewing DeepSeek is
 refused as an independent-model review, including Flash versus Pro.
@@ -54,10 +55,12 @@ lane separately. Mock mode never calls DeepSeek and cannot apply a patch.
 
 Live calls remain blocked until independently reviewed transfer-policy
 activation, approved credentials and exact-call source/payment authorization
-are available. The approval JSON binds `requestId` from mock preflight,
-`repository`, `baseSha`, `headSha`, `model`, `maxCostUsd`, `transferApproved:true`,
-`paymentApproved:true` and an `authorizationReference`. Role authorization and
-the proposed $1/$10 ceilings do not replace existing per-call approval.
+are available. The separate `cross-project.deepseek-call-authorization.v1` approval binds the
+owner authorization ID, task/repository/role/base/HEAD, serialized body SHA-256,
+request ID, Pro model, explicit low/high effort, exact maximum cost, source and
+payment approvals, timestamps and authorization reference. The mock preflight
+provides request/body identity without a provider call. All scope changes or
+body changes invalidate approval; the global ledger prevents authorization reuse.
 The shared provider transport reserves against the cross-project ledger before
 transmission; it permits zero retries and no fallback. Hosted calls without a
 shared cross-host budget authority are disabled. Existing tighter envelopes

@@ -126,3 +126,10 @@ test('ledger append revalidates metadata, excludes extra secrets and refuses sym
   await symlink(path.join(directory, 'real'), path.join(directory, 'alias'));
   await assert.rejects(appendDecisionRecord(path.join(directory, 'alias', 'ledger'), record()), /TELEMETRY_UNSAFE_PATH/);
 });
+
+test('task-scoped authorization logs only a bounded identity, never the owner request document',()=>{
+ const record=decisionRecord({taskId:'test-review',route:{repository:'tonyluo2000/mile-commons',taskType:'review',provider:'deepseek',model:'deepseek-v4-pro',reasoningEffort:'high',ownerRequestedDeepSeek:true,backupReason:'EXPLICIT_OWNER_REQUEST',ownerAuthorizationId:'owner-call-123',ownerRequest:{authorizationReference:'private approval text'},availability:'unknown',reviewBlocked:true}});
+ assert.equal(record.ownerAuthorizationId,'owner-call-123');assert.equal(record.selectionAvailability,'unknown');assert.equal(record.reviewBlocked,true);
+ assert.ok(!JSON.stringify(record).includes('private approval text'));
+ const invalid=decisionRecord({taskId:'test-review',route:{repository:'tonyluo2000/mile-commons',provider:'deepseek',model:'deepseek-v4-pro',ownerAuthorizationId:'owner@example.org'}});assert.equal(invalid.ownerAuthorizationId,null);
+});
