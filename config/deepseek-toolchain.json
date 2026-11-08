@@ -36,7 +36,7 @@
     "scripts/model-authorization.mjs": "ffa9535bb4194dc23017795c0ee80408ae16a97f081b274322e1ba5080a162ed",
     "scripts/deepseek-source-classification.mjs": "6ae89fdb10afc6f29a584dcc9857ba6e8b06e5edb1130f422f0001ac5d86468e",
     "tests/model-authorization.test.mjs": "a843b2e09bbda7fed0f3fc359f37e3947c90ed7be3e65dcc092e4b5bf7e6dbbf",
-    "tests/deepseek-source-classification.test.mjs": "4ad747e72dada68d44bf983c42c1348f1f7b2c0f591251f26c6bf7882b1200a4",
+    "tests/deepseek-source-classification.test.mjs": "815dd7bc1f884508e5968e688b89c3f55ac93ec203b8d6d17e00c948158522f9",
     "scripts/model-activation.mjs": "64c9f3ee785d6f4568a9cb62c9daa6788db6f72a73513f17a4b4846a596b4e52",
     "tests/model-activation.test.mjs": "0a35b2a6c2847158aba5366472da52df5368ed5ffd3f76e3c34c17fdd735b851"
   }

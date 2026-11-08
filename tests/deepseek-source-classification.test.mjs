@@ -116,7 +116,7 @@ test('the prefixed-SSH denial template has exact-file and exact-span synthetic c
   assert.doesNotThrow(()=>assertNoPrivateData(classified.scanText));
   assert.throws(()=>assertNoPrivateData(classifyReviewSection(data.context('tests/ordinary.test.mjs')).scanText),{code:'PRIVATE_DATA_DENIED'});
   const near=fixture(t,{[filename]:statement.replace('${prefix}','${differentPrefix}')});
-  const unclassified=classifyReviewSection(near.context(filename));
+  const unclassified = classifyReviewSection(near.context(filename));
   assert.equal(unclassified.counts['synthetic-denial-fixture'],undefined);
   assert.throws(()=>assertNoPrivateData(unclassified.scanText),{code:'PRIVATE_DATA_DENIED'});
 });
