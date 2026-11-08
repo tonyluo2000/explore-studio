@@ -73,7 +73,7 @@ unsigned source classification or stale HEAD/base still stop transmission.
 Run focused offline routing validation through the required runtime launcher:
 
 ```sh
-bash scripts/with-project-node.sh node --test tests/deepseek-routing.test.mjs tests/model-capabilities.test.mjs tests/model-quality.test.mjs tests/model-quota.test.mjs
+bash scripts/with-project-node.sh node --test tests/deepseek-routing.test.mjs tests/model-quality.test.mjs tests/model-quota.test.mjs
 ```
 
 Account/capability and quota evidence remain separate from actual execution.

@@ -44,7 +44,7 @@ Where a Node launcher exists, prefix these commands with
 `bash scripts/with-project-node.sh`. Other projects use Node 22.13.0 or newer.
 
 ```
-node --test tests/deepseek-*.test.mjs tests/model-*.test.mjs tests/agent-route.test.mjs
+node --test tests/deepseek-*.test.mjs tests/model-*.test.mjs
 ```
 
 Mile Commons additionally retains `npm run test:deepseek-review`. Mandatory

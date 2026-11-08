@@ -22,13 +22,13 @@
     "docs/operations/DEEPSEEK_IMPLEMENTER.md": "1b1dedea7791a9b6bd2a0bebfaea9680b3e7e040749729f3ff33c09d191a1c37",
     "docs/operations/DEEPSEEK_TRANSFER_POLICY.md": "5284b7f08fa370416e8267f56975a106ae8c5a95fa8df9dd6cac1e8776f62e57",
     "docs/operations/DEEPSEEK_BUDGET.md": "870f092143aafada5a5f0e236483da562ef0c046f65e832a27b6564a36641efc",
-    "docs/operations/DEEPSEEK_WORKFLOW.md": "fd31488f1499e4d5749846e72c6d2e115da388ba4ab9d3809622749d600176ef",
+    "docs/operations/DEEPSEEK_WORKFLOW.md": "fd3b90b831ab61ee0737744c9a9cf375e2e9b1ed5977cffd12070dc2134491b9",
     "scripts/model-capabilities.mjs": "380ed0add13df5e1fb97cfe17c4887305f39142afa93970993977450266d2448",
     "scripts/model-quality.mjs": "e2b5454baaef2753cd27acaa0b25688426ee93d33d0d729dc89c92d6160b8724",
     "scripts/model-quota.mjs": "5a8c21e193b05fdc8a52612a973b5f0bc85250f4771641cecf0d6b2cee4b8d3e",
     "tests/model-quality.test.mjs": "caf613ce6c76f952d2618f18dde31d37ca945ca83c7064ef89d5ee63916215f3",
     "tests/model-quota.test.mjs": "a4c43503cb105e8c9722d2fa2d71d7ecadec504937a68803e43ad0b0d66f9af6",
-    "docs/operations/MODEL_ROUTING.md": "d28bc3156de93cf7c7a088ea5e67399ac190157f6388ad648e6554903d84d6d1"
+    "docs/operations/MODEL_ROUTING.md": "895684a3a9f7959959d74fba2a16b86e20ed4655889dd266116732db65f8da71"
   },
   "selection": "codex-claude-default-deepseek-pro-explicit-owner-request-only"
 }
