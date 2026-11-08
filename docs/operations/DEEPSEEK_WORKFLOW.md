@@ -1,16 +1,12 @@
 # Cross-project implementation and review workflow
 
-Owner direction: November 7, 2026; Mile Commons #1120 and MonteFinance #980.
-DeepSeek Pro is a first-class implementer and reviewer when reviewing another
-model family's work. Flash handles routine work. Codex coordinates integration.
-Claude remains available for critical architecture/security review and release
-coordination. This updates model-role defaults, not review or release gates.
-
-Executable routing lives in `config/ai-model-routing.json`; project entries may
-override individual task defaults. `scripts/deepseek-routing.mjs` refuses
-same-family independent review, including Flash reviewing Pro. It describes
-escalations without automatically invoking or paying for another model.
-Release authority always belongs to the existing owner/release captain.
+Final owner policy, November 7, 2026: Codex and Claude are primary.
+DeepSeek Pro requires an explicit owner request; quota constraints never
+select it automatically.
+Earlier Flash/Pro-first defaults are superseded. Unknown quota never activates a paid provider.
+Use `scripts/agent-route.mjs`; see `MODEL_ROUTING.md` for execution, quota,
+escalation, telemetry and the separate activation gate. The owner and existing
+Claude release captain retain their authority. A router cannot relax reviews.
 
 The separate `scripts/deepseek-agent.mjs` profile proposes bounded changes and
 supports isolated worktrees, local focused tests and draft PR preparation.
@@ -45,10 +41,10 @@ additional provider client is needed.
 ## Offline qualification
 
 Where a Node launcher exists, prefix these commands with
-`bash scripts/with-project-node.sh`. Other projects use Node 22.16.0 or newer.
+`bash scripts/with-project-node.sh`. Other projects use Node 22.13.0 or newer.
 
 ```
-node --test tests/deepseek-budget.test.mjs tests/deepseek-routing.test.mjs tests/deepseek-agent.test.mjs tests/deepseek-transfer-policy.test.mjs
+node --test tests/deepseek-*.test.mjs tests/model-*.test.mjs tests/agent-route.test.mjs
 ```
 
 Mile Commons additionally retains `npm run test:deepseek-review`. Mandatory

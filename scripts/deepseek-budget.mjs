@@ -21,6 +21,8 @@ async function safeDirectory(directory) {
     const stat = await lstat(current);
     if (!stat.isDirectory() || stat.isSymbolicLink()) fail('LEDGER_UNSAFE_PATH');
   }
+  const owner = await lstat(resolved);
+  if ((owner.mode & 0o777) !== 0o700 || typeof process.geteuid === 'function' && owner.uid !== process.geteuid()) fail('LEDGER_PERMISSIONS_INVALID');
   return resolved;
 }
 

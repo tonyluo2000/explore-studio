@@ -1,0 +1,7 @@
+{
+  "schema": "cross-project.model-project.v1",
+  "repository": "tonyluo2000/explore-studio",
+  "activation": "pending_review",
+  "releaseAuthority": "existing owner or Claude release captain",
+  "sourcePolicy": "scripts/deepseek-transfer-policy.mjs"
+}

@@ -4,7 +4,10 @@ import {mkdtemp,writeFile,mkdir,readFile,rm,symlink,realpath} from 'node:fs/prom
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {prepareImplementation,runImplementation,validateImplementationResponse,applyImplementation,createIsolatedWorktree} from '../scripts/deepseek-agent.mjs';
+import {prepareImplementation as guardedPrepareImplementation,runImplementation as guardedRunImplementation,validateImplementationResponse,applyImplementation,createIsolatedWorktree,executeImplementationWithReceipt,finalizeImplementationResult} from '../scripts/deepseek-agent.mjs';
+const constrainedQuota = () => ({codex:{state:'low',source:'owner',observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}});
+const prepareImplementation = options => guardedPrepareImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
+const runImplementation = options => guardedRunImplementation({routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),risk:'low',complexity:'routine'},...options});
 async function fixture(t){
  const root=await realpath(await mkdtemp(path.join(tmpdir(),'deepseek-agent-'))); t.after(()=>rm(root,{recursive:true,force:true}));
  const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
@@ -70,4 +73,76 @@ test('new owned files are allowed without granting unowned creation',async t=>{
  const proposal={summary:'Added a source helper.',changes:[{path:manifest.ownedPaths[0],original_sha256:null,content:'export const emptyAverage = 0;\n'}]};
  await applyImplementation({root,prepared,proposal});
  assert.equal(await readFile(path.join(root,manifest.ownedPaths[0]),'utf8'),proposal.changes[0].content);
+});
+
+test('all primary quota states refuse DeepSeek without an explicit owner request',async t=>{
+ const {root,manifest}=await fixture(t);let calls=0;
+ for(const quota of [{},...['healthy','low','exhausted','rate_limited','imminent'].map(state=>({codex:{...constrainedQuota().codex,state}}))]) {
+  await assert.rejects(guardedRunImplementation({root,manifest,mode:'live',routingContext:{quota},providerCall:()=>{calls++;}}));
+ }
+ assert.equal(calls,0);
+});
+test('unknown source remains fail-closed under an explicit owner DeepSeek request',async t=>{
+ const {root,manifest}=await fixture(t);let calls=0;
+ await assert.rejects(runImplementation({root,manifest:{...manifest,ownedPaths:['mobile/private/health.json']},mode:'live',providerCall:()=>{calls++;}}),/PATH_NOT_ALLOWLISTED/);
+ assert.equal(calls,0);
+});
+test('difficult backup tasks serialize high effort and never provider medium',async t=>{
+ const {root,manifest}=await fixture(t);
+ const prepared=await prepareImplementation({root,manifest,routingContext:{ownerRequestedDeepSeek:true,quota:constrainedQuota(),complexity:'complex',risk:'high'}});
+ assert.equal(prepared.route.reasoningEffort,'high');
+ assert.equal(prepared.request.requestBody.reasoning_effort,'high');
+});
+
+test('implementation manifest cannot activate using a reviewer role or quota',async t=>{
+ const {root,manifest}=await fixture(t);
+ await assert.rejects(prepareImplementation({root,manifest:{...manifest,taskType:'review'}}),/IMPLEMENTATION_ROLE_REQUIRED/);
+ await assert.rejects(prepareImplementation({root,manifest,routingContext:{role:'review',quota:constrainedQuota()}}),/IMPLEMENTATION_ROLE_REQUIRED/);
+});
+
+
+test('control-plane ownership is denied without an override',async t=>{
+ const {root,manifest}=await fixture(t);
+ for(const filename of ['AGENTS.md','.github/workflows/release.yml','package.json','config/routing.json','scripts/deepseek-review-core.mjs','scripts/with-project-node.sh','scripts/agent-route.mjs','scripts/model-quota.mjs','scripts/model-quality.mjs','scripts/model-capabilities.mjs','scripts/model-telemetry.mjs']) {
+  await assert.rejects(prepareImplementation({root,manifest:{...manifest,ownedPaths:[filename]}}),/CONTROL_PLANE_WRITE_DENIED/);
+ }
+});
+test('receipt and proposal reserve before any callback, outside repo, without symlinks',async t=>{
+ const {root,manifest}=await fixture(t);const outside=await realpath(await mkdtemp(path.join(tmpdir(),'agent-receipts-')));t.after(()=>rm(outside,{recursive:true,force:true}));
+ let calls=0;const run=async()=>{calls++;return {status:'MOCK_ONLY'};};
+ const output=path.join(outside,'one.json');await writeFile(output,'existing receipt');
+ await assert.rejects(executeImplementationWithReceipt({root,manifest,output,run}),/EEXIST/);assert.equal(calls,0);assert.equal(await readFile(output,'utf8'),'existing receipt');
+ await assert.rejects(executeImplementationWithReceipt({root,manifest,output:path.join(root,'receipt.json'),run}),/OUTSIDE_REPOSITORY/);assert.equal(calls,0);
+ await symlink(outside,path.join(outside,'link'));
+ await assert.rejects(executeImplementationWithReceipt({root,manifest,output:path.join(outside,'link','two.json'),run}),/OUTPUT_SYMLINK_DENIED/);assert.equal(calls,0);
+ const reserved=path.join(outside,'reserved.json');await writeFile(reserved+'.proposal.json','prior proposal');
+ const refusal=await executeImplementationWithReceipt({root,manifest,output:reserved,run});assert.equal(refusal.status,'EXECUTION_FAILED');assert.equal(calls,0);
+});
+test('post-provider schema failure preserves attested usage in finalized offline receipt',async t=>{
+ const {root,manifest}=await fixture(t);const prepared=await prepareImplementation({root,manifest});
+ const usage={prompt_tokens:20,completion_tokens:10,total_tokens:30};
+ const report={mode:'OFFLINE_TEST',requestId:prepared.requestId,status:'RESERVED',actualModel:null,usage:null};
+ await finalizeImplementationResult({root,prepared,report,result:{resolvedModel:prepared.route.model,usage,parsed:{summary:'test',changes:[],unsafe:'private raw output must not persist'}}});
+ assert.equal(report.status,'POST_PROVIDER_FAILED');assert.deepEqual(report.usage,usage);assert.equal(report.actualModel,prepared.route.model);assert.equal(report.requestId,prepared.requestId);assert.doesNotMatch(JSON.stringify(report),/private raw output/);
+ const outside=await realpath(await mkdtemp(path.join(tmpdir(),'agent-failure-')));t.after(()=>rm(outside,{recursive:true,force:true}));
+ const output=path.join(outside,'failure.json');await executeImplementationWithReceipt({root,manifest,output,run:async()=>report});
+ const receipt=JSON.parse(await readFile(output,'utf8'));assert.equal(receipt.status,'POST_PROVIDER_FAILED');assert.deepEqual(receipt.usage,usage);
+});
+test('apply leaves model-authored code unexecuted and reports suggested argv only',async t=>{
+ const {root,manifest}=await fixture(t);manifest.tests=[{kind:'node-test',files:['tests/danger.test.mjs']}];const prepared=await prepareImplementation({root,manifest});
+ const report={mode:'OFFLINE_TEST',requestId:prepared.requestId};
+ const result={resolvedModel:prepared.route.model,usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2},parsed:{summary:'Bounded source change.',changes:[{path:'lib/average.mjs',original_sha256:prepared.sources[0].sha256,content:'throw new Error("must never execute model code");\n'}]}};
+ await finalizeImplementationResult({root,prepared,report,result,apply:true});assert.equal(report.status,'APPLIED_UNTESTED');assert.equal(report.tests[0].status,'NOT_RUN');assert.ok(report.tests[0].argv.includes('tests/danger.test.mjs'));
+});
+
+test('model-only manifest cannot impersonate explicit owner DeepSeek selection',async t=>{
+ const {root,manifest}=await fixture(t);
+ for(const ownerRequestedDeepSeek of [undefined,false,'true']) {
+  await assert.rejects(guardedPrepareImplementation({root,manifest:{...manifest,model:'deepseek-v4-pro'},routingContext:{ownerRequestedDeepSeek,quota:constrainedQuota(),risk:'low',complexity:'routine'}}),{code:'DEEPSEEK_OWNER_REQUEST_REQUIRED'});
+ }
+});
+test('explicit owner request can prepare a bounded task when primary quota is unknown',async t=>{
+ const {root,manifest}=await fixture(t);
+ const prepared=await guardedPrepareImplementation({root,manifest,routingContext:{ownerRequestedDeepSeek:true,risk:'low',complexity:'routine'}});
+ assert.equal(prepared.route.model,'deepseek-v4-pro');assert.equal(prepared.request.requestBody.reasoning_effort,'low');
 });

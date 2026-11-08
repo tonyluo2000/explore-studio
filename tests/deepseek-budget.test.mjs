@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, realpath, rm, writeFile, symlink } from 'node:fs/promises';
+import { chmod, mkdtemp, realpath, rm, writeFile, symlink } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { withBudget, budgetReport, recordOutcome } from '../scripts/deepseek-budget.mjs';
@@ -43,4 +43,10 @@ test('records usage and acceptance separately from reservation without claiming 
   assert.equal(report.outcomes[0].resolvedModel, 'deepseek-v4-pro');
   assert.equal(report.reportedCostUsd, null);
   assert.equal(report.reservedUsd, 0.02);
+});
+test('shared ledger must remain private to the current OS user', async t => {
+  const dir = await fixture(t);
+  await chmod(dir, 0o755);
+  await assert.rejects(withBudget({ identity: identity(1), maximumCostUsd: 0.02, ledgerDirectory: dir }, () => assert.fail()), { code: 'LEDGER_PERMISSIONS_INVALID' });
+  await chmod(dir, 0o700);
 });

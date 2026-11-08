@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -25,7 +25,9 @@ Modes:
   --acknowledge-external-transfer      Confirms allowlisted, redacted source will leave GitHub for DeepSeek.
 
 Options:
-  --model MODEL                        deepseek-v4-pro (default) or deepseek-flash
+  --model MODEL                        deepseek-v4-pro (backup only)
+  --routing-context FILE               Explicit owner DeepSeek request and implementer family
+  --reasoning-effort low|high           Optional effort override; cannot lower risk requirements
   --max-diff-chars NUMBER              Default: ${DEFAULT_MAX_DIFF_CHARS}
   --max-output-tokens NUMBER           Default: ${DEFAULT_MAX_OUTPUT_TOKENS}; maximum: 16000
   --max-request-bytes NUMBER           Default: ${DEFAULT_MAX_REQUEST_BYTES}; serialized UTF-8 body ceiling
@@ -95,6 +97,8 @@ export function parseArgs(argv) {
     else if (argument === "--head") options.headSha = take();
     else if (argument === "--base") options.baseSha = take();
     else if (argument === "--model") options.model = take();
+    else if (argument === "--routing-context") options.routingContextPath = take();
+    else if (argument === "--reasoning-effort") options.reasoningEffort = take();
     else if (argument === "--max-diff-chars") options.maxDiffChars = parseInteger(take(), "--max-diff-chars");
     else if (argument === "--max-output-tokens") options.maxOutputTokens = parseInteger(take(), "--max-output-tokens");
     else if (argument === "--max-request-bytes") options.maxRequestBytes = parseInteger(take(), "--max-request-bytes");
@@ -118,6 +122,7 @@ export function parseArgs(argv) {
   validateHeadSha(options.headSha);
   if (options.baseSha !== undefined) validateHeadSha(options.baseSha);
   validateModel(options.model);
+  if (options.reasoningEffort !== undefined && !["low", "high"].includes(options.reasoningEffort)) throw new Error("--reasoning-effort must be low or high");
   if (options.reservationId !== undefined) validateReservationId(options.reservationId);
   if (options.resumeReservationId !== undefined) validateReservationId(options.resumeReservationId);
   if (options.maxOutputTokens > 16_000) throw new Error("--max-output-tokens must not exceed 16000");
@@ -228,6 +233,8 @@ export async function main(argv) {
   }
   const reviewOptions = {
     repository: options.repository,
+    routingContext: options.routingContextPath ? JSON.parse(await readFile(path.resolve(options.routingContextPath), "utf8")) : undefined,
+    reasoningEffort: options.reasoningEffort,
     pullNumber: options.pullNumber,
     headSha: options.headSha,
     baseSha: options.baseSha,
