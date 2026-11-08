@@ -1,0 +1,19 @@
+{
+  "schema": "cross-project.model-routing.v1",
+  "projects": {
+    "tonyluo2000/mile-commons": {},
+    "briersystems/montefinance": {},
+    "tonyluo2000/explore-studio": {}
+  },
+  "tasks": {
+    "routine": {"provider":"deepseek","model":"deepseek-flash","family":"deepseek","reasoningEffort":"low","escalation":"deepseek-v4-pro"},
+    "implementation": {"provider":"deepseek","model":"deepseek-v4-pro","family":"deepseek","reasoningEffort":"low","escalation":"codex"},
+    "integration": {"provider":"openai","model":"codex","family":"openai","reasoningEffort":"medium","escalation":"deepseek-v4-pro assistance"},
+    "review": {"provider":"deepseek","model":"deepseek-v4-pro","family":"deepseek","reasoningEffort":"low","escalation":"claude-sonnet"},
+    "security": {"provider":"deepseek","model":"deepseek-v4-pro","family":"deepseek","reasoningEffort":"low","escalation":"claude-opus or strongest available Codex"},
+    "architecture": {"provider":"deepseek","model":"deepseek-v4-pro","family":"deepseek","reasoningEffort":"low","escalation":"claude-opus"},
+    "debugging": {"provider":"deepseek","model":"deepseek-v4-pro","family":"deepseek","reasoningEffort":"low","escalation":"claude-opus"}
+  },
+  "automaticFallback": false,
+  "releaseAuthority": "existing owner or release captain"
+}
