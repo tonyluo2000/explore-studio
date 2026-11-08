@@ -22,7 +22,7 @@
     "tests/deepseek-agent.test.mjs": "06cb0f00d3d1438069835ea82670d54a4c3dc5b6f1c3646b3d9a28b284c5e81c",
     "tests/deepseek-routing.test.mjs": "e03e1582e99fe9fae3bba467947a8822c71103a75a5ad89a0ecbfe7bea28aa29",
     "tests/deepseek-budget.test.mjs": "2e51a4a103a1f3a8dc2c69e0163d7477f2fa8406ca12346de81a2578c360f720",
-    "tests/deepseek-transfer-policy.test.mjs": "72d454fdb7b9ac37c01cea5bf5c4ff82bc2339ca51c15afc1964eeb7482dc3e4",
+    "tests/deepseek-transfer-policy.test.mjs": "b178b75c98ab23cd3bdd550be50a4cc5f08d87dbd390d689f31e8ae5e59abd26",
     "tests/agent-route.test.mjs": "229d22b6fc8f8d5a19989a8ce76be1a1bad91c8d832230803e1602c5a8c61b65",
     "tests/model-quality.test.mjs": "caf613ce6c76f952d2618f18dde31d37ca945ca83c7064ef89d5ee63916215f3",
     "tests/model-quota.test.mjs": "a4c43503cb105e8c9722d2fa2d71d7ecadec504937a68803e43ad0b0d66f9af6",
