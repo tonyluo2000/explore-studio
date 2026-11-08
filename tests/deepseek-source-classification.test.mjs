@@ -105,6 +105,22 @@ test('a near-match fixture or real-looking private record remains prohibited in 
   assert.throws(()=>assertNoPrivateData(classified.scanText),{code:'PRIVATE_DATA_DENIED'});
 });
 
+test('the prefixed-SSH denial template has exact-file and exact-span synthetic classification',t=>{
+  const fixtureSource=readFileSync(new URL('./deepseek-transfer-policy.test.mjs',import.meta.url),'utf8');
+  const statement=fixtureSource.split('\n').find(line=>line.includes('`${prefix}git@'))+'\n';
+  assert.ok(statement.length>40);
+  const filename='tests/deepseek-transfer-policy.test.mjs';
+  const data=fixture(t,{[filename]:statement,'tests/ordinary.test.mjs':statement});
+  const classified=classifyReviewSection(data.context(filename));
+  assert.equal(classified.counts['synthetic-denial-fixture'],1);
+  assert.doesNotThrow(()=>assertNoPrivateData(classified.scanText));
+  assert.throws(()=>assertNoPrivateData(classifyReviewSection(data.context('tests/ordinary.test.mjs')).scanText),{code:'PRIVATE_DATA_DENIED'});
+  const near=fixture(t,{[filename]:statement.replace('${prefix}','${differentPrefix}')});
+  const unclassified=classifyReviewSection(near.context(filename));
+  assert.equal(unclassified.counts['synthetic-denial-fixture'],undefined);
+  assert.throws(()=>assertNoPrivateData(unclassified.scanText),{code:'PRIVATE_DATA_DENIED'});
+});
+
 test('toolchain source digest is verified against exact-head blob and stays visible in review payload',t=>{
   const filename='config/deepseek-toolchain.json',target='scripts/deepseek-agent.mjs',source='export const value = 42;\n';
   const value=hash(source);

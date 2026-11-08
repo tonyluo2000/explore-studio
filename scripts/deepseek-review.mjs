@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { mkdir, writeFile, readFile, lstat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -227,6 +227,18 @@ async function writeReport(output, report) {
   return destination;
 }
 
+async function readOperatorDocument(filename) {
+  try {
+    const resolved=path.resolve(filename),stat=await lstat(resolved);
+    if(!stat.isFile() || stat.isSymbolicLink() || stat.size>64000) throw new Error();
+    return JSON.parse(await readFile(resolved,'utf8'));
+  } catch {
+    // JSON parse diagnostics can echo the first bytes of an accidental secret
+    // file. Report only a fixed code; never print the document or filesystem path.
+    throw Object.assign(new Error('operator document is invalid or unavailable'),{code:'INVALID_OPERATOR_DOCUMENT'});
+  }
+}
+
 export async function main(argv) {
   let options;
   try {
@@ -241,12 +253,12 @@ export async function main(argv) {
   }
   const reviewOptions = {
     repository: options.repository,
-    routingContext: options.routingContextPath ? JSON.parse(await readFile(path.resolve(options.routingContextPath), "utf8")) : undefined,
+    routingContext: options.routingContextPath ? await readOperatorDocument(options.routingContextPath) : undefined,
     reasoningEffort: options.reasoningEffort,
-    ownerRequest: options.ownerRequestPath ? JSON.parse(await readFile(path.resolve(options.ownerRequestPath),"utf8")) : undefined,
-    callAuthorization: options.approvalPath ? JSON.parse(await readFile(path.resolve(options.approvalPath),"utf8")) : undefined,
+    ownerRequest: options.ownerRequestPath ? await readOperatorDocument(options.ownerRequestPath) : undefined,
+    callAuthorization: options.approvalPath ? await readOperatorDocument(options.approvalPath) : undefined,
     sourceRoot:options.sourceRoot,
-    activation:options.activationPath?JSON.parse(await readFile(path.resolve(options.activationPath),"utf8")):undefined,
+    activation:options.activationPath?await readOperatorDocument(options.activationPath):undefined,
     pullNumber: options.pullNumber,
     headSha: options.headSha,
     baseSha: options.baseSha,
@@ -302,5 +314,6 @@ export async function main(argv) {
 // This file is an entry point. Tests import only the side-effect-free core and
 // exercise parseArgs by spawning the CLI when necessary.
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
-  process.exitCode = await main(process.argv.slice(2));
+  try {process.exitCode = await main(process.argv.slice(2));}
+  catch(error){console.error(`deepseek-review: ${/^[A-Z0-9_]+$/.test(error.code??'')?error.code:'REVIEW_FAILED'}`);process.exitCode=1;}
 }

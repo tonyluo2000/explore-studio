@@ -82,6 +82,8 @@ const SYNTHETIC_SPAN_HASHES = new Set([
   '44f95ad0586178c491a92e9715236b0c3b9d0453521ee334241f2984166d0dec',
   'ac21618954282d3a895313c9990f7839c37e652cbfaf0910585eda67ca5bcbfa',
   '832b7ed4a7866e7ddff31718649e7e58131ed799283295a8fddabe2597f7658a',
+  // Exact synthetic prefixed-SSH-email denial template in the transfer test.
+  'a8bcd630096328d1968629c7c5ee97aae208d9d495e293f9c8c75ae61aff4acf',
 ]);
 // Existing git-test setup uses this one reserved synthetic identity. This is
 // not permission for arbitrary addresses in tests, or a new email exception.
@@ -117,12 +119,13 @@ function verifySection({repository, filename, section, baseSha, headSha, root}) 
 }
 
 function replaceLiteralSpans(line, callback) {
-  // A bounded lexer for ordinary single/double-quoted source literals. It does
-  // not infer that every literal or every test input is safe.
+  // A bounded lexer for quoted source spans, including template-source text.
+  // No interpolation is executed or inferred safe: only exact known span
+  // hashes qualify, and nested/unmatched templates receive no special trust.
   let result = '', cursor = 0;
   for (let index = 0; index < line.length; index++) {
     const quote = line[index];
-    if (quote !== "'" && quote !== '"') continue;
+    if (quote !== "'" && quote !== '"' && quote !== '`') continue;
     const start = index++;
     for (; index < line.length; index++) {
       if (line[index] === '\\') { index++; continue; }
@@ -207,7 +210,7 @@ export function classifyReviewSection(context) {
     // File keys are exact manifest entries whose actual blob was verified.
     scanText = scanText.replace(/"([^"\n]+)"(?=\s*:\s*"CLASSIFIED_EXACT_SOURCE_DIGEST")/g, '"CLASSIFIED_SOURCE_PATH"');
   }
-  if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs', 'tests/deepseek-source-classification.test.mjs'].includes(filename)) {
+  if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs', 'tests/deepseek-review.test.mjs', 'tests/deepseek-source-classification.test.mjs'].includes(filename)) {
     for (const link of [
       'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6716279700',
       'https://github.com/briersystems/montefinance/issues/980#issuecomment-6716280037',

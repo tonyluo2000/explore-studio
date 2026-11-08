@@ -12,7 +12,7 @@
     "scripts/deepseek-transfer-policy.mjs": "1bd25ae47e93f9432536757bb1feb54a673495381baff10f980d9cecf4f985bf",
     "scripts/deepseek-source-scanner.mjs": "12ae491caecf49ecc5b11930b256e3cff41df26aa1ac2eb172ad9dd486c36019",
     "scripts/deepseek-review-core.mjs": "fa0720d4d6f4ef8dd9513ecd02d09e57047b0762c03a9a94ddc2128f3005a4fc",
-    "scripts/deepseek-review.mjs": "4c8d67fcae3735e7c2b1e10723b083e75aa3e3b5d957fdf67b26ed878b1b703c",
+    "scripts/deepseek-review.mjs": "3057046d123a03477591909533302a0b5c31ae50cc94eb5dee43db543a4acb03",
     "scripts/deepseek-review-cache-policy.mjs": "03df87e80409feca7906ac414bb4b3c75dc1088d79b0d74097d1b225b28f65db",
     "scripts/agent-route.mjs": "bbe83593b1015707549e4a979e9e3953948df243d6aa11cf8d5cafcfaf539660",
     "scripts/model-capabilities.mjs": "380ed0add13df5e1fb97cfe17c4887305f39142afa93970993977450266d2448",
@@ -34,9 +34,9 @@
     "docs/operations/DEEPSEEK_BUDGET.md": "870f092143aafada5a5f0e236483da562ef0c046f65e832a27b6564a36641efc",
     "docs/operations/DEEPSEEK_WORKFLOW.md": "5ac6c0d1eb346d297346300c18131748d7b3944ba075bd0b532cf76124ceea7f",
     "scripts/model-authorization.mjs": "ffa9535bb4194dc23017795c0ee80408ae16a97f081b274322e1ba5080a162ed",
-    "scripts/deepseek-source-classification.mjs": "07ef2ffc7d02ec65b29901e54c1b4821c8144b8aac6ba0dc6581d1e216b6e2a6",
+    "scripts/deepseek-source-classification.mjs": "6ae89fdb10afc6f29a584dcc9857ba6e8b06e5edb1130f422f0001ac5d86468e",
     "tests/model-authorization.test.mjs": "a843b2e09bbda7fed0f3fc359f37e3947c90ed7be3e65dcc092e4b5bf7e6dbbf",
-    "tests/deepseek-source-classification.test.mjs": "61f72e5b0a7261a642e2a9f06a375182b36f4cc10a5e36e7b967b014cbfe6204",
+    "tests/deepseek-source-classification.test.mjs": "4ad747e72dada68d44bf983c42c1348f1f7b2c0f591251f26c6bf7882b1200a4",
     "scripts/model-activation.mjs": "64c9f3ee785d6f4568a9cb62c9daa6788db6f72a73513f17a4b4846a596b4e52",
     "tests/model-activation.test.mjs": "0a35b2a6c2847158aba5366472da52df5368ed5ffd3f76e3c34c17fdd735b851"
   }
