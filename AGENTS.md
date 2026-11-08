@@ -1,16 +1,17 @@
 # Explore Studio model workflow
 
-Use the owner-authorized project/task routing in
-`config/ai-model-routing.json` and `docs/operations/DEEPSEEK_WORKFLOW.md`.
-DeepSeek Flash is preferred for routine edits, docs and tests; Pro for ordinary
-implementation and review of another model family's work. Codex coordinates
-overlapping changes. Claude remains available for critical security and
-architecture review. Same-family reviews do not establish model independence.
+November 7, 2026 final owner rule: always use Codex or Claude unless the
+owner explicitly requests DeepSeek Pro. Quota pressure, rate limits and cost
+never automatically select DeepSeek. See `config/ai-model-routing.json` and
+`docs/operations/MODEL_ROUTING.md`. Source transfer remains disabled pending
+independent review and separate exact-call transfer/payment authorization.
+All existing human review, privacy, financial verification and release gates
+remain mandatory.
 
 The separate guarded CLI does not replace Codex/Claude global configuration.
 All new source-transfer eligibility remains mock-only until independent review
 and separate exact-call source-transfer/payment authorization. Live budgets
-are ceilings, never spending approval. Use Node 22.16.0 or newer for the
+are ceilings, never spending approval. Use Node 22.13.0 or newer for the
 standalone dependency-free tooling tests documented in the workflow.
 
 Preserve licensing, content ownership, private learner-data and publishing

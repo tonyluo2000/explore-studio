@@ -4,9 +4,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { projectPathPolicy, assertSafeSource, readSafeSource, assertLiveTransferApproved } from "../scripts/deepseek-transfer-policy.mjs";
-import { prepareReviewInput, runReview, callDeepSeek, prepareDeepSeekRequest } from "../scripts/deepseek-review-core.mjs";
+import { prepareReviewInput, runReview, callDeepSeek, createDeepSeekTestClient, prepareDeepSeekRequest } from "../scripts/deepseek-review-core.mjs";
 const MC = "tonyluo2000/mile-commons", MF = "briersystems/montefinance", ES = "tonyluo2000/explore-studio";
 const diff = (file, value="export const value = 2;") => `diff --git a/${file} b/${file}\nindex 1111111..2222222 100644\n--- a/${file}\n+++ b/${file}\n@@ -1 +1 @@\n-export const value = 1;\n+${value}\n`;
+const constrainedQuota = () => Object.fromEntries(["codex","claude"].map(family=>[family,{state:"low",source:"owner",observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}]));
 const inventory = file => [{ filename: file, additions: 1, deletions: 1 }];
 
 test("project adapters permit source and exact native config without blanket mobile eligibility", () => {
@@ -56,7 +57,7 @@ test("local reads reject final and parent symlinks and return bounded UTF8 sourc
 test("new policy has no CLI live activation and denies before provider or budget access", async () => {
   assert.throws(assertLiveTransferApproved,error=>error.code==="POLICY_REVIEW_REQUIRED");
   let fetches=0,budgets=0;
-  await assert.rejects(callDeepSeek({apiKey:"offline-key",model:"deepseek-flash",messages:[],maxCostUsd:1,fetchImpl:async()=>{fetches++;},budgetCall:async()=>{budgets++;}}),error=>error.code==="POLICY_REVIEW_REQUIRED");
+  await assert.rejects(callDeepSeek({apiKey:"offline-key",model:"deepseek-v4-pro",repository:MC,routingContext:{ownerRequestedDeepSeek:true,risk:"low",complexity:"routine",quota:{codex:{state:"low",source:"owner",observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3_600_000).toISOString()}}},messages:[],maxCostUsd:1,fetchImpl:async()=>{fetches++;},budgetCall:async()=>{budgets++;}}),error=>error.code==="POLICY_REVIEW_REQUIRED");
   assert.equal(fetches,0); assert.equal(budgets,0);
   assert.throws(()=>prepareDeepSeekRequest({model:"deepseek-flash",messages:[],maxCostUsd:1.01}),/no more than 1/);
   assert.equal(prepareDeepSeekRequest({model:"deepseek-flash",messages:[]}).requestBody.reasoning_effort,"low");
@@ -66,4 +67,24 @@ test("private PR metadata denies even an otherwise eligible complete diff", asyn
   const head="a".repeat(40), base="b".repeat(40); let calls=0;
   const result=await runReview({repository:MC,pullNumber:1,headSha:head,mode:"mock",github:{getPull:async()=>({state:"open",head:{sha:head},base:{sha:base},title:'Runner record: {"runner_name":"Alice"}'}),getComparison:async()=>({complete:true,baseSha:base,headSha:head,mergeBaseSha:base,status:"ahead",totalCommits:1,files:inventory("lib/source.ts"),diff:diff("lib/source.ts")})},providerCall:async()=>{calls++;}});
   assert.equal(result.errors[0].code,"PRIVATE_DATA_DENIED"); assert.equal(calls,0); assert.equal(result.review_status,"REVIEW_NOT_COMPLETE");
+});
+
+
+test("request-body binding fails before activation, ledger or transport", async () => {
+  let fetches = 0;
+  const options = { apiKey: "offline-key", repository: MC, model: "deepseek-v4-pro", routingContext: { ownerRequestedDeepSeek:true, quota: constrainedQuota(), risk: "low", complexity: "routine" }, messages: [{role:"user",content:"bounded json request"}], maxCostUsd: 1, expectedBodySha256: "f".repeat(64), fetchImpl: async () => { fetches++; }, assertTransferApproved: () => {}, budgetCall: async (_policy, callback) => callback() };
+  await assert.rejects(callDeepSeek(options), {code:"REQUEST_BODY_HASH_MISMATCH"});
+  assert.equal(fetches, 0);
+  const fakeClient = createDeepSeekTestClient({fetchImpl:options.fetchImpl});
+  await assert.rejects(fakeClient(options), {code:"REQUEST_BODY_HASH_MISMATCH"});
+  assert.equal(fetches, 0);
+});
+
+test("offline test-client construction requires runner context and a fake transport", () => {
+  assert.throws(()=>createDeepSeekTestClient({fetchImpl:fetch}), {code:"TEST_CLIENT_CONTEXT_REQUIRED"});
+  const context = process.env.NODE_TEST_CONTEXT;
+  try {
+    delete process.env.NODE_TEST_CONTEXT;
+    assert.throws(()=>createDeepSeekTestClient({fetchImpl:async()=>{}}), {code:"TEST_CLIENT_CONTEXT_REQUIRED"});
+  } finally { if (context === undefined) delete process.env.NODE_TEST_CONTEXT; else process.env.NODE_TEST_CONTEXT = context; }
 });

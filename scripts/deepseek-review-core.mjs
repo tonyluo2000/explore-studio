@@ -5,11 +5,12 @@ import { containsRecognizedSecret, containsSuspiciousHighEntropy, redactSecrets 
 export { containsRecognizedSecret, containsSuspiciousHighEntropy, redactSecrets } from "./deepseek-source-scanner.mjs";
 import { projectPathPolicy, assertNoPrivateData, assertLiveTransferApproved, TRANSFER_POLICY_VERSION } from "./deepseek-transfer-policy.mjs";
 import { withBudget } from "./deepseek-budget.mjs";
+import { resolveRoute } from "./deepseek-routing.mjs";
 
 export const REPORT_SCHEMA = "mile-commons.deepseek-review-report.v3";
 export const RESPONSE_SCHEMA = "mile-commons.deepseek-review-response.v1";
 export const PROMPT_VERSION = "mile-commons.deepseek-review-prompt.v1";
-export const REQUEST_POLICY_VERSION = "cross-project.deepseek-request-policy.v3";
+export const REQUEST_POLICY_VERSION = "cross-project.deepseek-request-policy.v4";
 export const PROVIDER = "DeepSeek official API";
 export const DEFAULT_MODEL = "deepseek-v4-pro";
 export const SUPPORTED_MODELS = new Set(["deepseek-flash", "deepseek-v4-pro"]);
@@ -330,6 +331,7 @@ export function makeIdempotencyKey({
   maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
   providerRetries = DEFAULT_PROVIDER_RETRIES,
   maxCostUsd = null,
+  reasoningEffort = "low",
 }) {
   return createHash("sha256").update([
     PROMPT_VERSION,
@@ -341,6 +343,7 @@ export function makeIdempotencyKey({
     baseSha ?? "",
     model,
     mode,
+    reasoningEffort,
     maxDiffChars,
     maxOutputTokens,
     maxRequestBytes,
@@ -393,18 +396,20 @@ function validateRequestPolicy({ maxOutputTokens, maxRequestBytes, retries, maxC
 export function prepareDeepSeekRequest({
   model,
   messages,
+  reasoningEffort = "low",
   maxOutputTokens = DEFAULT_MAX_OUTPUT_TOKENS,
   maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
   retries = DEFAULT_PROVIDER_RETRIES,
   maxCostUsd = null,
 }) {
   validateModel(model);
+  if (!["low", "high"].includes(reasoningEffort)) throw Object.assign(new Error("DeepSeek reasoning effort must be explicitly low or high"), { code: "INVALID_DEEPSEEK_EFFORT" });
   validateRequestPolicy({ maxOutputTokens, maxRequestBytes, retries, maxCostUsd });
   const requestBody = {
     model,
     messages,
     response_format: { type: "json_object" },
-    reasoning_effort: "low",
+    reasoning_effort: reasoningEffort,
     max_tokens: maxOutputTokens,
     stream: false,
   };
@@ -496,29 +501,82 @@ function validateProviderResult(result, { requestedModel, maxOutputTokens, maxIn
   return { ...result, resolvedModel: requestedModel, usage: safeUsage };
 }
 
-export async function callDeepSeek({
+// Explicit provider choice is operator input, separate from untrusted task data.
+// Quota status never authorizes DeepSeek; enforce the opt-in again at transport.
+export function resolveBackupRoute({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {} }) {
+  if (routingContext.ownerRequestedDeepSeek !== true) throw Object.assign(new Error("DeepSeek Pro requires an explicit owner request"), { code: "DEEPSEEK_EXPLICIT_REQUEST_REQUIRED" });
+  if (model !== undefined && model !== "deepseek-v4-pro") throw Object.assign(new Error("only DeepSeek Pro is approved when explicitly requested"), { code: "BACKUP_MODEL_NOT_APPROVED" });
+  if (taskType === "review") {
+    if (!["openai", "claude", "deepseek"].includes(routingContext.implementerFamily)) throw Object.assign(new Error("review requires the actual implementer model family"), { code: "IMPLEMENTER_FAMILY_REQUIRED" });
+    if (routingContext.implementerFamily === "deepseek") throw Object.assign(new Error("DeepSeek cannot independently review its own model family"), { code: "INDEPENDENT_MODEL_REQUIRED" });
+  }
+  const route = resolveRoute({
+    ...routingContext,
+    ownerRequestedDeepSeek: true,
+    repository,
+    taskType,
+    role: taskType === "review" ? "review" : "implementation",
+    overrides: {
+      ...routingContext.overrides,
+      model: "deepseek-v4-pro",
+      ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
+    },
+  });
+  if (route.provider !== "deepseek" || route.model !== "deepseek-v4-pro" || route.backupReason !== "EXPLICIT_OWNER_REQUEST") throw Object.assign(new Error("DeepSeek Pro requires an explicit owner request"), { code: "DEEPSEEK_EXPLICIT_REQUEST_REQUIRED" });
+  if (!["low", "high"].includes(route.reasoningEffort)) throw Object.assign(new Error("DeepSeek effort must be low or high"), { code: "INVALID_DEEPSEEK_EFFORT" });
+  return route;
+}
+
+// Production entry point always uses the fixed activation gate, provider transport,
+// and host-wide ledger. Caller properties cannot replace any of these controls.
+export async function callDeepSeek(options) {
+  return executeDeepSeek(options, { fetchImpl: fetch, budgetCall: withBudget, assertTransferApproved: assertLiveTransferApproved });
+}
+
+// Explicit offline protocol harness. It cannot be constructed by a production CLI
+// and never uses the provider transport or creates a paid ledger reservation.
+export function createDeepSeekTestClient({ fetchImpl }) {
+  const assertTestContext = () => {
+    if (process.env.NODE_TEST_CONTEXT !== "child-v8" || typeof fetchImpl !== "function" || fetchImpl === fetch) {
+      throw Object.assign(new Error("an injected fake transport inside Node's test runner is required"), { code: "TEST_CLIENT_CONTEXT_REQUIRED" });
+    }
+  };
+  assertTestContext();
+  return options => {
+    assertTestContext();
+    return executeDeepSeek(options, { fetchImpl, budgetCall: async (_policy, callback) => callback(), assertTransferApproved: () => {} });
+  };
+}
+
+async function executeDeepSeek({
   apiKey,
   model,
   messages,
+  reasoningEffort,
+  routingContext,
+  repository,
+  taskType = "implementation",
   maxOutputTokens = DEFAULT_MAX_OUTPUT_TOKENS,
   maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
   maxCostUsd = null,
-  fetchImpl = fetch,
   budgetIdentity,
-  ledgerDirectory,
-  budgetCall = withBudget,
-  assertTransferApproved = assertLiveTransferApproved,
+  expectedBodySha256,
   timeoutMs = 90_000,
   retries = DEFAULT_PROVIDER_RETRIES,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   onProviderAttemptState = async () => {},
-}) {
+}, { fetchImpl, budgetCall, assertTransferApproved }) {
   if (!apiKey) throw Object.assign(new Error("DEEPSEEK_API_KEY is required for live mode"), { code: "MISSING_API_KEY" });
   if (maxCostUsd === null) throw Object.assign(new Error("a maximum cost in USD is required before a DeepSeek API request"), { code: "MAX_COST_REQUIRED" });
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 180_000) throw new Error("timeout must be between 1 and 180000 milliseconds");
-  const planned = prepareDeepSeekRequest({ model, messages, maxOutputTokens, maxRequestBytes, retries, maxCostUsd });
+  const route = resolveBackupRoute({ repository: repository ?? budgetIdentity?.repository, taskType, model, reasoningEffort, routingContext });
+  const planned = prepareDeepSeekRequest({ model, messages, reasoningEffort: route.reasoningEffort, maxOutputTokens, maxRequestBytes, retries, maxCostUsd });
+  if (expectedBodySha256 !== undefined && (!/^[a-f0-9]{64}$/.test(expectedBodySha256)
+    || createHash("sha256").update(planned.serializedBody).digest("hex") !== expectedBodySha256)) {
+    throw Object.assign(new Error("serialized provider request differs from the exact authorized body"), { code: "REQUEST_BODY_HASH_MISMATCH" });
+  }
   assertTransferApproved();
-  return budgetCall({ identity: { ...budgetIdentity, actualModel: model, provider: "deepseek" }, maximumCostUsd: maxCostUsd, ledgerDirectory }, async () => {
+  return budgetCall({ identity: { ...budgetIdentity, actualModel: model, provider: "deepseek" }, maximumCostUsd: maxCostUsd }, async () => {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     let response;
     try {
@@ -622,6 +680,8 @@ function validateComparisonSnapshot(snapshot, baseSha, headSha) {
 
 export async function runReview({
   repository,
+  routingContext,
+  reasoningEffort,
   pullNumber,
   headSha,
   model = DEFAULT_MODEL,
@@ -656,7 +716,7 @@ export async function runReview({
   if (mode === "mock" && (reserveOnly || reservationId !== undefined || resumeReservationId !== undefined)) {
     throw new Error("provider reservations are only valid in live mode");
   }
-  const reviewPolicy = { maxDiffChars, maxOutputTokens, maxRequestBytes, providerRetries, maxCostUsd };
+  const reviewPolicy = { maxDiffChars, maxOutputTokens, maxRequestBytes, providerRetries, maxCostUsd, reasoningEffort };
   const report = makeBaseReport({ repository, pullNumber, headSha, model, mode, reviewPolicy, now: now() });
   if (pinnedBaseSha) {
     report.exact_base_sha = pinnedBaseSha;
@@ -694,8 +754,15 @@ export async function runReview({
     };
     const built = buildMessages({ repository, pullNumber, baseSha, headSha, title: pull.title, body: pull.body, prepared });
     mergeCounts(report.coverage.redactions, built.metadataRedactions);
+    const route = resolveBackupRoute({ repository, taskType: "review", model, reasoningEffort, routingContext });
+    reviewPolicy.reasoningEffort = route.reasoningEffort;
+    report.routing = route;
+    report.requested_effort = route.requestedEffort ?? route.reasoningEffort;
+    report.effective_effort = route.effectiveEffort ?? route.reasoningEffort;
+    report.idempotency_key = makeIdempotencyKey({ repository, pullNumber, headSha, baseSha, model, mode, ...reviewPolicy });
     const planned = prepareDeepSeekRequest({
       model,
+      reasoningEffort: route.reasoningEffort,
       messages: built.messages,
       maxOutputTokens,
       maxRequestBytes,
@@ -739,6 +806,10 @@ export async function runReview({
       result = await providerCall({
         apiKey,
         model,
+        reasoningEffort: route.reasoningEffort,
+        routingContext,
+        repository,
+        taskType: "review",
         budgetIdentity: { repository, pullNumber, headSha, baseSha, taskType: "review", requestId: report.idempotency_key },
         messages: built.messages,
         maxOutputTokens,
@@ -889,6 +960,17 @@ export async function runReviewWithState({ stateDirectory, reviewOptions }) {
     return { report, receiptPath: null };
   }
 
+  let route;
+  try {
+    route = resolveBackupRoute({ repository: reviewOptions.repository, taskType: "review", model: reviewOptions.model ?? DEFAULT_MODEL, reasoningEffort: reviewOptions.reasoningEffort, routingContext: reviewOptions.routingContext });
+  } catch {
+    // Preserve an explicit incomplete report when explicit provider opt-in is absent.
+    // Normal preflight still accounts for source/GitHub errors; it cannot call
+    // a provider unless the same route validation succeeds there.
+    const report = await runReview({ ...reviewOptions, baseSha });
+    return { report, receiptPath: null };
+  }
+  reviewOptions = { ...reviewOptions, reasoningEffort: route.reasoningEffort };
   const key = makeIdempotencyKey({ ...reviewOptions, baseSha });
   const receiptPath = path.join(stateDirectory, `${key}.json`);
   const lockPath = path.join(stateDirectory, `${key}.lock`);

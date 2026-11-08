@@ -1,19 +1,15 @@
 # Cross-project implementation and review workflow
 
-Owner direction: November 7, 2026; Mile Commons #1120 and MonteFinance #980.
-DeepSeek Pro is a first-class implementer and reviewer when reviewing another
-model family's work. Flash handles routine work. Codex coordinates integration.
-Claude remains available for critical architecture/security review and release
-coordination. This updates model-role defaults, not review or release gates.
-
-Executable routing lives in `config/ai-model-routing.json`; project entries may
-override individual task defaults. `scripts/deepseek-routing.mjs` refuses
-same-family independent review, including Flash reviewing Pro. It describes
-escalations without automatically invoking or paying for another model.
-Release authority always belongs to the existing owner/release captain.
+Final owner policy, November 7, 2026: always use Codex or Claude unless the
+owner explicitly requests DeepSeek Pro. No quota, rate-limit, availability or
+cost condition automatically selects DeepSeek. Earlier Flash/Pro-first and
+automatic standby proposals are superseded. `config/ai-model-routing.json`
+and `scripts/deepseek-routing.mjs` implement the task/project defaults; see
+`MODEL_ROUTING.md` for the explicit operator context. Required reviews and the
+existing owner/release captain retain their authority.
 
 The separate `scripts/deepseek-agent.mjs` profile proposes bounded changes and
-supports isolated worktrees, local focused tests and draft PR preparation.
+supports isolated worktrees, reviewed focused-test handoffs and draft PR preparation.
 See `DEEPSEEK_IMPLEMENTER.md`. It does not change shared Codex/Claude settings.
 The existing `scripts/deepseek-review.mjs` pipeline retains complete immutable
 comparison accounting, exact base/HEAD binding and durable review state. See
@@ -45,17 +41,17 @@ additional provider client is needed.
 ## Offline qualification
 
 Where a Node launcher exists, prefix these commands with
-`bash scripts/with-project-node.sh`. Other projects use Node 22.16.0 or newer.
+`bash scripts/with-project-node.sh`. Other projects use Node 22.13.0 or newer.
 
 ```
-node --test tests/deepseek-budget.test.mjs tests/deepseek-routing.test.mjs tests/deepseek-agent.test.mjs tests/deepseek-transfer-policy.test.mjs
+node --test tests/deepseek-*.test.mjs tests/model-*.test.mjs tests/agent-route.test.mjs
 ```
 
 Mile Commons additionally retains `npm run test:deepseek-review`. Mandatory
 repository FULL CI belongs on the stable qualified PR head under existing
 policy. Focused local checks do not confer merge readiness.
 
-## Seven-day measurement after authorized activation
+## Seven-day measurement after authorized activation and explicit owner request
 
 Record T0 only after policy review, project-specific transfer and distinct
 payment approval, approved credentials, and both live qualification calls:
