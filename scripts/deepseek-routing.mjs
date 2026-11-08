@@ -72,7 +72,7 @@ export function resolveRoute({repository,taskType,role,implementerFamily,overrid
     const backupEffort=effort==='low' ? 'low' : 'high';
     if(overrides.reasoningEffort==='medium') fail('UNSUPPORTED_REASONING_EFFORT');
     if(!suitable(backup,backupEffort)) fail(reviewing&&backup?.family===implementerFamily ? 'INDEPENDENT_MODEL_REQUIRED' : 'NO_SUITABLE_BACKUP');
-    selected=backup;effort=backupEffort;reason='OWNER_EXPLICIT_REQUEST';
+    selected=backup;effort=backupEffort;reason='EXPLICIT_OWNER_REQUEST';
   }
   if(!reason) {
     if(overrides.family && overrides.family!==selected?.family) fail('PROVIDER_FAMILY_MISMATCH');

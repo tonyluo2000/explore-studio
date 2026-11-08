@@ -48,7 +48,7 @@ test('quota constraint alone never activates DeepSeek and blocked primary select
 test('only explicit owner request activates Pro under healthy constrained or unknown quota',()=>{
   for(const quota of [{},{codex:report('healthy')},{codex:report('low')},{codex:report('exhausted')}]) {
     const selected=route({quota,ownerRequestedDeepSeek:true});
-    assert.equal(selected.model,'deepseek-v4-pro');assert.equal(selected.effectiveEffort,'low');assert.equal(selected.backupReason,'OWNER_EXPLICIT_REQUEST');assert.equal(selected.ownerRequestedDeepSeek,true);
+    assert.equal(selected.model,'deepseek-v4-pro');assert.equal(selected.effectiveEffort,'low');assert.equal(selected.backupReason,'EXPLICIT_OWNER_REQUEST');assert.equal(selected.ownerRequestedDeepSeek,true);
     assert.ok(selected.gates.includes('PAID_CALL_AUTHORIZATION_REQUIRED'));assert.ok(selected.gates.includes('EXTERNAL_TRANSFER_AUTHORIZATION_REQUIRED'));
     assert.equal(selected.reviewer.provider,'anthropic');
   }

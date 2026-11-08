@@ -43,8 +43,8 @@ export function decisionRecord({route, taskId, attempt = 1, timestamp = Date.now
   const primaryRole = oneOf(route.primaryRole, new Set(['codex', 'claude'])) ?? (role === 'review' ? 'claude' : 'codex');
   // A quota observation is telemetry only. The owner must explicitly request
   // DeepSeek Pro for this task; low or exhausted quotas never imply opt-in.
-  const ownerRequestedDeepSeek = route.ownerRequestedDeepSeek === true || route.backupReason === 'OWNER_EXPLICIT_REQUEST';
-  const backupReason = backupActive && ownerRequestedDeepSeek ? 'OWNER_EXPLICIT_REQUEST' : null;
+  const ownerRequestedDeepSeek = route.ownerRequestedDeepSeek === true || route.backupReason === 'EXPLICIT_OWNER_REQUEST';
+  const backupReason = backupActive && ownerRequestedDeepSeek ? 'EXPLICIT_OWNER_REQUEST' : null;
   const reviewerIdentity = route.reviewer && identity(route.reviewer.provider, route.reviewer.model);
   return {
     schema: SCHEMA, timestamp, repository, taskId, attempt,

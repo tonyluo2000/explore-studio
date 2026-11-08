@@ -54,9 +54,9 @@ test('quota constraints never imply DeepSeek opt-in or an automatic backup reaso
 });
 
 test('only explicit owner opt-in is recorded as the DeepSeek selection reason', () => {
-  for (const explicit of [{ownerRequestedDeepSeek: true}, {backupReason: 'OWNER_EXPLICIT_REQUEST'}]) {
+  for (const explicit of [{ownerRequestedDeepSeek: true}, {backupReason: 'EXPLICIT_OWNER_REQUEST'}]) {
     const result = record({route: {...route, provider: 'deepseek', model: 'deepseek-v4-pro', ...explicit}});
-    assert.equal(result.backupReason, 'OWNER_EXPLICIT_REQUEST');
+    assert.equal(result.backupReason, 'EXPLICIT_OWNER_REQUEST');
     assert.equal(result.ownerRequestedDeepSeek, true);
   }
   const primary = record({route: {...route, ownerRequestedDeepSeek: true}});
@@ -118,7 +118,7 @@ test('ledger append revalidates metadata, excludes extra secrets and refuses sym
   await appendDecisionRecord(filename, record({route: {...route, provider: 'deepseek', model: 'deepseek-v4-pro', ownerRequestedDeepSeek: true}}));
   const optedIn = JSON.parse((await readFile(filename, 'utf8')).trim().split('\n').at(-1));
   assert.equal(optedIn.ownerRequestedDeepSeek, true);
-  assert.equal(optedIn.backupReason, 'OWNER_EXPLICIT_REQUEST');
+  assert.equal(optedIn.backupReason, 'EXPLICIT_OWNER_REQUEST');
   const linked = path.join(directory, 'linked.jsonl');
   await symlink(filename, linked);
   await assert.rejects(appendDecisionRecord(linked, record()));

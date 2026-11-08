@@ -1,5 +1,5 @@
 {
-  "schema": "cross-project.model-routing.v2",
+  "schema": "cross-project.model-routing.v3",
   "projects": {
     "tonyluo2000/mile-commons": {},
     "briersystems/montefinance": {},
