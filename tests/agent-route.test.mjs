@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { sourcePolicyDigest } from '../scripts/model-activation.mjs';
 import { routeTask, primaryCommand, parsePrimaryOutput, main } from '../scripts/agent-route.mjs';
 
 const REPO='tonyluo2000/mile-commons';
@@ -95,4 +96,11 @@ test('CLI reads operator request separately and records only an advisory DeepSee
   assert.equal(receipt.status,'planned');assert.equal(receipt.requested.model,'deepseek-v4-pro');assert.equal(receipt.actual.model,null);
   assert.equal(receipt.selectionAvailability,'unknown');assert.equal(receipt.limitation,'MODEL_AVAILABILITY_UNVERIFIED');
   assert.ok(!lines[0].includes('authorizationReference'));
+});
+
+test('approved primary capability can launch without editing source, while DeepSeek still needs separate grants',async t=>{
+ const {root,task}=await fixture(t);let calls=0;const digest=sourcePolicyDigest();
+ const activation={schema:'cross-project.primary-routing-activation.v1',repository:task.repository,activationId:'synthetic-activation-01',ownerApproved:true,ownerApprovalReference:'synthetic:test-only',sourcePolicyDigest:digest,roles:['implementation','review'],independentReview:{provider:'anthropic',actualModel:'claude-opus-5-5',outcome:'clean',substantiveDefects:0,participatedInImplementation:false,sourcePolicyDigest:digest,baseSha:'a'.repeat(40),headSha:'b'.repeat(40),receiptSha256:'c'.repeat(64),sourceBundleSha256:'d'.repeat(64)}};
+ const result=await routeTask({root,task:{...task,instruction:'Perform a synthetic task.'},activation,capabilities,execute:true,launch:async()=>{calls++;return {status:'succeeded',output:''};}});
+ assert.equal(calls,1);assert.equal(result.route.provider,'openai');assert.equal(result.status,'succeeded');
 });

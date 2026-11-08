@@ -17,6 +17,7 @@ const fail = code => {throw Object.assign(new Error(code), {code});};
 // to this tooling's explicit source paths below. Recognized secrets are never
 // classified here and continue through the ordinary redaction/verification.
 const SOURCE_WORDS = new Set([
+  'INDEPENDENT_POLICY_REVIEW_REQUIRED',
   'HIGH_REVIEW_OUTPUT_ENVELOPE_REQUIRED',
   'ABSOLUTE_EXTERNAL_OUTPUT_REQUIRED', 'INDEPENDENT_TRANSFER_POLICY_REVIEW_REQUIRED',
   'ISOLATED_DEEPSEEK_BRANCH_REQUIRED', 'SOURCE_CHANGED_SINCE_PREPARATION',
@@ -43,10 +44,17 @@ const SOURCE_WORDS = new Set([
   'SOURCE_CLASSIFICATION_CONTEXT_INVALID', 'SOURCE_CLASSIFICATION_REPOSITORY_MISMATCH',
   'SOURCE_CLASSIFICATION_ROOT_UNSAFE', 'SOURCE_CLASSIFICATION_SECTION_MISMATCH',
   'SOURCE_DIGEST_REPOSITORY_MISMATCH', 'SOURCE_DIGEST_TARGET_NOT_REGULAR',
+  'codex-claude-primary-deepseek-pro-task-scoped-owner-request-only',
+  'fresh-task-scoped-owner-request-only', 'PAID_AUTHORIZATION_REPLAY_DENIED',
+  'deepseek-review-cache-policy', 'classified=classificationContext',
+  'remaining=containsRecognizedSecret', 'input_price_usd_per_million+receipt',
+  'reported_usage_cost_upper_bound_usd=Math', 'independent_review_attested=false',
+  'authorized_body_sha256=exactAuthorization', 'classified=classifyReviewSection',
 ]);
 const TOOLING_PATHS = new Set([
-  SELF_PATH, 'scripts/deepseek-agent.mjs', 'scripts/deepseek-routing.mjs',
+  SELF_PATH, 'scripts/model-activation.mjs', 'tests/model-activation.test.mjs', 'scripts/deepseek-agent.mjs', 'scripts/deepseek-routing.mjs',
   'scripts/deepseek-review-core.mjs', 'scripts/deepseek-review.mjs',
+  'scripts/deepseek-review-cache-policy.mjs',
   'scripts/deepseek-source-scanner.mjs', 'scripts/deepseek-transfer-policy.mjs',
   'scripts/deepseek-budget.mjs', 'scripts/agent-route.mjs', 'scripts/model-quality.mjs',
   'scripts/model-quota.mjs', 'scripts/model-capabilities.mjs', 'scripts/model-telemetry.mjs',
@@ -78,6 +86,9 @@ const SYNTHETIC_SPAN_HASHES = new Set([
 // not permission for arbitrary addresses in tests, or a new email exception.
 const GIT_TEST_IDENTITY_HASH = '86fc68d648ba6e53a652bcf21946cab2116f26d9e483409e1767caa323e6a0a0';
 const GIT_TEST_PATHS = new Set(['tests/deepseek-agent.test.mjs', 'tests/agent-route.test.mjs']);
+const REVIEW_TEST_PATH = 'tests/deepseek-review.test.mjs';
+// Exact invented account-number denial literal in the context-forgery test.
+const REVIEW_DENIAL_HASH = '8f7de0027218c582c71048deb1a3247aee79614d9f24a53382d4abdec9a933a6';
 
 function git(root, args, bytes = false) {
   return execFileSync('git', ['-C', root, ...args], {encoding: bytes ? undefined : 'utf8',
@@ -145,11 +156,12 @@ export function classifyReviewSection(context) {
   const counts = {};
   const bump = kind => {counts[kind] = (counts[kind] ?? 0) + 1;};
   let transmittedText = section;
-  if (filename === FIXTURE_PATH || GIT_TEST_PATHS.has(filename)) {
+  if (filename === FIXTURE_PATH || filename === REVIEW_TEST_PATH || GIT_TEST_PATHS.has(filename)) {
     transmittedText = section.split('\n').map(line => replaceLiteralSpans(line, literal => {
       const value = digest(literal);
       if (!(filename === FIXTURE_PATH && SYNTHETIC_SPAN_HASHES.has(value))
-        && !(GIT_TEST_PATHS.has(filename) && value === GIT_TEST_IDENTITY_HASH)) return literal;
+        && !(GIT_TEST_PATHS.has(filename) && value === GIT_TEST_IDENTITY_HASH)
+        && !(filename === REVIEW_TEST_PATH && value === REVIEW_DENIAL_HASH)) return literal;
       bump('synthetic-denial-fixture');
       return `${literal[0]}[REDACTED:synthetic-denial-fixture]${literal[0]}`;
     })).join('\n');
@@ -165,7 +177,7 @@ export function classifyReviewSection(context) {
   if (filename === SELF_PATH) {
     scanText = scanText.split('\n').map(line => replaceLiteralSpans(line, literal => {
       const value = literal.slice(1, -1);
-      if (!SYNTHETIC_SPAN_HASHES.has(value) && value !== GIT_TEST_IDENTITY_HASH) return literal;
+      if (!SYNTHETIC_SPAN_HASHES.has(value) && value !== GIT_TEST_IDENTITY_HASH && value !== REVIEW_DENIAL_HASH) return literal;
       bump('synthetic-span-digest');
       return `${literal[0]}CLASSIFIED_SPAN_DIGEST${literal[0]}`;
     })).join('\n');
@@ -191,7 +203,7 @@ export function classifyReviewSection(context) {
     // File keys are exact manifest entries whose actual blob was verified.
     scanText = scanText.replace(/"([^"\n]+)"(?=\s*:\s*"CLASSIFIED_EXACT_SOURCE_DIGEST")/g, '"CLASSIFIED_SOURCE_PATH"');
   }
-  if (filename === 'docs/operations/MODEL_ROUTING.md' || filename === SELF_PATH) {
+  if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs'].includes(filename)) {
     for (const link of ['https://github.com/tonyluo2000/mile-commons/issues/1120', 'https://github.com/briersystems/montefinance/issues/980']) {
       if (scanText.includes(link)) {scanText = scanText.split(link).join('CLASSIFIED_PUBLIC_POLICY_LINK'); bump('public-policy-link');}
     }

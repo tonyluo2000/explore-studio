@@ -2,13 +2,14 @@ import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
 import { containsRecognizedSecret, containsSuspiciousHighEntropy } from "./deepseek-source-scanner.mjs";
+import { assertSourceActivation } from "./model-activation.mjs";
 
 export const TRANSFER_POLICY_VERSION = "cross-project.source-transfer.v2";
-// Eligibility is implemented for mock qualification, not live activation. An independently
-// reviewed source change is required before this switch can change; CLI flags cannot do it.
+// No global activation or automatic fallback. A reviewed, owner-approved record
+// can activate this exact source policy without editing the qualified source.
 export const LIVE_TRANSFER_ENABLED = false;
-export function assertLiveTransferApproved() {
-  if (!LIVE_TRANSFER_ENABLED) throw Object.assign(new Error("independent transfer-policy review and separate live activation are required"), { code: "POLICY_REVIEW_REQUIRED" });
+export function assertLiveTransferApproved(options) {
+  return assertSourceActivation(options);
 }
 
 const WEB = [".cjs", ".css", ".html", ".js", ".json", ".jsx", ".md", ".mjs", ".sh", ".sql", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml"];
@@ -77,7 +78,7 @@ export function assertNoPrivateData(text) {
   // three approved repositories and the literal validated-source template are
   // recognized. Similar domains, ordinary addresses and arbitrary remotes stay
   // subject to the same personal-data denial below.
-  const candidate = String(text).replace(/\bgit@github\.com:(?:\$\{(?:repository|task\.repository)\}|(?:tonyluo2000\/(?:mile-commons|explore-studio)|briersystems\/montefinance)(?:\.git)?)(?=["'`\s),\]])/g, "PUBLIC_GITHUB_SSH_REMOTE");
+  const candidate = String(text).replace(/\bgit@github\.com:(?:\$\{(?:repository|task\.repository)\}(?:\.git)?|(?:tonyluo2000\/(?:mile-commons|explore-studio)|briersystems\/montefinance)(?:\.git)?)(?=["'`\s),\]])/g, "PUBLIC_GITHUB_SSH_REMOTE");
   const patterns = [
     /\b(?:latitude|longitude|lat|lng|heart[_-]?rate|blood[_-]?pressure|account[_-]?number|routing[_-]?number|social[_-]?security|ssn)["']?\s*[:=]\s*["']?-?\d+(?:\.\d+)?/i,
     /\b(?:runner|customer|learner|patient)[_-]?(?:name|email|record|address)["']?\s*[:=]\s*["'][^"'\n]+["']/i,

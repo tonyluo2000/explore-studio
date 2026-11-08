@@ -124,3 +124,29 @@ test('classification policy constants themselves retain full secret and private-
   assert.equal(containsRecognizedSecret(redacted),null);
   assert.equal(containsSuspiciousHighEntropy(redacted),false);
 });
+
+test('new task-scoped policy labels and cache source names have finite exact classifications',t=>{
+  const filename='config/ai-model-routing.json';
+  const policy='codex-claude-primary-deepseek-pro-task-scoped-owner-request-only';
+  const selection='fresh-task-scoped-owner-request-only';
+  const cache='scripts/deepseek-review-cache-policy.mjs';
+  const data=fixture(t,{[filename]:JSON.stringify({policy,selection})+'\n',[cache]:'const policy="deepseek-review-cache-policy";\n'});
+  for(const file of [filename,cache]) {
+    const context=data.context(file);
+    const classified=classifyReviewSection(context);
+    assert.equal(classified.transmittedText,context.section);
+    assert.equal(containsSuspiciousHighEntropy(classified.scanText),false);
+    assert.ok(classified.counts['known-source-word']>0);
+  }
+});
+
+test('known source tokens do not authorize adjacent opaque values or waive credential redaction',t=>{
+  const filename='scripts/deepseek-review-core.mjs';
+  const source='const token="PAID_AUTHORIZATION_REPLAY_DENIED";\nconst label="deepseek-review-cache-policy'+ '-opaque";\n';
+  const data=fixture(t,{[filename]:source});
+  const classified=classifyReviewSection(data.context(filename));
+  const redacted=redactSecrets(classified.transmittedText);
+  assert.ok(Object.keys(redacted.counts).length>0);
+  assert.ok(!redacted.text.includes('PAID_AUTHORIZATION_REPLAY_DENIED'));
+  assert.equal(containsSuspiciousHighEntropy(classified.scanText),true);
+});

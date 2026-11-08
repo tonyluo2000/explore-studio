@@ -29,6 +29,7 @@ Options:
   --routing-context FILE               Risk, quota and implementer family (never owner permission)
   --owner-request FILE                 Fresh owner request bound to this exact task/base/HEAD
   --approval FILE                      Exact body/cost/transfer/payment permission for a live call
+  --activation FILE                   Independently reviewed owner-approved capability record
   --source-root PATH                   Optional canonical local source for exact diff classification
   --reasoning-effort low|high           Optional effort override; cannot lower risk requirements
   --max-diff-chars NUMBER              Default: ${DEFAULT_MAX_DIFF_CHARS}
@@ -103,6 +104,7 @@ export function parseArgs(argv) {
     else if (argument === "--routing-context") options.routingContextPath = take();
     else if (argument === "--owner-request") options.ownerRequestPath = take();
     else if (argument === "--approval") options.approvalPath = take();
+    else if (argument === "--activation") options.activationPath = take();
     else if (argument === "--source-root") options.sourceRoot = take();
     else if (argument === "--reasoning-effort") options.reasoningEffort = take();
     else if (argument === "--max-diff-chars") options.maxDiffChars = parseInteger(take(), "--max-diff-chars");
@@ -244,6 +246,7 @@ export async function main(argv) {
     ownerRequest: options.ownerRequestPath ? JSON.parse(await readFile(path.resolve(options.ownerRequestPath),"utf8")) : undefined,
     callAuthorization: options.approvalPath ? JSON.parse(await readFile(path.resolve(options.approvalPath),"utf8")) : undefined,
     sourceRoot:options.sourceRoot,
+    activation:options.activationPath?JSON.parse(await readFile(path.resolve(options.activationPath),"utf8")):undefined,
     pullNumber: options.pullNumber,
     headSha: options.headSha,
     baseSha: options.baseSha,

@@ -233,7 +233,7 @@ export async function executeImplementationWithReceipt({root,manifest,output,run
   return report;
 }
 
-export async function runImplementation({root,manifest,mode='mock',approval,providerCall=callDeepSeek,apply=false,routingContext,ownerRequest,onPrepared=async()=>{}}) {
+export async function runImplementation({root,manifest,mode='mock',approval,apply=false,routingContext,ownerRequest,activation,onPrepared=async()=>{}}) {
   const started = Date.now();
   if (!['mock','live'].includes(mode)) fail('INVALID_MODE');
   const prepared = await prepareImplementation({root,manifest,routingContext,ownerRequest});
@@ -246,9 +246,9 @@ export async function runImplementation({root,manifest,mode='mock',approval,prov
   // New source classifications remain disabled until reviewed activation is installed.
   const policy = await import('./deepseek-transfer-policy.mjs');
   if(typeof policy.assertLiveTransferApproved !== 'function') fail('INDEPENDENT_TRANSFER_POLICY_REVIEW_REQUIRED');
-  await policy.assertLiveTransferApproved({repository:manifest.repository,approval,requestId:prepared.requestId});
+  await policy.assertLiveTransferApproved({repository:manifest.repository,activation});
   try {
-    const result = await providerCall({apiKey:process.env.DEEPSEEK_API_KEY,model:prepared.route.model,reasoningEffort:prepared.route.reasoningEffort,routingContext,ownerRequest,callAuthorization,repository:manifest.repository,taskType:manifest.taskType??'implementation',messages:prepared.messages,maxCostUsd:prepared.maximumCostUsd,maxOutputTokens:manifest.maxOutputTokens??4000,maxRequestBytes:manifest.maxRequestBytes??64_000,retries:0,expectedBodySha256:hash(prepared.request.serializedBody),budgetIdentity:{repository:manifest.repository,taskId:manifest.taskId,authorizationId:prepared.route.authorizationId,reasoningEffort:prepared.route.reasoningEffort,...(manifest.pullNumber ? {pullNumber:manifest.pullNumber}:{}),taskType:'implementation',headSha:manifest.headSha,baseSha:manifest.baseSha,actualModel:prepared.route.model,provider:'deepseek',requestId:prepared.requestId}});
+    const result = await callDeepSeek({apiKey:process.env.DEEPSEEK_API_KEY,model:prepared.route.model,reasoningEffort:prepared.route.reasoningEffort,routingContext,ownerRequest,callAuthorization,activation,repository:manifest.repository,taskType:manifest.taskType??'implementation',messages:prepared.messages,maxCostUsd:prepared.maximumCostUsd,maxOutputTokens:manifest.maxOutputTokens??4000,maxRequestBytes:manifest.maxRequestBytes??64_000,retries:0,expectedBodySha256:hash(prepared.request.serializedBody),budgetIdentity:{repository:manifest.repository,taskId:manifest.taskId,authorizationId:prepared.route.authorizationId,reasoningEffort:prepared.route.reasoningEffort,...(manifest.pullNumber ? {pullNumber:manifest.pullNumber}:{}),taskType:'implementation',headSha:manifest.headSha,baseSha:manifest.baseSha,actualModel:prepared.route.model,provider:'deepseek',requestId:prepared.requestId}});
     await finalizeImplementationResult({root,prepared,report,result,apply});
   } catch(error) {
     if(error?.providerReceipt) {try {const receipt=validateProviderReceipt(error.providerReceipt,{requestedModel:prepared.route.model,maxOutputTokens:manifest.maxOutputTokens??4000,maxInputTokensUpperBound:prepared.request.budget.serialized_request_bytes,maximumAttempts:1});report.actualModel=receipt.resolvedModel;report.usage=receipt.usage;report.providerRequestId=receipt.providerRequestId;report.attempts=receipt.attempts;} catch { /* Invalid identity/usage cannot attest a charge. */ }}
@@ -263,10 +263,10 @@ export async function main(argv) {
   const options={mode:'mock'};
   for(let i=0;i<argv.length;i++) {
     const argument=argv[i];
-    if(argument==='--help') {console.log('deepseek-agent --task FILE [--routing-context FILE] --owner-request FILE [--live --approval FILE] [--apply] --output /absolute/outside-repository/NEW_FILE [--create-worktree PATH --branch codex/deepseek-NAME]');return 0;}
+    if(argument==='--help') {console.log('deepseek-agent --task FILE [--routing-context FILE] --owner-request FILE [--live --approval FILE --activation FILE] [--apply] --output /absolute/outside-repository/NEW_FILE [--create-worktree PATH --branch codex/deepseek-NAME]');return 0;}
     if(argument==='--live') options.mode='live';
     else if(argument==='--apply') options.apply=true;
-    else if(['--task','--approval','--output','--create-worktree','--branch','--routing-context','--owner-request'].includes(argument)) {const value=argv[++i];if(!value||value.startsWith('--')) fail('MISSING_ARGUMENT');options[argument.slice(2)]=value;}
+    else if(['--task','--approval','--output','--create-worktree','--branch','--routing-context','--owner-request','--activation'].includes(argument)) {const value=argv[++i];if(!value||value.startsWith('--')) fail('MISSING_ARGUMENT');options[argument.slice(2)]=value;}
     else fail('UNKNOWN_ARGUMENT');
   }
   if(!options.task) fail('TASK_REQUIRED');
@@ -277,8 +277,9 @@ export async function main(argv) {
   const approval=options.approval?JSON.parse(await readFile(path.resolve(options.approval),'utf8')):undefined;
   const routingContext=options['routing-context']?JSON.parse(await readFile(path.resolve(options['routing-context']),'utf8')):undefined;
   const ownerRequest=options['owner-request']?JSON.parse(await readFile(path.resolve(options['owner-request']),'utf8')):undefined;
+  const activation=options.activation?JSON.parse(await readFile(path.resolve(options.activation),'utf8')):undefined;
   const destination=path.resolve(options.output);
-  const report=await executeImplementationWithReceipt({root,manifest,output:options.output,mode:options.mode,approval,apply:options.apply,routingContext,ownerRequest});
+  const report=await executeImplementationWithReceipt({root,manifest,output:options.output,mode:options.mode,approval,apply:options.apply,routingContext,ownerRequest,activation});
   console.log(JSON.stringify({status:report.status,provider:report.provider,requestedModel:report.requestedModel,actualModel:report.actualModel,report:destination}));
   return ['MOCK_ONLY','PROPOSAL_READY','APPLIED_UNTESTED'].includes(report.status)?0:1;
 }

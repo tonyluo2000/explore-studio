@@ -3,6 +3,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { readFile, lstat, realpath } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { assertPrimaryRoutingActivation } from './model-activation.mjs';
 import { resolveRoute } from './deepseek-routing.mjs';
 import { discoverCapabilities } from './model-capabilities.mjs';
 import { collectCodexQuota } from './model-quota.mjs';
@@ -69,7 +70,7 @@ export function parsePrimaryOutput(output, provider) {
   return result;
 }
 
-export async function routeTask({root=process.cwd(),task,quota={},ownerRequestedDeepSeek=false,ownerRequest,execute=false,pilot=false,capabilities,launch=launchPrimary,now=Date.now()}) {
+export async function routeTask({root=process.cwd(),task,quota={},ownerRequestedDeepSeek=false,ownerRequest,activation,execute=false,pilot=false,capabilities,launch=launchPrimary,now=Date.now()}) {
   root=path.resolve(root);
   if(await realpath(root)!==root)fail('NONCANONICAL_PROJECT_ROOT');
   const adapter=await readInput(path.join(root,'config/model-project.json'));
@@ -89,7 +90,7 @@ export async function routeTask({root=process.cwd(),task,quota={},ownerRequested
   // Validate telemetry identity before starting any child.
   record();
   if(!execute&&!pilot)return {route,record:record({status:'planned'}),status:'planned'};
-  if(!pilot&&adapter.activation!=='approved')fail('ROUTING_ACTIVATION_APPROVAL_REQUIRED');
+  if(!pilot) {try{assertPrimaryRoutingActivation({activation,repository:task.repository});}catch{fail('ROUTING_ACTIVATION_APPROVAL_REQUIRED');}}
   if(route.provider==='deepseek')fail('GUARDED_DEEPSEEK_PROFILE_REQUIRED');
   if(route.availability!=='verified')fail('MODEL_AVAILABILITY_UNVERIFIED');
   const selectedQuota=route.quota?.[route.provider==='openai'?'codex':'claude'];
@@ -108,9 +109,9 @@ export async function main(argv) {
   const options={};
   for(let i=0;i<argv.length;i++) {
     const key=argv[i];
-    if(key==='--help'){console.log('agent-route --task FILE [--quota FILE] [--refresh-quota] [--output LEDGER] [--owner-request FILE] [--pilot | --execute]. Default: Codex/Claude selection only. DeepSeek requires a fresh task-scoped operator request file and the guarded profile. Pilot: fixed synthetic no-source task; production activation remains separate.');return;}
+    if(key==='--help'){console.log('agent-route --task FILE [--quota FILE] [--refresh-quota] [--output LEDGER] [--owner-request FILE] [--pilot | --execute --activation FILE]. Default: Codex/Claude selection only. DeepSeek requires a fresh task-scoped operator request file and the guarded profile. Pilot: fixed synthetic no-source task; production activation remains separate.');return;}
     if(['--execute','--pilot','--refresh-quota'].includes(key)){options[key.slice(2)]=true;continue;}
-    if(!['--task','--quota','--output','--owner-request'].includes(key)||!argv[i+1]||argv[i+1].startsWith('--'))fail('INVALID_ARGUMENT');
+    if(!['--task','--quota','--output','--owner-request','--activation'].includes(key)||!argv[i+1]||argv[i+1].startsWith('--'))fail('INVALID_ARGUMENT');
     options[key.slice(2)]=argv[++i];
   }
   if(!options.task||options.pilot&&options.execute)fail('INVALID_MODE');
@@ -118,7 +119,8 @@ export async function main(argv) {
   const quota=options.quota?await readInput(path.resolve(options.quota)):{};
   if(options['refresh-quota'])quota.codex=await collectCodexQuota();
   const ownerRequest=options['owner-request']?await readInput(path.resolve(options['owner-request'])):undefined;
-  const result=await routeTask({task,quota,ownerRequest,execute:options.execute,pilot:options.pilot});
+  const activation=options.activation?await readInput(path.resolve(options.activation)):undefined;
+  const result=await routeTask({task,quota,ownerRequest,activation,execute:options.execute,pilot:options.pilot});
   if(options.output)await appendDecisionRecord(path.resolve(options.output),result.record);
   console.log(JSON.stringify({...result.record,status:result.status,selectionAvailability:result.route.availability,
     primaryQuotaWarning:result.route.quotaWarning,reviewBlocked:result.route.reviewBlocked,

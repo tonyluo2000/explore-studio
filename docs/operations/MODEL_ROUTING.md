@@ -134,9 +134,17 @@ tokens, verified toolchain digests or individually classified synthetic test
 spans as source. No file is omitted; unknown opaque values and real private
 records remain denied.
 
-`LIVE_TRANSFER_ENABLED` remains false. Independent security review, authorized
-source-policy activation and exact-call source/payment approval are distinct
-requirements. $1/request and $10/rolling-week caps are ceilings, not approval.
+No activation is installed by default. `--activation FILE` consumes a separate
+operator record with the exact executable source-policy digest, owner approval
+reference and a clean independent Claude review receipt identity. Source files
+are hashed at use time; any control-code change invalidates activation. Primary
+routing uses `cross-project.primary-routing-activation.v1`; DeepSeek capability
+uses `cross-project.deepseek-activation.v1`. These records are separate and
+neither grants a DeepSeek task request, source transfer or spending consent.
+A qualified capability can thus be approved without changing source or starting
+a new review/CI cycle. No activation file is created or enabled automatically.
+Independent security review, capability activation and exact-call source/payment
+approval remain distinct requirements. $1/request and $10/rolling-week caps are ceilings, not approval.
 A pending router candidate does not authorize merge, paid calls, beta/production
 activation, release, publishing or access around GitHub connector limitations.
 
@@ -162,3 +170,10 @@ Capability sources checked November 7, 2026:
 [DeepSeek request contract](https://api-docs.deepseek.com/api/create-chat-completion/).
 Installed CLI and account catalog evidence is checked separately; documentation
 alone is not an account availability claim.
+
+Authenticated historical reviews exhausted 1,000 output tokens. High-effort
+review now refuses an output limit below 4,000 before dispatch. Qualified owner
+call profiles may explicitly choose up to 16,000, within their approved dollar
+ceiling; no retry or spending increase follows truncation. An incomplete or
+invalid JSON response keeps the verdict incomplete while retaining validated
+provider model/usage metadata. Raw output and reasoning text never enter receipts.

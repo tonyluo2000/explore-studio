@@ -583,6 +583,7 @@ async function executeDeepSeek({
   routingContext,
   ownerRequest,
   callAuthorization,
+  activation,
   repository,
   taskType = "implementation",
   maxOutputTokens = DEFAULT_MAX_OUTPUT_TOKENS,
@@ -609,7 +610,7 @@ async function executeDeepSeek({
   }
   const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
   const authorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:budgetIdentity.requestId,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd});
-  assertTransferApproved();
+  assertTransferApproved({repository:scope.repository,activation});
   return budgetCall({ identity: { ...budgetIdentity,...scope,taskType:scope.role,actualModel:model,provider:'deepseek',authorizationId:authorization.authorizationId,reasoningEffort:route.reasoningEffort }, maximumCostUsd: maxCostUsd }, async () => {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     let response;
@@ -707,6 +708,7 @@ async function executeReview({
   routingContext,
   ownerRequest,
   callAuthorization,
+  activation,
   sourceRoot,
   reasoningEffort,
   pullNumber,
@@ -816,7 +818,7 @@ async function executeReview({
     const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
     const exactAuthorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:report.idempotency_key,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd});
     report.authorized_body_sha256=exactAuthorization.bodySha256;
-    runtime.assertActivation();
+    runtime.assertActivation({repository,activation});
     const beforeCall = await github.getPull(repository, pullNumber);
     assertPullIdentity(beforeCall, { headSha, baseSha, report, stage: "pre-provider check" });
     if (reserveOnly) {
@@ -847,6 +849,7 @@ async function executeReview({
         routingContext,
         ownerRequest,
         callAuthorization:exactAuthorization,
+        activation,
         expectedBodySha256:bodySha256,
         repository,
         taskType: "review",
