@@ -198,6 +198,7 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
     throw error;
   }
   const redactionCounts = {};
+  const classificationCounts = {};
   const changedLines = {};
   const redactedSections = sections.map((section) => {
     changedLines[section.filename] = changedLinesForSection(section.text);
@@ -214,7 +215,10 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
     assertNoPrivateData(classified.scanText);
     const scanned=redactSecrets(classified.scanText);
     const redacted=redactSecrets(classified.transmittedText);
-    mergeCounts(redactionCounts,classified.counts);
+    for(const [kind,count] of Object.entries(classified.counts)) {
+      if(kind==='synthetic-denial-fixture') mergeCounts(redactionCounts,{[kind]:count});
+      else mergeCounts(classificationCounts,{[kind]:count});
+    }
     mergeCounts(redactionCounts,redacted.counts);
     const remaining=containsRecognizedSecret(scanned.text) || containsRecognizedSecret(redacted.text);
     if (remaining) throw new Error(`secret redaction verification failed for ${section.filename}: ${remaining}`);
@@ -239,6 +243,7 @@ export function prepareReviewInput({ diff, files, maxDiffChars = DEFAULT_MAX_DIF
     originalCharacters: diff.length,
     transmittedCharacters: redactedDiff.length,
     redactionCounts,
+    classificationCounts,
     changedLines,
   };
 }
@@ -384,7 +389,7 @@ export function makeBaseReport({ repository, pullNumber, headSha, model, mode, r
     reservation_id: null,
     gate_effect: "NONE",
     stale: false,
-    coverage: { complete: false, files: [], file_count: 0, merge_base_sha: null, compare_status: null, total_commits: 0, original_characters: 0, transmitted_characters: 0, truncated: false, redactions: {} },
+    coverage: { complete: false, files: [], file_count: 0, merge_base_sha: null, compare_status: null, total_commits: 0, original_characters: 0, transmitted_characters: 0, truncated: false, redactions: {}, classifications:{} },
     budget: null,
     usage: null,
     summary: "Review did not complete.",
@@ -530,9 +535,9 @@ function retainReviewProviderReceipt(report,receipt) {
 
 // An explicit owner request is operator input, separate from untrusted source/task
 // manifests. Quota observations alone never authorize DeepSeek activation.
-export function resolveBackupRoute({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {}, ownerRequest, scope }) {
+function resolveBackupRouteAt({ repository, taskType = "implementation", model, reasoningEffort, routingContext = {}, ownerRequest, scope }, validationNow) {
   if (model !== undefined && model !== "deepseek-v4-pro") throw Object.assign(new Error("only DeepSeek Pro is approved as standby"), { code: "BACKUP_MODEL_NOT_APPROVED" });
-  const owner = assertOwnerTaskRequest({request:ownerRequest,scope});
+  const owner = assertOwnerTaskRequest({request:ownerRequest,scope,now:validationNow});
   const role = taskType === "review" ? "review" : "implementation";
   if(scope.repository !== repository || scope.role !== role) throw Object.assign(new Error("task role or repository does not match the host operation"),{code:"OWNER_TASK_SCOPE_MISMATCH"});
   const route = resolveRoute({
@@ -540,7 +545,7 @@ export function resolveBackupRoute({ repository, taskType = "implementation", mo
     repository,
     taskType,
     role,
-    taskId:scope.taskId,baseSha:scope.baseSha,headSha:scope.headSha,ownerRequest:owner,
+    taskId:scope.taskId,baseSha:scope.baseSha,headSha:scope.headSha,ownerRequest:owner,now:validationNow,
     overrides: {
       ...routingContext.overrides,
       ...(model === undefined ? {} : { model }),
@@ -551,6 +556,8 @@ export function resolveBackupRoute({ repository, taskType = "implementation", mo
   if (!["low", "high"].includes(route.reasoningEffort)) throw Object.assign(new Error("DeepSeek effort must be low or high"), { code: "INVALID_DEEPSEEK_EFFORT" });
   return {...route,authorizationId:owner.authorizationId};
 }
+
+export const resolveBackupRoute = options => resolveBackupRouteAt(options,Date.now());
 
 export const reviewTaskId = pullNumber => `pr-${pullNumber}-review`;
 
@@ -724,12 +731,11 @@ async function executeReview({
   providerRetries = DEFAULT_PROVIDER_RETRIES,
   maxCostUsd = null,
   onProviderAttemptState = async () => {},
-  now = () => new Date(),
   baseSha: pinnedBaseSha,
   reserveOnly = false,
   reservationId,
   resumeReservationId,
-}, runtime) {
+}, runtime, validationNow=Date.now()) {
   const providerCall=runtime.providerCall;
   validateRepository(repository);
   asPositiveInteger(pullNumber, "pull number");
@@ -746,7 +752,7 @@ async function executeReview({
     throw new Error("provider reservations are only valid in live mode");
   }
   const reviewPolicy = { maxDiffChars, maxOutputTokens, maxRequestBytes, providerRetries, maxCostUsd, reasoningEffort };
-  const report = makeBaseReport({ repository, pullNumber, headSha, model, mode, reviewPolicy, now: now() });
+  const report = makeBaseReport({ repository, pullNumber, headSha, model, mode, reviewPolicy, now: new Date(validationNow) });
   if(runtime.offline) {report.execution_kind="OFFLINE_TEST";report.provider="Offline fake DeepSeek protocol";report.independent_review_attested=false;report.provider_model_attestation="FAKE_RESPONSE_ONLY";}
   if (pinnedBaseSha) {
     report.exact_base_sha = pinnedBaseSha;
@@ -781,11 +787,12 @@ async function executeReview({
       transmitted_characters: prepared.transmittedCharacters,
       truncated: false,
       redactions: prepared.redactionCounts,
+      classifications: prepared.classificationCounts,
     };
     const built = buildMessages({ repository, pullNumber, baseSha, headSha, title: pull.title, body: pull.body, prepared });
     mergeCounts(report.coverage.redactions, built.metadataRedactions);
     const scope={repository,taskId:reviewTaskId(pullNumber),role:'review',baseSha,headSha};
-    const route = resolveBackupRoute({repository,taskType:'review',model,reasoningEffort,routingContext,ownerRequest,scope});
+    const route = resolveBackupRouteAt({repository,taskType:'review',model,reasoningEffort,routingContext,ownerRequest,scope},validationNow);
     if(route.reasoningEffort==='high' && maxOutputTokens<MIN_HIGH_REVIEW_OUTPUT_TOKENS) throw Object.assign(new Error('high-effort review requires a qualified output envelope of at least 4000 tokens'),{code:'HIGH_REVIEW_OUTPUT_ENVELOPE_REQUIRED'});
     reviewPolicy.authorizationId=route.authorizationId;
     report.authorization_id=route.authorizationId;report.task_id=scope.taskId;
@@ -816,7 +823,7 @@ async function executeReview({
       throw Object.assign(new Error("DEEPSEEK_API_KEY is required for live mode"), { code: "MISSING_API_KEY" });
     }
     const bodySha256=createHash('sha256').update(planned.serializedBody).digest('hex');
-    const exactAuthorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:report.idempotency_key,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd});
+    const exactAuthorization=assertCallAuthorization({authorization:callAuthorization,ownerRequest,scope,requestId:report.idempotency_key,bodySha256,reasoningEffort:route.reasoningEffort,maxCostUsd,now:validationNow});
     report.authorized_body_sha256=exactAuthorization.bodySha256;
     runtime.assertActivation({repository,activation});
     const beforeCall = await github.getPull(repository, pullNumber);
@@ -979,6 +986,9 @@ async function resolveReviewBase({ repository, pullNumber, headSha, github, base
 }
 
 async function executeReviewWithState({ stateDirectory, reviewOptions }, runtime) {
+  const validationNow=Date.now();
+  const refusal=()=>{throw Object.assign(new Error("stateful preflight failed; provider access and reservations are forbidden"),{code:"STATEFUL_PREFLIGHT_FAILED"});};
+  const preflightRuntime={...runtime,assertActivation:refusal,providerCall:async()=>refusal()};
   if (!stateDirectory) throw new Error("stateDirectory is required");
   if (reviewOptions?.mode === "live" && !reviewOptions.reserveOnly && reviewOptions.resumeReservationId === undefined) {
     throw Object.assign(new Error("live stateful execution requires a durable provider reservation"), { code: "RESERVATION_REQUIRED" });
@@ -995,18 +1005,18 @@ async function executeReviewWithState({ stateDirectory, reviewOptions }, runtime
       getPull: async () => { throw resolutionError; },
       getComparison: (...args) => reviewOptions.github.getComparison(...args),
     };
-    const report = await executeReview({ ...reviewOptions, github: guardedGithub },runtime);
+    const report = await executeReview({ ...reviewOptions, github: guardedGithub,onProviderAttemptState:async()=>{} },preflightRuntime,validationNow);
     return { report, receiptPath: null };
   }
 
   let route;
   try {
-    route = resolveBackupRoute({ repository: reviewOptions.repository, taskType: "review", model: reviewOptions.model ?? DEFAULT_MODEL, reasoningEffort: reviewOptions.reasoningEffort, routingContext: reviewOptions.routingContext,ownerRequest:reviewOptions.ownerRequest,scope:{repository:reviewOptions.repository,taskId:reviewTaskId(reviewOptions.pullNumber),role:"review",baseSha,headSha:reviewOptions.headSha} });
+    route = resolveBackupRouteAt({ repository: reviewOptions.repository, taskType: "review", model: reviewOptions.model ?? DEFAULT_MODEL, reasoningEffort: reviewOptions.reasoningEffort, routingContext: reviewOptions.routingContext,ownerRequest:reviewOptions.ownerRequest,scope:{repository:reviewOptions.repository,taskId:reviewTaskId(reviewOptions.pullNumber),role:"review",baseSha,headSha:reviewOptions.headSha} },validationNow);
   } catch {
     // Preserve an explicit incomplete report even when no standby route exists.
-    // Normal preflight still accounts for source/GitHub errors; it cannot call
-    // a provider unless the same route validation succeeds there.
-    const report = await executeReview({ ...reviewOptions, baseSha },runtime);
+    // Account for source/GitHub errors with a permanently non-transmitting
+    // runtime. No changed clock or input can turn this fallback into execution.
+    const report = await executeReview({ ...reviewOptions, baseSha,onProviderAttemptState:async()=>{} },preflightRuntime,validationNow);
     return { report, receiptPath: null };
   }
   reviewOptions = { ...reviewOptions, reasoningEffort: route.reasoningEffort,authorizationId:route.authorizationId };
@@ -1045,7 +1055,7 @@ async function executeReviewWithState({ stateDirectory, reviewOptions }, runtime
       onProviderAttemptState: async (stateReport) => {
         await writeReceiptAtomically(receiptPath, stateReport);
       },
-    },runtime);
+    },runtime,validationNow);
     await writeReceiptAtomically(receiptPath, report);
     return { report, receiptPath };
   } finally {

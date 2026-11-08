@@ -14,7 +14,7 @@ async function fixture(t) {
   t.after(()=>rm(root,{recursive:true,force:true}));
   const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   git('init');git('config','user.name','Synthetic Test');git('config','user.email','test@example.invalid');git('remote','add','origin',`https://github.com/${REPO}.git`);
-  await mkdir(path.join(root,'config'));await writeFile(path.join(root,'config/model-project.json'),JSON.stringify({repository:REPO,activation:'pending_review'}));
+  await mkdir(path.join(root,'config'));await writeFile(path.join(root,'config/model-project.json'),JSON.stringify({repository:REPO,activationPolicy:'reviewed-owner-record-required'}));
   git('add','.');git('commit','-m','synthetic adapter');
   const task={repository:REPO,taskId:'synthetic-docs',taskType:'routine',risk:'low',complexity:'simple',baseSha:git('rev-parse','HEAD'),headSha:git('rev-parse','HEAD')};
   return {root,task,git};

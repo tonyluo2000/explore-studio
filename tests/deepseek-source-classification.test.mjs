@@ -6,17 +6,21 @@ import {mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, rmSyn
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {classifyReviewSection} from '../scripts/deepseek-source-classification.mjs';
-import {assertNoPrivateData} from '../scripts/deepseek-transfer-policy.mjs';
+import {assertNoPrivateData, projectPathPolicy} from '../scripts/deepseek-transfer-policy.mjs';
 import {containsRecognizedSecret, containsSuspiciousHighEntropy, redactSecrets} from '../scripts/deepseek-source-scanner.mjs';
 
 const repository='tonyluo2000/mile-commons';
 const hash=value=>createHash('sha256').update(value).digest('hex');
-function fixture(t, files) {
+function fixture(t, files, initialFiles = {}) {
   const root=realpathSync(mkdtempSync(path.join(tmpdir(),'source-classification-')));
   t.after(()=>rmSync(root,{recursive:true,force:true}));
   const git=args=>execFileSync('git',['-C',root,'-c','core.hooksPath=/dev/null','-c','commit.gpgsign=false','-c','user.name=Synthetic','-c','user.email=fixture@example.com',...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trimEnd();
   git(['init','-q']); git(['remote','add','origin',`https://github.com/${repository}`]);
   writeFileSync(path.join(root,'README.md'),'Synthetic source classification test.\n');
+  for(const [filename,content] of Object.entries(initialFiles)) {
+    mkdirSync(path.dirname(path.join(root,filename)),{recursive:true});
+    writeFileSync(path.join(root,filename),content);
+  }
   git(['add','.']); git(['commit','-qm','Synthetic base']);
   const baseSha=git(['rev-parse','HEAD']);
   for(const [filename,content] of Object.entries(files)) {
@@ -65,6 +69,19 @@ test('index abbreviation may vary while every source byte, mode and hunk remains
   assert.throws(()=>classifyReviewSection({...context,section:context.section.replace('42','43')}),{code:'SOURCE_CLASSIFICATION_SECTION_MISMATCH'});
 });
 
+test('modified-file index mode cannot be forged or removed while normalizing hash abbreviations',t=>{
+  const filename='scripts/deepseek-agent.mjs';
+  const data=fixture(t,{[filename]:'export const value = 2;\n'},{[filename]:'export const value = 1;\n'});
+  const context=data.context(filename);
+  assert.match(context.section,/^index [a-f0-9]+\.\.[a-f0-9]+ 100644$/m);
+  const abbreviated=context.section.replace(/^(index )[a-f0-9]+\.\.[a-f0-9]+/m,'$11111111..2222222');
+  assert.doesNotThrow(()=>classifyReviewSection({...context,section:abbreviated}));
+  for(const section of [
+    context.section.replace(/^(index [^\n]+) 100644$/m,'$1 100755'),
+    context.section.replace(/^(index [^\n]+) 100644$/m,'$1'),
+  ]) assert.throws(()=>classifyReviewSection({...context,section}),{code:'SOURCE_CLASSIFICATION_SECTION_MISMATCH'});
+});
+
 test('only exact known synthetic spans in the exact fixture path are redacted',t=>{
   const fixtureSource=readFileSync(new URL('./deepseek-transfer-policy.test.mjs',import.meta.url),'utf8');
   const denialStatement=fixtureSource.split('\n').find(line=>line.includes('for (const text of')&&line.includes('lib/source.ts'))+'\n';
@@ -101,6 +118,14 @@ test('toolchain source digest is verified against exact-head blob and stays visi
   assert.equal(containsSuspiciousHighEntropy(classified.scanText),false);
   writeFileSync(path.join(data.root,target),'Uncommitted replacement is irrelevant.\n');
   assert.doesNotThrow(()=>classifyReviewSection(context));
+});
+
+test('a verified blob digest cannot classify a private email embedded in its manifest target path',t=>{
+  const filename='config/deepseek-toolchain.json',target=['scripts/runner','github.com.mjs'].join('@'),source='export const value = 42;\n';
+  assert.equal(projectPathPolicy(repository,target).allowed,true);
+  const manifest=JSON.stringify({source_repository:repository,files:{[target]:hash(source)}},null,2)+'\n';
+  const data=fixture(t,{[filename]:manifest,[target]:source});
+  assert.throws(()=>classifyReviewSection(data.context(filename)),{code:'PRIVATE_DATA_DENIED'});
 });
 
 test('forged manifest digest and arbitrary opaque hex in ordinary source remain blocked',t=>{
@@ -149,4 +174,32 @@ test('known source tokens do not authorize adjacent opaque values or waive crede
   assert.ok(Object.keys(redacted.counts).length>0);
   assert.ok(!redacted.text.includes('PAID_AUTHORIZATION_REPLAY_DENIED'));
   assert.equal(containsSuspiciousHighEntropy(classified.scanText),true);
+});
+
+test('only complete exact public policy URLs and finite known owner fragments are classified',t=>{
+  const filename='docs/operations/MODEL_ROUTING.md';
+  const links=[
+    'https://github.com/tonyluo2000/mile-commons/issues/1120',
+    'https://github.com/briersystems/montefinance/issues/980',
+    'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6716279700',
+    'https://github.com/briersystems/montefinance/issues/980#issuecomment-6716280037',
+    'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6715998366',
+    'https://github.com/briersystems/montefinance/issues/980#issuecomment-6715998814',
+  ];
+  const source=links.map(link=>`[Owner policy](${link})\n${link}\n`).join('');
+  const data=fixture(t,{[filename]:source});
+  const context=data.context(filename),classified=classifyReviewSection(context);
+  assert.equal(classified.counts['public-policy-link'],links.length*2);
+  assert.equal(classified.transmittedText,context.section);
+});
+
+test('policy URL prefixes cannot classify a different issue, an unknown fragment or an embedded URL',t=>{
+  const filename='docs/operations/MODEL_ROUTING.md';
+  const link='https://github.com/tonyluo2000/mile-commons/issues/1120';
+  const source=[link+'9',link+'#unknown-fragment',link+'#issuecomment-6716279700'+'9','https://other.example.com/?next='+link].map(url=>`[Unclassified](${url})`).join('\n')+'\n';
+  const data=fixture(t,{[filename]:source});
+  const context=data.context(filename),classified=classifyReviewSection(context);
+  assert.equal(classified.counts['public-policy-link'],undefined);
+  assert.equal(classified.scanText,context.section);
+  assert.equal(classified.transmittedText,context.section);
 });

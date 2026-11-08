@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {realpathSync} from 'node:fs';
 import path from 'node:path';
-import {projectPathPolicy} from './deepseek-transfer-policy.mjs';
+import {projectPathPolicy, assertNoPrivateData} from './deepseek-transfer-policy.mjs';
 
 const PROJECTS = new Set(['tonyluo2000/mile-commons', 'briersystems/montefinance', 'tonyluo2000/explore-studio']);
 const SHA = /^[a-f0-9]{40}$/;
@@ -17,6 +17,7 @@ const fail = code => {throw Object.assign(new Error(code), {code});};
 // to this tooling's explicit source paths below. Recognized secrets are never
 // classified here and continue through the ordinary redaction/verification.
 const SOURCE_WORDS = new Set([
+  'reviewed-owner-record-required',
   'INDEPENDENT_POLICY_REVIEW_REQUIRED',
   'HIGH_REVIEW_OUTPUT_ENVELOPE_REQUIRED',
   'ABSOLUTE_EXTERNAL_OUTPUT_REQUIRED', 'INDEPENDENT_TRANSFER_POLICY_REVIEW_REQUIRED',
@@ -62,7 +63,7 @@ const TOOLING_PATHS = new Set([
   'tests/deepseek-agent.test.mjs', 'tests/deepseek-routing.test.mjs', 'tests/deepseek-review.test.mjs',
   'tests/deepseek-budget.test.mjs', FIXTURE_PATH, 'tests/agent-route.test.mjs',
   'tests/model-quality.test.mjs', 'tests/model-quota.test.mjs', 'tests/model-telemetry.test.mjs',
-  'tests/deepseek-source-classification.test.mjs', 'config/ai-model-routing.json', TOOLCHAIN_PATH,
+  'tests/deepseek-source-classification.test.mjs', 'config/ai-model-routing.json', 'config/model-project.json', TOOLCHAIN_PATH,
 ]);
 
 // SHA256 of the exact quoted source spans holding the pre-existing invented
@@ -96,9 +97,9 @@ function git(root, args, bytes = false) {
 }
 
 function normalizeSection(section) {
-  // GitHub may abbreviate index object IDs differently. This header has no
-  // source content; all modes, paths, hunks and context remain byte-exact.
-  return section.replace(/^index [a-f0-9]{7,64}\.\.[a-f0-9]{7,64}(?: [0-7]{6})?\n/m, '')
+  // GitHub may abbreviate object IDs differently. Normalize only those IDs;
+  // the optional index-line mode remains part of the immutable comparison.
+  return section.replace(/^index [a-f0-9]{7,64}\.\.[a-f0-9]{7,64}( [0-7]{6})?\n/m, (_match, mode = '') => `index NORMALIZED_OBJECT_IDS${mode}\n`)
     .replace(/\n?$/, '\n');
 }
 
@@ -141,6 +142,9 @@ function manifestAt(root, sha) {
 }
 
 function verifiedManifestDigest(root, repository, sha, filename, value) {
+  // A matching blob digest does not classify a path's personal information.
+  // Check the original target before its key can be masked in scanText.
+  assertNoPrivateData(filename);
   const manifest = manifestAt(root, sha);
   if (manifest?.files?.[filename] !== value || !projectPathPolicy(repository, filename).allowed) fail('SOURCE_DIGEST_NOT_DECLARED');
   let bytes;
@@ -203,9 +207,23 @@ export function classifyReviewSection(context) {
     // File keys are exact manifest entries whose actual blob was verified.
     scanText = scanText.replace(/"([^"\n]+)"(?=\s*:\s*"CLASSIFIED_EXACT_SOURCE_DIGEST")/g, '"CLASSIFIED_SOURCE_PATH"');
   }
-  if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs'].includes(filename)) {
-    for (const link of ['https://github.com/tonyluo2000/mile-commons/issues/1120', 'https://github.com/briersystems/montefinance/issues/980']) {
-      if (scanText.includes(link)) {scanText = scanText.split(link).join('CLASSIFIED_PUBLIC_POLICY_LINK'); bump('public-policy-link');}
+  if (['docs/operations/MODEL_ROUTING.md', SELF_PATH, 'tests/agent-route.test.mjs', 'tests/deepseek-routing.test.mjs', 'tests/deepseek-source-classification.test.mjs'].includes(filename)) {
+    for (const link of [
+      'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6716279700',
+      'https://github.com/briersystems/montefinance/issues/980#issuecomment-6716280037',
+      'https://github.com/tonyluo2000/mile-commons/issues/1120#issuecomment-6715998366',
+      'https://github.com/briersystems/montefinance/issues/980#issuecomment-6715998814',
+      'https://github.com/tonyluo2000/mile-commons/issues/1120',
+      'https://github.com/briersystems/montefinance/issues/980',
+    ]) {
+      scanText = scanText.replaceAll(link, (match, offset, input) => {
+        const previous = input[offset - 1], next = input[offset + match.length];
+        const beginsDiffLine = /(?:^|\n)[+-]$/.test(input.slice(0, offset));
+        if (previous !== undefined && !/[\s"'`(\[]/.test(previous) && !beginsDiffLine
+          || next !== undefined && !/[\s"'`\])]/.test(next)) return match;
+        bump('public-policy-link');
+        return 'CLASSIFIED_PUBLIC_POLICY_LINK';
+      });
     }
   }
   return {scanText, transmittedText, counts};

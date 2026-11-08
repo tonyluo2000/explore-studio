@@ -31,6 +31,9 @@ test("public approved GitHub SSH protocol syntax is not private email, near matc
   for(const repository of [MC,MF,ES]) assert.doesNotThrow(()=>assertNoPrivateData(`const remote = 'git@github.com:${repository}.git';`));
   assert.doesNotThrow(()=>assertNoPrivateData('const remote = `git@github.com:${repository}`;'));
   for(const text of ['git@github.com.evil','git@github.com:other/repository','alice@private-domain.com']) assert.throws(()=>assertNoPrivateData(text),{code:"PRIVATE_DATA_DENIED"});
+  for(const prefix of ['name.','name+','name-','name_','name%','name0']) {
+    assert.throws(()=>assertNoPrivateData(`${prefix}git@github.com:${MC}`),{code:"PRIVATE_DATA_DENIED"});
+  }
 });
 
 test("redaction sentinels retain expression boundaries without hiding nearby real credentials",()=>{

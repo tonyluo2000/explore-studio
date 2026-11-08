@@ -7,7 +7,6 @@ import { assertSourceActivation } from "./model-activation.mjs";
 export const TRANSFER_POLICY_VERSION = "cross-project.source-transfer.v2";
 // No global activation or automatic fallback. A reviewed, owner-approved record
 // can activate this exact source policy without editing the qualified source.
-export const LIVE_TRANSFER_ENABLED = false;
 export function assertLiveTransferApproved(options) {
   return assertSourceActivation(options);
 }
@@ -78,7 +77,7 @@ export function assertNoPrivateData(text) {
   // three approved repositories and the literal validated-source template are
   // recognized. Similar domains, ordinary addresses and arbitrary remotes stay
   // subject to the same personal-data denial below.
-  const candidate = String(text).replace(/\bgit@github\.com:(?:\$\{(?:repository|task\.repository)\}(?:\.git)?|(?:tonyluo2000\/(?:mile-commons|explore-studio)|briersystems\/montefinance)(?:\.git)?)(?=["'`\s),\]])/g, "PUBLIC_GITHUB_SSH_REMOTE");
+  const candidate = String(text).replace(/(?<![A-Za-z0-9._%+-])git@github\.com:(?:\$\{(?:repository|task\.repository)\}(?:\.git)?|(?:tonyluo2000\/(?:mile-commons|explore-studio)|briersystems\/montefinance)(?:\.git)?)(?=["'`\s),\]])/g, "PUBLIC_GITHUB_SSH_REMOTE");
   const patterns = [
     /\b(?:latitude|longitude|lat|lng|heart[_-]?rate|blood[_-]?pressure|account[_-]?number|routing[_-]?number|social[_-]?security|ssn)["']?\s*[:=]\s*["']?-?\d+(?:\.\d+)?/i,
     /\b(?:runner|customer|learner|patient)[_-]?(?:name|email|record|address)["']?\s*[:=]\s*["'][^"'\n]+["']/i,

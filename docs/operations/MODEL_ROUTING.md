@@ -31,8 +31,10 @@ origin must match the requested repository. Unknown risk defaults upward.
 it never enters decision logs.
 
 Selection is deterministic and does not call a model. `--execute` launches the
-selected installed primary CLI only when the project adapter has been approved
-and activated. All adapters initially remain `pending_review`. The CLI uses
+selected installed primary CLI only when a separately supplied, reviewed owner
+activation record validates. Project adapters identify the required record schema;
+they do not represent current active/inactive state. No activation record is
+installed automatically. The CLI uses
 explicit model and effort flags, starts one child, performs no retries and
 never switches a successful task mid-run. DeepSeek selection is a handoff to
 the guarded backup profile, not an unrestricted CLI invocation.
