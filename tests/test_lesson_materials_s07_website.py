@@ -1,4 +1,4 @@
-"""S07 public content matches the authored lesson and keeps S08 details private."""
+"""S07 public content matches the authored lesson and keeps its Python history session-local."""
 
 import json
 import os
@@ -23,7 +23,7 @@ def test_s07_publication_and_shared_context():
         r'"S\d\d"',
         calendar.split("sessionsWithSlides: readonly string[] = ", 1)[1].split(";", 1)[0],
     )
-    assert ids == [f'"S{i:02}"' for i in range(1, 8)]
+    assert ids == [f'"S{i:02}"' for i in range(1, 9)]
     slides = SLIDES.read_text()
     assert "<JourneyContext session={session.id} />" in slides
     assert '<PythonJourney session={session.id} mode="compact" />' in slides
@@ -31,8 +31,8 @@ def test_s07_publication_and_shared_context():
     assert "<JourneyContext session={session.id} />" in learn
     assert '<PythonJourney session={session.id} mode="compact" />' in learn
     assert 'id: "S07"' in (WEB / "lib/learn.ts").read_text()
-    assert not (WEB / "app/students/slides/s08").exists()
-    assert not (WEB / "public/journey/s08").exists()
+    assert not (WEB / "app/students/slides/s09").exists()
+    assert not (WEB / "public/journey/s09").exists()
 
 
 def test_commands_match_task_card_and_one_line_launch():
@@ -52,7 +52,7 @@ def test_commands_match_task_card_and_one_line_launch():
 def test_starter_bug_and_worked_repair_are_executable_and_truthful():
     starter = subprocess.check_output([sys.executable, str(STARTER)], text=True)
     assert starter == "False blue\nFalse gold\n"
-    source = (WEB / "lib/learn.ts").read_text().split('id: "S07",', 1)[1]
+    source = (WEB / "lib/learn.ts").read_text().split('id: "S07",', 1)[1].split('id: "S08",', 1)[0]
     code = re.search(r"code: `([^`]*)`", source).group(1)
     result = subprocess.check_output([sys.executable, "-c", code], text=True)
     assert result == "False blue\nTrue gold\n"
@@ -102,18 +102,20 @@ def test_s07_journey_stop_and_snapshot_state_contract():
     from scripts.journey_snapshots import SESSIONS_BY_ID
 
     data = json.loads((WEB / "journey/journey.json").read_text())
-    assert [stop["session"] for stop in data["stops"]] == [f"S{i:02}" for i in range(1, 8)]
-    assert data["stops"][-1]["landmark"] == "sky-signal"
+    assert [stop["session"] for stop in data["stops"]] == [f"S{i:02}" for i in range(1, 9)]
+    assert (
+        next(stop for stop in data["stops"] if stop["session"] == "S07")["landmark"] == "sky-signal"
+    )
     hero = SESSIONS_BY_ID["S07"].hero
     assert hero.expect.complete and hero.expect.toggle_on == ("sky-lantern-switch:sky-lantern",)
-    assert "S08" not in SESSIONS_BY_ID
+    assert "S09" not in SESSIONS_BY_ID
 
 
 SITE = os.environ.get("JOURNEY_SITE_OUT")
 
 
 @pytest.mark.skipif(not SITE, reason="requires fresh exported site")
-def test_rendered_s07_progress_no_s08_details_or_bundles():
+def test_rendered_s07_progress_no_later_objectives():
     out = ROOT / SITE
     for route in ("slides", "learn"):
         html = (out / f"students/{route}/s07/index.html").read_text()
@@ -122,7 +124,7 @@ def test_rendered_s07_progress_no_s08_details_or_bundles():
         visible = " ".join(unescape(re.sub("<[^>]*>", " ", html)).split())
         assert re.search(r"7\s*/\s*30", visible)
         assert 'data-python-step="S08"' not in html
-        assert not (out / f"students/{route}/s08/index.html").exists()
+        assert not (out / f"students/{route}/s09/index.html").exists()
     forbidden = (
         "Boolean branches",
         "Choose between two behaviors based on state.",
@@ -130,12 +132,9 @@ def test_rendered_s07_progress_no_s08_details_or_bundles():
         "when_on",
         "when_off",
         "guardian-response",
-        "/journey/s08/",
     )
     files = [
-        out / "students/journey/index.html",
         *out.glob("students/*/s07/index.html"),
-        *out.glob("_next/static/**/*.js"),
     ]
     for path in files:
         content = path.read_text()

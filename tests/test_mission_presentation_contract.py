@@ -55,7 +55,7 @@ CALENDAR = REPO / "course4teen-website/lib/calendar.ts"
 STANDARD, MOON_MEADOW = "standard", "moon-meadow"
 
 #: Published S06+ sessions may use STANDARD only with a reviewed, lesson-specific
-#: reason here. Empty today: S06 is polished and S07+ is not published.
+#: reason here. Empty today: published sessions use the polished Trail.
 PUBLISHED_STANDARD_EXCEPTIONS: dict[str, str] = {}
 
 #: session -> (canonical --mission-id, presentation the runtime gives it today).
@@ -67,7 +67,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s05": ("write-a-short-conversation", MOON_MEADOW),
     "s06": ("build-an-object-collection", MOON_MEADOW),
     "s07": ("toggle-an-object-state", MOON_MEADOW),
-    "s08": ("respond-to-object-state", STANDARD),
+    "s08": ("respond-to-object-state", MOON_MEADOW),
     "s09": ("count-object-interactions", STANDARD),
     "s10": ("compare-a-counter-to-its-goal", STANDARD),
     "s11": ("require-all-switches-on", STANDARD),
@@ -106,6 +106,7 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
     # still use the trusted course art.
     "s06": (NOVA_QUALIFIED_ID,),
     "s07": (NOVA_QUALIFIED_ID,),
+    "s08": (NOVA_QUALIFIED_ID, "cloud-gate:gate-guardian"),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.

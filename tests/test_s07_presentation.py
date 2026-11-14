@@ -40,7 +40,7 @@ def test_s07_scope_and_alias():
     assert policy.sprite_aliases == {OBJECT: SKY_LANTERN_PRESENTATION_ID}
     assert not policy.talk_cue and not policy.dialogue_focus and not policy.lantern_waypoint
     # Rendering cannot silently migrate a later toggle-style lesson.
-    for session in ("s08", "s14", "s23", "s28"):
+    for session in ("s14", "s23", "s28"):
         packages, options = CANONICAL[session]
         ids = tuple(
             yaml.safe_load((_package_root(p) / "manifest.yaml").read_text())["package"]["id"]

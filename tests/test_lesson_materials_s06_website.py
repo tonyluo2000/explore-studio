@@ -52,12 +52,12 @@ def _js_string(source: str, key: str) -> str:
     return match.group(1)
 
 
-def test_s06_remains_published_with_s07() -> None:
-    assert _published() == ["S01", "S02", "S03", "S04", "S05", "S06", "S07"]
+def test_s06_remains_published_with_s08() -> None:
+    assert _published() == ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08"]
     assert SLIDES.is_file()
     assert re.findall(r'^\s+id: "(S\d\d)"', _read(LEARN), re.MULTILINE) == _published()
-    assert not (WEBSITE / "app" / "students" / "slides" / "s08").exists()
-    assert not (WEBSITE / "public" / "journey" / "s08").exists()
+    assert not (WEBSITE / "app" / "students" / "slides" / "s09").exists()
+    assert not (WEBSITE / "public" / "journey" / "s09").exists()
 
 
 def test_s06_title_date_and_next_session_are_calendar_derived() -> None:

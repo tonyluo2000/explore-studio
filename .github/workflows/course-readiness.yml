@@ -27,6 +27,7 @@ on:
       - "course4teen-website/app/students/slides/s05/**"
       - "course4teen-website/app/students/slides/s06/**"
       - "course4teen-website/app/students/slides/s07/**"
+      - "course4teen-website/app/students/slides/s08/**"
       - "engine/**"
       - "tests/test_s07_presentation.py"
       - "course4teen-website/lib/calendar.ts"
@@ -65,6 +66,7 @@ on:
       - "course4teen-website/app/students/slides/s05/**"
       - "course4teen-website/app/students/slides/s06/**"
       - "course4teen-website/app/students/slides/s07/**"
+      - "course4teen-website/app/students/slides/s08/**"
       - "engine/**"
       - "tests/test_s07_presentation.py"
       - "course4teen-website/lib/calendar.ts"
@@ -106,6 +108,7 @@ jobs:
           tests/test_lesson_materials_s05_website.py
           tests/test_lesson_materials_s06_website.py
           tests/test_lesson_materials_s07_website.py
+          tests/test_lesson_materials_s08_website.py
           tests/test_s07_presentation.py
           tests/test_lesson_materials_s06_s10.py
           tests/test_lesson_materials_s11_s15.py
