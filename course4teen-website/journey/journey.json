@@ -101,6 +101,15 @@
           "state": "revealed"
         }
       ]
+    },
+    {
+      "id": "cloud-gate",
+      "name": "Cloud Gate",
+      "region": "moonlit-ridge",
+      "icon": "guide",
+      "x": 648,
+      "y": 207,
+      "reveal": [{ "from": "S08", "state": "revealed" }]
     }
   ],
   "paths": [
@@ -151,6 +160,14 @@
           "state": "revealed"
         }
       ]
+    },
+    {
+      "id": "trail-signal-gate",
+      "kind": "trail",
+      "from": "sky-signal",
+      "to": "cloud-gate",
+      "d": "M846 228C800 235 735 220 663 207",
+      "reveal": [{ "from": "S08", "state": "revealed" }]
     }
   ],
   "frontier": {
@@ -219,6 +236,15 @@
       "story": "The breadcrumb trail reaches the Sky Lantern signal for a gate hidden in the sky.",
       "snapshot": "S07_LANTERN_ON",
       "snapshotAlt": "The actual S07 Moon Meadow Trail: Nova beside the glowing gold Sky Lantern after one toggle, with M07 complete. Completion records a change, not a final ON state."
+    },
+    {
+      "session": "S08",
+      "kind": "reveal",
+      "landmark": "cloud-gate",
+      "headline": "landmark",
+      "story": "Nova finds a gate hidden in the sky. Its Guardian asks Nova to wake the Sky Switch.",
+      "snapshot": "S08_GUARDIAN_ON",
+      "snapshotAlt": "In Moon Meadow, the Sky Switch glows yellow and the Gate Guardian welcomes Nova through. The HUD shows Responses 2 / 2 and mission complete."
     }
   ]
 }

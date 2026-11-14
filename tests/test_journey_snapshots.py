@@ -347,6 +347,8 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
     assert S01.presentation == MOON_MEADOW
     assert set(S01.must_show) == {journey.NOVA, journey.PIXEL, journey.LANTERN}
     assert set(S01.must_not_show) == {
+        journey.S08_SWITCH,
+        journey.S08_GUARDIAN,
         journey.S02_COMPASS,
         journey.S03_COMPASS,
         journey.GUIDE,
@@ -390,7 +392,7 @@ def test_harness_refuses_deferred_and_unpublished_sessions(
     with pytest.raises(CaptureError, match="S01 is deferred"):
         publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
-        publish(["S08"])
+        publish(["S09"])
 
 
 # ---------------------------------------------------------------------------
@@ -434,6 +436,7 @@ def test_published_snapshot_set_is_the_reviewed_one() -> None:
         "S05": [(HERO, "S05_CONVERSATION")],
         "S06": [(HERO, "S06_BREADCRUMB_TRAIL")],
         "S07": [(HERO, "S07_LANTERN_ON")],
+        "S08": [(HERO, "S08_GUARDIAN_ON"), ("LEARNING_MOMENT", "S08_GUARDIAN_OFF")],
     }
 
 

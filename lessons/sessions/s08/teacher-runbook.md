@@ -15,7 +15,7 @@ Guardian's refusal is the recoverable loop that carries the session:
 
 1. Speak to the Guardian while the switch is off — it refuses passage.
 2. The refusal names the fix: "Wake the sky switch, then come speak with me
-   again." The clue always comes before the student can act on it.
+   again." Ask students to record this clue before they touch the switch.
 3. Student toggles the Sky Switch.
 4. Student speaks to the Guardian again.
 5. The Guardian's response changes to grant passage narratively.
@@ -29,7 +29,8 @@ progress, not physics. Do not tell students or families that the world
 ## Before class
 
 - Send the task card and confirm shared Quick Start readiness.
-- Validate the two-contribution package and prepare False/True branch cards.
+- Validate the two-contribution package and rehearse the task-card launch in
+  Moon Meadow. Prepare False/True branch cards.
 - Withhold execution until both student predictions are recorded.
 
 ## 45-minute runbook
@@ -65,8 +66,8 @@ then open. The package validates only when the NPC references the exact
 same-package toggle ID. In the Trail, speaking while off records the off branch
 — the Guardian's refusal, which names the Sky Switch as the fix; after one
 toggle, speaking records the on branch — the Guardian's acceptance — and
-completes M08. Nothing about player movement changes at any point; only the
-Guardian's line does.
+completes M08. The HUD moves from `Responses 1 / 2` to `Responses 2 / 2`.
+Students can walk past the Guardian in either state.
 
 ## Bounded AI assistance
 

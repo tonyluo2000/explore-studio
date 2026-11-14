@@ -98,7 +98,9 @@ def _package_text(spec: PackageText) -> str:
     import yaml
 
     data = yaml.safe_load((journey.package_root(spec.package) / spec.file).read_text("utf-8"))
-    value = data[spec.key]
+    value = data
+    for key in spec.key.split("."):
+        value = value[key]
     if spec.index is not None:
         if not isinstance(value, list) or not -len(value) <= spec.index < len(value):
             raise CaptureError(f"{spec.file}: {spec.key} has no item {spec.index}")

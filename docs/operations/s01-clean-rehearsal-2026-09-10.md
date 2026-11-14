@@ -58,7 +58,10 @@ polished marker primitives while later M06 reuse sessions stay on their existing
 presentation. On 2026-11-06 the release-candidate pin advanced to
 `f2cda35dee4929f98c48eab8c48790ea24c7640a` for S07's package-scoped
 Sky Lantern presentation, preserving M07 first-change completion and later
-toggle-session presentation. This candidate does not replace the live Course Kit.
+toggle-session presentation. On 2026-11-14 the Lecture 8 candidate advanced the
+pin to `d1e89a1d260ba647dcac09e9237faa397f2faee7`. The Cloud Gate package
+uses Moon Meadow, with a two-state Sky Switch and a speech bubble for each
+Guardian response.
 
 ## Student flow exercised
 

@@ -15,14 +15,14 @@ const base = process.env.QA_SITE_URL ?? "http://127.0.0.1:4177";
 const output = process.env.QA_OUTPUT_DIR;
 assert(output, "Set QA_OUTPUT_DIR to a screenshot/report folder outside the source tree");
 mkdirSync(output, { recursive: true });
-const published = Array.from({ length: 7 }, (_, i) => `s0${i + 1}`);
+const published = Array.from({ length: 8 }, (_, i) => `s0${i + 1}`);
 const routes = ["/students/journey/", ...published.flatMap((id) => [
   `/students/slides/${id}/`, `/students/learn/${id}/`,
 ])];
-const screenshotRoutes = new Set(["/students/journey/", ...["s06", "s07"].flatMap((id) => [
+const screenshotRoutes = new Set(["/students/journey/", ...["s06", "s07", "s08"].flatMap((id) => [
   `/students/slides/${id}/`, `/students/learn/${id}/`,
 ])]);
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.QA_BROWSER_PATH });
 const results = [];
 const simulated = JSON.parse(execFileSync(process.execPath, [fileURLToPath(new URL("./python_journey_probe.mjs", import.meta.url))], {
   input: JSON.stringify({
@@ -79,11 +79,11 @@ try {
         assert.equal(layout.explorerLabel, "Explorer Journey");
         assert.equal(layout.text.match(/Python Journey so far/g)?.length, 1);
       }
-      const count = route.includes("journey") ? 7 : Number(route.match(/s(\d\d)/)[1]);
+      const count = route.includes("journey") ? published.length : Number(route.match(/s(\d\d)/)[1]);
       assert.deepEqual(layout.ids, published.slice(0, count).map((id) => id.toUpperCase()));
       assert.equal(layout.current, `S0${count}`);
       assert(layout.currentText.includes("You are here"));
-      assert.equal(layout.text.includes("Boolean state"), count === 7);
+      assert.equal(layout.text.includes("Boolean state"), count >= 7);
       if (route.includes("journey")) {
         await page.locator("#python-journey").scrollIntoViewIfNeeded();
       }
@@ -120,7 +120,7 @@ try {
           await page.screenshot({ path, clip, fullPage: true });
         };
         if (route.includes("journey")) {
-          for (const [part, selector] of [["hero", ".journey-hero"], ["map", ".journey-map-section"], ["python", ".python-journey"], ["s06-card", "#stop-s06"], ["s07-card", "#stop-s07"]]) {
+          for (const [part, selector] of [["hero", ".journey-hero"], ["map", ".journey-map-section"], ["python", ".python-journey"], ["s06-card", "#stop-s06"], ["s07-card", "#stop-s07"], ["s08-card", "#stop-s08"]]) {
             await capture(selector, join(output, `${name}-${part}.png`));
           }
         } else {

@@ -55,7 +55,7 @@ Interaction 2  False  OFF  blue
 Interaction 3  True   ON   gold`}</code></pre><p>OFF has dim, cool glass. ON has a bright core, a larger glow, and rising sparks. Compare every row with your prediction.</p><p>The authored near message says “The lantern waits for a spark — one flame could reach the gate above.” The interaction message says “Click! The lantern changes.” These fixed messages do not read state.</p></> },
   { heading: "What M07 completion means", body: <><p>M07 completes after the toggle changes at least once. After the first change it stays complete through OFF and ON.</p><p>Final ON/gold is a story target, not mission-checked. Leave the lantern lit and show your teacher; confirm it by observation. Completion does not verify the final state.</p></> },
   { heading: "Explain what changed", body: <><ul className="slide-checks"><li>Explain False → True → False → True.</li><li>Name the assignment you repaired.</li><li>Separate local Python, YAML colors, and Trail state.</li><li>Show why M07 remains complete after interaction 2.</li></ul><p>Save your work and explain your prediction and tested repair. Use the task card for the AI receipt and optional Git close.</p><p><Link className="text-link" href="/students/learn/s07/">What we learned in Python today →</Link></p></> },
-  { heading: `${nextSession.id} · ${nextSession.title}`, body: <p>{formatSessionDate(nextSession.date)}. Our signal points toward the hidden gate. The next session is coming soon.</p> },
+  { heading: `${nextSession.id} · ${nextSession.title}`, body: <p>{formatSessionDate(nextSession.date)}. Our signal points toward the hidden gate. <Link className="text-link" href="/students/slides/s08/">Open the next lesson →</Link></p> },
 ];
 
 export default function S07SlidesPage() {

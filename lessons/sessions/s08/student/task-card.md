@@ -51,16 +51,14 @@ and two plain responses; the Trail evaluates its own toggle state.
 
    ```console
    explore-package validate lessons/sessions/s08/student/explorer-package
-   explore-package trail \
-     examples/explorer-packages/nova-character \
-     lessons/sessions/s08/student/explorer-package \
-     --player "nova-character:nova" \
-     --mission-id "respond-to-object-state" \
-     --name "S08 Build an If/Else Guardian"
+   explore-package trail examples/explorer-packages/nova-character lessons/sessions/s08/student/explorer-package --player "nova-character:nova" --mission-id "respond-to-object-state" --name "S08 Build an If/Else Guardian"
    ```
 
-3. Speak to the guardian while the switch is off. Toggle once, then speak again.
-4. Checkpoint: record both exact responses and M08 completion.
+3. In Moon Meadow, walk toward the Gate Guardian and press **E** at the talk
+   prompt. With the Sky Switch off, the Guardian tells you how to wake it.
+4. Walk left to the Sky Switch and press **E** at its prompt. Look for the
+   bright yellow glow, then return to the Guardian and press **E** again.
+5. Record the two responses and check that the HUD shows `Responses 2 / 2`.
 
 ## Debug checkpoint
 

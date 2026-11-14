@@ -236,6 +236,11 @@ class _TrailObject(Protocol):
     def world_object(self) -> _Positioned: ...
 
 
+class _ToggleResponse(Protocol):
+    @property
+    def toggle_qualified_id(self) -> str: ...
+
+
 class _TrailNPC(Protocol):
     qualified_id: str
 
@@ -244,6 +249,9 @@ class _TrailNPC(Protocol):
 
     @property
     def conversation_lines(self) -> tuple[str, ...]: ...
+
+    @property
+    def respond_to_toggle(self) -> _ToggleResponse | None: ...
 
 
 class _Mission(Protocol):
@@ -602,18 +610,21 @@ class TrailPresentation:
     def _spoken_line(self, view: TrailView, npc: _TrailNPC) -> str | None:
         """The line *npc* just said, read from the scene's own feedback line.
 
-        A greeting is its one line. For a 2-3-line conversation the scene alone
-        knows which line came next; it shows it as ``"<name>: <line>"``, so the
-        bubble repeats exactly that line and never keeps a second position.
+        For conversations and conditional responses, the scene selects the
+        line. Repeat its feedback without advancing a conversation or
+        evaluating the condition a second time.
         """
         lines = npc.conversation_lines
         if len(lines) == 1:
             return lines[0]
-        if not lines or not self.policy.dialogue_focus:
+        if not self.policy.dialogue_focus:
             return None
         message = getattr(view, "feedback_message", None)
-        name = npc.character.name
-        return next((line for line in lines if message == f"{name}: {line}"), None)
+        prefix = f"{npc.character.name}: "
+        if not isinstance(message, str) or not message.startswith(prefix):
+            return None
+        line = message[len(prefix) :]
+        return line if line in lines or getattr(npc, "respond_to_toggle", None) else None
 
     # ------------------------------------------------------------------
     # Poses
@@ -1187,21 +1198,29 @@ class TrailPresentation:
         return None
 
     def talk_cue_ids(self, view: TrailView) -> tuple[str, ...]:
-        """Talking NPCs the mission still needs: exactly what M04 or M05 waits for.
+        """Talking NPCs whose current response the mission still needs.
 
         A greeting NPC needs speaking to once (M04). An NPC with a 2-3-line
         conversation needs its final line shown (M05), so its cue stays up
-        between lines.
+        between lines. A conditional NPC's cue returns when the switch now
+        selects a branch that the player has yet to hear.
         """
         if not self.policy.talk_cue:
             return ()
-        return tuple(
-            npc.qualified_id
-            for npc in view.npcs
-            if npc.conversation_lines
-            and npc.qualified_id
-            not in (self._conversed if len(npc.conversation_lines) > 1 else self._spoken)
-        )
+        displayed = getattr(view, "displayed_conditional_branches", frozenset())
+        pending = []
+        for npc in view.npcs:
+            qualified_id = npc.qualified_id
+            conditional = getattr(npc, "respond_to_toggle", None)
+            if conditional is not None:
+                branch = (qualified_id, conditional.toggle_qualified_id in self._toggle_on)
+                if branch not in displayed:
+                    pending.append(qualified_id)
+            elif npc.conversation_lines:
+                heard = self._conversed if len(npc.conversation_lines) > 1 else self._spoken
+                if qualified_id not in heard:
+                    pending.append(qualified_id)
+        return tuple(pending)
 
     def _draw_talk_cues(self, renderer: object, view: TrailView) -> None:
         if not supports(renderer, "draw_rounded_rect", "draw_polygon", "draw_circle"):

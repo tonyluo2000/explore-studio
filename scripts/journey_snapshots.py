@@ -100,6 +100,10 @@ S03_PACKAGE: Final = "lessons/sessions/s03/student/explorer-package"
 S04_PACKAGE: Final = "lessons/sessions/s04/student/explorer-package"
 S05_PACKAGE: Final = "lessons/sessions/s05/student/explorer-package"
 S06_PACKAGE: Final = "lessons/sessions/s06/student/explorer-package"
+S08_PACKAGE: Final = "lessons/sessions/s08/student/explorer-package"
+S08_GUARDIAN: Final = "cloud-gate:gate-guardian"
+S08_SWITCH: Final = "cloud-gate:sky-switch"
+S08_HEAR_GUARDIAN: Final = (("walk_to", 650, 275), ("press",), ("hold", 0.35))
 
 #: The presentation runtime: everything between the task-card package files and
 #: the drawn frame, in groups an auditor can read. ``tests/test_journey_snapshots.py``
@@ -203,6 +207,7 @@ class PackageText:
     ``joined`` text may wrap over several drawn lines (a speech bubble);
     otherwise one ``draw_text`` call must draw exactly ``prefix + value``.
     ``index`` picks one item of a list value (a conversation line).
+    Dot-separated keys select nested fields.
     """
 
     package: str
@@ -301,6 +306,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             S02_COMPASS,
             S03_COMPASS,
@@ -330,6 +337,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             S03_COMPASS,
             GUIDE,
@@ -364,6 +373,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             PIXEL,
             LANTERN,
@@ -407,6 +418,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             PIXEL,
             S02_COMPASS,
@@ -442,6 +455,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # collection.
         must_show=(NOVA, LANTERN, S05_GUIDE),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             PIXEL,
             S02_COMPASS,
@@ -499,6 +514,8 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # objects; no prior cast member or later mechanic joins the scene.
         must_show=(NOVA, *S06_OBJECTS),
         must_not_show=(
+            S08_SWITCH,
+            S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
             PIXEL,
             LANTERN,
@@ -540,7 +557,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, "sky-lantern-switch:sky-lantern"),
-        must_not_show=(PIXEL, LANTERN, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(S08_SWITCH, S08_GUARDIAN, PIXEL, LANTERN, GUIDE, S05_GUIDE, *S06_OBJECTS),
         moments=(
             Moment(
                 name="S07_LANTERN_ON",
@@ -563,6 +580,72 @@ SESSIONS: Final[tuple[Session, ...]] = (
                             "lessons/sessions/s07/student/explorer-package",
                             "objects/sky-lantern.yaml",
                             "when_interacted",
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Session(
+        session="S08",
+        mission_id="respond-to-object-state",
+        player=NOVA,
+        presentation=MOON_MEADOW,
+        must_show=(NOVA, S08_SWITCH, S08_GUARDIAN),
+        must_not_show=(
+            PIXEL,
+            LANTERN,
+            S02_COMPASS,
+            S03_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+            "sky-lantern-switch:sky-lantern",
+        ),
+        moments=(
+            Moment(
+                name="S08_GUARDIAN_ON",
+                kind=HERO,
+                slug="hero",
+                steps=(
+                    *S08_HEAR_GUARDIAN,
+                    ("walk_to", 350, 340),
+                    ("press",),
+                    *S08_HEAR_GUARDIAN,
+                ),
+                expect=Expect(
+                    target=S08_GUARDIAN,
+                    visited=(S08_SWITCH,),
+                    complete=True,
+                    toggle_on=(S08_SWITCH,),
+                    texts=(
+                        "Responses 2 / 2",
+                        "Gate Guardian",
+                        PackageText(
+                            S08_PACKAGE,
+                            "character/gate-guardian.yaml",
+                            "respond_to_toggle.when_on",
+                            joined=True,
+                        ),
+                    ),
+                ),
+            ),
+            Moment(
+                name="S08_GUARDIAN_OFF",
+                kind=LEARNING_MOMENT,
+                slug="guardian-off",
+                steps=S08_HEAR_GUARDIAN,
+                expect=Expect(
+                    target=S08_GUARDIAN,
+                    toggle_on=(),
+                    texts=(
+                        "Responses 1 / 2",
+                        "Gate Guardian",
+                        PackageText(
+                            S08_PACKAGE,
+                            "character/gate-guardian.yaml",
+                            "respond_to_toggle.when_off",
+                            joined=True,
                         ),
                     ),
                 ),

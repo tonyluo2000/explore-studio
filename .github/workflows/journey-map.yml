@@ -16,6 +16,7 @@ on:
       - "tests/journey_map_probe.mjs"
       - "tests/test_python_journey.py"
       - "tests/test_lesson_materials_s07_website.py"
+      - "tests/test_lesson_materials_s08_website.py"
       - "tests/python_journey_*.mjs"
   push:
     branches:
@@ -28,6 +29,7 @@ on:
       - "tests/journey_map_probe.mjs"
       - "tests/test_python_journey.py"
       - "tests/test_lesson_materials_s07_website.py"
+      - "tests/test_lesson_materials_s08_website.py"
       - "tests/python_journey_*.mjs"
   workflow_dispatch:
 
@@ -68,4 +70,4 @@ jobs:
           JOURNEY_SITE_OUT: course4teen-website/out
         run: |
           python -m pip install -e ".[dev]"
-          python -m pytest -q tests/test_journey_map.py tests/test_python_journey.py tests/test_lesson_materials_s07_website.py
+          python -m pytest -q tests/test_journey_map.py tests/test_python_journey.py tests/test_lesson_materials_s07_website.py tests/test_lesson_materials_s08_website.py

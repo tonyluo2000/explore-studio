@@ -647,6 +647,56 @@ print(is_on, on_color)`,
       "Explain the boundary: Python models state, YAML declares colors, and Trail owns runtime session state. Leave the lantern ON/gold for the story and ask your teacher to observe it.",
     ],
   },
+  {
+    id: "S08",
+    sourceFile: "task-card.md",
+    concepts: [
+      { term: "condition", meaning: "A test that evaluates to True or False." },
+      { term: "if", meaning: "Runs its block when the condition is True." },
+      { term: "else", meaning: "Runs its block when the condition is False." },
+      { term: "return", meaning: "Gives the selected response back to the caller and ends the function." },
+    ],
+    code: `def guardian_response(is_on):
+    if is_on:
+        return "The portal is glowing!"
+    else:
+        return "The portal is sleeping."
+
+
+print(guardian_response(False))
+print(guardian_response(True))`,
+    runCommand: "python lessons/sessions/s08/student/starter.py",
+    output: `The portal is sleeping.
+The portal is glowing!`,
+    meanings: [
+      { term: "guardian_response(is_on)", meaning: "Receives the Boolean state as an argument." },
+      { term: "if is_on:", meaning: "Selects the glowing response when the argument is True." },
+      { term: "else:", meaning: "Selects the sleeping response when the argument is False." },
+      { term: "print(guardian_response(False))", meaning: "Calls the function with False and prints the line it returns." },
+    ],
+    why: [
+      "A single condition lets the same function choose between two responses.",
+      "Testing both inputs reveals a swapped pair of responses even when Python runs without errors.",
+      "Python models the branch. The package's respond_to_toggle links the Guardian to the Sky Switch. The Trail reads its own switch state to select when_off or when_on.",
+    ],
+    debugged: {
+      broken: "if not is_on:",
+      error: "The glowing response prints first, even though the first input is False.",
+      explanation: "not turns False into True, so the first call enters the if block. Test is_on directly to make True choose the glowing response.",
+      fixed: "if is_on:",
+    },
+    keyWords: [
+      { term: "branch", meaning: "One of the possible paths through a decision." },
+      { term: "not", meaning: "Reverses a Boolean value." },
+      { term: "if", meaning: "Introduces the condition and its True branch." },
+      { term: "else", meaning: "Introduces the fallback branch." },
+    ],
+    tryIt: [
+      "Predict both outputs before running the starter.",
+      "Repair only the condition. Run both cases again and explain which line each call returns.",
+      "Talk to the Guardian with the switch off, flip the Sky Switch, then talk again. Record both responses and look for Responses 2 / 2.",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);
