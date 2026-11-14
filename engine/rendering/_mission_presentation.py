@@ -51,6 +51,10 @@ S06_MISSION_ID: Final = "build-an-object-collection"
 S07_MISSION_ID: Final = "toggle-an-object-state"
 S07_PACKAGE_ID: Final = "sky-lantern-switch"
 S07_SKY_LANTERN_QUALIFIED_ID: Final = f"{S07_PACKAGE_ID}:sky-lantern"
+S08_MISSION_ID: Final = "respond-to-object-state"
+S08_PACKAGE_ID: Final = "cloud-gate"
+S08_SKY_SWITCH_QUALIFIED_ID: Final = f"{S08_PACKAGE_ID}:sky-switch"
+S08_GATE_GUARDIAN_QUALIFIED_ID: Final = f"{S08_PACKAGE_ID}:gate-guardian"
 
 #: The canonical S03 package (``lessons/sessions/s03/student/explorer-package``)
 #: ships the same Moon Compass under its own package id.
@@ -169,6 +173,20 @@ PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation
                 player_start=(240, 300),
                 sprite_aliases=MappingProxyType(
                     {S07_SKY_LANTERN_QUALIFIED_ID: SKY_LANTERN_PRESENTATION_ID}
+                ),
+            ),
+            (S08_MISSION_ID, S08_PACKAGE_ID): MissionPresentation(
+                celebration=True,
+                talk_cue=True,
+                dialogue_focus=True,
+                meadow_audio=True,
+                object_feedback_focus=True,
+                player_start=(710, 290),
+                sprite_aliases=MappingProxyType(
+                    {
+                        S08_SKY_SWITCH_QUALIFIED_ID: SKY_LANTERN_PRESENTATION_ID,
+                        S08_GATE_GUARDIAN_QUALIFIED_ID: MOONLIT_GUIDE_QUALIFIED_ID,
+                    }
                 ),
             ),
         }
