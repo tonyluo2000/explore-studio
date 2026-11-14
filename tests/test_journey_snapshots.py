@@ -347,6 +347,8 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
     assert S01.presentation == MOON_MEADOW
     assert set(S01.must_show) == {journey.NOVA, journey.PIXEL, journey.LANTERN}
     assert set(S01.must_not_show) == {
+        journey.S08_SWITCH,
+        journey.S08_GUARDIAN,
         journey.S02_COMPASS,
         journey.S03_COMPASS,
         journey.GUIDE,
