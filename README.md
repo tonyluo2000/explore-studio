@@ -40,6 +40,7 @@ See [`docs/roadmap.md`](docs/roadmap.md) for detail.
 
 ## Architecture and Documentation
 
+- Follow the [Cross-Project CI Batching Policy](docs/ci-batching-policy.md) for CI qualification and merges.
 - [`docs/architecture.md`](docs/architecture.md) — architecture index.
 - [`docs/architecture/student-contribution-model.md`](docs/architecture/student-contribution-model.md)
   — student repositories, Explorer Packages, execution modes, progression, and
