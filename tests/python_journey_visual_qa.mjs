@@ -115,6 +115,10 @@ try {
         const capture = async (selector, path) => {
           // Capture document coordinates from the top, so fixed offscreen
           // controls are not pulled into a tall element's screenshot.
+          await page.locator(selector).scrollIntoViewIfNeeded();
+          await page.locator(selector).evaluate(async (element) => {
+            await Promise.all([...element.querySelectorAll("img")].map((img) => img.decode()));
+          });
           await page.evaluate(() => window.scrollTo(0, 0));
           const clip = await page.locator(selector).boundingBox();
           assert(clip);

@@ -116,8 +116,8 @@
       "name": "Storm Engine",
       "region": "moonlit-ridge",
       "icon": "engine",
-      "x": 430,
-      "y": 190,
+      "x": 350,
+      "y": 165,
       "reveal": [
         {
           "from": "S09",
@@ -188,7 +188,7 @@
       "kind": "trail",
       "from": "cloud-gate",
       "to": "storm-engine",
-      "d": "M630 207C560 210 500 190 445 190",
+      "d": "M630 207C550 205 440 165 365 165",
       "reveal": [
         {
           "from": "S09",

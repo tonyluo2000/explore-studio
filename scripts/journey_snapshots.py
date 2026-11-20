@@ -307,6 +307,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -338,6 +339,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -374,6 +376,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -419,6 +422,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -456,6 +460,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # collection.
         must_show=(NOVA, LANTERN, S05_GUIDE),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -515,6 +520,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # objects; no prior cast member or later mechanic joins the scene.
         must_show=(NOVA, *S06_OBJECTS),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -558,7 +564,16 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, "sky-lantern-switch:sky-lantern"),
-        must_not_show=(S08_SWITCH, S08_GUARDIAN, PIXEL, LANTERN, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "storm-engine:storm-engine",
+            S08_SWITCH,
+            S08_GUARDIAN,
+            PIXEL,
+            LANTERN,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             Moment(
                 name="S07_LANTERN_ON",
@@ -594,6 +609,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, S08_SWITCH, S08_GUARDIAN),
         must_not_show=(
+            "storm-engine:storm-engine",
             PIXEL,
             LANTERN,
             S02_COMPASS,

@@ -347,6 +347,7 @@ def test_s01_row_states_the_moon_meadow_arrival_contract() -> None:
     assert S01.presentation == MOON_MEADOW
     assert set(S01.must_show) == {journey.NOVA, journey.PIXEL, journey.LANTERN}
     assert set(S01.must_not_show) == {
+        "storm-engine:storm-engine",
         journey.S08_SWITCH,
         journey.S08_GUARDIAN,
         journey.S02_COMPASS,
@@ -392,7 +393,7 @@ def test_harness_refuses_deferred_and_unpublished_sessions(
     with pytest.raises(CaptureError, match="S01 is deferred"):
         publish(["S01"])
     with pytest.raises(CaptureError, match="not published"):
-        publish(["S09"])
+        publish(["S10"])
 
 
 # ---------------------------------------------------------------------------
