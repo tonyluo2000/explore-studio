@@ -68,7 +68,7 @@ EXPECTED_PRESENTATION: dict[str, tuple[str, str]] = {
     "s06": ("build-an-object-collection", MOON_MEADOW),
     "s07": ("toggle-an-object-state", MOON_MEADOW),
     "s08": ("respond-to-object-state", MOON_MEADOW),
-    "s09": ("count-object-interactions", STANDARD),
+    "s09": ("count-object-interactions", MOON_MEADOW),
     "s10": ("compare-a-counter-to-its-goal", STANDARD),
     "s11": ("require-all-switches-on", STANDARD),
     "s12": ("open-with-either-switch", STANDARD),
@@ -107,6 +107,7 @@ REQUIRED_TRUSTED_ART: dict[str, tuple[str, ...]] = {
     "s06": (NOVA_QUALIFIED_ID,),
     "s07": (NOVA_QUALIFIED_ID,),
     "s08": (NOVA_QUALIFIED_ID, "cloud-gate:gate-guardian"),
+    "s09": (NOVA_QUALIFIED_ID,),
 }
 
 #: Student Workspace copies named on task cards -> the Course Kit seed they start from.

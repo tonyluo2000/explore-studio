@@ -45,6 +45,7 @@ MOONLIT_GUIDE_QUALIFIED_ID = "moonlit-guide:guide"
 SUN_SEED_PRESENTATION_ID: Final = "moon-meadow-presentation:sun-seed"
 RAIN_BELL_PRESENTATION_ID: Final = "moon-meadow-presentation:rain-bell"
 WIND_FLOWER_PRESENTATION_ID: Final = "moon-meadow-presentation:wind-flower"
+STORM_ENGINE_PRESENTATION_ID: Final = "moon-meadow-presentation:storm-engine"
 SKY_LANTERN_PRESENTATION_ID: Final = "moon-meadow-presentation:sky-lantern"
 PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
     {
@@ -52,6 +53,7 @@ PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
         RAIN_BELL_PRESENTATION_ID,
         WIND_FLOWER_PRESENTATION_ID,
         SKY_LANTERN_PRESENTATION_ID,
+        STORM_ENGINE_PRESENTATION_ID,
     }
 )
 
@@ -442,6 +444,53 @@ def _draw_crystal_lantern(
         renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
 
 
+def _draw_storm_engine(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """S09 cosmetic charge cells, already bounded by its presentation role.
+
+    Rows name the two-to-five-cell designs; columns name illuminated cells.
+    No package text or gameplay rule is interpreted by this drawing primitive.
+    """
+    cells = {"cells-2": 2, "cells-3": 3, "cells-4": 4, "cells-5": 5}.get(
+        pose.row if pose else None, 3
+    )
+    lit = {f"lit-{i}": i for i in range(cells + 1)}.get(pose.column if pose else None, 0)
+    box = _Box(x, y, width, height)
+    dark = _mix(accent, (18, 23, 40), 0.8)
+    metal = (142, 164, 186)
+    light = _mix(accent, _WHITE, 0.65)
+    box.shadow(renderer, 50, 30)
+    if lit:
+        renderer.draw_circle(
+            *box.point(50, 42), box.radius(22 + 4 * lit), _mix(accent, (26, 34, 55), 0.6)
+        )
+    box.polygon(renderer, ((18, 85), (26, 28), (39, 17), (61, 17), (74, 28), (82, 85)), dark)
+    box.rect(renderer, 26, 29, 74, 79, accent)
+    renderer.draw_circle(*box.point(50, 43), box.radius(19), metal)
+    renderer.draw_circle(*box.point(50, 43), box.radius(15), dark)
+    renderer.draw_circle(*box.point(50, 43), box.radius(3 + 3 * lit), light if lit else accent)
+    # Distinct filled bars plus a white tick: progress is not hue alone.
+    for i in range(cells):
+        left = 29 + i * 44 / cells
+        right = left + 36 / cells
+        box.rect(renderer, left, 67, right, 78, dark)
+        if i < lit:
+            box.rect(renderer, left, 64, right, 78, light)
+            renderer.draw_line(*box.point(left, 62), *box.point(right, 62), _WHITE, 2)
+    box.rect(renderer, 17, 84, 83, 94, metal)
+    if lit == cells:
+        box.polygon(renderer, ((52, 25), (40, 44), (50, 44), (46, 59), (62, 38), (52, 38)), _WHITE)
+        for px, py in ((12, 20), (88, 24), (12, 70), (88, 67)):
+            _sparkle(renderer, *box.point(px, py), box.radius(6), light)
+
+
 def _draw_sun_seed(
     renderer: _SpriteRenderer,
     x: int,
@@ -606,6 +655,7 @@ _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
     MOON_COMPASS_QUALIFIED_ID: _draw_moon_compass,
     CRYSTAL_LANTERN_QUALIFIED_ID: _draw_crystal_lantern,
     SKY_LANTERN_PRESENTATION_ID: _draw_crystal_lantern,
+    STORM_ENGINE_PRESENTATION_ID: _draw_storm_engine,
     MOONLIT_GUIDE_QUALIFIED_ID: _draw_moonlit_guide,
     SUN_SEED_PRESENTATION_ID: _draw_sun_seed,
     RAIN_BELL_PRESENTATION_ID: _draw_rain_bell,
