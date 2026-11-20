@@ -51,6 +51,7 @@ const ICON_LAYOUT: Record<string, { gem: number; label: number }> = {
   lantern: { gem: 150, label: 72 },
   guide: { gem: 82, label: 62 },
   markers: { gem: 74, label: 68 },
+  engine: { gem: 80, label: 64 },
 };
 
 function layout(icon: string) {
@@ -291,6 +292,18 @@ function GardenMarkers({ x, y, soft }: { x: number; y: number; soft: string }) {
   );
 }
 
+/** S09's powered milestone; the actual lesson evidence remains its runtime HERO. */
+function StormEngine({ x, y }: { x: number; y: number }) {
+  return <g className="jm-engine">
+    <ellipse cx={x} cy={y + 32} rx={44} ry={12} fill="#222640" />
+    <path d={`M${x - 34} ${y + 24}L${x - 27} ${y - 33}L${x - 13} ${y - 46}H${x + 13}L${x + 27} ${y - 33}L${x + 34} ${y + 24}Z`} fill="#7855a2" stroke="#e5d7ff" strokeWidth={2} />
+    <circle cx={x} cy={y - 20} r={17} fill="#e6d3ff" />
+    <path d={`M${x + 3} ${y - 34}L${x - 10} ${y - 17}H${x}L${x - 3} ${y - 5}L${x + 12} ${y - 23}H${x + 2}Z`} fill="#fffce9" stroke="#76529c" />
+    {[-19, -1, 17].map((offset) => <rect key={offset} x={x + offset - 6} y={y + 8} width={13} height={10} fill="#fffce9" />)}
+    <path d={`M${x - 43} ${y - 32}v12m-6 -6h12M${x + 43} ${y - 20}v12m-6 -6h12`} stroke="#fffce9" strokeWidth={3} />
+  </g>;
+}
+
 function Landmark({ landmark, number, soft }: { landmark: LandmarkView; number: number; soft: string }) {
   const { x, y } = landmark;
   const place = layout(landmark.icon);
@@ -298,6 +311,7 @@ function Landmark({ landmark, number, soft }: { landmark: LandmarkView; number: 
     landmark.icon === "lander" ? <Lander x={x} y={y} />
     : landmark.icon === "compass" ? <StoneCircle landmark={landmark} soft={soft} />
     : landmark.icon === "lantern" ? <Shrine x={x} y={y} soft={soft} />
+    : landmark.icon === "engine" ? <StormEngine x={x} y={y} />
     : landmark.icon === "markers" ? <GardenMarkers x={x} y={y} soft={soft} />
     : <Guide landmark={landmark} soft={soft} />;
   return (

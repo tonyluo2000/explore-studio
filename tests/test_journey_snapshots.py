@@ -437,6 +437,7 @@ def test_published_snapshot_set_is_the_reviewed_one() -> None:
         "S06": [(HERO, "S06_BREADCRUMB_TRAIL")],
         "S07": [(HERO, "S07_LANTERN_ON")],
         "S08": [(HERO, "S08_GUARDIAN_ON"), ("LEARNING_MOMENT", "S08_GUARDIAN_OFF")],
+        "S09": [(HERO, "S09_DEVICE_POWERED")],
     }
 
 

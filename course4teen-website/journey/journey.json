@@ -110,6 +110,20 @@
       "x": 648,
       "y": 207,
       "reveal": [{ "from": "S08", "state": "revealed" }]
+    },
+    {
+      "id": "storm-engine",
+      "name": "Storm Engine",
+      "region": "moonlit-ridge",
+      "icon": "engine",
+      "x": 430,
+      "y": 190,
+      "reveal": [
+        {
+          "from": "S09",
+          "state": "revealed"
+        }
+      ]
     }
   ],
   "paths": [
@@ -168,6 +182,19 @@
       "to": "cloud-gate",
       "d": "M846 228C800 235 735 220 663 207",
       "reveal": [{ "from": "S08", "state": "revealed" }]
+    },
+    {
+      "id": "trail-gate-engine",
+      "kind": "trail",
+      "from": "cloud-gate",
+      "to": "storm-engine",
+      "d": "M630 207C560 210 500 190 445 190",
+      "reveal": [
+        {
+          "from": "S09",
+          "state": "revealed"
+        }
+      ]
     }
   ],
   "frontier": {
@@ -245,6 +272,15 @@
       "story": "Nova finds a gate hidden in the sky. Its Guardian asks Nova to wake the Sky Switch.",
       "snapshot": "S08_GUARDIAN_ON",
       "snapshotAlt": "In Moon Meadow, the Sky Switch glows yellow and the Gate Guardian welcomes Nova through. The HUD shows Responses 2 / 2 and mission complete."
+    },
+    {
+      "session": "S09",
+      "kind": "reveal",
+      "landmark": "storm-engine",
+      "headline": "landmark",
+      "story": "Beyond a gate hidden in the sky, sparks power the Storm Engine for the observatory check.",
+      "snapshot": "S09_DEVICE_POWERED",
+      "snapshotAlt": "The actual S09 Moon Meadow Trail: Nova beside the fully powered purple Storm Engine, all three charge cells lit, Count 3 / 3 and mission complete."
     }
   ]
 }

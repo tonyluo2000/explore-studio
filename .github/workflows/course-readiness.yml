@@ -28,8 +28,10 @@ on:
       - "course4teen-website/app/students/slides/s06/**"
       - "course4teen-website/app/students/slides/s07/**"
       - "course4teen-website/app/students/slides/s08/**"
+      - "course4teen-website/app/students/slides/s09/**"
       - "engine/**"
       - "tests/test_s07_presentation.py"
+      - "tests/test_s09_presentation.py"
       - "course4teen-website/lib/calendar.ts"
       - "course4teen-website/lib/courseKit.ts"
       - "course4teen-website/lib/learn.ts"
@@ -67,8 +69,10 @@ on:
       - "course4teen-website/app/students/slides/s06/**"
       - "course4teen-website/app/students/slides/s07/**"
       - "course4teen-website/app/students/slides/s08/**"
+      - "course4teen-website/app/students/slides/s09/**"
       - "engine/**"
       - "tests/test_s07_presentation.py"
+      - "tests/test_s09_presentation.py"
       - "course4teen-website/lib/calendar.ts"
       - "course4teen-website/lib/courseKit.ts"
       - "course4teen-website/lib/learn.ts"
@@ -109,6 +113,8 @@ jobs:
           tests/test_lesson_materials_s06_website.py
           tests/test_lesson_materials_s07_website.py
           tests/test_lesson_materials_s08_website.py
+          tests/test_lesson_materials_s09_website.py
+          tests/test_s09_presentation.py
           tests/test_s07_presentation.py
           tests/test_lesson_materials_s06_s10.py
           tests/test_lesson_materials_s11_s15.py

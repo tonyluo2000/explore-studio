@@ -123,7 +123,7 @@ const pythonJourneySteps: Record<string, PythonJourneyStep> = {
       "off-by-one reasoning",
       "basic assert"
     ],
-    "capability": "Count repeated actions and verify when a goal is reached."
+    "capability": "Count repeated actions and verify exactly when a goal is reached."
   },
   "S10": {
     "id": "S10",

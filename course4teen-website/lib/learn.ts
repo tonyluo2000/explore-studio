@@ -697,6 +697,61 @@ The portal is glowing!`,
       "Talk to the Guardian with the switch off, flip the Sky Switch, then talk again. Record both responses and look for Responses 2 / 2.",
     ],
   },
+  {
+    id: "S09",
+    sourceFile: "task-card.md",
+    concepts: [
+      { term: "integer counter", meaning: "A whole-number value that records how many actions have happened. Start count at 0." },
+      { term: "update", meaning: "count = count + 1 reads the old value, adds one, and stores the new value." },
+      { term: "loop", meaning: "Repeats the indented update once for each value supplied by range." },
+      { term: "off-by-one", meaning: "Doing one update too few or too many, so success happens one step too early or late." },
+      { term: "assertion", meaning: "assert count == goal checks the expected final count. A false check raises AssertionError; a true check is silent." },
+    ],
+    code: `goal = 3
+count = 0
+
+for interaction_number in range(1, goal + 1):
+    count = count + 1
+    print(interaction_number, count)
+
+assert count == goal`,
+    runCommand: "python lessons/sessions/s09/student/starter.py",
+    output: `1 1
+2 2
+3 3`,
+    meanings: [
+      { term: "goal = 3", meaning: "Stores the intended number of actions as an integer." },
+      { term: "count = 0", meaning: "No actions have happened yet." },
+      { term: "range(1, goal + 1)", meaning: "Supplies 1, 2, 3. range stops before its second number, so the stop value must be 4." },
+      { term: "count = count + 1", meaning: "Each pass changes the state: 0 → 1 → 2 → 3." },
+      { term: "assert count == goal", meaning: "Checks that the loop produced exactly the expected count. It catches the shortened loop ending at 2." },
+    ],
+    why: [
+      "Counters track repeated actions, such as completed tasks. A loop keeps the update consistent on every pass.",
+      "Predict interaction 3 as the first success. Interaction 2 is one spark short. One basic assertion protects the expected local final count.",
+      "The canonical starter already has the correct loop and leaves the assertion for you. Add it, then temporarily shorten the range to create the deliberate bug.",
+      "Local Python models repeated counting and update logic. Package YAML declares counter.goal and counter.when_goal_reached. Trail owns the actual interaction count during the session; student Python does not execute inside Trail.",
+      "The powered Storm Engine prepares the observatory for the next readiness check in the story. This session does not save charging state into a later Trail.",
+    ],
+    debugged: {
+      broken: "for interaction_number in range(1, goal):",
+      error: "For goal 3, only counts 1 and 2 print. The added assertion raises AssertionError.",
+      explanation: "The stop value is excluded. Restore goal + 1 for exactly three updates, rerun, and explain why the assertion now passes silently.",
+      fixed: "for interaction_number in range(1, goal + 1):",
+    },
+    keyWords: [
+      { term: "integer", meaning: "A whole number, such as 0, 1, 2, or 3." },
+      { term: "assignment", meaning: "Stores a value under a variable name." },
+      { term: "for", meaning: "Repeats an indented block for each supplied value." },
+      { term: "assert", meaning: "Checks a claim about expected behavior." },
+    ],
+    tryIt: [
+      "Predict counts after interactions 1, 2, 3, and 4. Circle the first success interaction before running anything.",
+      "Run the starter, write one assertion, shorten the loop, predict and observe the failure, then repair the stop value and rerun.",
+      "Validate the package and launch the task-card Trail command. Press E once at a time: at count 2 the mission is incomplete; at count 3 it completes. A later press keeps completion and continues counting.",
+      "Explain why the assertion protects the expected count, and which state belongs to local Python, YAML, and Trail.",
+    ],
+  },
 ];
 
 export const sessionsWithNotes = learnSessions.map((session) => session.id);

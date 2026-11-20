@@ -23,7 +23,7 @@ def test_s07_publication_and_shared_context():
         r'"S\d\d"',
         calendar.split("sessionsWithSlides: readonly string[] = ", 1)[1].split(";", 1)[0],
     )
-    assert ids == [f'"S{i:02}"' for i in range(1, 9)]
+    assert ids == [f'"S{i:02}"' for i in range(1, 10)]
     slides = SLIDES.read_text()
     assert "<JourneyContext session={session.id} />" in slides
     assert '<PythonJourney session={session.id} mode="compact" />' in slides
@@ -31,8 +31,8 @@ def test_s07_publication_and_shared_context():
     assert "<JourneyContext session={session.id} />" in learn
     assert '<PythonJourney session={session.id} mode="compact" />' in learn
     assert 'id: "S07"' in (WEB / "lib/learn.ts").read_text()
-    assert not (WEB / "app/students/slides/s09").exists()
-    assert not (WEB / "public/journey/s09").exists()
+    assert not (WEB / "app/students/slides/s10").exists()
+    assert not (WEB / "public/journey/s10").exists()
 
 
 def test_commands_match_task_card_and_one_line_launch():
@@ -102,13 +102,13 @@ def test_s07_journey_stop_and_snapshot_state_contract():
     from scripts.journey_snapshots import SESSIONS_BY_ID
 
     data = json.loads((WEB / "journey/journey.json").read_text())
-    assert [stop["session"] for stop in data["stops"]] == [f"S{i:02}" for i in range(1, 9)]
+    assert [stop["session"] for stop in data["stops"]] == [f"S{i:02}" for i in range(1, 10)]
     assert (
         next(stop for stop in data["stops"] if stop["session"] == "S07")["landmark"] == "sky-signal"
     )
     hero = SESSIONS_BY_ID["S07"].hero
     assert hero.expect.complete and hero.expect.toggle_on == ("sky-lantern-switch:sky-lantern",)
-    assert "S09" not in SESSIONS_BY_ID
+    assert "S10" not in SESSIONS_BY_ID
 
 
 SITE = os.environ.get("JOURNEY_SITE_OUT")
@@ -124,7 +124,7 @@ def test_rendered_s07_progress_no_later_objectives():
         visible = " ".join(unescape(re.sub("<[^>]*>", " ", html)).split())
         assert re.search(r"7\s*/\s*30", visible)
         assert 'data-python-step="S08"' not in html
-        assert not (out / f"students/{route}/s09/index.html").exists()
+        assert not (out / f"students/{route}/s10/index.html").exists()
     forbidden = (
         "Boolean branches",
         "Choose between two behaviors based on state.",
