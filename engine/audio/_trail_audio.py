@@ -18,8 +18,9 @@ cues for an :class:`~engine.audio._manager.AudioManager`:
   a beat after the interaction that caused it.
 
 Audio is allow-listed by the mission presentation policy (``meadow_audio``):
-M02-M05 and the package-scoped S06 presentation opt in; S01 and later plain
-M06 reuses stay silent. Every cue has a visual twin, so a muted or soundless
+M02-M05 and explicitly scoped course presentations opt in; S01 and unknown
+package reuses stay silent unless an allowed presentation session is selected.
+Every cue has a visual twin, so a muted or soundless
 Trail loses nothing. A small "Audio" indicator (M to toggle) is drawn only
 while a mixer is actually open.
 
@@ -94,8 +95,11 @@ class TrailAudio:
         start: tuple[float, float] | None = None,
         *,
         package_ids: tuple[str, ...] = (),
+        presentation_session: str | None = None,
     ) -> None:
-        policy = mission_presentation(mission_id, package_ids=package_ids)
+        policy = mission_presentation(
+            mission_id, package_ids=package_ids, presentation_session=presentation_session
+        )
         self.active = sink is not None and policy is not None and policy.meadow_audio
         self._sink = sink if self.active else None
         self._aliases = policy.sprite_aliases if policy is not None else {}

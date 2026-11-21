@@ -134,3 +134,12 @@ Add one exact-message regression without introducing new branch logic.
 - Python stays local; the repaired world payoff is existing declarative M08.
 - The broken `object_id` is a demonstration only. It is never committed, and no
   engine, schema, or validator behavior changes in this session.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

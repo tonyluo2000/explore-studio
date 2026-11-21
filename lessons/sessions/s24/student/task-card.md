@@ -167,3 +167,7 @@ git commit -m "Compare ranger lookup inspection counts"
 Interpret `M`, `??`, and no output; use identity recovery and Control-C
 cancel/correct/retry. Stage code with its equivalence/duplicate tests.
 Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S24 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

@@ -161,3 +161,7 @@ object names and coordinates, a text walkthrough, or a teacher-operated Trail
 while you narrate. If time is short, protect green tests, valid package, matching
 exports, one algorithm explanation, the recovery script, every-object M16 tour,
 and the completion boundary. Defer polish, optional tagging, and extra Q&A.
+
+## Review notes
+
+Use the [S30 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

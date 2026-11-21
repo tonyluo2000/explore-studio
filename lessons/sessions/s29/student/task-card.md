@@ -168,3 +168,7 @@ changing behavior, then rerun the same evidence chain.
 Protect one duplication removal, one responsibility/name improvement, green
 regression tests, unchanged deterministic output, package validation, and one
 M14/M15 walkthrough. Defer cosmetic cleanup, extra refactors, and new features.
+
+## Review notes
+
+Use the [S29 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

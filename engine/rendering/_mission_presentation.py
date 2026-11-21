@@ -15,7 +15,10 @@ leaks into free-play runs.
 Most presentations are mission-wide. Reused missions can instead opt in one
 exact package identity through :data:`PACKAGE_SCOPED_PRESENTATIONS`. That is
 the session boundary for S06: later sessions reuse M06 with different packages
-and therefore keep the plain Trail until they are migrated deliberately.
+and receive their own course profiles when migrated deliberately.
+S10–S30 profiles preserve the same boundary. An explicit presentation session
+lets student-owned packages change identity without adding YAML fields or
+changing their selected mission. S26 is planning-only and has no profile.
 
 Presentation never changes gameplay. Per-mission options only *withhold*
 story beats that belong to one session, and alias a mission's canonical
@@ -110,6 +113,8 @@ class MissionPresentation:
     #: Optional presentation-only player spawn. This is package-scoped when a
     #: reused mission needs a coherent visual route without moving authored objects.
     player_start: tuple[int, int] | None = None
+    #: Later course profiles infer cosmetic roles from validated entity types.
+    authored_roles: bool = False
     #: Package qualified id -> the trusted-art identity it is drawn and posed as.
     sprite_aliases: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -208,8 +213,90 @@ PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation
 )
 
 
+# Explicit session boundaries. S26 is planning-only and has no Trail profile.
+# The extra package ids are the authored generator/recovery identities, not wildcards.
+COURSE_TRAIL_PROFILES: Final = MappingProxyType(
+    {
+        "S10": (("storm-observatory",), ("compare-a-counter-to-its-goal",), (680, 260)),
+        "S11": (("twin-star-vault",), ("require-all-switches-on",), (700, 260)),
+        "S12": (("storm-rescue-signals",), ("open-with-either-switch",), (710, 330)),
+        "S13": (("moonflower-garden",), ("invert-a-switch-condition",), (650, 300)),
+        "S14": (("twin-beacon-style",), ("reuse-a-named-toggle-style",), (140, 220)),
+        "S15": (("star-song-sequence",), ("complete-actions-in-order",), (740, 230)),
+        "S16": (("curators-atlas",), ("build-an-object-collection",), (100, 190)),
+        "S17": (("clue-finder",), ("build-an-object-collection",), (110, 390)),
+        "S18": (
+            ("power-scoreboard",),
+            ("compare-a-counter-to-its-goal", "count-object-interactions"),
+            (670, 310),
+        ),
+        "S19": (("priority-route",), ("complete-actions-in-order",), (750, 390)),
+        "S20": (("data-built-mystery",), ("complete-actions-in-order",), (750, 220)),
+        "S21": (("ranger-gatekeeper-kit",), ("build-an-object-collection",), (100, 190)),
+        "S22": (("prism-guardian-repair",), ("respond-to-object-state",), (660, 260)),
+        "S23": (
+            ("builders-workshop-twins", "workshop-twins", "my-workshop-system"),
+            ("reuse-a-named-toggle-style", "respond-to-object-state"),
+            (700, 220),
+        ),
+        "S24": (("fast-ranger-route",), ("complete-actions-in-order",), (740, 220)),
+        "S25": (
+            ("my-playable-prototype", "stormlight-rescue-trail"),
+            (
+                "complete-actions-in-order",
+                "count-object-interactions",
+                "respond-to-object-state",
+                "require-all-switches-on",
+                "open-with-either-switch",
+                "compare-a-counter-to-its-goal",
+            ),
+            (760, 210),
+        ),
+        "S27": (
+            ("skyglass-core",),
+            ("build-an-object-collection", "reuse-a-named-toggle-style"),
+            (140, 300),
+        ),
+        "S28": (
+            ("skyglass-integration",),
+            ("reuse-a-named-toggle-style", "complete-actions-in-order"),
+            (140, 300),
+        ),
+        "S29": (
+            ("skyglass-review",),
+            ("reuse-a-named-toggle-style", "complete-actions-in-order"),
+            (140, 300),
+        ),
+        "S30": (
+            ("skyglass-premiere",),
+            (
+                "present-your-capstone-expedition",
+                "reuse-a-named-toggle-style",
+                "complete-actions-in-order",
+            ),
+            (140, 300),
+        ),
+    }
+)
+
+
+def _course_profile(session: str) -> MissionPresentation:
+    return MissionPresentation(
+        celebration=True,
+        talk_cue=True,
+        dialogue_focus=True,
+        meadow_audio=True,
+        object_feedback_focus=True,
+        authored_roles=True,
+        player_start=COURSE_TRAIL_PROFILES[session][2],
+    )
+
+
 def mission_presentation(
-    mission_id: str | None, *, package_ids: tuple[str, ...] = ()
+    mission_id: str | None,
+    *,
+    package_ids: tuple[str, ...] = (),
+    presentation_session: str | None = None,
 ) -> MissionPresentation | None:
     """Return this exact Trail's presentation, or ``None`` for the plain Trail.
 
@@ -217,6 +304,12 @@ def mission_presentation(
     selected only when the canonical package is actually loaded, preventing a
     reused mission id from silently changing later curriculum sessions.
     """
+    if presentation_session is not None:
+        if presentation_session not in COURSE_TRAIL_PROFILES:
+            raise ValueError("unknown Trail presentation session")
+        if mission_id not in COURSE_TRAIL_PROFILES[presentation_session][1]:
+            raise ValueError("presentation session does not support this mission")
+        return _course_profile(presentation_session)
     if not isinstance(mission_id, str):
         return None
     policy = MISSION_PRESENTATIONS.get(mission_id)
@@ -231,4 +324,11 @@ def mission_presentation(
         for (scoped_mission, package_id), policy in PACKAGE_SCOPED_PRESENTATIONS.items()
         if scoped_mission == mission_id and package_id in package_ids
     ]
-    return matches[0] if len(matches) == 1 else None
+    if matches:
+        return matches[0] if len(matches) == 1 else None
+    course_matches = [
+        session
+        for session, (identities, missions, _) in COURSE_TRAIL_PROFILES.items()
+        if mission_id in missions and any(identity in package_ids for identity in identities)
+    ]
+    return _course_profile(course_matches[0]) if len(course_matches) == 1 else None

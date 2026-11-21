@@ -460,6 +460,7 @@ class ClassroomTrailScene(Scene):
         audio: AudioSink | None = None,
         story_presentation: bool = True,
         presentation_package_ids: tuple[str, ...] = (),
+        presentation_session: str | None = None,
     ) -> None:
         """*story_presentation* ``False`` keeps the plain Trail whatever the mission.
 
@@ -524,12 +525,15 @@ class ClassroomTrailScene(Scene):
         # The mission whose presentation this Trail wears; None is the plain Trail.
         self._presentation_mission_id = mission.mission_id if story_presentation else None
         self._presentation_package_ids = presentation_package_ids if story_presentation else ()
+        self._presentation_session = presentation_session if story_presentation else None
         # Cosmetic only: observes state after update, never writes it.
         self._presentation = TrailPresentation(
             self._presentation_mission_id,
             start=(player.x_float, player.y_float),
             package_ids=self._presentation_package_ids,
+            presentation_session=self._presentation_session,
         )
+        self._presentation.configure_entities(self._objects, self._npcs)
         # Audio only, and only with a manager: observes the same
         # transitions as the presentation and never writes state either.
         self._audio = TrailAudio(
@@ -537,6 +541,7 @@ class ClassroomTrailScene(Scene):
             audio,
             start=(player.x_float, player.y_float),
             package_ids=self._presentation_package_ids,
+            presentation_session=self._presentation_session,
         )
         objects_by_id = {item.qualified_id: item for item in self._objects}
         for npc in self._npcs:
@@ -976,6 +981,7 @@ class ClassroomTrailScene(Scene):
             self._renderer,
             self._presentation_mission_id,
             package_ids=self._presentation_package_ids,
+            presentation_session=self._presentation_session,
         )
         presentation.draw_ground(self._renderer)
         for item in self._objects:

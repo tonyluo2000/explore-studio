@@ -163,3 +163,7 @@ git commit -m "Fix guardian failure and protect its behavior"
 `M`, `??`, and no output have the Quick Start meanings. Use identity recovery
 and Control-C cancel/correct/retry. State the cause and protected behavior in the
 commit; understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S22 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

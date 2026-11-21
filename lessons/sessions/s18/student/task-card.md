@@ -134,3 +134,7 @@ git commit -m "Summarize power station counters"
 
 Interpret `M`, `??`, and no output; use Git identity and cancel/retry recovery.
 Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S18 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

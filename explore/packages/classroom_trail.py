@@ -213,6 +213,7 @@ def create_classroom_trail_scene(
     *,
     mission_id: str | None = None,
     audio: object | None = None,
+    presentation_session: str | None = None,
 ) -> ClassroomTrailScene:
     """Translate one immutable trail plan into engine-owned runtime objects.
 
@@ -305,9 +306,13 @@ def create_classroom_trail_scene(
                 "Mission 14 requires its toggle style to be referenced by at least two "
                 "distinct world objects"
             )
+    if presentation_session is not None and not explicit_mission:
+        raise ValueError("presentation session requires an explicit mission id")
     player = plan.player.character
     presentation = (
-        mission_presentation(mission.mission_id, package_ids=package_ids)
+        mission_presentation(
+            mission.mission_id, package_ids=package_ids, presentation_session=presentation_session
+        )
         if explicit_mission
         else None
     )
@@ -450,6 +455,7 @@ def create_classroom_trail_scene(
         audio=audio,  # type: ignore[arg-type]
         story_presentation=explicit_mission,
         presentation_package_ids=package_ids,
+        presentation_session=presentation_session,
     )
 
 
@@ -458,6 +464,7 @@ def run_classroom_trail(
     *,
     name: str = "Classroom Trail",
     mission_id: str | None = None,
+    presentation_session: str | None = None,
 ) -> None:
     """Run one planned trail locally until the window is closed.
 
@@ -489,7 +496,13 @@ def run_classroom_trail(
     scene: ClassroomTrailScene | None = None
     try:
         renderer = Renderer(platform)
-        scene = create_classroom_trail_scene(renderer, plan, mission_id=mission_id, audio=audio)
+        scene = create_classroom_trail_scene(
+            renderer,
+            plan,
+            mission_id=mission_id,
+            audio=audio,
+            presentation_session=presentation_session,
+        )
         scene.enter()
         while True:
             events = platform.poll_frame_events()

@@ -136,3 +136,7 @@ git commit -m "Build a data-driven mystery trail"
 Interpret `M`, `??`, and no output; inspect generated YAML in the staged diff.
 Use identity recovery and Control-C cancel/correct/retry. Understanding takes
 priority over a rushed commit.
+
+## Review notes
+
+Use the [S20 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

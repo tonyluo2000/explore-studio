@@ -168,6 +168,7 @@ def test_s26_ships_one_blueprint_and_no_implementation_scaffold():
         "examples/right-sized-blueprint.yaml",
         "examples/too-big-blueprint.yaml",
         "mechanic_menu.py",
+        "python-notes.md",
         "task-card.md",
         "test_blueprint.py",
     ], shipped

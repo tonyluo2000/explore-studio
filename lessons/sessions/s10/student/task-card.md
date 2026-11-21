@@ -112,3 +112,7 @@ git commit -m "Check the storm engine boundary"
 
 Use the Quick Start for Git interpretation and recovery. Understanding comes
 before a rushed commit.
+
+## Review notes
+
+Use the [S10 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

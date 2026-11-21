@@ -10,7 +10,8 @@ sNN/
     ├── task-card.md
     ├── starter.py
     ├── debug.py           # optional isolated debugging activity
-    ├── python-notes.md    # "What We Learned in Python" (S01–S02 so far)
+    ├── python-notes.md    # review notes (S01–S02 and S10–S30)
+    ├── trail-checkpoints.md # polished rehearsal (S10–S30 except planning-only S26)
     ├── discovery.md       # optional "What We Discovered" real-world page
     └── explorer-package/  # optional validated declarative world content
 ```
@@ -80,3 +81,14 @@ accepted code.
 
 Git: status → diff → stage intentionally → inspect staged diff → descriptive
 commit.
+
+## Remaining-session presentation readiness
+
+S10–S30 now include session-specific Python review notes. Every remaining
+Trail-bearing reference package opts into a scoped Moon Meadow presentation;
+S26 stays planning-only. Follow each task card and `trail-checkpoints.md` for
+the exact learning evidence and completion boundary. For a student-owned
+package with new identities, use the documented `--presentation-session` option
+with that session’s supported mission. Visual polish never completes TODOs or
+replaces milestone, blueprint, review or premiere assessment. These materials
+do not publish future website lessons or replace the production Course Kit.

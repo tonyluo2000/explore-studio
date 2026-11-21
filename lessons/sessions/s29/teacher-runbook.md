@@ -179,3 +179,12 @@ green regression tests, unchanged deterministic output, package validation, and
 one M14/M15 walkthrough. Defer cosmetic polish, extra refactors, and new
 features. Do not add S30 materials or engine/schema/Student API/Trail/Mission/
 runtime behavior, deployment, authentication, or Phase E work.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

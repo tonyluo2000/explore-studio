@@ -165,3 +165,7 @@ git commit -m "Validate package records in order"
 that view. Use identity recovery and Control-C cancel/correct/retry from Quick
 Start. Commit one validation behavior with its regression case. Understanding
 takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S21 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

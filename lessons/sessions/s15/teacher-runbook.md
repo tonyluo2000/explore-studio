@@ -104,3 +104,12 @@ Read or paraphrase: "You just completed the first expedition. Every reasoning
 step was yours — the truth tables, the reset logic, the tests that passed."
 Point forward with one line only: the next region of the course opens in
 S16; nothing about it is defined yet, so do not promise specifics.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

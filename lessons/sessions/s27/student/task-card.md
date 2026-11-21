@@ -202,3 +202,7 @@ Protect validation, flattening, one selection/search rule, stable ordering, and
 deterministic in-memory document output. Optional aggregation polish may defer.
 Do not write YAML, build the full capstone, add mechanics, or polish beyond the
 accepted scope.
+
+## Review notes
+
+Use the [S27 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

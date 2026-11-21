@@ -26,7 +26,11 @@ def test_only_s09_package_opts_into_the_reused_mission():
     for sid in ("s10", "s13", "s18"):
         root = ROOT / f"lessons/sessions/{sid}/student/explorer-package"
         identity = yaml.safe_load((root / "manifest.yaml").read_text())["package"]["id"]
-        assert mission_presentation(MISSION, package_ids=(identity,)) is None
+        later = mission_presentation(MISSION, package_ids=(identity,))
+        if sid == "s18":
+            assert later is not None and later.authored_roles
+        else:
+            assert later is None
 
 
 @pytest.mark.parametrize("goal,color", [(2, "green"), (3, "purple"), (4, "pink"), (5, "gold")])

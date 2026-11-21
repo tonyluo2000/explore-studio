@@ -111,3 +111,12 @@ assertions. Keep the function to one comparison and one return.
 - `count > goal` fails at exact equality. That is the deliberate boundary bug.
 - The package NPC references the same-package counter. Runtime uses that
   counter's authored goal; there is no second threshold or executable rule.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

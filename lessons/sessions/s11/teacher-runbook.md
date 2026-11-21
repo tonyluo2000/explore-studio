@@ -92,3 +92,12 @@ rule. Do not add nesting or new runtime behavior.
   never imported or run by the Trail.
 - If keys appear inactive: validate, save, relaunch, focus the Trail window, use
   WASD/arrows, approach a key, and tap E once.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

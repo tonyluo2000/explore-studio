@@ -112,3 +112,7 @@ git commit -m "Reuse one aurora beacon style"
 Read `M`, `??`, and no output; inspect the staged diff. If identity fails, set
 repository name/email, cancel a stuck command with Control-C, and retry.
 Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S14 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.
