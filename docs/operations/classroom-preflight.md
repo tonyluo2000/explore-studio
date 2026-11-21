@@ -10,6 +10,15 @@ The student-side steps are the **Am I ready?** check in
 `docs/windows-wsl-setup.md` (shipped in the Course Kit). This page is the
 teacher's half.
 
+## Release gate before student checks
+
+For a runtime-changing lesson, follow [the release runbook](course-release-runbook.md).
+Implementation merge and website publication do not establish classroom readiness.
+Run `python scripts/course_release_status.py`, then verify actual public bytes and
+isolated fresh-install Trail acceptance. Require **CLASSROOM VERIFIED** before class.
+Student setup checks below cannot detect a stale production ZIP when both the kit
+and installed tools are consistently old.
+
 ## Before class (the day before, or 15 minutes before)
 
 Ask every student to run, in **Ubuntu** on Windows or Terminal on a Mac:

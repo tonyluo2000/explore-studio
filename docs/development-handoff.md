@@ -77,3 +77,11 @@ Publication verified: <command/result, without credentials>
 
 The GitHub branch/PR and associated issue are the canonical cross-environment
 handoff; a local path, transient workspace, or chat summary is not.
+
+## Runtime-changing lesson release boundary
+
+Implementation handoff and website publication establish **IMPLEMENTATION MERGED**,
+not classroom readiness. Follow the [Course Kit release runbook](operations/course-release-runbook.md)
+through separately approved **COURSE KIT PUBLISHED**, actual-byte **LIVE VERIFIED**,
+and isolated-install **CLASSROOM VERIFIED**. Course readiness enforces the expected
+runtime contract on main and validates candidate evidence during implementation PRs.
