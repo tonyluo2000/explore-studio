@@ -104,3 +104,7 @@ git commit -m "Guide a rescue with either signal"
 Interpret `M`, `??`, and no output before staging. Review `git diff --staged`.
 Use repository Git identity recovery, Control-C cancellation, and retry guidance
 from Quick Start. Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S12 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

@@ -143,3 +143,12 @@ Extract a coordinator without adding classes or changing output.
   mission, completion rule, or cross-package reference is introduced.
 - The mission stays M14 (`ALL_TOGGLE_OBJECTS_CHANGED`). The keeper is visible
   behavior that makes the system legible; it is not a new completion condition.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

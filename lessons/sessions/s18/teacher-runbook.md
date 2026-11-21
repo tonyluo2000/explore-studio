@@ -80,3 +80,12 @@ Return the IDs tied for maximum using a simple loop after core evidence.
   Sun Core, and Tide Core are each authored as their own M09 counter — that
   is Python evidence vs. Trail evidence: Trail shows one station at a time,
   never a summary across all three.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

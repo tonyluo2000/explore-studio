@@ -171,3 +171,7 @@ git commit -m "Refactor trail builder without changing output"
 Interpret `M`, `??`, and no output; use Git identity recovery and Control-C
 cancel/correct/retry. Keep this refactor isolated from behavior changes. Exact
 before/after evidence and understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S23 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

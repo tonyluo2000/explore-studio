@@ -90,3 +90,12 @@ one style and two references; do not add inheritance or runtime behavior.
   (`shared_style`), and why a single named definition is safer to change
   later than two copies that could silently drift apart has met the goal,
   regardless of line count.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

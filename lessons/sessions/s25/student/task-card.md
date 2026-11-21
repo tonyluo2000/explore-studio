@@ -369,3 +369,7 @@ git commit -m "Complete my two-mechanic playable prototype"
 Interpret `M`, `??`, and no output. Use identity recovery and Control-C
 cancel/correct/retry. Stage only the intended code, test, and package evidence;
 understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S25 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

@@ -110,3 +110,7 @@ git commit -m "Build a two-key star vault"
 changes. No `git diff` output means no unstaged tracked changes. If identity
 fails, set repository `user.name`/`user.email`, cancel with Control-C if needed,
 and retry. Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S11 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

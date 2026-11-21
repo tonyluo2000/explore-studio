@@ -309,3 +309,12 @@ must be renamed together.
   `milestone.yaml` as `reflection.design_decision` and
   `reflection.technical_decision`, and the checker requires both to be nonblank
   and no longer a placeholder. It does not judge the wording.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

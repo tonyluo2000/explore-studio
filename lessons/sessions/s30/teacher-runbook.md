@@ -141,3 +141,12 @@ and the explicit completion boundary. Defer cosmetic polish, optional tagging,
 extra questions, and all new features. This lesson adds no S31 materials or
 engine/schema/Student API/Trail/Mission/runtime behavior, publication,
 deployment, authentication, or Phase E work.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

@@ -191,3 +191,7 @@ file list and repeat-run determinism remain stable.
 Protect one valid source read, one deterministic safe package generation,
 package validation, one M14 observation, and one M15 observation. Defer polish,
 extra files, mechanics, and S29 work.
+
+## Review notes
+
+Use the [S28 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

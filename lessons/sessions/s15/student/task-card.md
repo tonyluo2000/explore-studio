@@ -161,3 +161,7 @@ changes, and no diff output means no unstaged tracked changes. Inspect
 `git diff --staged`. Recover repository Git identity if needed; Control-C,
 correct, and retry a mistaken command. Understanding takes priority over a
 rushed commit.
+
+## Review notes
+
+Use the [S15 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

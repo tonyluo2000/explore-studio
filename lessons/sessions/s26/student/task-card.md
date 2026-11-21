@@ -270,3 +270,7 @@ If you are stuck on a premise, the teacher can help you narrow one you already
 have — a place you like, a thing you wish existed, one mechanic you enjoyed
 building. The teacher may help you make a project smaller. The teacher does not
 choose your premise or make your design decisions for you.
+
+## Review notes
+
+Use the [S26 Python notes](python-notes.md) after your prediction. This session stays planning-only.

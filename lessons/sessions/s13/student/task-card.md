@@ -113,3 +113,7 @@ git commit -m "Invert the moonflower rule"
 Interpret `M`, `??`, and no output; inspect the staged diff. Use identity
 recovery and Control-C/correct/retry guidance when needed. Understanding takes
 priority over a rushed commit.
+
+## Review notes
+
+Use the [S13 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

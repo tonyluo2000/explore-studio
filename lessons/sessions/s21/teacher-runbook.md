@@ -123,3 +123,12 @@ Test one inclusive coordinate boundary without expanding validation scope.
   manifest contribution, which is why the student's local `validate_records`
   shape and the package contract are not identical. Make that difference
   explicit rather than smoothing it over.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+Use [Trail checkpoints](student/trail-checkpoints.md) for the reference launch and
+student-authored package presentation option. Preserve the authored mission rule;
+a polished or completed Trail is not proof that the local Python/project task passed.

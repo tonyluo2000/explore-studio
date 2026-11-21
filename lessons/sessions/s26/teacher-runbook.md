@@ -360,3 +360,10 @@ blueprint is the point — there is nothing else to stage.
   fragment, not a bad idea.
 - Do not add S27+ materials, runtime, schema, or API behaviour, Trail or Mission
   mechanics, deployment, authentication, or Phase E work.
+
+## Polished presentation rehearsal
+
+Use the student [Python notes](student/python-notes.md) to protect this session’s
+reasoning and evidence before the world payoff.
+
+S26 stays planning-only: do not launch Trail or build a package today.

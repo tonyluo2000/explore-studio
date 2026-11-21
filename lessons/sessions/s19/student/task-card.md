@@ -108,3 +108,7 @@ git commit -m "Plan a stable priority route"
 Commit algorithm work separately from optional story edits. Interpret `M`, `??`,
 and no output; recover identity or cancel/correct/retry. Understanding takes
 priority over a rushed commit.
+
+## Review notes
+
+Use the [S19 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.

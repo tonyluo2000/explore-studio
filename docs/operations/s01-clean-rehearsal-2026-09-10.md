@@ -20,6 +20,10 @@ Python import path.
 
 ## Later Course Kit platform pin
 
+The unpublished remaining-lectures candidate pins `b95351bc1e1fcd29fb677f237c8fe6ee737c28de` for scoped
+S10–S30 presentation, preserving planning-only S26. It is a local preparation
+artifact; production Course Kit replacement remains a separate approved step.
+
 The S09 candidate prepared on 2026-11-20 pins
 `ee64c3957661dc574f5ac9e971bf3f687e4dc25f` for the package-scoped Storm Engine
 charge presentation. Production remains on the S08 pin until exact-head

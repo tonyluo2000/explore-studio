@@ -104,3 +104,7 @@ git commit -m "Catalog the curator collection"
 `M` means modified; `??` means untracked; no output means nothing is pending in
 that view. Recover Git identity or cancel/correct/retry as described in Quick
 Start. Understanding takes priority over a rushed commit.
+
+## Review notes
+
+Use the [S16 Python notes](python-notes.md) after your prediction. Use [Trail checkpoints](trail-checkpoints.md) for the polished rehearsal.
