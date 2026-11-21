@@ -1,0 +1,89 @@
+{
+  "schema": "cross-project.model-routing.v3",
+  "projects": {
+    "tonyluo2000/mile-commons": {},
+    "briersystems/montefinance": {},
+    "tonyluo2000/explore-studio": {}
+  },
+  "tasks": {
+    "routine": {
+      "primary": "codex",
+      "model": "gpt-6-luna",
+      "reasoningEffort": "low"
+    },
+    "documentation": {
+      "primary": "codex",
+      "model": "gpt-6-luna",
+      "reasoningEffort": "low"
+    },
+    "formatting": {
+      "primary": "codex",
+      "model": "gpt-6-luna",
+      "reasoningEffort": "low"
+    },
+    "simple-tests": {
+      "primary": "codex",
+      "model": "gpt-6-luna",
+      "reasoningEffort": "low"
+    },
+    "implementation": {
+      "primary": "codex",
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "low"
+    },
+    "feature": {
+      "primary": "codex",
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium"
+    },
+    "bugfix": {
+      "primary": "codex",
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium"
+    },
+    "integration": {
+      "primary": "codex",
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium"
+    },
+    "review": {
+      "primary": "claude",
+      "model": "claude-sonnet-5-5",
+      "reasoningEffort": "medium"
+    },
+    "security": {
+      "primary": "codex",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "high"
+    },
+    "architecture": {
+      "primary": "codex",
+      "model": "gpt-6-astra",
+      "reasoningEffort": "high"
+    },
+    "debugging": {
+      "primary": "codex",
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium"
+    }
+  },
+  "automaticFallback": false,
+  "releaseAuthority": "existing owner or release captain",
+  "policy": "codex-claude-default-deepseek-pro-explicit-owner-request-only",
+  "quota": {
+    "lowThresholdPercent": 20,
+    "maxAgeMs": 900000,
+    "ownerMaxAgeMs": 86400000
+  },
+  "backup": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-pro",
+    "family": "deepseek",
+    "efforts": [
+      "low",
+      "high"
+    ],
+    "selection": "explicit-owner-request-only"
+  },
+  "automaticSelection": "primary-models-only"
+}
