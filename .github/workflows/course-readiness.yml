@@ -101,6 +101,15 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      - name: Set up Node for website-backed lesson checks
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: course4teen-website/package-lock.json
+      - name: Install website dependencies
+        working-directory: course4teen-website
+        run: npm ci
       - name: Install project
         run: python -m pip install -e ".[dev]"
       - name: Verify course materials and workspace bootstrap
