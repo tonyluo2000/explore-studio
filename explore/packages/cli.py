@@ -74,11 +74,9 @@ def _parser() -> argparse.ArgumentParser:
             "the visit-all-classroom-objects completion rule"
         ),
     )
-    from engine.rendering._mission_presentation import COURSE_TRAIL_PROFILES
-
     trail.add_argument(
         "--presentation-session",
-        choices=tuple(COURSE_TRAIL_PROFILES),
+        choices=tuple(f"S{number:02}" for number in range(10, 31) if number != 26),
         help="cosmetic course look for your own package; requires a matching --mission-id",
     )
     return parser

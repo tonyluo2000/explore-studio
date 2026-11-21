@@ -180,3 +180,32 @@ def test_cli_passes_the_profile_and_rejects_mismatches(monkeypatch, capsys):
     assert cli.main(args) == 1
     assert "does not support" in capsys.readouterr().out
     assert len(calls) == 1
+
+
+def test_validation_json_stays_clean_without_importing_the_renderer():
+    import json
+    import os
+    import subprocess
+    import sys
+
+    environment = dict(os.environ)
+    environment.pop("PYGAME_HIDE_SUPPORT_PROMPT", None)
+    code = "from explore.packages.cli import main; raise SystemExit(main(['validate', 'examples/explorer-packages/nova-character', '--json']))"
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(result.stdout)["valid"] is True
+    assert "pygame" not in result.stdout.lower()
+    from explore.packages.cli import _parser
+
+    choices = next(
+        a.choices
+        for a in _parser()._subparsers._group_actions[0].choices["trail"]._actions
+        if a.dest == "presentation_session"
+    )
+    assert tuple(choices) == tuple(COURSE_TRAIL_PROFILES)
