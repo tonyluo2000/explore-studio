@@ -73,7 +73,7 @@ export const breakPeriods: BreakPeriod[] = [
 ];
 
 /** Ids of sessions that currently have a published web slide deck. */
-export const sessionsWithSlides: readonly string[] = ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08"];
+export const sessionsWithSlides: readonly string[] = ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09"];
 
 export function formatSessionDate(isoDate: string): string {
   const date = new Date(`${isoDate}T00:00:00`);

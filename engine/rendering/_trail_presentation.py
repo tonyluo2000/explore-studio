@@ -63,6 +63,7 @@ from engine.rendering._classroom_sprites import (
     PIXEL_QUALIFIED_ID,
     RAIN_BELL_PRESENTATION_ID,
     SKY_LANTERN_PRESENTATION_ID,
+    STORM_ENGINE_PRESENTATION_ID,
     SUN_SEED_PRESENTATION_ID,
     WIND_FLOWER_PRESENTATION_ID,
 )
@@ -519,6 +520,7 @@ class TrailPresentation:
         self._previous_complete: bool | None = None
         self._visited: frozenset[str] = frozenset()
         self._toggle_on: frozenset[str] = frozenset()
+        self._device_pose = SpritePose(row="cells-3", column="lit-0")
         self._spoken: frozenset[str] = frozenset()
         self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
@@ -567,6 +569,17 @@ class TrailPresentation:
         self._previous_complete = complete
         self._visited = view.visited_qualified_ids
         self._toggle_on = getattr(view, "toggle_on_qualified_ids", frozenset())
+        # Only S09's visual role observes charge. The renderer receives bounded
+        # cosmetic cells, never arbitrary counter state or authored responses.
+        for item in view.objects:
+            if self.sprite_identity(item.qualified_id) == STORM_ENGINE_PRESENTATION_ID:
+                counter = getattr(item, "counter", None)
+                if counter is not None:
+                    count = getattr(view, "counter_counts", {}).get(item.qualified_id, 0)
+                    self._device_pose = SpritePose(
+                        row=f"cells-{counter.goal}",
+                        column=f"lit-{min(counter.goal, max(0, count))}",
+                    )
         # Read-only NPC evidence (M04's and M05's completion state); views
         # without it simply show every talk cue.
         spoken = getattr(view, "spoken_npc_ids", None)
@@ -651,6 +664,8 @@ class TrailPresentation:
             return self._pixel_pose(qualified_id)
         if role == MOONLIT_GUIDE_QUALIFIED_ID:
             return self._guide_pose(qualified_id)
+        if role == STORM_ENGINE_PRESENTATION_ID:
+            return self._device_pose
         if role == SKY_LANTERN_PRESENTATION_ID:
             return SpritePose(row="on" if qualified_id in self._toggle_on else "off")
         if role == CRYSTAL_LANTERN_QUALIFIED_ID:

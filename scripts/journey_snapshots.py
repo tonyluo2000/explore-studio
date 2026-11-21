@@ -239,6 +239,7 @@ class Expect:
     texts: tuple[str | PackageText, ...] = ()
     positions: tuple[tuple[str, int, int], ...] = ()
     toggle_on: tuple[str, ...] | None = None
+    counter_counts: tuple[tuple[str, int], ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -306,6 +307,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # retired Fern / River Fountain cast or a later session's content.
         must_show=(NOVA, PIXEL, LANTERN),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -337,6 +339,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, PIXEL, S02_COMPASS, LANTERN),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -373,6 +376,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, S03_COMPASS),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -418,6 +422,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, LANTERN, GUIDE),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -455,6 +460,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # collection.
         must_show=(NOVA, LANTERN, S05_GUIDE),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -514,6 +520,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         # objects; no prior cast member or later mechanic joins the scene.
         must_show=(NOVA, *S06_OBJECTS),
         must_not_show=(
+            "storm-engine:storm-engine",
             S08_SWITCH,
             S08_GUARDIAN,
             "sky-lantern-switch:sky-lantern",
@@ -557,7 +564,16 @@ SESSIONS: Final[tuple[Session, ...]] = (
         player=NOVA,
         presentation=MOON_MEADOW,
         must_show=(NOVA, "sky-lantern-switch:sky-lantern"),
-        must_not_show=(S08_SWITCH, S08_GUARDIAN, PIXEL, LANTERN, GUIDE, S05_GUIDE, *S06_OBJECTS),
+        must_not_show=(
+            "storm-engine:storm-engine",
+            S08_SWITCH,
+            S08_GUARDIAN,
+            PIXEL,
+            LANTERN,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+        ),
         moments=(
             Moment(
                 name="S07_LANTERN_ON",
@@ -593,6 +609,7 @@ SESSIONS: Final[tuple[Session, ...]] = (
         presentation=MOON_MEADOW,
         must_show=(NOVA, S08_SWITCH, S08_GUARDIAN),
         must_not_show=(
+            "storm-engine:storm-engine",
             PIXEL,
             LANTERN,
             S02_COMPASS,
@@ -645,6 +662,58 @@ SESSIONS: Final[tuple[Session, ...]] = (
                             S08_PACKAGE,
                             "character/gate-guardian.yaml",
                             "respond_to_toggle.when_off",
+                            joined=True,
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    ),
+    Session(
+        session="S09",
+        mission_id="count-object-interactions",
+        player=NOVA,
+        presentation=MOON_MEADOW,
+        must_show=(NOVA, "storm-engine:storm-engine"),
+        must_not_show=(
+            PIXEL,
+            LANTERN,
+            S02_COMPASS,
+            S03_COMPASS,
+            GUIDE,
+            S05_GUIDE,
+            *S06_OBJECTS,
+            S08_SWITCH,
+            S08_GUARDIAN,
+        ),
+        moments=(
+            Moment(
+                name="S09_DEVICE_POWERED",
+                kind=HERO,
+                slug="hero",
+                steps=(
+                    ("hold", 0.3),
+                    ("walk_to", 350, 300),
+                    ("hold", 0.4),
+                    ("press",),
+                    ("hold", 0.35),
+                    ("press",),
+                    ("hold", 0.35),
+                    ("press",),
+                    ("hold", 0.35),
+                ),
+                expect=Expect(
+                    target="storm-engine:storm-engine",
+                    visited=("storm-engine:storm-engine",),
+                    complete=True,
+                    counter_counts=(("storm-engine:storm-engine", 3),),
+                    texts=(
+                        "Goals 1 / 1",
+                        "Mission state: Complete",
+                        PackageText(
+                            "lessons/sessions/s09/student/explorer-package",
+                            "objects/storm-engine.yaml",
+                            "counter.when_goal_reached",
                             joined=True,
                         ),
                     ),

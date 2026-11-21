@@ -19,7 +19,7 @@ ROOT = Path(__file__).parents[1]
 WEBSITE = ROOT / "course4teen-website"
 DATA = WEBSITE / "lib/pythonJourney.ts"
 COMPONENT = WEBSITE / "app/components/PythonJourney.tsx"
-PUBLISHED = [f"S{i:02}" for i in range(1, 9)]
+PUBLISHED = [f"S{i:02}" for i in range(1, 10)]
 TOPICS = [
     "Output and strings", "Variables and basic types", "f-strings", "Functions",
     "Lists", "Dictionaries and loops", "Boolean state", "if / else",
@@ -107,27 +107,27 @@ def test_published_steps_follow_sessions_with_slides(rendered):
     assert rendered["publication"] == PUBLISHED
     assert [step["id"] for step in rendered["published"]] == rendered["publication"]
     assert rendered["total"] == 30
-    assert rendered["current"]["id"] == "S08"
-    assert rendered["current"]["topic"] == "if / else"
+    assert rendered["current"]["id"] == "S09"
+    assert rendered["current"]["topic"] == "Counters and loops"
     assert_steps(rendered["full"], PUBLISHED)
 
 
 def test_no_unpublished_objectives_or_contexts_are_rendered(rendered):
-    for sid in ("S09", "S30", "unknown"):
+    for sid in ("S10", "S30", "unknown"):
         assert rendered["compact"][sid] == ""
         assert rendered["histories"][sid] == []
     for html in [rendered["full"], *rendered["compact"].values()]:
         for step in list(source_steps().values())[len(PUBLISHED):]:
             assert step["topic"] not in unescape(html)
             assert step["capability"] not in unescape(html)
-        assert "off-by-one reasoning" not in html
+        assert "Comparisons and assertions" not in html
 
 
 @pytest.mark.parametrize("sid", PUBLISHED)
 def test_compact_history_stops_at_the_current_session(rendered, sid):
     ids = PUBLISHED[:PUBLISHED.index(sid) + 1]
     html = rendered["compact"][sid]
-    assert_steps(html, ids)
+    assert_steps(html, ids[-5:] if len(ids) > 8 else ids, cumulative_count=len(ids))
     assert [step["id"] for step in rendered["histories"][sid]] == ids
     assert "Python Journey so far" in visible(html)
     assert "Now I can…" in visible(html)
@@ -145,18 +145,18 @@ def test_s06_features_dictionaries_and_for_loops(rendered):
     assert "for loop" in visible(rendered["compact"]["S06"])
 
 
-def test_s08_release_preserves_previous_session_histories(rendered):
+def test_s09_release_preserves_previous_session_histories(rendered):
     previous = probe(published=PUBLISHED[:-1], sessions=PUBLISHED)
-    assert previous["compact"]["S08"] == ""
+    assert previous["compact"]["S09"] == ""
     for sid in PUBLISHED[:-1]:
         assert previous["compact"][sid] == rendered["compact"][sid]
-    assert "if / else" in rendered["compact"]["S08"]
-    assert_steps(rendered["compact"]["S08"], PUBLISHED)
+    assert "Counters and loops" in rendered["compact"]["S09"]
+    assert_steps(rendered["compact"]["S09"], PUBLISHED[-5:], cumulative_count=9)
 
 
 @pytest.fixture(scope="module")
 def all_published(rendered):
-    # Publication is simulated in the probe process only. The real site stays S08.
+    # Publication is simulated in the probe process only. The real site stays S09.
     ids = [f"S{i:02}" for i in range(1, 31)]
     return probe(published=ids, sessions=ids)
 
@@ -252,7 +252,7 @@ needs_site = pytest.mark.skipif(not SITE_OUT, reason="set JOURNEY_SITE_OUT to a 
 
 
 @needs_site
-def test_fresh_build_journey_has_exactly_s01_through_s08():
+def test_fresh_build_journey_has_exactly_s01_through_s09():
     html = (ROOT / SITE_OUT / "students/journey/index.html").read_text()
     assert "Two journeys, one course." in visible(html)
     assert "Explorer Journey" in visible(html) and "Python Journey" in visible(html)
@@ -263,8 +263,8 @@ def test_fresh_build_journey_has_exactly_s01_through_s08():
         assert step["topic"] not in unescape(panel(html))
         assert step["capability"] not in unescape(html)
     assert "Next: coming soon" in visible(panel(html))
-    assert not (ROOT / SITE_OUT / "students/slides/s09/index.html").exists()
-    assert not (ROOT / SITE_OUT / "students/learn/s09/index.html").exists()
+    assert not (ROOT / SITE_OUT / "students/slides/s10/index.html").exists()
+    assert not (ROOT / SITE_OUT / "students/learn/s10/index.html").exists()
 
 
 @needs_site
@@ -274,10 +274,10 @@ def test_fresh_build_session_context_has_no_later_objectives(sid, kind):
     html = (ROOT / SITE_OUT / f"students/{kind}/{sid.lower()}/index.html").read_text()
     context = panel(html)
     ids = PUBLISHED[:PUBLISHED.index(sid) + 1]
-    assert_steps(context, ids)
+    assert_steps(context, ids[-5:] if len(ids) > 8 else ids, cumulative_count=len(ids))
     assert "Explorer Journey" in visible(html)
     assert "World Journey" not in visible(html)
-    assert ("Boolean state" in context) is (sid in ("S07", "S08"))
+    assert ("Boolean state" in context) is (sid in ("S07", "S08", "S09"))
     for step in list(source_steps().values())[len(ids):]:
         assert step["topic"] not in unescape(context)
         assert step["capability"] not in unescape(html)  # includes RSC payloads
@@ -292,4 +292,4 @@ def test_future_curriculum_never_ships_in_browser_bundles():
         source = path.read_text()
         for step in list(source_steps().values())[len(PUBLISHED):]:
             assert step["capability"] not in source, path
-        assert "off-by-one reasoning" not in source, path
+        assert "Comparisons and assertions" not in source, path

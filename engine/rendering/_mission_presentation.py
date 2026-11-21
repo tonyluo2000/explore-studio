@@ -36,6 +36,7 @@ from engine.rendering._classroom_sprites import (
     MOONLIT_GUIDE_QUALIFIED_ID,
     RAIN_BELL_PRESENTATION_ID,
     SKY_LANTERN_PRESENTATION_ID,
+    STORM_ENGINE_PRESENTATION_ID,
     SUN_SEED_PRESENTATION_ID,
     WIND_FLOWER_PRESENTATION_ID,
 )
@@ -51,6 +52,9 @@ S06_MISSION_ID: Final = "build-an-object-collection"
 S07_MISSION_ID: Final = "toggle-an-object-state"
 S07_PACKAGE_ID: Final = "sky-lantern-switch"
 S07_SKY_LANTERN_QUALIFIED_ID: Final = f"{S07_PACKAGE_ID}:sky-lantern"
+S09_MISSION_ID: Final = "count-object-interactions"
+S09_PACKAGE_ID: Final = "storm-engine"
+S09_DEVICE_QUALIFIED_ID: Final = "storm-engine:storm-engine"
 S08_MISSION_ID: Final = "respond-to-object-state"
 S08_PACKAGE_ID: Final = "cloud-gate"
 S08_SKY_SWITCH_QUALIFIED_ID: Final = f"{S08_PACKAGE_ID}:sky-switch"
@@ -173,6 +177,16 @@ PACKAGE_SCOPED_PRESENTATIONS: Final[Mapping[tuple[str, str], MissionPresentation
                 player_start=(240, 300),
                 sprite_aliases=MappingProxyType(
                     {S07_SKY_LANTERN_QUALIFIED_ID: SKY_LANTERN_PRESENTATION_ID}
+                ),
+            ),
+            # M09 is reused later: only the authored S09 package opts in.
+            (S09_MISSION_ID, S09_PACKAGE_ID): MissionPresentation(
+                celebration=True,
+                meadow_audio=True,
+                object_feedback_focus=True,
+                player_start=(280, 300),
+                sprite_aliases=MappingProxyType(
+                    {S09_DEVICE_QUALIFIED_ID: STORM_ENGINE_PRESENTATION_ID}
                 ),
             ),
             (S08_MISSION_ID, S08_PACKAGE_ID): MissionPresentation(

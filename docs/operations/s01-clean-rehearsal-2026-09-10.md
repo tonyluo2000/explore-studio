@@ -20,6 +20,11 @@ Python import path.
 
 ## Later Course Kit platform pin
 
+The S09 candidate prepared on 2026-11-20 pins
+`ee64c3957661dc574f5ac9e971bf3f687e4dc25f` for the package-scoped Storm Engine
+charge presentation. Production remains on the S08 pin until exact-head
+independent review, owner approval, and a separate Course Kit publication PR.
+
 On 2026-09-26, the Course Kit platform pin advanced to
 `715e6cadc3b797d538e5d988f796987d9e5be586` for the narrow S02 procedural
 sprite renderer. Later the same day it advanced to
