@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 from pathlib import Path
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.course_release import PUBLIC, ROOT, check_phase, git, load_contract
+from scripts.course_release import PUBLIC, ROOT, check_phase, git, load_contract, published_head
 
 
 def main() -> int:
@@ -34,6 +35,30 @@ def main() -> int:
             f"{contract['published_session']} / {phase}\nWebsite: published\n"
             f"Implementation source: {contract['implementation_head']}"
         )
+        implementation_merged = (
+            subprocess.run(
+                [
+                    "git",
+                    "merge-base",
+                    "--is-ancestor",
+                    contract["implementation_head"],
+                    "origin/main",
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                check=False,
+            ).returncode
+            == 0
+        )
+        print("Implementation: " + ("merged" if implementation_merged else "merge not proven"))
+        publication_head = published_head(contract)
+        state = (
+            "COURSE_KIT_PUBLISHED"
+            if publication_head
+            else ("MERGED" if implementation_merged else "BUILDING")
+        )
+        print("Release state: " + state)
+        print("Course Kit publication head: " + (publication_head or "not proven"))
         print(
             "Proposed artifact commit (not merge proof): "
             + git(ROOT, "log", "-1", "--format=%H", "--", PUBLIC.as_posix())
