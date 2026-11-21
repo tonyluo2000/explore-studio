@@ -77,6 +77,7 @@ class Trail:
         *,
         mission_id: str,
         player: str = NOVA,
+        presentation_session: str | None = None,
     ) -> None:
         from engine._config import Config
         from engine._platform import Platform
@@ -92,8 +93,11 @@ class Trail:
         self.renderer = RecordingRenderer(Renderer(self.platform))
         planned = plan_local_classroom_trail(tuple(package_roots), player_qualified_id=player)
         assert planned.is_planned, planned.issues
+        options = (
+            {} if presentation_session is None else {"presentation_session": presentation_session}
+        )
         self.scene = create_classroom_trail_scene(
-            self.renderer, planned.plan, mission_id=mission_id
+            self.renderer, planned.plan, mission_id=mission_id, **options
         )
         self.scene.enter()
         self.frames: list[pygame.Surface] = []

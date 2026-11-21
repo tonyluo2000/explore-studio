@@ -45,6 +45,7 @@ MOONLIT_GUIDE_QUALIFIED_ID = "moonlit-guide:guide"
 SUN_SEED_PRESENTATION_ID: Final = "moon-meadow-presentation:sun-seed"
 RAIN_BELL_PRESENTATION_ID: Final = "moon-meadow-presentation:rain-bell"
 WIND_FLOWER_PRESENTATION_ID: Final = "moon-meadow-presentation:wind-flower"
+FIELD_MARKER_PRESENTATION_ID: Final = "moon-meadow-presentation:field-marker"
 STORM_ENGINE_PRESENTATION_ID: Final = "moon-meadow-presentation:storm-engine"
 SKY_LANTERN_PRESENTATION_ID: Final = "moon-meadow-presentation:sky-lantern"
 PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
@@ -54,6 +55,7 @@ PRESENTATION_PRIMITIVE_IDS: Final = frozenset(
         WIND_FLOWER_PRESENTATION_ID,
         SKY_LANTERN_PRESENTATION_ID,
         STORM_ENGINE_PRESENTATION_ID,
+        FIELD_MARKER_PRESENTATION_ID,
     }
 )
 
@@ -444,6 +446,46 @@ def _draw_crystal_lantern(
         renderer.draw_circle(*box.point(50, 52), box.radius(3), _WHITE)
 
 
+def _draw_field_marker(
+    renderer: _SpriteRenderer,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    accent: Color,
+    pose: SpritePose | None = None,
+) -> None:
+    """A bounded expedition instrument; geometry and accent stay package-authored."""
+    box = _Box(x, y, width, height)
+    dark = _mix(accent, (20, 28, 49), 0.8)
+    light = _mix(accent, _WHITE, 0.6)
+    visited = pose is not None and pose.row == "visited"
+    variant = pose.column if pose else "glyph-0"
+    box.shadow(renderer, 50, 28)
+    renderer.draw_circle(*box.point(50, 45), box.radius(34), dark)
+    renderer.draw_circle(*box.point(50, 45), box.radius(28), accent)
+    if variant == "glyph-1":
+        # An engraved lens/dial.
+        renderer.draw_circle(*box.point(50, 45), box.radius(17), light)
+        renderer.draw_circle(*box.point(50, 45), box.radius(12), dark)
+        renderer.draw_line(*box.point(50, 45), *box.point(62, 31), _WHITE, 3)
+    elif variant == "glyph-2":
+        box.polygon(renderer, ((50, 20), (72, 47), (50, 69), (28, 47)), light)
+        box.polygon(renderer, ((50, 31), (60, 47), (50, 57), (40, 47)), dark)
+    else:
+        box.polygon(
+            renderer,
+            ((50, 20), (56, 37), (73, 43), (56, 49), (50, 67), (44, 49), (27, 43), (44, 37)),
+            light,
+        )
+    box.rect(renderer, 26, 77, 74, 87, dark)
+    box.rect(renderer, 32, 73, 68, 79, accent)
+    if visited:
+        # A white check makes visited state legible without relying on hue.
+        renderer.draw_line(*box.point(35, 91), *box.point(46, 98), _WHITE, 3)
+        renderer.draw_line(*box.point(46, 98), *box.point(66, 84), _WHITE, 3)
+
+
 def _draw_storm_engine(
     renderer: _SpriteRenderer,
     x: int,
@@ -656,6 +698,7 @@ _SPRITE_DRAWERS: dict[str, SpriteDrawer] = {
     CRYSTAL_LANTERN_QUALIFIED_ID: _draw_crystal_lantern,
     SKY_LANTERN_PRESENTATION_ID: _draw_crystal_lantern,
     STORM_ENGINE_PRESENTATION_ID: _draw_storm_engine,
+    FIELD_MARKER_PRESENTATION_ID: _draw_field_marker,
     MOONLIT_GUIDE_QUALIFIED_ID: _draw_moonlit_guide,
     SUN_SEED_PRESENTATION_ID: _draw_sun_seed,
     RAIN_BELL_PRESENTATION_ID: _draw_rain_bell,

@@ -57,6 +57,7 @@ from engine.rendering._classroom_sprites import (
     COMPASS_HALO_FRAME,
     COMPASS_HALO_SHEET_ID,
     CRYSTAL_LANTERN_QUALIFIED_ID,
+    FIELD_MARKER_PRESENTATION_ID,
     MOON_COMPASS_QUALIFIED_ID,
     MOONLIT_GUIDE_QUALIFIED_ID,
     NOVA_QUALIFIED_ID,
@@ -501,8 +502,11 @@ class TrailPresentation:
         start: tuple[float, float] | None = None,
         *,
         package_ids: tuple[str, ...] = (),
+        presentation_session: str | None = None,
     ) -> None:
-        policy = mission_presentation(mission_id, package_ids=package_ids)
+        policy = mission_presentation(
+            mission_id, package_ids=package_ids, presentation_session=presentation_session
+        )
         self.active = policy is not None
         #: Inactive missions get the empty policy: no extras and no aliases.
         self.policy = policy or MissionPresentation()
@@ -520,12 +524,45 @@ class TrailPresentation:
         self._previous_complete: bool | None = None
         self._visited: frozenset[str] = frozenset()
         self._toggle_on: frozenset[str] = frozenset()
-        self._device_pose = SpritePose(row="cells-3", column="lit-0")
+        self._device_poses: dict[str, SpritePose] = {}
+        self._authored_aliases: dict[str, str] = {}
+        self._marker_variants: dict[str, str] = {}
+        self._sequence_counts: dict[str, int] = {}
         self._spoken: frozenset[str] = frozenset()
         self._conversed: frozenset[str] = frozenset()
         self._layouts: dict[tuple[object, ...], object] = {}
         self._failed_layers: set[str] = set()
         self._object_feedback_drawn = False
+
+    def configure_entities(
+        self, objects: Sequence[_TrailObject], npcs: Sequence[_TrailNPC]
+    ) -> None:
+        """Assign cosmetic roles only within an opted-in later course profile.
+
+        Validated gameplay entities supply their kind, not response text, names,
+        coordinates or a guessed mission. Student ids remain free to change.
+        """
+        if not self.policy.authored_roles:
+            return
+        for index, item in enumerate(objects):
+            role = (
+                STORM_ENGINE_PRESENTATION_ID
+                if getattr(item, "counter", None) is not None
+                else (
+                    SKY_LANTERN_PRESENTATION_ID
+                    if getattr(item, "toggle", None) is not None
+                    else FIELD_MARKER_PRESENTATION_ID
+                )
+            )
+            self._authored_aliases[item.qualified_id] = role
+            self._marker_variants[item.qualified_id] = f"glyph-{index % 3}"
+            counter = getattr(item, "counter", None)
+            if counter is not None:
+                self._device_poses[item.qualified_id] = SpritePose(
+                    row=f"cells-{counter.goal}", column="lit-0"
+                )
+        for npc in npcs:
+            self._authored_aliases[npc.qualified_id] = MOONLIT_GUIDE_QUALIFIED_ID
 
     # ------------------------------------------------------------------
     # Observation (called after every scene update)
@@ -576,10 +613,12 @@ class TrailPresentation:
                 counter = getattr(item, "counter", None)
                 if counter is not None:
                     count = getattr(view, "counter_counts", {}).get(item.qualified_id, 0)
-                    self._device_pose = SpritePose(
+                    self._device_poses[item.qualified_id] = SpritePose(
                         row=f"cells-{counter.goal}",
                         column=f"lit-{min(counter.goal, max(0, count))}",
                     )
+        if self.policy.authored_roles:
+            self._sequence_counts = dict(getattr(view, "sequence_progress", {}))
         # Read-only NPC evidence (M04's and M05's completion state); views
         # without it simply show every talk cue.
         spoken = getattr(view, "spoken_npc_ids", None)
@@ -637,7 +676,17 @@ class TrailPresentation:
         if not isinstance(message, str) or not message.startswith(prefix):
             return None
         line = message[len(prefix) :]
-        return line if line in lines or getattr(npc, "respond_to_toggle", None) else None
+        conditional = any(
+            getattr(npc, field, None) is not None
+            for field in (
+                "respond_to_toggle",
+                "respond_to_two_toggles",
+                "respond_to_either_toggle",
+                "respond_to_counter",
+                "respond_to_sequence",
+            )
+        )
+        return line if line in lines or conditional else None
 
     # ------------------------------------------------------------------
     # Poses
@@ -651,7 +700,9 @@ class TrailPresentation:
         """
         if qualified_id is None:
             return None
-        return self.policy.sprite_aliases.get(qualified_id, qualified_id)
+        return self.policy.sprite_aliases.get(
+            qualified_id, self._authored_aliases.get(qualified_id, qualified_id)
+        )
 
     def pose_for(self, qualified_id: str | None) -> SpritePose | None:
         """Return this frame's cosmetic pose, or ``None`` outside a presentation."""
@@ -665,7 +716,12 @@ class TrailPresentation:
         if role == MOONLIT_GUIDE_QUALIFIED_ID:
             return self._guide_pose(qualified_id)
         if role == STORM_ENGINE_PRESENTATION_ID:
-            return self._device_pose
+            return self._device_poses.get(qualified_id, SpritePose(row="cells-3", column="lit-0"))
+        if role == FIELD_MARKER_PRESENTATION_ID:
+            return SpritePose(
+                row="visited" if qualified_id in self._visited else "waiting",
+                column=self._marker_variants.get(qualified_id, "glyph-0"),
+            )
         if role == SKY_LANTERN_PRESENTATION_ID:
             return SpritePose(row="on" if qualified_id in self._toggle_on else "off")
         if role == CRYSTAL_LANTERN_QUALIFIED_ID:
@@ -1028,6 +1084,18 @@ class TrailPresentation:
     ) -> None:
         x, y, width, height = _rect_of(entity)
         role = self.sprite_identity(qualified_id)
+        if qualified_id in self._sequence_counts:
+            # Three cosmetic route cells follow the real prefix/reset evidence.
+            filled = self._sequence_counts[qualified_id]
+            for index in range(3):
+                renderer.draw_rect(
+                    round(x + width - 5),
+                    round(y + 20 + index * 14),
+                    8,
+                    10,
+                    _WHITE if index < filled else (35, 39, 67),
+                )
+
         if role == MOON_COMPASS_QUALIFIED_ID:
             cx, cy = x + width / 2, y + height * 0.45
             light = mix(color, _WHITE, 0.72)
@@ -1231,11 +1299,36 @@ class TrailPresentation:
                 branch = (qualified_id, conditional.toggle_qualified_id in self._toggle_on)
                 if branch not in displayed:
                     pending.append(qualified_id)
+            elif self.policy.authored_roles and self._pending_authored_response(view, npc):
+                pending.append(qualified_id)
             elif npc.conversation_lines:
                 heard = self._conversed if len(npc.conversation_lines) > 1 else self._spoken
                 if qualified_id not in heard:
                     pending.append(qualified_id)
         return tuple(pending)
+
+    def _pending_authored_response(self, view: TrailView, npc: _TrailNPC) -> bool:
+        qid = npc.qualified_id
+        condition = getattr(npc, "respond_to_two_toggles", None)
+        if condition is not None:
+            state = all(q in self._toggle_on for q in condition.toggle_qualified_ids)
+            return (qid, state) not in getattr(view, "displayed_two_toggle_branches", ())
+        condition = getattr(npc, "respond_to_either_toggle", None)
+        if condition is not None:
+            first, second = condition.toggle_qualified_ids
+            return (qid, first in self._toggle_on, second in self._toggle_on) not in getattr(
+                view, "displayed_either_toggle_cases", ()
+            )
+        condition = getattr(npc, "respond_to_counter", None)
+        if condition is not None:
+            item = next(o for o in view.objects if o.qualified_id == condition.counter_qualified_id)
+            state = (
+                getattr(view, "counter_counts", {}).get(item.qualified_id, 0) >= item.counter.goal
+            )
+            return (qid, state) not in getattr(view, "displayed_counter_comparison_branches", ())
+        if getattr(npc, "respond_to_sequence", None) is not None:
+            return qid not in getattr(view, "completed_sequence_npc_ids", ())
+        return False
 
     def _draw_talk_cues(self, renderer: object, view: TrailView) -> None:
         if not supports(renderer, "draw_rounded_rect", "draw_polygon", "draw_circle"):

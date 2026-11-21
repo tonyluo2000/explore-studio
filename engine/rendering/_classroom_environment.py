@@ -355,9 +355,15 @@ def draw_classroom_backdrop(
     mission_id: str | None,
     *,
     package_ids: tuple[str, ...] = (),
+    presentation_session: str | None = None,
 ) -> bool:
     """Draw the Moon Meadow behind entities; report whether it completed."""
-    if mission_presentation(mission_id, package_ids=package_ids) is None:
+    if (
+        mission_presentation(
+            mission_id, package_ids=package_ids, presentation_session=presentation_session
+        )
+        is None
+    ):
         return False
     try:
         if draw_scenery_plate(renderer, MEADOW_BACKDROP):

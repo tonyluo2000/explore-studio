@@ -79,18 +79,20 @@ def test_s06_policy_is_exactly_package_scoped() -> None:
 
 
 @pytest.mark.parametrize("session", LATER_M06_SESSIONS)
-def test_later_m06_reuse_stays_standard(session: str) -> None:
+def test_later_m06_reuse_has_its_own_polished_profile(session: str) -> None:
     packages, options = CANONICAL[session]
     roots = tuple(_package_root(argument) for argument in packages)
     planned = plan_local_classroom_trail(roots, player_qualified_id=options["--player"])
     assert planned.is_planned and planned.plan is not None
     package_ids = tuple(package.package_id for package in planned.plan.packages)
     assert S06_PACKAGE_ID not in package_ids
-    assert mission_presentation(S06_MISSION_ID, package_ids=package_ids) is None
+    later = mission_presentation(S06_MISSION_ID, package_ids=package_ids)
+    assert later is not None and later.authored_roles
+    assert not later.sprite_aliases  # no S06 marker identities leak into this session
     scene = create_classroom_trail_scene(
         AccentCheckingRenderer(), planned.plan, mission_id=S06_MISSION_ID
     )
-    assert not scene._presentation.active
+    assert scene._presentation.active
 
 
 def test_s06_scene_preserves_authored_objects_and_uses_distinct_primitives() -> None:

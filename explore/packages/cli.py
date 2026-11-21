@@ -74,6 +74,13 @@ def _parser() -> argparse.ArgumentParser:
             "the visit-all-classroom-objects completion rule"
         ),
     )
+    from engine.rendering._mission_presentation import COURSE_TRAIL_PROFILES
+
+    trail.add_argument(
+        "--presentation-session",
+        choices=tuple(COURSE_TRAIL_PROFILES),
+        help="cosmetic course look for your own package; requires a matching --mission-id",
+    )
     return parser
 
 
@@ -103,7 +110,24 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"{issue.code.value}: {issue.location}: {issue.message}")
             return 1
         assert result.plan is not None
-        run_classroom_trail(result.plan, name=args.name, mission_id=args.mission_id)
+        if args.presentation_session is not None:
+            from engine.rendering._mission_presentation import mission_presentation
+
+            try:
+                mission_presentation(
+                    args.mission_id, presentation_session=args.presentation_session
+                )
+            except ValueError as error:
+                print(str(error))
+                return 1
+            run_classroom_trail(
+                result.plan,
+                name=args.name,
+                mission_id=args.mission_id,
+                presentation_session=args.presentation_session,
+            )
+        else:
+            run_classroom_trail(result.plan, name=args.name, mission_id=args.mission_id)
         return 0
 
     package_root = args.package_root.resolve()

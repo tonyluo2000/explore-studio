@@ -46,7 +46,7 @@ def test_s07_scope_and_alias():
             yaml.safe_load((_package_root(p) / "manifest.yaml").read_text())["package"]["id"]
             for p in packages
         )
-        assert mission_presentation(options["--mission-id"], package_ids=ids) is None
+        assert mission_presentation(S07_MISSION_ID, package_ids=ids) is None
 
 
 def test_authored_identity_messages_and_no_future_mechanic():
