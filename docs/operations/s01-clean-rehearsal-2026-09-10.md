@@ -20,7 +20,7 @@ Python import path.
 
 ## Later Course Kit platform pin
 
-The unpublished remaining-lectures candidate pins `b95351bc1e1fcd29fb677f237c8fe6ee737c28de` for scoped
+The unpublished remaining-lectures candidate pins `a01c8a6f6ac88057f764215963f34e4b7c107cde` for scoped
 S10–S30 presentation, preserving planning-only S26. It is a local preparation
 artifact; production Course Kit replacement remains a separate approved step.
 

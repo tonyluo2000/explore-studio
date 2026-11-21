@@ -190,7 +190,11 @@ def test_validation_json_stays_clean_without_importing_the_renderer():
 
     environment = dict(os.environ)
     environment.pop("PYGAME_HIDE_SUPPORT_PROMPT", None)
-    code = "from explore.packages.cli import main; raise SystemExit(main(['validate', 'examples/explorer-packages/nova-character', '--json']))"
+    code = (
+        "from explore.packages.cli import main; "
+        "raise SystemExit(main(['validate', "
+        "'examples/explorer-packages/nova-character', '--json']))"
+    )
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=ROOT,

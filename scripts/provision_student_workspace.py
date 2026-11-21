@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-COURSE_PLATFORM_COMMIT = "b95351bc1e1fcd29fb677f237c8fe6ee737c28de"
+COURSE_PLATFORM_COMMIT = "a01c8a6f6ac88057f764215963f34e4b7c107cde"
 SESSION_IDS = tuple(f"s{number:02d}" for number in range(1, 31))
 EXAMPLE_PACKAGE_IDS = (
     "crystal-lantern",

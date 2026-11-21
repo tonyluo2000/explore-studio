@@ -323,7 +323,8 @@ def test_runner_without_mission_builds_a_plain_trail(monkeypatch: pytest.MonkeyP
 
     seen: list[object] = []
 
-    def capture(renderer, plan, *, mission_id=None, audio=None):  # type: ignore[no-untyped-def]
+    def capture(renderer, plan, *, mission_id=None, audio=None, presentation_session=None):
+        assert presentation_session is None  # type: ignore[no-untyped-def]
         seen.append(mission_id)
         raise _StopError
 
