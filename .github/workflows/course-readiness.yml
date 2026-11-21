@@ -2,89 +2,8 @@ name: Course readiness
 
 on:
   pull_request:
-    paths:
-      - ".github/workflows/course-readiness.yml"
-      - "classroom/**"
-      - "docs/classroom-student-workspace.md"
-      - "docs/operations/s01-clean-rehearsal-*.md"
-      - "docs/curriculum*.md"
-      - "lessons/sessions/**"
-      - "course4teen-website/public/downloads/explore-studio-course.zip"
-      - "scripts/build_student_zip.py"
-      - "scripts/provision_student_workspace.py"
-      - "scripts/sync_student_downloads.py"
-      - "scripts/verify_public_zip_provenance.py"
-      - "tests/test_public_zip_provenance_guard.py"
-      - "tests/test_student_zip.py"
-      - "tests/test_classroom_student_workspace.py"
-      - "tests/test_computer_readiness.py"
-      - "tests/test_onboarding_docs.py"
-      - "tests/test_student_command_copy_paste.py"
-      - "tests/test_course_kit_update_scenario.py"
-      - "tests/test_mission_presentation_contract.py"
-      - "docs/operations/classroom-preflight.md"
-      - "course4teen-website/app/students/prepare/**"
-      - "course4teen-website/app/students/slides/s05/**"
-      - "course4teen-website/app/students/slides/s06/**"
-      - "course4teen-website/app/students/slides/s07/**"
-      - "course4teen-website/app/students/slides/s08/**"
-      - "course4teen-website/app/students/slides/s09/**"
-      - "engine/**"
-      - "tests/test_s07_presentation.py"
-      - "tests/test_s09_presentation.py"
-      - "tests/test_remaining_trail_presentation.py"
-      - "scripts/capture_remaining_trails.py"
-      - "course4teen-website/lib/calendar.ts"
-      - "course4teen-website/lib/courseKit.ts"
-      - "course4teen-website/lib/learn.ts"
-      - "tests/test_lesson_materials*.py"
-      - "examples/explorer-packages/**"
-      - "scripts/check_computer_readiness.py"
-      - "docs/computer-readiness.md"
-      - "docs/windows-wsl-setup.md"
   push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/course-readiness.yml"
-      - "classroom/**"
-      - "docs/classroom-student-workspace.md"
-      - "docs/operations/s01-clean-rehearsal-*.md"
-      - "docs/curriculum*.md"
-      - "lessons/sessions/**"
-      - "course4teen-website/public/downloads/explore-studio-course.zip"
-      - "scripts/build_student_zip.py"
-      - "scripts/provision_student_workspace.py"
-      - "scripts/sync_student_downloads.py"
-      - "scripts/verify_public_zip_provenance.py"
-      - "tests/test_public_zip_provenance_guard.py"
-      - "tests/test_student_zip.py"
-      - "tests/test_classroom_student_workspace.py"
-      - "tests/test_computer_readiness.py"
-      - "tests/test_onboarding_docs.py"
-      - "tests/test_student_command_copy_paste.py"
-      - "tests/test_course_kit_update_scenario.py"
-      - "tests/test_mission_presentation_contract.py"
-      - "docs/operations/classroom-preflight.md"
-      - "course4teen-website/app/students/prepare/**"
-      - "course4teen-website/app/students/slides/s05/**"
-      - "course4teen-website/app/students/slides/s06/**"
-      - "course4teen-website/app/students/slides/s07/**"
-      - "course4teen-website/app/students/slides/s08/**"
-      - "course4teen-website/app/students/slides/s09/**"
-      - "engine/**"
-      - "tests/test_s07_presentation.py"
-      - "tests/test_s09_presentation.py"
-      - "tests/test_remaining_trail_presentation.py"
-      - "scripts/capture_remaining_trails.py"
-      - "course4teen-website/lib/calendar.ts"
-      - "course4teen-website/lib/courseKit.ts"
-      - "course4teen-website/lib/learn.ts"
-      - "tests/test_lesson_materials*.py"
-      - "examples/explorer-packages/**"
-      - "scripts/check_computer_readiness.py"
-      - "docs/computer-readiness.md"
-      - "docs/windows-wsl-setup.md"
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -148,5 +67,27 @@ jobs:
           tests/test_mission_presentation_contract.py
           tests/test_student_zip.py
           tests/test_public_zip_provenance_guard.py
+          tests/test_course_release.py
       - name: Verify the committed public ZIP matches its provenance commit
         run: python3 scripts/verify_public_zip_provenance.py
+      - name: Enforce phase-aware Course Kit freshness
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$PR_BASE" ]; then
+            python scripts/course_release_status.py --pr-base "$PR_BASE"
+          else
+            python scripts/course_release_status.py
+          fi
+      - name: Prepare approved candidate and publication handoff
+        if: github.event_name == 'pull_request'
+        run: |
+          SESSION=$(python -c 'from scripts.course_release import load_contract; print(load_contract()["published_session"])')
+          python scripts/prepare_course_release.py --session "$SESSION" --export-approved
+      - name: Preserve candidate and publication metadata for separate approval
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-kit-publication-bundle
+          path: build/course-releases/
+          if-no-files-found: error
